@@ -52,10 +52,10 @@ function drawCharm(ctx, style, x, y, size) {
   ctx.restore();
 }
 const clipPositions={adult:[[.434,.061],[.44,.09],[.44,.09]],little:[[.370,.082],[.375,.09],[.375,.09]]};
-function drawCheekDetail(c,shot,x,y,width,height){
+function drawCheekDetail(c,shot,x,y,width,height,point){
   if(!shot.gem)return;
   const adult=shot.doll==='adult';
-  const px=x+width*(adult?.507:.445),py=y+height*(adult?.112:.25);
+  const px=x+width*(point?.[0]??(adult?.507:.445)),py=y+height*(point?.[1]??(adult?.112:.25));
   c.save();c.translate(px,py);c.scale(width*.038,width*.038);
   c.shadowColor='#753d5a';c.shadowBlur=1;c.fillStyle=shot.gem===1?'#ec618b':'#ffdd90';
   if(shot.gem===1){
@@ -67,8 +67,19 @@ function drawCheekDetail(c,shot,x,y,width,height){
   }
   c.restore();
 }
+function drawSprite(c,img,shot,view,x,y,width,height){
+  c.drawImage(img,x,y,width,height);
+  const front=view==='front',adult=shot.doll==='adult';
+  const clipX=front?(adult?.42:.34):.46;
+  drawCharm(c,shot.clip,x+width*clipX,y+height*(adult?.09:.08),width*.089);
+  drawCheekDetail(c,shot,x,y,width,height,front?(adult?[.50,.13]:[.44,.23]):(adult?[.55,.126]:[.59,.19]));
+}
 async function paintPortrait(canvas, shot, postcard=false) {
-  const img=await asset('assets/'+shot.doll+'-'+shot.outfit+'.jpg');
+  const scenic=shot.backdrop>0,scene=scenic?districts[shot.backdrop-1]:null;
+  const [img,background]=await Promise.all([
+    asset(scenic?spritePath(shot.doll,shot.outfit,'front'):'assets/'+shot.doll+'-'+shot.outfit+'.jpg'),
+    scenic?asset('assets/scenes/'+scene.id+'.jpg'):null
+  ]);
   const w=canvas.width=postcard?640:480,h=canvas.height=postcard?860:720;
   const c=canvas.getContext('2d');
   const x=postcard?70:0,y=postcard?21:0,width=postcard?500:w,height=postcard?750:h;
@@ -81,10 +92,21 @@ async function paintPortrait(canvas, shot, postcard=false) {
     }
     c.fillStyle='#fffefa';c.fillRect(x-9,y-9,width+18,h-y-19);
   }
-  c.drawImage(img,x,y,width,height);
-  const pos=clipPositions[shot.doll][shot.outfit];
-  drawCharm(c,shot.clip,x+pos[0]*width,y+pos[1]*height,width*.108);
-  drawCheekDetail(c,shot,x,y,width,height);
+  if(scenic){
+    const cropWidth=background.height*width/height;
+    const cropX=(background.width-cropWidth)*(shot.backdrop===3?.74:.52);
+    c.drawImage(background,cropX,0,cropWidth,background.height,x,y,width,height);
+    const dh=height*(shot.doll==='adult'?.87:.70),dw=dh*img.width/img.height;
+    const footY=y+height*.96;
+    c.fillStyle='rgba(70,42,58,.22)';c.beginPath();
+    c.ellipse(x+width/2,footY-dh*.015,dw*.19,dh*.016,0,0,Math.PI*2);c.fill();
+    drawSprite(c,img,shot,'front',x+(width-dw)/2,footY-dh,dw,dh);
+  }else{
+    c.drawImage(img,x,y,width,height);
+    const pos=clipPositions[shot.doll][shot.outfit];
+    drawCharm(c,shot.clip,x+pos[0]*width,y+pos[1]*height,width*.108);
+    drawCheekDetail(c,shot,x,y,width,height);
+  }
   if(postcard){
     drawCharm(c,shot.sticker,x+width-16,y+height-30,60);
     c.fillStyle='#7a305e';c.font='italic bold 32px Georgia';c.textAlign='center';

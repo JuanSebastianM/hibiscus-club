@@ -17,12 +17,20 @@ You can also put the contents of `dist/` on a static web host. Serve the files t
 ## A first trip around the island
 
 1. Pick **Grown-up** or **Little Me** on the player card. Each character remembers her own look.
-2. Open **Dress-Up Studio** and pick an outfit. Grown-up’s hibiscus top and jeans also have front, side, and back reference views. Choose **Pose** to return to the styled portrait.
+2. Open **Dress-Up Studio** and pick an outfit. Every outfit has front and side views. Grown-up’s signature look also has a back reference. Choose **Pose** to return to the styled portrait.
 3. Visit the **Beauty Salon** to add a hair clip and face gems. From the studio or salon, choose **Walk the island runway** to rehearse. Watch the three marks, then repeat them in order. **Replay cues** repeats the same routine.
-4. In the **Photo Booth**, choose a frame and corner sticker, then take a photo. For the first style challenge, use the second outfit and the peach blossom clip. A successful photo advances the challenge.
+4. In the **Photo Booth**, choose scenery, a frame, and a corner sticker, then take a photo. For the first style challenge, use the second outfit and the peach blossom clip. A successful photo advances the challenge.
 5. Open **Scrapbook** to download a 640 × 860 PNG. The album holds 24 postcards. Removing a postcard asks for confirmation and frees one space. Download favorites before clearing browser data.
 
 Use a mouse or touch, or Tab and Shift+Tab to move between controls. Enter activates links and buttons. Space also activates buttons. Escape closes dialogs. The speaker in the top bar toggles game chimes. Sound starts off.
+
+## Island Life
+
+Choose **Explore Island Life** on the player card, pick either age, and use **Choose a name**. Click or tap the ground to walk. A second click redirects her. You can also focus the scene and use the arrow keys. Select a resident or object to walk within reach and interact. Use the three travel cards to change districts.
+
+Mara collects shells on Pearl Boardwalk, Rosa tends the Flower Market, and Kit runs the Starlight Pavilion. Ask about their work to become friends, or offer to help to start a task. The journal records the next action and destination, and the bag shows what you’re carrying. The three errands award 6, 8, and 10 stars once per character. Each age remembers her own name, location, friendships, and task progress. Both share the star wallet.
+
+**Take a scenic postcard** uses your current location in the photo booth. The studio and booth also let you select any district or the original pink studio. Saved postcards retain the scenery you chose.
 
 ## Stars and stamps
 
@@ -47,11 +55,14 @@ The three supplied images shaped the character art. The two portraits provide th
 | `dist/style.css` | Responsive island layout, studio, game tables, and scrapbook |
 | `dist/game.js` | Room navigation, character choices, memory game, bouquet orders, challenges, rewards, and saves |
 | `dist/portrait.js` | Image loading, accessory placement, face gems, postcard frames, and Canvas 2D rendering |
+| `dist/island-life.js` and `dist/island-life.css` | Movement, scene layout, character naming, conversations, inventory, and task progression |
 | `dist/runway.js` | Spotlight sequence, replay, input checking, and rehearsal reward |
 | `dist/icons.js` and `dist/assets/` | Interface icons, character portraits, turnaround views, wordmark, and island art |
 | `serve.cjs` | Dependency-free local HTTP server |
 
 The player card, studio pose, runway portrait, and postcards share the same drawing code. A saved postcard records the character and outfit, accessory, gem, sticker, and frame selections. The renderer recreates it from those selections for display and PNG export. To add an outfit, supply a portrait with the same framing, extend the wardrobe list and allowed outfit index, and set its normalized hair-clip coordinates in `portrait.js`.
+
+Island Life uses three illustrated JPEG backgrounds and transparent front, side, and stride sprites for all six outfits. Each scene prepares the active doll’s frames with her accessories once. Movement updates her transform with requestAnimationFrame, scales her with depth, and stops scheduling frames on arrival. The reduced-motion setting moves her directly to the destination. Scene coordinates are normalized so saved positions work on different screen sizes.
 
 ## Saves and compatibility
 
@@ -62,6 +73,8 @@ Each browser profile and site address has its own save. Using a different port g
 ## Verification
 
 The game was exercised in desktop Chrome at 1440 × 960 and with a 375 × 812 phone viewport. The checks covered character switching, wardrobe angles, salon details, the style challenge and frame unlock, a completed runway rehearsal, correct and incorrect bouquet orders, memory matches, postcard creation and PNG generation, removal, and restoration after a reload. All rooms were checked for horizontal overflow at phone width.
+
+Additional browser checks covered old-save migration, interrupting a walk, keyboard movement, reduced motion, naming both characters, all three errands and their rewards, all twelve wardrobe angles, and scenic postcard rendering after saving.
 
 Hibiscus Club is an independent game inspired by the era’s dress-up games.
 
