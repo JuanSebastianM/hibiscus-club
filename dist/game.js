@@ -9,12 +9,13 @@ const dollNames={adult:'Grown-up',little:'Little Me'};
 const saveKey='hibiscus-club-v1';
 
 const smallInt=(n,max)=>Number.isInteger(n)&&n>=0&&n<=max?n:0;
-function readLook(v={}){return {outfit:smallInt(v?.outfit,2),clip:smallInt(v?.clip,3),gem:smallInt(v?.gem,2),frame:smallInt(v?.frame,3),sticker:smallInt(v?.sticker,3)}}
+function readLook(v={}){return {outfit:smallInt(v?.outfit,2),clip:smallInt(v?.clip,3),gem:smallInt(v?.gem,2),frame:smallInt(v?.frame,3),sticker:smallInt(v?.sticker,3),backdrop:smallInt(v?.backdrop,3)}}
 function loadGame(){
   let raw={};
   try{raw=JSON.parse(localStorage.getItem(saveKey))||{}}catch{}
   return {
     doll:raw.doll==='little'?'little':'adult',
+    life:loadIslandLife(raw.life),
     looks:{adult:readLook(raw.looks?.adult),little:readLook(raw.looks?.little)},
     stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound===true,
     visits:places.filter(p=>Array.isArray(raw.visits)&&raw.visits.includes(p.id)).map(p=>p.id),
@@ -54,7 +55,7 @@ function tone(win=false){
 function look(){return state.looks[state.doll]}
 function currentShot(){return {...look(),doll:state.doll}}
 function navBar(){
-  const links=[['map','map','Island Map'],['wardrobe','hanger','Dress-Up'],['scrapbook','book','Scrapbook']];
+  const links=[['map','map','Island Map'],['life','compass','Island Life'],['wardrobe','hanger','Dress-Up'],['scrapbook','book','Scrapbook']];
   document.querySelector('#navigation').innerHTML=links.map(([id,s,label])=>`<a href="#${id}" ${route===id?'aria-current="page"':''}>${icon(s)}<span>${label}</span></a>`).join('');
   document.querySelector('#wallet').innerHTML=`${icon('star',19)} <b>${state.stars}</b> <span>stars</span>`;
   const b=document.querySelector('.sound');b.innerHTML=icon(state.sound?'volume':'mute',18);
@@ -78,7 +79,7 @@ function challenge(){
   return `<aside class="challenge"><div class="eyeline">${icon('ticket',18)} STYLE CHALLENGE</div><h2>${b.title}</h2><p>Photograph the ${wardrobes[state.doll][b.outfit].toLowerCase()} with the ${clips[b.clip].toLowerCase()} clip.</p><a class="challenge-link" href="#wardrobe">Plan my look <span>✧</span></a><span class="ticket-star" aria-hidden="true">☆</span></aside>`;
 }
 function mapScreen(){
-  return sectionTitle('Hibiscus Island','Pick a place on the map and let’s play!')+`<div class="map-layout"><div class="map-column"><section class="map-case" aria-label="Interactive island map"><div class="map-bar"><span>${icon('compass',16)} Island Explorer</span><span aria-hidden="true">✧ &nbsp; ✦ &nbsp; ✧</span></div><div class="map-art">${places.map(p=>`<a class="pin pin-${p.id}" style="--x:${p.x}%;--y:${p.y}%;--ink:${p.color}" href="#${p.id}"><i>${icon(p.icon,20)}</i><strong>${p.name}</strong></a>`).join('')}<span class="compass" aria-label="North">N<span>✥</span></span></div></section>${passport()}</div><div class="rail"><section class="player"><header>${icon('id',20)} <h2>My Player Card</h2><span aria-hidden="true">✦</span></header><div class="player-body"><div class="portrait-print"><div class="card-portrait"><canvas id="card-preview" aria-label="${dollNames[state.doll]} in ${wardrobes[state.doll][look().outfit]}"></canvas></div><span class="tape" aria-hidden="true"></span><img class="flower-sticker" src="assets/flower.svg" alt=""><span class="caption">${dollNames[state.doll]} <i>♡</i></span></div>${dollSwitch()}<a class="primary wide" href="#wardrobe">${icon('hanger',17)} Dress me up</a></div></section>${challenge()}</div></div>`;
+  return sectionTitle('Hibiscus Island','Pick a place on the map and let’s play!')+`<div class="map-layout"><div class="map-column"><section class="map-case" aria-label="Interactive island map"><div class="map-bar"><span>${icon('compass',16)} Island Explorer</span><span aria-hidden="true">✧ &nbsp; ✦ &nbsp; ✧</span></div><div class="map-art">${places.map(p=>`<a class="pin pin-${p.id}" style="--x:${p.x}%;--y:${p.y}%;--ink:${p.color}" href="#${p.id}"><i>${icon(p.icon,20)}</i><strong>${p.name}</strong></a>`).join('')}<span class="compass" aria-label="North">N<span>✥</span></span></div></section>${passport()}</div><div class="rail"><section class="player"><header>${icon('id',20)} <h2>My Player Card</h2><span aria-hidden="true">✦</span></header><div class="player-body"><div class="portrait-print"><div class="card-portrait"><canvas id="card-preview" aria-label="${dollNames[state.doll]} in ${wardrobes[state.doll][look().outfit]}"></canvas></div><span class="tape" aria-hidden="true"></span><img class="flower-sticker" src="assets/flower.svg" alt=""><span class="caption">${escapeText(playerLabel())} <i>♡</i></span></div>${dollSwitch()}<a class="primary wide" href="#life">${icon('compass',17)} Explore Island Life</a><a class="sub-link" href="#wardrobe">Dress me up</a></div></section>${challenge()}</div></div>`;
 }
 function group(label,body){return `<section class="option-group"><h3>${label}</h3>${body}</section>`}
 function options(field,names){
@@ -88,15 +89,20 @@ function studio(){
   const p=places.find(p=>p.id===route);
   const booth=route==='booth',salon=route==='salon';
   const hint=booth?'Frame your portrait and save it to your scrapbook.':salon?'Pick a finishing touch for her hair.':'Try on a look for your next island adventure.';
-  const stand=angle!==null&&route==='wardrobe'?`<img class="angle" src="assets/adult-0-${['front','side','back'][angle]}.jpg" alt="Signature outfit, ${['front','side','back'][angle]} view">`:'<canvas id="preview" aria-label="Current styled doll portrait"></canvas>';
-  const rotate=route==='wardrobe'&&state.doll==='adult'&&look().outfit===0?`<div class="turns">${[null,0,1,2].map((a,i)=>`<button data-angle="${a??'pose'}" aria-pressed="${angle===a}">${['Pose','Front','Side','Back'][i]}</button>`).join('')}</div>`:'';
+  const signature=state.doll==='adult'&&look().outfit===0;
+  const viewName=['front','side','back'][angle];
+  const viewFile=signature&&(!look().backdrop||angle===2)?'assets/adult-0-'+viewName+'.jpg':spritePath(state.doll,look().outfit,viewName);
+  const stand=angle!==null&&route==='wardrobe'?`<img class="angle" src="${viewFile}" alt="${wardrobes[state.doll][look().outfit]}, ${viewName} view">`:'<canvas id="preview" aria-label="Current styled doll portrait"></canvas>';
+  const rotate=route==='wardrobe'?`<div class="turns">${(signature?[null,0,1,2]:[null,0,1]).map((a,i)=>`<button data-angle="${a??'pose'}" aria-pressed="${angle===a}">${['Pose','Front','Side','Back'][i]}</button>`).join('')}</div>`:'';
   const outfits=`<div class="outfits">${wardrobes[state.doll].map((name,i)=>`<button data-field="outfit" data-value="${i}" aria-pressed="${look().outfit===i}"><img src="assets/${state.doll}-${i}.jpg" alt=""><span>${name}</span></button>`).join('')}</div>`;
   let controls=group('Character',dollSwitch());
   if(booth) controls+=group('Postcard frame',options('frame',frames))+group('Corner sticker',options('sticker',['None','Flower','Bow','Star']));
   else if(salon) controls+=group('Hair accessory',options('clip',clips))+group('Face gems',options('gem',gems));
   else controls+=group('Outfit rack',outfits);
+  if(!salon)controls+=group('Scenery',options('backdrop',sceneryNames));
+  const backdropStyle=look().backdrop?` style="background: center / cover url('assets/scenes/${districts[look().backdrop-1].id}.jpg')"`:'';
   let next=booth?`<button class="primary wide" data-action="snap">${icon('camera')} Take photo</button>`:`<a class="primary wide" href="#${salon?'booth':'salon'}">${icon(salon?'camera':'wand')}${salon?'Visit photo booth':'Visit beauty salon'}</a>`;
-  return sectionTitle(p.name,hint,true)+`<div class="workbench"><section class="display"><div class="map-bar"><span>${icon(p.icon,16)} ${dollNames[state.doll]}</span><span>✧</span></div><div class="doll-stage ${booth?'photo-stage':salon?'salon-stage':''}">${stand}</div>${rotate}</section><div class="controls"><div class="panel">${controls}${next}${booth?'<a class="sub-link" href="#scrapbook">Open scrapbook</a>':'<a class="sub-link" href="#runway">Walk the island runway</a>'}</div>${challenge()}</div></div>`;
+  return sectionTitle(p.name,hint,true)+`<div class="workbench"><section class="display"><div class="map-bar"><span>${icon(p.icon,16)} ${dollNames[state.doll]}</span><span>✧</span></div><div class="doll-stage ${booth?'photo-stage':salon?'salon-stage':''}"${angle!==null?backdropStyle:''}>${stand}</div>${rotate}</section><div class="controls"><div class="panel">${controls}${next}${booth?'<a class="sub-link" href="#scrapbook">Open scrapbook</a>':'<a class="sub-link" href="#runway">Walk the island runway</a>'}</div>${challenge()}</div></div>`;
 }
 
 const deckIcons=['flower','star','heart','camera','music','hanger'];
@@ -127,8 +133,10 @@ function draw(){
   const focused=document.activeElement;
   const key=focused?.dataset&&Object.keys(focused.dataset)[0];
   const val=key?focused.dataset[key]:null;
+  detachWorld();
   navBar();
-  main.innerHTML=route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():studio();
+  main.innerHTML=route==='life'?lifeScene():route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():studio();
+  if(route==='life')attachWorld();
   const c=document.querySelector('#preview, #card-preview');
   if(c)paintPortrait(c,currentShot(),route==='booth').catch(()=>say('The portrait could not load.'));
   main.querySelectorAll('[data-photo]').forEach(el=>paintPortrait(el,state.photos.find(s=>s.id===el.dataset.photo),true).catch(()=>say('The postcard could not load.')));
@@ -138,12 +146,14 @@ function draw(){
   }
 }
 function navigate(){
+  detachWorld();
+  document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
   const id=location.hash.slice(1);
-  route=[...places.map(p=>p.id),'scrapbook','runway'].includes(id)?id:'map';
+  route=[...places.map(p=>p.id),'scrapbook','runway','life'].includes(id)?id:'map';
   clearTimeout(timer);if(round)round.up=[];resetRunway();
   angle=null;
   if(places.some(p=>p.id===route)&&!state.visits.includes(route)){state.visits.push(route);persist();}
-  document.title=(places.find(p=>p.id===route)?.name|| (route==='map'?'Island Map':route==='runway'?'Island Runway':'My Scrapbook'))+' · Hibiscus Club';
+  document.title=(places.find(p=>p.id===route)?.name|| (route==='map'?'Island Map':route==='life'?'Island Life':route==='runway'?'Island Runway':'My Scrapbook'))+' · Hibiscus Club';
   draw();window.scrollTo(0,0);
 }
 function takePhoto(){
@@ -185,7 +195,8 @@ document.addEventListener('click',async e=>{
   if(b.classList.contains('sound')){state.sound=!state.sound;persist();navBar();tone();return;}
   const d=b.dataset;
   if(d.pose!==undefined){performPose(Number(d.pose));return;}
-  if(d.doll){state.doll=d.doll;angle=null;persist();draw();return;}
+  if(route==='life'&&(d.travel!==undefined||d.lifeAction||d.taskStep!==undefined)){handleLifeAction(b);return;}
+  if(d.doll){detachWorld();state.doll=d.doll;angle=null;persist();draw();return;}
   if(d.field){look()[d.field]=Number(d.value);angle=null;persist();draw();return;}
   if(d.angle){angle=d.angle==='pose'?null:Number(d.angle);draw();return;}
   if(d.card!==undefined){flipCard(Number(d.card));return;}

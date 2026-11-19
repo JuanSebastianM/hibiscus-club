@@ -8,6 +8,7 @@
   <meta name="description" content="Visit Hibiscus Island for dress-up, a beauty salon, arcade games, flower arranging, and a photo scrapbook.">
   <link rel="icon" href="assets/flower.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="island-life.css">
 </head>
 <body>
   <a class="skip" href="#game">Skip to game</a>
@@ -20,9 +21,12 @@
   <div id="announcer" role="status" aria-live="polite"></div>
   <dialog id="help" aria-labelledby="guide-title"><form method="dialog"><h2 id="guide-title">Island guide</h2><p>Choose a map pin to play. Each first visit adds a stamp to your island passport.</p><p>Switch between Grown-up and Little Me on your player card. Each keeps her own outfit and accessories.</p><p>Match cards, deliver a bouquet, or photograph a style challenge to earn stars. Collect 10 stars to unlock the golden postcard frame.</p><p>Use a mouse, touch, or Tab and Enter. Your looks, stars, and scrapbook save in this browser.</p><button class="primary">Back to the island</button></form></dialog>
   <dialog id="remove-photo" aria-labelledby="remove-title"><h2 id="remove-title">Remove this postcard?</h2><p>This frees one space in your scrapbook.</p><form method="dialog" class="dialog-actions"><button class="primary">Keep photo</button><button type="button" data-action="confirm-remove">Remove photo</button></form></dialog>
+  <dialog id="encounter" aria-label="Island conversation"></dialog>
+  <dialog id="name-dialog" aria-labelledby="name-title"><h2 id="name-title">Choose her name</h2><form id="name-form"><label for="character-name">Character name</label><input id="character-name" name="name" maxlength="48" autocomplete="off" required><div class="dialog-actions"><button class="primary">Save name</button><button type="button" onclick="this.closest('dialog').close()">Cancel</button></div></form></dialog>
   <script src="icons.js"></script>
   <script src="portrait.js"></script>
   <script src="runway.js"></script>
+  <script src="island-life.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
