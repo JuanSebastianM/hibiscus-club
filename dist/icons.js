@@ -18,6 +18,7 @@ const outlines = {
   compass:'<circle cx="12" cy="12" r="9"/><path d="m16 7-2.5 6.5L7 17l3-7z"/>',
   id:'<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8.5" cy="10" r="2"/><path d="M5 16q3-5 7 0m2-7h4m-4 4h4"/>',
   sparkle:'<path d="m11 2 2 7 7 2-7 2-2 8-2-8-7-2 7-2z"/>',
+  'sparkle-off':'<path d="m11 2 2 7 7 2-7 2-2 8-2-8-7-2 7-2zM3 3l18 18"/>',
   play:'<path d="m7 4 13 8-13 8z"/>',
   download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>'
 };
