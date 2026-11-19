@@ -14,6 +14,16 @@ Open [Hibiscus Club on this computer](http://127.0.0.1:4173). The server binds t
 
 You can also put the contents of `dist/` on a static web host. Serve the files together from the same origin so the browser can export postcard images. The existing Sites project uses the static directory specified in `.openai/hosting.json`.
 
+## Deploy to Cloudflare Workers
+
+`wrangler.jsonc` configures an assets-only Worker named `hibiscus-club` that serves `dist/`. There is no Worker script, and rooms use URL hashes, so no routing rules are needed. From the project directory, run the following command. Wrangler asks you to sign in to Cloudflare the first time.
+
+```sh
+npx wrangler deploy
+```
+
+Add `--dry-run` to check the configuration without uploading anything.
+
 ## A first trip around the island
 
 1. Pick **Grown-up** or **Little Me** on the player card. Each character remembers her own look.
@@ -22,7 +32,7 @@ You can also put the contents of `dist/` on a static web host. Serve the files t
 4. In the **Photo Booth**, choose scenery, a frame, and a corner sticker, then take a photo. For the first style challenge, use the second outfit and the peach blossom clip. A successful photo advances the challenge.
 5. Open **Scrapbook** to download a 640 × 860 PNG. The album holds 24 postcards. Removing a postcard asks for confirmation and frees one space. Download favorites before clearing browser data.
 
-Use a mouse or touch, or Tab and Shift+Tab to move between controls. Enter activates links and buttons. Space also activates buttons. Escape closes dialogs. The speaker in the top bar toggles game chimes. Sound starts off.
+Use a mouse or touch, or Tab and Shift+Tab to move between controls. Enter activates links and buttons. Space also activates buttons. Escape closes dialogs. Sound starts on: an endless, cheerful background tune begins with your first click or key press and keeps playing as you move between rooms, with sparkles for clicks and a fanfare for wins. The speaker in the top bar turns the music and sound effects off or on together, and the game remembers your choice.
 
 ## Island Life
 
@@ -56,9 +66,11 @@ The three supplied images shaped the character art. The two portraits provide th
 | `dist/game.js` | Room navigation, character choices, memory game, bouquet orders, challenges, rewards, and saves |
 | `dist/portrait.js` | Image loading, accessory placement, face gems, postcard frames, and Canvas 2D rendering |
 | `dist/island-life.js` and `dist/island-life.css` | Movement, scene layout, character naming, conversations, inventory, and task progression |
+| `dist/music.js` | Procedural background music loop and sound effects synthesized with the Web Audio API |
 | `dist/runway.js` | Spotlight sequence, replay, input checking, and rehearsal reward |
 | `dist/icons.js` and `dist/assets/` | Interface icons, character portraits, turnaround views, wordmark, and island art |
 | `serve.cjs` | Dependency-free local HTTP server |
+| `wrangler.jsonc` | Cloudflare Workers static-assets configuration |
 
 The player card, studio pose, runway portrait, and postcards share the same drawing code. A saved postcard records the character and outfit, accessory, gem, sticker, and frame selections. The renderer recreates it from those selections for display and PNG export. To add an outfit, supply a portrait with the same framing, extend the wardrobe list and allowed outfit index, and set its normalized hair-clip coordinates in `portrait.js`.
 

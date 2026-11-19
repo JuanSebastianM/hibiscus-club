@@ -17,7 +17,7 @@ function loadGame(){
     doll:raw.doll==='little'?'little':'adult',
     life:loadIslandLife(raw.life),
     looks:{adult:readLook(raw.looks?.adult),little:readLook(raw.looks?.little)},
-    stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound===true,
+    stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound!==false,
     visits:places.filter(p=>Array.isArray(raw.visits)&&raw.visits.includes(p.id)).map(p=>p.id),
     missions:smallInt(raw.missions,Number.MAX_SAFE_INTEGER),
     bouquets:smallInt(raw.bouquets,Number.MAX_SAFE_INTEGER),
@@ -29,7 +29,7 @@ const state=loadGame();
 const main=document.querySelector('#game');
 const help=document.querySelector('#help');
 const announcer=document.querySelector('#announcer');
-let route='',timer,announceTimer,audioCtx,angle=null,round=null,stems=[],gardenNote='',storageFailed=false;
+let route='',timer,announceTimer,angle=null,round=null,stems=[],gardenNote='',storageFailed=false;
 function persist(){
   try{localStorage.setItem(saveKey,JSON.stringify(state));storageFailed=false}
   catch{storageFailed=true;}
@@ -40,17 +40,9 @@ function say(msg){
   announceTimer=setTimeout(()=>announcer.classList.remove('shown'),3200);
 }
 function tone(win=false){
+  // Sparkle blip for ordinary clicks, fanfare with shimmer for wins. Shares music.js's AudioContext.
   if(!state.sound)return;
-  try{
-    audioCtx??=new (window.AudioContext||window.webkitAudioContext)();
-    audioCtx.resume().catch(()=>{});
-    const start=audioCtx.currentTime;
-    (win?[523,659,784]:[659]).forEach((f,i)=>{
-      const o=audioCtx.createOscillator(),v=audioCtx.createGain(),t=start+i*.09;
-      o.type='sine';o.frequency.value=f;v.gain.setValueAtTime(.045,t);v.gain.exponentialRampToValueAtTime(.001,t+.22);
-      o.connect(v);v.connect(audioCtx.destination);o.start(t);o.stop(t+.23);
-    });
-  }catch{}
+  try{HibiscusMusic.effect(win)}catch{}
 }
 function look(){return state.looks[state.doll]}
 function currentShot(){return {...look(),doll:state.doll}}
@@ -192,7 +184,7 @@ function wrapBouquet(){
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button,a');if(!b||b.disabled)return;
   if(!b.classList.contains('sound'))tone();
-  if(b.classList.contains('sound')){state.sound=!state.sound;persist();navBar();tone();return;}
+  if(b.classList.contains('sound')){state.sound=!state.sound;persist();HibiscusMusic.setEnabled(state.sound);navBar();tone();return;}
   const d=b.dataset;
   if(d.pose!==undefined){performPose(Number(d.pose));return;}
   if(route==='life'&&(d.travel!==undefined||d.lifeAction||d.taskStep!==undefined)){handleLifeAction(b);return;}
@@ -226,4 +218,5 @@ document.addEventListener('click',async e=>{
   }
 });
 window.addEventListener('hashchange',()=>{navigate();main.focus({preventScroll:true})});
+HibiscusMusic.setEnabled(state.sound);
 navigate();
