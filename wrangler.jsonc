@@ -1,0 +1,9 @@
+// Cloudflare Workers static assets: no Worker script, just the files in ./dist.
+// Deploy with `npx wrangler deploy` from the repository root.
+{
+  "name": "hibiscus-club",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
