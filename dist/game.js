@@ -17,7 +17,7 @@ function loadGame(){
     doll:raw.doll==='little'?'little':'adult',
     life:loadIslandLife(raw.life),
     looks:{adult:readLook(raw.looks?.adult),little:readLook(raw.looks?.little)},
-    stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound!==false,
+    stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound!==false,sparkle:raw.sparkle!==false,
     visits:places.filter(p=>Array.isArray(raw.visits)&&raw.visits.includes(p.id)).map(p=>p.id),
     missions:smallInt(raw.missions,Number.MAX_SAFE_INTEGER),
     bouquets:smallInt(raw.bouquets,Number.MAX_SAFE_INTEGER),
@@ -41,6 +41,7 @@ function say(msg){
 }
 function tone(win=false){
   // Sparkle blip for ordinary clicks, fanfare with shimmer for wins. Shares music.js's AudioContext.
+  if(win)try{HibiscusFx.confetti()}catch{}
   if(!state.sound)return;
   try{HibiscusMusic.effect(win)}catch{}
 }
@@ -52,6 +53,8 @@ function navBar(){
   document.querySelector('#wallet').innerHTML=`${icon('star',19)} <b>${state.stars}</b> <span>stars</span>`;
   const b=document.querySelector('.sound');b.innerHTML=icon(state.sound?'volume':'mute',18);
   b.title=b.ariaLabel=state.sound?'Turn sound off':'Turn sound on';b.setAttribute('aria-pressed',String(state.sound));
+  const fx=document.querySelector('.sparkle-toggle');fx.innerHTML=icon(state.sparkle?'sparkle':'sparkle-off',18);
+  fx.title=fx.ariaLabel=state.sparkle?'Turn sparkles off':'Turn sparkles on';fx.setAttribute('aria-pressed',String(state.sparkle));
 }
 function dollSwitch(){
   return `<div class="switch" aria-label="Choose character">${Object.entries(dollNames).map(([id,n])=>`<button data-doll="${id}" aria-pressed="${id===state.doll}">${n}</button>`).join('')}</div>`;
@@ -185,6 +188,7 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('button,a');if(!b||b.disabled)return;
   if(!b.classList.contains('sound'))tone();
   if(b.classList.contains('sound')){state.sound=!state.sound;persist();HibiscusMusic.setEnabled(state.sound);navBar();tone();return;}
+  if(b.classList.contains('sparkle-toggle')){state.sparkle=!state.sparkle;persist();try{HibiscusFx.setEnabled(state.sparkle);if(state.sparkle){const r=b.getBoundingClientRect();HibiscusFx.burst(r.left+r.width/2,r.top+r.height/2)}}catch{}navBar();return;}
   const d=b.dataset;
   if(d.pose!==undefined){performPose(Number(d.pose));return;}
   if(route==='life'&&(d.travel!==undefined||d.lifeAction||d.taskStep!==undefined)){handleLifeAction(b);return;}
@@ -219,4 +223,5 @@ document.addEventListener('click',async e=>{
 });
 window.addEventListener('hashchange',()=>{navigate();main.focus({preventScroll:true})});
 HibiscusMusic.setEnabled(state.sound);
+try{HibiscusFx.setEnabled(state.sparkle)}catch{}
 navigate();
