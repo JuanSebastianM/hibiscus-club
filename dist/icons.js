@@ -1,0 +1,24 @@
+const outlines = {
+  map:'<path d="m3 5 6-2 6 3 6-2v15l-6 2-6-3-6 2zM9 3v15m6-12v15"/>',
+  hanger:'<path d="M10 7a2 2 0 1 1 3 1.7c-1 .6-1 1-1 2.3l9 6a1.2 1.2 0 0 1-.7 2H3.7a1.2 1.2 0 0 1-.7-2l9-6"/>',
+  book:'<rect x="5" y="3" width="15" height="18" rx="2"/><path d="M8 3v18M3 7h4m-4 5h4m-4 5h4"/><path d="m14 8 1 2 2.2.3-1.6 1.6.4 2.1-2-1-1.9 1 .3-2.1-1.5-1.6 2.1-.3z"/>',
+  star:'<path d="m12 2 3.1 6.3 7 .9-5.1 5 1.2 7-6.2-3.3-6.2 3.3 1.2-7-5.1-5 7-.9z"/>',
+  volume:'<path d="M3 9h4l5-4v14l-5-4H3zM16 8c3 2 3 6 0 8m3-11c5 4 5 10 0 14"/>',
+  mute:'<path d="M3 9h4l5-4v14l-5-4H3zM16 9l5 6m0-6-5 6"/>',
+  camera:'<path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="3.5"/>',
+  gamepad:'<path d="M7 7h10c4 0 6 12 3 12-1 0-4-3-5-3H9c-1 0-4 3-5 3-3 0-1-12 3-12Z"/><path d="M6 11h5m-2.5-2.5v5m7-2h.1m2-2h.1"/>',
+  flower:'<path d="M12 8C6 0 2 7 7 10c-9 1-6 8 1 6-3 8 5 9 6 2 4 7 10 2 5-3 9-2 5-9-1-6 2-8-6-9-6-1Z"/><circle cx="12.5" cy="12.5" r="2.2"/>',
+  wand:'<path d="m4 20 11-11 2 2L6 22zM13 4l1-3 1 3 3 1-3 1-1 3-1-3-3-1zM20 13l1-2 1 2 2 1-2 1-1 2-1-2-2-1z"/>',
+  pin:'<path d="M19 10c0 5-7 12-7 12S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/>',
+  heart:'<path d="M12 20 3.8 12C-2 5 7 0 12 7c5-7 14-2 8.2 5Z"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9 9c0-4 7-4 6 0-.6 2-3 2-3 5m0 3v.1"/>',
+  music:'<path d="M9 17V5l11-2v12M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/>',
+  check:'<path d="m4 12 5 5L21 5"/>',
+  ticket:'<path d="M3 5h18v5a2 2 0 0 0 0 4v5H3v-5a2 2 0 0 0 0-4zM15 5v3m0 3v2m0 3v3"/>',
+  compass:'<circle cx="12" cy="12" r="9"/><path d="m16 7-2.5 6.5L7 17l3-7z"/>',
+  id:'<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8.5" cy="10" r="2"/><path d="M5 16q3-5 7 0m2-7h4m-4 4h4"/>',
+  sparkle:'<path d="m11 2 2 7 7 2-7 2-2 8-2-8-7-2 7-2z"/>',
+  play:'<path d="m7 4 13 8-13 8z"/>',
+  download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>'
+};
+function icon(name,size=20){return '<svg aria-hidden="true" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+(outlines[name]||'')+'</svg>'}
