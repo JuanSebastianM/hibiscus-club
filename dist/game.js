@@ -1,11 +1,14 @@
 /* Display text comes from i18n.js: `name` getters and dollNames follow the current language. */
+/* Rooms (buildings) on the island map; the walk-in places are `districts` (quests.js), with map pins at `walkPins`. */
 const places = [
-  {id:'wardrobe',icon:'hanger',color:'#e55095',x:24,y:38},
-  {id:'salon',icon:'wand',color:'#a272cb',x:65,y:30},
-  {id:'arcade',icon:'gamepad',color:'#548cd5',x:80,y:58},
-  {id:'garden',icon:'flower',color:'#6aaf81',x:20,y:68},
-  {id:'booth',icon:'camera',color:'#e3924f',x:49,y:81}
+  {id:'wardrobe',icon:'hanger',color:'#e55095',x:25,y:31},
+  {id:'salon',icon:'wand',color:'#a272cb',x:69,y:26},
+  {id:'arcade',icon:'gamepad',color:'#548cd5',x:81,y:54},
+  {id:'garden',icon:'flower',color:'#6aaf81',x:13,y:45},
+  {id:'booth',icon:'camera',color:'#e3924f',x:43,y:70}
 ].map(p=>Object.defineProperty(p,'name',{get(){return t('place.'+p.id)},enumerable:true}));
+const walkPins={boardwalk:{x:63,y:80},market:{x:25,y:65},pavilion:{x:49,y:41}};
+const stampIds=[...districts.map(d=>d.id),...places.map(p=>p.id)];
 const dollNames={get adult(){return t('doll.adult')},get little(){return t('doll.little')}};
 const saveKey='hibiscus-club-v1';
 
@@ -24,7 +27,7 @@ function loadGame(){
     looks:{adult:readLook(raw.looks?.adult,'adult'),little:readLook(raw.looks?.little,'little')},
     stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound!==false,sparkle:raw.sparkle!==false,
     analytics:raw.analytics!==false, // anonymous play counts (analytics.js); the Privacy dialog has the switch
-    visits:places.filter(p=>Array.isArray(raw.visits)&&raw.visits.includes(p.id)).map(p=>p.id),
+    visits:stampIds.filter(id=>Array.isArray(raw.visits)&&raw.visits.includes(id)),
     missions:smallInt(raw.missions,Number.MAX_SAFE_INTEGER),
     bouquets:smallInt(raw.bouquets,Number.MAX_SAFE_INTEGER),
     best:smallInt(raw.best,Number.MAX_SAFE_INTEGER),
@@ -34,8 +37,14 @@ function loadGame(){
     spent:0,
     owned:Shop.readOwned(raw.owned),
     favorites:{adult:readFavorites(raw.favorites?.adult,'adult'),little:readFavorites(raw.favorites?.little,'little')},
-    lang:I18N.SUPPORTED.includes(raw.lang)?raw.lang:null // only set once the player picks a language
+    lang:I18N.SUPPORTED.includes(raw.lang)?raw.lang:null, // only set once the player picks a language
+    /* Island adventure: the first-visit tour ('done' or 'skipped' once over) and the latest day the
+       daily errands were played (so turning the clock back never refills them). */
+    tutorial:['done','skipped'].includes(raw.tutorial)?raw.tutorial:null,
+    dayMax:typeof raw.dayMax==='string'&&DAY_RE.test(raw.dayMax)?raw.dayMax:''
   };
+  // Players who already walked the island before the tour existed don't need it.
+  if(!game.tutorial&&Object.values(game.life).some(p=>p.quests.some(Boolean)||p.topics.some(Boolean)))game.tutorial='done';
   game.spent=Math.min(smallInt(raw.spent,Number.MAX_SAFE_INTEGER),game.stars);
   // Anything already in her saved wardrobe stays hers (saves from before the shop wore everything free).
   for(const doll of ['adult','little'])for(const l of [game.looks[doll],...game.favorites[doll]])
@@ -67,13 +76,15 @@ function tone(win=false){
 function look(){return state.looks[state.doll]}
 function currentShot(){return {...look(),doll:state.doll}}
 function navBar(){
-  const links=[['map','map'],['life','compass'],['wardrobe','hanger'],['scrapbook','book']];
-  document.querySelector('#navigation').innerHTML=links.map(([id,s])=>`<a href="#${id}" ${route===id?'aria-current="page"':''}>${icon(s)}<span>${t('nav.'+id)}</span></a>`).join('');
+  const links=[['map','map'],['wardrobe','hanger'],['scrapbook','book']];
+  const current=isDistrictRoute(route)?'map':route; // walk-in places are part of the island map
+  document.querySelector('#navigation').innerHTML=links.map(([id,s])=>`<a href="#${id}" ${current===id?'aria-current="page"':''}>${icon(s)}<span>${t('nav.'+id)}</span></a>`).join('');
   const wallet=document.querySelector('#wallet'),spend=t('wallet.toSpend',{count:balance()});
   wallet.innerHTML=`${icon('star',19)} <b aria-hidden="true">${I18N.num(balance())}</b> <span class="wallet-unit" aria-hidden="true">${t('wallet.unit',{count:balance()})}</span><span class="sr-only">${spend}</span>`;
   wallet.title=t('wallet.title',{spend,earned:t('wallet.earned',{count:state.stars})});
   const b=document.querySelector('.sound');b.innerHTML=icon(state.sound?'volume':'mute',18);
   b.title=b.ariaLabel=t(state.sound?'sound.off':'sound.on');b.setAttribute('aria-pressed',String(state.sound));
+  document.documentElement.dataset.fx=state.sparkle?'on':'off'; // island-life.css: still markers when off
   const fx=document.querySelector('.sparkle-toggle');fx.innerHTML=icon(state.sparkle?'sparkle':'sparkle-off',18);
   fx.title=fx.ariaLabel=t(state.sparkle?'sparkle.off':'sparkle.on');fx.setAttribute('aria-pressed',String(state.sparkle));
 }
@@ -83,8 +94,10 @@ function dollSwitch(){
 function sectionTitle(title,sub,room=false){
   return `<div class="heading"><div>${room?`<a class="back" href="#map">‹ &nbsp; ${t('common.backToMap')}</a>`:''}<h1>${title}<span class="heading-sparks" aria-hidden="true">✦<small>✧</small></span></h1><p>${sub}</p></div>${room?'':`<button class="guide" data-action="help">${icon('help',17)} ${t('common.howToPlay')}</button>`}</div>`;
 }
+/* The passport doubles as the list of every place on the map, grouped by kind (walk in / room). */
 function passport(){
-  return `<section class="passport"><div class="pass-title"><span class="pass-icon">${icon('book',23)}</span><div><h2>${t('passport.title')}</h2><p>${t('passport.sub')}</p></div><b>${t('common.ratio',{n:state.visits.length,total:5})}</b></div><div class="stamps">${places.map(p=>`<a href="#${p.id}" style="--ink:${p.color}" class="stamp ${state.visits.includes(p.id)?'earned':''}" aria-label="${t(state.visits.includes(p.id)?'passport.collected':'passport.todo',{place:p.name})}"><span>${icon(p.icon,21)}</span>${p.name}</a>`).join('')}</div></section>`;
+  const stamp=(p,walk)=>`<li><a href="#${p.id}" style="--ink:${p.color}" class="stamp ${walk?'stamp-walk':'stamp-room'} ${state.visits.includes(p.id)?'earned':''}" aria-label="${t(state.visits.includes(p.id)?'passport.collected':'passport.todo',{place:p.name})}"><span>${walk?`<img src="assets/scenes/${p.id}.jpg" alt="">`:icon(p.icon,21)}</span>${p.name}</a></li>`;
+  return `<section class="passport"><div class="pass-title"><span class="pass-icon">${icon('book',23)}</span><div><h2>${t('passport.title')}</h2><p>${t('passport.sub')}</p></div><b>${t('common.ratio',{n:state.visits.length,total:stampIds.length})}</b></div><div class="stamp-groups"><div class="stamp-group"><h3>${icon('pin',15)} ${t('map.legendWalk')}</h3><ul class="stamps">${districts.map(d=>stamp(d,true)).join('')}</ul></div><div class="stamp-group"><h3>${icon('map',15)} ${t('map.legendRoom')}</h3><ul class="stamps">${places.map(p=>stamp(p,false)).join('')}</ul></div></div></section>`;
 }
 /* Style challenges: each brief names two things to wear (catalog ids, per doll where they differ).
    Every brief can be met by both dolls with free starter options. */
@@ -114,8 +127,27 @@ function challenge(){
   const link=todo?`<a class="challenge-link" href="#${plan[0]}" data-plan-room="${plan[0]}" data-plan-tab="${plan[1]}">${t('challenge.plan')} <span>✧</span></a>`:route==='booth'?`<p class="challenge-ready">${icon('check',16)} ${t('challenge.ready')}</p>`:`<a class="challenge-link" href="#booth">${t('challenge.takePhoto')} <span>✧</span></a>`;
   return `<aside class="challenge"><div class="eyeline">${icon('ticket',18)} ${t('challenge.eyeline')}</div><h2>${t('brief.'+b.key)}</h2><p>${t('challenge.wear')}</p><ul class="brief-list">${needs.map(([f,v])=>`<li class="${shot[f]===v?'met':''}"><span aria-hidden="true">${shot[f]===v?icon('check',14):'♡'}</span>${escapeText(needName(f,v))}<span class="sr-only">${t(shot[f]===v?'challenge.wearing':'challenge.notYet')}</span></li>`).join('')}</ul>${link}<span class="ticket-star" aria-hidden="true">☆</span></aside>`;
 }
+/* Map pins: rooms are round icon badges, walk-in places are photo bubbles of the scene. On narrow maps
+   only the bubbles and icons show, and a label appears on hover or focus; the pin of the next step always
+   shows its label and a "Next" flag. Every place is also listed, by kind, in the passport below. */
+function mapPins(o){
+  const room=p=>`<a class="pin pin-room" style="--x:${p.x}%;--y:${p.y}%;--ink:${p.color}" href="#${p.id}" aria-label="${escapeText(t('map.pinRoom',{place:p.name}))}"><i>${icon(p.icon,20)}</i><strong>${p.name}</strong></a>`;
+  const walk=d=>{const next=o.at===d.id,at=walkPins[d.id];
+    return `<a class="pin pin-walk ${next?'is-next':''}" style="--x:${at.x}%;--y:${at.y}%;--ink:${d.color}" href="#${d.id}" aria-label="${escapeText(t(next?'map.pinWalkNext':'map.pinWalk',{place:d.name}))}"><i style="background-image:url('assets/scenes/${d.id}.jpg')"></i><strong>${d.name}</strong>${next?`<span class="pin-next" aria-hidden="true">★ ${t('life.markerNext')}</span>`:''}</a>`};
+  return places.map(room).join('')+districts.map(walk).join('');
+}
+function mapQuest(o){
+  const go=o.at?`<a class="primary map-quest-go" href="#${o.at}">${t('quest.go',{place:districtOf(o.at).name})} ›</a>`:'';
+  return `<div class="map-quest"><span class="hud-badge" aria-hidden="true">${o.kind==='rest'?icon('check',16):'★'}</span><div class="hud-text"><span class="hud-label">${t(o.kind==='rest'?'quest.restLabel':'quest.labelFor',{name:playerLabel()})}</span><strong>${escapeText(o.text)}</strong>${o.at?`<span class="hud-where">${icon('pin',13)} ${escapeText(objectiveWhere(o))}</span>`:''}</div>${go}</div>`;
+}
+function playerCard(o){
+  const p=lifePlayer(),where=districts[p.scene],been=state.visits.includes(where.id);
+  const target=o.at||where.id,started=state.visits.some(v=>DISTRICT_IDS.includes(v));
+  return `<section class="player"><header>${icon('id',20)} <h2>${t('card.title')}</h2><span aria-hidden="true">✦</span></header><div class="player-body"><div class="portrait-print"><div class="card-portrait"><canvas id="card-preview" aria-label="${escapeText(t('common.dollIn',{doll:dollNames[state.doll],outfit:itemName(look().outfit)}))}"></canvas></div><span class="tape" aria-hidden="true"></span><img class="flower-sticker" src="assets/flower.svg" alt=""><span class="caption">${escapeText(playerLabel())} <i>♡</i></span></div><div class="card-name"><span>${p.name?escapeText(dollNames[state.doll]):t('card.noName')}</span><button class="name-change" data-life-action="name">${icon('id',16)} ${t(p.name?'life.changeName':'life.nameHer')}</button></div>${dollSwitch()}<p class="card-where">${icon('pin',15)} ${escapeText(been?t('card.where',{name:playerLabel(),place:where.name}):t('card.whereNew',{name:playerLabel()}))}</p><a class="primary wide" href="#${target}">${icon('compass',17)} ${t(started?'card.continue':'card.start')}</a><a class="sub-link" href="#wardrobe">${t('card.dressMe')}</a></div></section>`;
+}
 function mapScreen(){
-  return sectionTitle(t('map.title'),t('map.sub'))+`<div class="map-layout"><div class="map-column"><section class="map-case" aria-label="${t('map.label')}"><div class="map-bar"><span>${icon('compass',16)} ${t('map.explorer')}</span><span aria-hidden="true">✧ &nbsp; ✦ &nbsp; ✧</span></div><div class="map-art">${places.map(p=>`<a class="pin pin-${p.id}" style="--x:${p.x}%;--y:${p.y}%;--ink:${p.color}" href="#${p.id}"><i>${icon(p.icon,20)}</i><strong>${p.name}</strong></a>`).join('')}<span class="compass" role="img" aria-label="${t('map.north')}">N<span>✥</span></span></div></section>${passport()}</div><div class="rail"><section class="player"><header>${icon('id',20)} <h2>${t('card.title')}</h2><span aria-hidden="true">✦</span></header><div class="player-body"><div class="portrait-print"><div class="card-portrait"><canvas id="card-preview" aria-label="${escapeText(t('common.dollIn',{doll:dollNames[state.doll],outfit:itemName(look().outfit)}))}"></canvas></div><span class="tape" aria-hidden="true"></span><img class="flower-sticker" src="assets/flower.svg" alt=""><span class="caption">${escapeText(playerLabel())} <i>♡</i></span></div>${dollSwitch()}<a class="primary wide" href="#life">${icon('compass',17)} ${t('card.explore')}</a><a class="sub-link" href="#wardrobe">${t('card.dressMe')}</a></div></section>${challenge()}</div></div>`;
+  const o=objective();
+  return sectionTitle(t('map.title'),t('map.sub'))+`<div class="map-layout"><div class="map-column"><section class="map-case" aria-label="${t('map.label')}"><div class="map-bar"><span>${icon('compass',16)} ${t('map.explorer')}</span><span class="map-legend" aria-hidden="true"><span class="legend-walk"><i style="background-image:url('assets/scenes/boardwalk.jpg')"></i>${t('map.legendWalk')}</span><span class="legend-room"><i></i>${t('map.legendRoom')}</span></span></div><div class="map-art">${mapPins(o)}<span class="compass" role="img" aria-label="${t('map.north')}">N<span>✥</span></span></div>${mapQuest(o)}</section>${passport()}</div><div class="rail">${playerCard(o)}${challenge()}</div></div>`;
 }
 function group(label,body){return `<section class="option-group"><h3>${label}</h3>${body}</section>`}
 /* `names` is a function so the option labels are read in the current language on every render. */
@@ -162,8 +194,8 @@ function draw(){
   const val=key?focused.dataset[key]:null;
   detachWorld();
   navBar();
-  main.innerHTML=route==='life'?lifeScene():route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():isMakeoverRoute()?makeoverRoom():studio();
-  if(route==='life')attachWorld();
+  main.innerHTML=isDistrictRoute(route)?lifeScene():route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():isMakeoverRoute()?makeoverRoom():studio();
+  if(isDistrictRoute(route))attachWorld();
   if(route==='map')try{HibiscusScenes.mount(main.querySelector('.map-art'),'island')}catch{} // living scene; plain picture if unavailable
   if(isMakeoverRoute())paintStage();
   else{const c=document.querySelector('#preview, #card-preview');
@@ -175,21 +207,28 @@ function draw(){
   }
 }
 function setPageTitle(){
-  document.title=t('meta.title',{page:places.find(p=>p.id===route)?.name||t('page.'+route)});
+  document.title=t('meta.title',{page:places.find(p=>p.id===route)?.name||districtOf(route)?.name||t('page.'+route)});
 }
 function navigate(){
   detachWorld();
   document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
-  const id=location.hash.slice(1),leaving=route;
+  let id=location.hash.slice(1);const leaving=route;
+  // Old links: #life (the former Island Life tab) opens the place where she last was, with no extra history entry.
+  if(id==='life'){id=districts[lifePlayer().scene].id;history.replaceState(null,'','#'+id);}
   const dropped=leaving&&leaving!==id&&dropTrial();
-  route=[...places.map(p=>p.id),'scrapbook','runway','life'].includes(id)?id:'map';
-  document.documentElement.dataset.room=route; // style.css: each room's pastel theme
-  if(route!==leaving)track('room',route);
+  route=[...places.map(p=>p.id),...DISTRICT_IDS,'scrapbook','runway'].includes(id)?id:'map';
+  const walking=isDistrictRoute(route);
+  document.documentElement.dataset.room=walking?'life':route; // style.css: each room's pastel theme; walk-in places share "life"
+  if(route!==leaving){
+    if(!(walking&&isDistrictRoute(leaving)))track('room',walking?'life':route);
+    if(walking)track('district',route);
+  }
   clearTimeout(timer);if(round)round.up=[];resetRunway();
-  if(places.some(p=>p.id===route)&&!state.visits.includes(route)){state.visits.push(route);persist();}
+  if(stampIds.includes(route)&&!state.visits.includes(route)){state.visits.push(route);persist();}
   setPageTitle();
   draw();window.scrollTo(0,0);
   if(dropped)say(t('shop.droppedLeave'));
+  else if(walking&&route!==leaving)sceneSay(t('life.arrive',{place:districtOf(route).name,next:objective().text}));
 }
 function takePhoto(){
   if(state.photos.length>=24){say(t('booth.full'));return;}
@@ -236,7 +275,7 @@ document.addEventListener('click',async e=>{
   if(d.lang){setLanguage(d.lang);return;}
   if(makeoverClick(b,d))return;
   if(d.pose!==undefined){performPose(Number(d.pose));return;}
-  if(route==='life'&&(d.travel!==undefined||d.lifeAction||d.taskStep!==undefined)){handleLifeAction(b);return;}
+  if((d.lifeAction||d.taskStep!==undefined||d.dailyStep!==undefined)&&handleLifeAction(b))return;
   if(d.doll){detachWorld();if(d.doll!==state.doll)track('character',d.doll);state.doll=d.doll;persist();draw();return;}
   if(d.field){const v=['frame','sticker','backdrop'].includes(d.field)?Number(d.value):d.value;state.looks[state.doll]=readLook({...look(),[d.field]:v},state.doll);persist();draw();return;}
   if(d.card!==undefined){flipCard(Number(d.card));return;}
@@ -297,6 +336,8 @@ window.addEventListener('langchange',()=>{
   if(isMakeoverRoute()&&document.querySelector('#stage')){navBar();relocalizeRoom();}
   else draw();
   relocalizeBuyDialog();relocalizeEncounter();
+  if(nameDialog.open)fillNameDialog();
+  if(coach>=0)showCoach();
   const nameInput=document.querySelector('#character-name');
   if(nameInput.validationMessage)nameInput.setCustomValidity(t('name.empty'));
   window.scrollTo(x,y);
@@ -308,4 +349,11 @@ I18N.applyStatic(); // i18n.js picked the language: the saved choice, else the b
 try{HibiscusAnalytics.init(state.analytics,()=>({c:state.doll,l:I18N.lang}))}catch{}
 syncPrivacy();
 navigate();
-track('visit',route);
+track('visit',isDistrictRoute(route)?'life':route);
+/* Daily errands refresh at local midnight: redraw what shows them when the day changes. */
+let shownDay=dayKey();
+setInterval(()=>{
+  const now=dayKey();if(now===shownDay)return;
+  shownDay=now;
+  if(isDistrictRoute(route))refreshQuestUI();else if(route==='map')draw();
+},30000);

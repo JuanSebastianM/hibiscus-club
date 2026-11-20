@@ -16,12 +16,14 @@ const RANGES = {
 const SERIES = { a: '#7a4fb0', b: '#c2387a' }; // lilac, berry: validated as a 2-slot palette on #fffafd
 
 const NAMES = {
-  room: { map: 'Island map', wardrobe: 'Dress-Up Studio', salon: 'Beauty Salon', booth: 'Photo Booth', scrapbook: 'Scrapbook', arcade: 'Star Arcade', garden: 'Flower Garden', runway: 'Island Runway', life: 'Island Life' },
+  room: { map: 'Island map', wardrobe: 'Dress-Up Studio', salon: 'Beauty Salon', booth: 'Photo Booth', scrapbook: 'Scrapbook', arcade: 'Star Arcade', garden: 'Flower Garden', runway: 'Island Runway', life: 'Walk-in places' },
   district: { boardwalk: 'Pearl Boardwalk', market: 'Flower Market', pavilion: 'Starlight Pavilion', studio: 'Pink studio' },
   category: { outfit: 'Outfits', shoes: 'Shoes', jewelry: 'Jewelry', hair: 'Hairstyles', 'hair-color': 'Hair color', makeup: 'Makeup', nails: 'Nails', accessory: 'Hair accessories' },
   game: { memory: 'Memory Match', bouquet: 'Bouquet orders', runway: 'Runway rehearsal' },
   challenge: { picnic: 'Picnic in paradise', disco: 'Disco by the sea', seashell: 'Seashell sweetheart', mall: 'Mall crawl Saturday', rosy: 'Rosy glow-up', midnight: 'Midnight boardwalk', homecoming: 'Island homecoming', bob: 'Bouncy bob bash' },
-  errand: { 'story-1': 'A shell for the show', 'story-2': 'A window-box wish', 'story-3': 'Opening-night lights' },
+  // each character has her own four stories (Grown-up / Little Me), so they are counted by position
+  errand: { 'story-1': 'Story 1', 'story-2': 'Story 2', 'story-3': 'Story 3', 'story-4': 'Story 4' },
+  daily: { deliver: 'Deliveries', find: 'Find hidden things', greet: 'Say hi to everyone', compliment: 'Compliments', tidy: 'Tidy up' },
   device: { phone: 'Phone', tablet: 'Tablet', desktop: 'Desktop', unknown: 'Unknown' },
   lang: { en: 'English', es: 'Spanish' },
   band: { '1-9': '1–9', '10-19': '10–19', '20-plus': '20+' }
@@ -232,7 +234,9 @@ function dashboard(d, rangeKey) {
       ${rankTable('Postcards taken, by scenery', rows('photo', NAMES.district), { head: 'Scenery', empty: 'No postcards yet.' })}
       ${rankTable('Style challenges completed', rows('challenge', NAMES.challenge), { head: 'Brief', empty: 'No challenges completed yet.' })}
       ${small('Scrapbook and favorites', [['Postcards downloaded', sum(ev.postcard)], ['Favorite looks saved', get('favorite', 'saved')], ['Favorite looks worn', get('favorite', 'worn')], ['Surprise me! in the studio', get('surprise', 'wardrobe')], ['Surprise me! in the salon', get('surprise', 'salon')]])}
-      ${small('Island Life', [...rows('district', NAMES.district).filter(r => r[0] !== 'Pink studio').map(([k, v]) => ['Trips to ' + k, v]), ...rows('chat', NAMES.district).filter(r => r[0] !== 'Pink studio').map(([k, v]) => ['Conversations at ' + k, v]), ...rows('errand', NAMES.errand).map(([k, v]) => ['Errand done: ' + k, v])])}
+      ${small('Walk-in places', [...rows('district', NAMES.district).filter(r => r[0] !== 'Pink studio').map(([k, v]) => ['Trips to ' + k, v]), ...rows('chat', NAMES.district).filter(r => r[0] !== 'Pink studio').map(([k, v]) => ['Conversations at ' + k, v]), ...rows('findable', NAMES.district).filter(r => r[0] !== 'Pink studio').map(([k, v]) => ['Treasures found at ' + k, v])])}
+      ${small('Stories and daily errands', [...rows('errand', NAMES.errand).map(([k, v]) => [k + ' finished', v]), ...rows('daily', NAMES.daily).map(([k, v]) => ['Daily errand: ' + k, v])])}
+      ${small('First visit', [['Tour finished', get('tutorial', 'done')], ['Tour skipped', get('tutorial', 'skipped')], ['Name set', get('name', 'yes')], ['Name prompt skipped', get('name', 'no')]])}
       ${small('Settings changed', [['Switched to English', get('lang', 'en')], ['Switched to Spanish', get('lang', 'es')], ['Switched to Grown-up', get('character', 'adult')], ['Switched to Little Me', get('character', 'little')], ['Sound turned off', get('sound', 'off')], ['Sound turned on', get('sound', 'on')], ['Sparkles turned off', get('sparkle', 'off')], ['Sparkles turned on', get('sparkle', 'on')]])}
     </div>
     <footer><p>Times are UTC. Visits are page loads, not people: nothing identifies a player, so one person playing twice counts twice. Players who turned off sharing, or whose browser sends Global Privacy Control or Do Not Track, are not counted. Analytics Engine keeps events for three months.</p></footer>`;

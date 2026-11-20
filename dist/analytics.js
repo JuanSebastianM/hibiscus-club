@@ -18,7 +18,8 @@ const HibiscusAnalytics=(()=>{
       'visit':ROOMS,'room':ROOMS,'district':DISTRICTS,'lang':['en','es'],'character':['adult','little'],
       'makeover':CATEGORIES,'tryon':CATEGORIES,'surprise':['wardrobe','salon'],'favorite':['saved','worn'],
       'purchase':CATEGORIES,'game-start':GAMES,'game-done':GAMES,'chat':DISTRICTS,
-      'errand':['story-1','story-2','story-3'],'photo':['studio',...DISTRICTS],
+      'errand':['story-1','story-2','story-3','story-4'],'photo':['studio',...DISTRICTS],
+      'daily':['deliver','find','greet','compliment','tidy'],'findable':DISTRICTS,'tutorial':['done','skipped'],'name':['yes','no'],
       'challenge':['picnic','disco','seashell','mall','rosy','midnight','homecoming','bob'],
       'postcard':['png'],'sound':['on','off'],'sparkle':['on','off']
     },

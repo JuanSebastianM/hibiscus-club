@@ -1,76 +1,164 @@
-/* Island Life: walkable scene, travel cards, profile, task journal, conversation and name dialogs.
-   Uses the tokens and the room theme from style.css (Island Life = aqua). */
-.life-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,26%);gap:20px;align-items:start}
+/* Walk-in places (#boardwalk, #market, #pavilion): scene, quest HUD, markers, treasures, travel strip,
+   first-visit tour, journal, conversation and name dialogs. Uses the tokens and the "life" room theme
+   (aqua) from style.css; anything about stars and "next step" is butter, as stars are everywhere. */
+.scene-heading{align-items:flex-end}
+.life-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,25%);gap:20px;align-items:start}
 .life-left,.life-right{min-width:0;display:grid;gap:16px}
+.scene-case{display:grid;gap:0}
+
+/* ---------- quest HUD: one line for the next step, where it is, one tap to travel ---------- */
+.hud{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:8px 10px;background:linear-gradient(var(--butter-50),#fffdf3);border:1.5px solid var(--butter-300);border-bottom:0;border-radius:10px 10px 0 0;color:var(--text)}
+.hud-main,.map-quest{display:flex;align-items:center;gap:10px;flex:1 1 320px;min-width:0}
+.hud-badge{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--butter-200);border:2px solid var(--butter-500);color:var(--butter-800);font-size:1.15rem;line-height:1}
+.hud-text{display:grid;min-width:0;flex:1;line-height:1.25}
+.hud-label{font-size:var(--fs-badge);font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:var(--butter-800)}
+.hud-text strong{font-size:var(--fs-md);color:var(--text);overflow-wrap:anywhere}
+.hud-where{display:flex;align-items:center;gap:4px;font-size:var(--fs-sm);color:var(--text-soft)}
+.hud-go,.map-quest-go{flex:none;min-height:40px;padding:6px 14px;font-size:var(--fs-sm)}
+.hud-today{flex:none;display:flex;align-items:center;gap:5px;min-height:36px;padding:4px 11px;border:1.5px solid var(--butter-300);border-radius:18px;background:var(--white);font-size:var(--fs-sm);font-weight:bold;color:var(--butter-800)}
+.hud-today:hover{background:var(--butter-100)}
+
+/* ---------- the scene ---------- */
 #world{position:relative;isolation:isolate;overflow:hidden;aspect-ratio:16/10;background:#d0ecec var(--scene) center/100% 100% no-repeat;cursor:crosshair;user-select:none;touch-action:manipulation;border:1px solid var(--a300);contain:layout paint}
 #world:focus-visible{outline-offset:-4px}
-.world-status{display:flex;align-items:center;gap:6px;min-height:32px;padding:5px 10px;font-size:var(--fs-sm);color:var(--a800);font-weight:bold}
 .walker{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none}
 .walker.walking{will-change:transform}
 .walker-shadow{position:absolute;left:0;bottom:0;width:calc(var(--size)*.28);height:calc(var(--size)*.045);border-radius:50%;background:#402d48;opacity:.29;transform:translate(-50%,10%);filter:blur(2px)}
 .walker-body{position:absolute;left:0;bottom:0;height:var(--size);aspect-ratio:600/970;transform:translate(-50%,2.1%) scaleX(var(--facing,1));transform-origin:50% 100%}
-.walker-body canvas{transform-origin:50% 100%;transition:transform .18s ease-out}
-/* no stride frame: a step-paced bounce (up on each step, settle at contact), a small side sway and a
-   forward lean toward the walking direction (--lean = -1 left, 1 right) carry the walk */
-.walker.walking .walker-body canvas{transform:rotate(calc(var(--lean,1)*2.2deg));animation:walker-step .52s cubic-bezier(.45,0,.55,1) infinite}
-.walker.walking .walker-shadow{animation:walker-shadow .52s cubic-bezier(.45,0,.55,1) infinite}
-@keyframes walker-step{
-  0%,50%,100%{transform:translate(0,0) rotate(calc(var(--lean,1)*2.2deg)) scaleY(.985)}
-  25%{transform:translate(calc(var(--lean,1)*.6%),-2.4%) rotate(calc(var(--lean,1)*2.2deg + .9deg)) scaleY(1.01)}
-  75%{transform:translate(calc(var(--lean,1)*.6%),-2.4%) rotate(calc(var(--lean,1)*2.2deg - .9deg)) scaleY(1.01)}}
-@keyframes walker-shadow{0%,50%,100%{transform:translate(-50%,10%) scaleX(1)}25%,75%{transform:translate(-50%,10%) scaleX(.9);opacity:.22}}
-@media(prefers-reduced-motion:reduce){.walker.walking .walker-body canvas,.walker.walking .walker-shadow{animation:none}.walker-body canvas{transition:none}}
+/* A calm glide: she moves at a constant speed (island-life.js) with only a slight sway from foot to
+   foot around her feet and a hint of lean; nothing lifts her off the ground. */
+.walker.walking .walker-body canvas{animation:walker-sway .9s ease-in-out infinite alternate}
+@keyframes walker-sway{from{transform:rotate(calc(var(--lean,1)*.8deg - .7deg))}to{transform:rotate(calc(var(--lean,1)*.8deg + .7deg))}}
+.walker-body canvas{transform-origin:50% 100%}
+@media(prefers-reduced-motion:reduce){.walker.walking .walker-body canvas{animation:none}}
 .walker-body img,.walker-body canvas{display:block;width:100%;height:100%;object-fit:contain}
-.walker-body [hidden]{display:none}
 /* name tags floating over the scene */
-.walker-name,.world-person span,.world-object{border:1.5px solid var(--a500);background:#fffffff2;box-shadow:0 2px 3px #3d234038;color:var(--text);border-radius:18px;font:bold var(--fs-sm)/1.2 "Trebuchet MS",sans-serif;white-space:nowrap}
+.walker-name,.world-person .tag,.world-object .tag{border:1.5px solid var(--a500);background:#fffffff2;box-shadow:0 2px 3px #3d234038;color:var(--text);border-radius:18px;font:bold var(--fs-sm)/1.2 "Trebuchet MS",sans-serif;white-space:nowrap}
 .walker-name{position:absolute;bottom:calc(var(--size) + 3px);left:0;transform:translateX(-50%);padding:3px 10px;max-width:130px;overflow:hidden;text-overflow:ellipsis;border-color:var(--pink-300);background:var(--pink-50);color:var(--pink-800)}
 .world-person{position:absolute;padding:0;width:auto;height:27%;aspect-ratio:176/432;transform:translate(-50%,-100%);color:var(--a800)}
 .world-person img{height:100%;width:100%;object-fit:contain;display:block;filter:drop-shadow(1px 2px 1px #48223f45)}
-.world-person span,.world-object{display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 10px}
-.world-person span{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:3px;color:var(--a800)}
-.world-person:hover span,.world-object:hover{background:var(--a100)}
-.world-object{position:absolute;z-index:96;transform:translate(-50%,-100%);min-height:32px;color:var(--a800)}
-.world-object:after{content:"";width:8px;height:8px;background:#fff;position:absolute;left:calc(50% - 4px);bottom:-6px;transform:rotate(45deg);border-right:1.5px solid var(--a500);border-bottom:1.5px solid var(--a500)}
+.world-person .tag,.world-object .tag{display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 10px;color:var(--a800)}
+.world-person .tag{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:3px}
+.world-person:hover .tag,.world-object:hover .tag{background:var(--a100)}
+.world-object{position:absolute;z-index:96;transform:translate(-50%,-100%);padding:0;min-height:32px}
+.world-object .tag{position:relative;min-height:32px}
+.tag-text{display:inline}
+.world-object .tag:after{content:"";width:8px;height:8px;background:#fff;position:absolute;left:calc(50% - 4px);bottom:-6px;transform:rotate(45deg);border-right:1.5px solid var(--a500);border-bottom:1.5px solid var(--a500)}
 .destination-ring{position:absolute;width:26px;height:11px;border:2px solid white;border-radius:50%;box-shadow:0 0 0 2px var(--a700);background:#7fd5cb80;transform:translate(-50%,-50%);pointer-events:none}
-/* side cards: neutral paper, aqua header text; the journal gets a notebook header band */
-.destinations,.life-profile,.journal{background:var(--paper);border:1.5px solid var(--a300);border-radius:14px;box-shadow:0 4px 0 var(--a200),0 8px 18px #3d234012;padding:16px}
-.destinations h2,.life-profile h2,.journal h2{font:bold var(--fs-lg)/1.22 "Trebuchet MS",sans-serif;color:var(--a800)}.destinations h2{margin:0 0 10px}
-.travel-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.travel-cards button{position:relative;display:grid;grid-template-columns:58px 1fr;align-items:center;gap:9px;min-height:54px;text-align:left;overflow:hidden;border:1.5px solid var(--a200);background:var(--white);border-radius:10px;padding:4px 8px 4px 4px;font-size:var(--fs-sm);font-weight:bold;line-height:1.2;color:var(--text-soft)}
-.travel-cards button:hover{border-color:var(--a500);color:var(--a800)}
-.travel-cards img{display:block;width:58px;height:44px;object-fit:cover;border-radius:6px}
-.travel-cards button[aria-pressed=true]{border-color:var(--a700);background:var(--a100);box-shadow:inset 0 0 0 1.5px var(--a700);color:var(--a800)}
-.travel-cards button[aria-pressed=true]::after{content:'✓';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--a700);color:#fff;font-size:12px;line-height:20px;text-align:center;box-shadow:0 0 0 2px #fff}
-.profile-title,.journal-head,.inventory strong,.encounter-head,.responses button,.scene-photo{display:flex;align-items:center;gap:7px}
-.profile-title{margin-bottom:12px;color:var(--a800)}.profile-title h2{overflow-wrap:anywhere}
-.profile-actions{display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px 10px}.profile-actions .sub-link{margin:10px 0 0;font-size:var(--fs-sm)}
-.journal{padding:0;overflow:hidden}
+/* ---------- objective markers: a glyph and a word over the thing to tap, bouncing unless motion is off ---------- */
+.is-next .tag{border:2.5px solid var(--butter-700);background:var(--butter-100);color:var(--butter-800);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--butter-500)}
+.is-task .tag{border-color:var(--a700);border-style:dashed}
+.marker{position:absolute;left:50%;bottom:calc(100% + 32px);display:flex;flex-direction:column;align-items:center;gap:1px;transform:translateX(-50%);pointer-events:none;z-index:2}
+.world-object .marker{bottom:calc(100% + 8px)}
+.marker b{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--butter-200);border:2.5px solid var(--butter-700);color:var(--butter-800);font:bold 1.2rem/1 "Trebuchet MS",sans-serif;box-shadow:0 2px 0 var(--butter-700),0 0 14px #fff6}
+.marker em{font:bold normal var(--fs-badge)/1.1 "Trebuchet MS",sans-serif;padding:1px 7px;border-radius:9px;background:var(--butter-800);color:#fff;white-space:nowrap}
+.marker-task b{width:24px;height:24px;font-size:.95rem;background:var(--white);border-color:var(--a700);color:var(--a800);box-shadow:0 2px 0 var(--a700)}
+.marker-task em{background:var(--a800)}
+.marker-next{animation:marker-bob 1s ease-in-out infinite alternate}
+@keyframes marker-bob{from{transform:translate(-50%,0)}to{transform:translate(-50%,-7px)}}
+/* treasures (1 star each) and things a "find" errand hides: small glowing buttons on the ground */
+.tokens{position:absolute;inset:0;pointer-events:none;z-index:95}
+.token{position:absolute;z-index:var(--z);width:38px;height:38px;padding:0;transform:translate(-50%,-80%);display:grid;place-items:center;pointer-events:auto;border-radius:50%}
+.token span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle,#fff 0 30%,var(--butter-200) 62%,#ffe79a00 100%);color:var(--butter-800);box-shadow:0 0 10px 3px #fff9;border:1.5px solid var(--butter-500)}
+.token span svg{fill:var(--butter-300)}
+.find-token span{background:radial-gradient(circle,#fff 0 35%,var(--a100) 70%);color:var(--a800);border:2px dashed var(--a700)}
+.find-token span svg{fill:none}
+.sparkle-token span{animation:twinkle 1.6s ease-in-out infinite alternate}
+@keyframes twinkle{from{transform:scale(.9);box-shadow:0 0 6px 2px #fff8}to{transform:scale(1.06);box-shadow:0 0 14px 5px #fffc}}
+.token:hover span,.token:focus-visible span{transform:scale(1.15)}
+/* no motion (system setting or the sparkle button off): still markers with a ring, no bounce or twinkle */
+@media(prefers-reduced-motion:reduce){.marker-next,.sparkle-token span,.pin-next{animation:none}}
+[data-fx=off] .marker-next,[data-fx=off] .sparkle-token span,[data-fx=off] .pin-next{animation:none}
+
+/* ---------- first-visit tour ---------- */
+#coach:empty{display:none}
+.coach-card{position:relative;margin:10px 0 2px;padding:12px 14px;border:2px solid var(--butter-500);border-radius:12px;background:var(--butter-50);box-shadow:0 3px 0 var(--butter-300)}
+.coach-card::before{content:'';position:absolute;top:-8px;left:28px;width:12px;height:12px;background:var(--butter-50);border-left:2px solid var(--butter-500);border-top:2px solid var(--butter-500);transform:rotate(45deg)}
+.coach-step{font-size:var(--fs-badge);font-weight:bold;letter-spacing:.05em;color:var(--butter-800);text-transform:uppercase}
+.coach-card p{margin:3px 0 10px;font-size:var(--fs-md);color:var(--text)}
+.coach-actions{display:flex;flex-wrap:wrap;gap:8px}.coach-actions .primary{min-height:40px;padding:6px 16px;font-size:var(--fs-sm)}
+.coach-actions button:not(.primary){min-height:40px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--butter-300);background:var(--white);color:var(--butter-800);font-weight:bold;font-size:var(--fs-sm)}
+/* wider screens: the tip floats over the lower left of the scene, so it is seen without scrolling */
+#coach:empty,.coach-slot:empty{display:none}
+.coach-slot{position:absolute;left:12px;top:12px;z-index:150;max-width:min(400px,55%);cursor:auto}
+.coach-slot .coach-card{margin:0;box-shadow:0 4px 0 var(--butter-300),0 10px 24px #3d234040}.coach-slot .coach-card::before{display:none}
+[data-tour="2"] .hud{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--butter-500);position:relative;z-index:1}
+
+/* ---------- travel strip: the map and the three places, one tap each ---------- */
+.travel-strip{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 2px}
+.travel-strip a{position:relative;display:flex;align-items:center;gap:7px;min-height:44px;padding:4px 12px 4px 4px;border:1.5px solid var(--a200);border-radius:12px;background:var(--white);font-size:var(--fs-sm);font-weight:bold;color:var(--text-soft);line-height:1.15}
+.travel-strip a:hover{border-color:var(--a500);color:var(--a800)}
+.travel-strip img{width:44px;height:32px;object-fit:cover;border-radius:7px;flex:none}
+.travel-strip .travel-map{padding:4px 12px;background:var(--a100);border-color:var(--a300);color:var(--a800)}
+.travel-strip a[aria-current]{border-color:var(--a700);background:var(--a100);color:var(--a800);box-shadow:inset 0 0 0 1.5px var(--a700)}
+.travel-strip a[aria-current]::after{content:'✓';position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:var(--a700);color:#fff;font-size:12px;line-height:20px;text-align:center;box-shadow:0 0 0 2px #fff}
+.chip-next{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--butter-200);border:1.5px solid var(--butter-700);color:var(--butter-800);font-size:.8125rem}
+
+/* ---------- name badge (scene header) and name dialog ---------- */
+.name-badge{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;padding:6px 6px 6px 14px;border:1.5px solid var(--pink-300);border-radius:16px;background:var(--pink-50);box-shadow:0 3px 0 var(--pink-200)}
+.name-badge-text{display:grid;line-height:1.15}.name-badge-text small{font-size:var(--fs-badge);color:var(--pink-700);font-weight:bold}.name-badge-text b{font:italic bold var(--fs-xl) Georgia,serif;color:var(--pink-800);overflow-wrap:anywhere}
+.name-change{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:11px;border:1.5px solid var(--pink-300);background:var(--white);color:var(--pink-800);font-weight:bold;font-size:var(--fs-sm)}
+.name-change:hover{background:var(--pink-100)}
+.name-ideas-label{margin:14px 0 6px!important;font-weight:bold;font-size:var(--fs-sm);color:var(--a800)}
+#name-dialog #name-why{margin:8px 0 0;color:var(--text-soft)}
+.name-ideas{display:flex;flex-wrap:wrap;gap:8px}
+.name-ideas button{min-height:44px;min-width:72px;padding:6px 14px;border-radius:22px;border:1.5px solid var(--a300);background:var(--white);font-weight:bold;font-size:var(--fs-md);color:var(--a800)}
+.name-ideas button:hover{background:var(--a50);border-color:var(--a500)}
+.name-ideas button[aria-pressed=true]{background:var(--a100);border-color:var(--a700)}
+
+/* ---------- journal ---------- */
+.journal,.life-profile{background:var(--paper);border:1.5px solid var(--a300);border-radius:14px;box-shadow:0 4px 0 var(--a200),0 8px 18px #3d234012}
+.journal{padding:0;overflow:hidden;outline:none}
+.journal:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.journal h2{font:bold var(--fs-lg)/1.22 "Trebuchet MS",sans-serif;color:var(--a800)}
+.journal-head,.inventory strong,.encounter-head,.responses button,.responses a{display:flex;align-items:center;gap:7px}
 .journal-head{padding:12px 14px;background:linear-gradient(var(--a100),var(--a200));border-bottom:1.5px solid var(--a300);color:var(--a800)}
-.journal-head b{margin-left:auto;color:var(--a800);font-size:var(--fs-xs);background:var(--white);border:1px solid var(--a300);border-radius:16px;padding:2px 10px;white-space:nowrap}
-.story-list{list-style:none;padding:0 14px;margin:0;background:repeating-linear-gradient(transparent 0 27px,var(--a50) 27px 28px)}
-.story-list li{display:flex;align-items:flex-start;gap:10px;padding:12px 0}.story-list li+li{border-top:1.5px dashed var(--a200)}
+.journal-sub{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0;padding:10px 14px 2px;font-size:var(--fs-sm);letter-spacing:.04em;color:var(--a800);text-transform:uppercase}
+.journal-sub b{font-size:var(--fs-badge);background:var(--white);border:1px solid var(--a300);border-radius:14px;padding:1px 9px;white-space:nowrap}
+.story-list{list-style:none;padding:0 14px;margin:0}
+.story-list li{display:flex;align-items:flex-start;gap:10px;padding:10px 0}.story-list li+li{border-top:1.5px dashed var(--a200)}
+.story-list li>div{flex:1;min-width:0}
 .story-list strong{display:block;font-size:var(--fs-md);color:var(--text)}.story-list p{font-size:var(--fs-sm);color:var(--text-soft);line-height:1.4;margin-top:2px}
+.story-reward{flex:none;font-size:var(--fs-badge);font-weight:bold;color:var(--butter-800);background:var(--butter-100);border:1px solid var(--butter-300);border-radius:10px;padding:1px 7px;margin-top:2px}.story-reward:empty{display:none}
 .story-seal{margin-top:1px;border-radius:50%;background:#f6f1f6;border:1.5px solid #cdbccd;display:grid;place-items:center;width:28px;height:28px;flex:none;color:var(--text-muted)}
-.active .story-seal{background:var(--butter-100);color:var(--butter-800);border-color:var(--butter-500)}
+.active .story-seal,.ready .story-seal{background:var(--butter-100);color:var(--butter-800);border-color:var(--butter-500)}
+.active strong::after{content:' ★';color:var(--butter-700)}
 .finished .story-seal{background:var(--mint-100);border-color:var(--mint-500);color:var(--mint-700)}
 .finished strong{text-decoration:line-through;text-decoration-color:var(--mint-500);text-decoration-thickness:2px}
+.waiting{opacity:.78}
+.tomorrow,.sparkle-count{margin:0 14px;padding:8px 10px;border-radius:10px;font-size:var(--fs-sm)}
+.tomorrow{display:flex;gap:6px;align-items:center;background:var(--mint-50);border:1.5px solid var(--mint-300);color:var(--mint-800);font-weight:bold}
+.sparkle-count{margin-top:6px;margin-bottom:6px;color:var(--butter-800);background:var(--butter-50)}
 .inventory{display:grid;gap:4px;border-top:1.5px solid var(--a200);padding:12px 14px;background:var(--a50);font-size:var(--fs-sm)}.inventory strong{color:var(--a800)}.inventory span{color:var(--text-soft)}
-.scene-photo{justify-content:center;border-radius:11px;min-height:44px;font-size:var(--fs-md)!important;color:var(--a800)!important;border-color:var(--a300)!important}
+.life-profile{padding:14px;display:grid;gap:8px}
+.profile-actions{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 10px}.profile-actions .sub-link{margin:0;display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-sm)}
+
+/* ---------- conversation ---------- */
 #encounter,#name-dialog{width:min(460px,92vw);padding:0 20px 20px}
 #encounter::before,#name-dialog::before{margin:0 -20px 18px}
 .encounter-head{gap:13px;color:var(--a800)}.encounter-head h2{font-size:var(--fs-2xl)}.encounter-head span{font-size:var(--fs-sm);color:var(--text-soft)}
+.object-badge{display:grid;place-items:center;width:56px;height:56px;border-radius:14px;background:var(--a100);border:1.5px solid var(--a300);flex:none}
 .resident-photo{width:64px;height:68px;flex:none;overflow:hidden;background:linear-gradient(var(--a100),var(--b200));border-radius:12px;border:1.5px solid var(--a300);display:flex;justify-content:center;align-items:flex-start}.resident-photo img{height:235%;width:auto;margin-top:2px}
 .speech{padding:14px 15px;border:1.5px solid var(--a200);border-radius:4px 14px 14px;background:var(--a50);line-height:1.55;font-size:var(--fs-md)}
+#encounter .speech{margin:14px 0 12px}
+.next-up{margin:0 0 12px;padding:10px 12px;border:1.5px solid var(--butter-300);border-radius:12px;background:var(--butter-50);font-size:var(--fs-md)}
+.next-up p{margin:0}.next-up b{color:var(--butter-800)}
+.next-done{display:flex;align-items:center;gap:6px;font-weight:bold;color:var(--mint-800);margin-bottom:4px!important}
 .responses{display:grid;gap:7px}
-.responses button{min-height:44px;border-radius:10px;border:1.5px solid var(--a200);background:var(--white);padding:8px 12px;text-align:left;font-size:var(--fs-md);color:var(--text);line-height:1.3}
-.responses button:first-child{background:var(--a100);border-color:var(--a500);color:var(--a800);font-weight:bold}
-.responses button:hover{background:var(--a50);border-color:var(--a500)}
+.responses button,.responses a{min-height:44px;border-radius:10px;border:1.5px solid var(--a200);background:var(--white);padding:8px 12px;text-align:left;font-size:var(--fs-md);color:var(--text);line-height:1.3}
+.responses .is-story{background:var(--butter-100);border-color:var(--butter-500);color:var(--butter-800);font-weight:bold}
+.responses .is-daily{background:var(--a100);border-color:var(--a500);color:var(--a800);font-weight:bold}
+.responses a.primary{justify-content:center;color:#fff;border-color:var(--primary-edge);background:var(--primary-mid) linear-gradient(var(--primary-top),var(--primary-bottom))}
+.responses button:hover{border-color:var(--a500)}
 .responses button:last-child{color:var(--text-soft)}
-#name-form{display:grid;gap:10px;margin-top:14px}#name-form label{font-size:var(--fs-sm);font-weight:bold;color:var(--a800)}
+#name-form{display:grid;gap:8px;margin-top:16px}#name-form label{font-size:var(--fs-sm);font-weight:bold;color:var(--a800)}
 #character-name{font:inherit;font-size:var(--fs-md);min-height:44px;border:1.5px solid var(--a300);border-radius:9px;padding:8px 11px;color:var(--text);background:var(--white);width:100%}
 #character-name:focus-visible{outline-offset:1px}
-@media(max-width:1000px){.life-layout{gap:12px;grid-template-columns:minmax(0,1fr) 240px}.travel-cards button{display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:4px;text-align:center}.travel-cards img{width:100%;height:42px}.travel-cards span{padding:2px 0 4px}}
-@media(max-width:760px){.life-layout{grid-template-columns:1fr}.life-right{grid-template-columns:1fr 1.15fr;align-items:start}.life-right .scene-photo{grid-column:1}.life-right .journal{grid-column:2;grid-row:1 / 3}.bar-inner{gap:7px}.life-left,.life-right{gap:12px}.travel-cards button{font-size:var(--fs-xs)}.world-person span,.world-object,.walker-name{font-size:var(--fs-badge)}}
-@media(max-width:700px){.bar-inner{gap:0}.bar-inner nav a{gap:3px;padding:6px 3px}.bar-inner nav svg{width:15px}}
-@media(max-width:480px){.life-right{grid-template-columns:1fr}.life-right .journal,.life-right .scene-photo{grid-column:auto;grid-row:auto}#world{aspect-ratio:1.47}.world-object{min-height:26px}.world-person span,.world-object{padding:3px 7px}.destinations,.life-profile{padding:13px}.travel-cards{gap:6px}.walker-name{max-width:96px}.bar-inner nav svg{display:none}}
+
+@media(max-width:1000px){.life-layout{grid-template-columns:1fr}.life-right{grid-template-columns:1.3fr 1fr;align-items:start}}
+@media(max-width:760px){.life-right{grid-template-columns:1fr}.world-person .tag,.world-object .tag,.walker-name{font-size:var(--fs-badge)}.scene-heading{flex-wrap:wrap;align-items:flex-start}.name-badge{width:100%;justify-content:space-between}}
+@media(max-width:480px){#world{aspect-ratio:1.47}.world-object .tag-text{display:none}.world-object .tag{width:32px;height:32px;padding:0!important;border-radius:50%}.marker-task em{display:none}.world-object .tag{min-height:26px}.world-object{min-height:26px}.world-person .tag,.world-object .tag{padding:2px 7px}.walker-name{max-width:96px}
+  .hud{padding:7px 8px}.hud-badge{width:28px;height:28px;font-size:1rem}.hud-text strong{font-size:var(--fs-sm)}.hud-where{font-size:var(--fs-xs)}.hud-go{flex:1 1 100%;order:3}.hud-main{flex-wrap:wrap}
+  .marker{bottom:calc(100% + 24px)}.marker b{width:26px;height:26px;font-size:1rem}.marker em{padding:0 5px}.marker-task b{width:20px;height:20px}
+  .travel-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.travel-strip a{font-size:var(--fs-xs);padding-right:6px}.travel-strip img{width:36px;height:28px}
+  .name-badge-text b{font-size:var(--fs-lg)}.name-change{min-height:44px}}

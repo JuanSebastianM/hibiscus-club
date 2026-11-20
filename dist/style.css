@@ -82,11 +82,26 @@ h1{font:italic bold var(--fs-display)/1.04 Georgia,"Times New Roman",serif;lette
 /* the island map case is the ocean: always aqua */
 [data-room=map] .map-case{--a100:var(--aqua-100);--a200:var(--aqua-200);--a300:var(--aqua-300);--a700:var(--aqua-700);--a800:var(--aqua-800)}
 .map-art{position:relative;isolation:isolate;aspect-ratio:1.71;background:#6bd7e1 url(assets/island.jpg) center/100% 100% no-repeat;border:1px solid var(--a300);border-radius:0 0 10px 10px;overflow:hidden}
-.pin{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);display:flex;align-items:center;background:linear-gradient(#fff,#fdf8ff);border:2px solid white;outline:2px solid var(--ink);box-shadow:1px 3px 0 color-mix(in srgb,var(--ink),#3d2340 25%),0 4px 8px #30313c52;border-radius:30px;color:var(--text);min-height:38px;padding:1px 12px 1px 3px;gap:6px;white-space:nowrap;transition:transform .16s ease}
-.pin::after{content:'';position:absolute;bottom:-7px;left:calc(50% - 5px);width:9px;height:9px;transform:rotate(45deg);background:#fdf8ff;box-shadow:2px 2px 0 var(--ink);z-index:-1}
-.pin i{width:30px;height:30px;flex:none;display:grid;place-items:center;background:color-mix(in srgb,var(--ink),#000 24%);color:#fff;border:1px solid color-mix(in srgb,var(--ink),white 20%);border-radius:50%;box-shadow:inset 0 2px 0 #ffffff4d}
-.pin strong{font-size:clamp(.875rem,1.05vw,1.0625rem);line-height:1.1}.pin:hover,.pin:focus-visible{transform:translate(-50%,-58%) scale(1.06);z-index:2}
-.compass{position:absolute;margin:0;right:10px;bottom:8px;display:grid;place-items:center;padding:3px 6px 4px;border-radius:14px;background:#154d68b3;font:bold 13px Georgia;color:#fff;text-shadow:0 1px 2px #0b2c3c}.compass span{font:36px/.95 Georgia}
+/* Map pins. Rooms: a round icon badge. Walk-in places: a photo bubble of the scene on a pointed tail.
+   The label sits under the badge; on narrow maps it shows on hover or focus, and always for the next step. */
+.pin{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text);transition:transform .16s ease;z-index:1;border-radius:14px}
+.pin i{flex:none;display:grid;place-items:center;border-radius:50%}
+.pin-room i{width:38px;height:38px;background:color-mix(in srgb,var(--ink),#000 24%);color:#fff;border:2.5px solid #fff;box-shadow:0 0 0 2px var(--ink),0 3px 6px #30313c66,inset 0 2px 0 #ffffff4d}
+.pin-walk i{position:relative;width:54px;height:54px;background:#fff center/cover no-repeat;border:3px solid #fff;box-shadow:0 0 0 2.5px var(--ink),0 4px 8px #30313c70}
+.pin-walk i::after{content:'';position:absolute;left:calc(50% - 7px);bottom:-11px;width:14px;height:14px;background:#fff;transform:rotate(45deg);box-shadow:2.5px 2.5px 0 var(--ink);z-index:-1}
+.pin strong{display:block;max-width:150px;padding:2px 9px;border-radius:12px;background:#fffffff2;border:1.5px solid var(--ink);box-shadow:0 2px 4px #30313c40;font-size:var(--fs-badge);line-height:1.15;text-align:center;white-space:nowrap}
+.pin-walk strong{margin-top:7px}
+.pin:hover,.pin:focus-visible{transform:translate(-50%,-50%) scale(1.07);z-index:3}
+.pin-next{position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);padding:2px 8px;border-radius:10px;background:var(--butter-200);border:2px solid var(--butter-700);color:var(--butter-800);font-size:var(--fs-badge);font-weight:bold;white-space:nowrap;animation:pin-bob 1s ease-in-out infinite alternate}
+@keyframes pin-bob{to{transform:translate(-50%,-6px)}}
+.pin.is-next{z-index:2}.pin.is-next i{box-shadow:0 0 0 3px var(--butter-700),0 0 0 6px #fff,0 4px 10px #30313c70}
+.map-legend{display:flex;gap:12px;font-size:var(--fs-badge);letter-spacing:0}.map-legend>span{display:flex;align-items:center;gap:5px}
+.map-legend i{display:inline-block;width:14px;height:14px;border-radius:50%}
+.legend-walk i{width:16px;height:16px;background:var(--sky-300) center/cover;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--aqua-700)}
+.legend-room i{width:12px;height:12px;background:var(--aqua-700);border:2px solid #fff;box-shadow:0 0 0 1.5px var(--aqua-700)}
+/* "Next step" tracker under the map */
+.map-quest{flex:none;padding:9px 12px;margin-top:5px;border:1.5px solid var(--butter-300);border-radius:10px;background:linear-gradient(var(--butter-50),#fffdf3);flex-wrap:wrap}
+.compass{position:absolute;z-index:0;margin:0;right:10px;bottom:8px;display:grid;place-items:center;padding:3px 6px 4px;border-radius:14px;background:#154d68b3;font:bold 13px Georgia;color:#fff;text-shadow:0 1px 2px #0b2c3c}.compass span{font:36px/.95 Georgia}
 
 /* Player card (map): signature pink */
 .player{overflow:hidden;--a100:var(--pink-100);--a200:var(--pink-200);--a300:var(--pink-300);--a700:var(--pink-700);--a800:var(--pink-800);border-color:var(--pink-300)}
@@ -107,7 +122,10 @@ h1{font:italic bold var(--fs-display)/1.04 Georgia,"Times New Roman",serif;lette
 /* Primary button: the signature pink in every room */
 .primary{justify-content:center;gap:8px;min-height:44px;background:var(--primary-mid) linear-gradient(var(--primary-top),var(--primary-bottom));border:1px solid var(--primary-edge);box-shadow:inset 0 1px 0 #ffc6e1,0 3px 0 var(--primary-edge);color:white;text-shadow:0 1px 1px #8a1f50;border-radius:11px;padding:9px 18px;font-size:var(--fs-md);font-weight:bold;line-height:1.25;text-align:center}
 .primary:hover{filter:brightness(1.05)}.primary:disabled{filter:saturate(.45);box-shadow:inset 0 1px 0 #ffc6e1;opacity:.6}
-.wide{width:100%}.player .primary{margin-top:12px}
+.wide{width:100%}.player .primary{margin-top:10px}
+.card-name{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 8px;margin:0 0 10px}
+.card-name>span{font-size:var(--fs-sm);font-weight:bold;color:var(--pink-700)}
+.card-where{display:flex;align-items:flex-start;gap:6px;margin:10px 0 0;font-size:var(--fs-sm);color:var(--text-soft)}.card-where svg{flex:none;margin-top:2px;color:var(--pink-700)}
 
 /* Style challenge: always a butter-yellow ticket (stars are butter everywhere) */
 .challenge{position:relative;overflow:hidden;border:1.5px solid var(--butter-300);background:radial-gradient(at 90% 4%,#fffdf3 0,transparent 54%),var(--butter-50);border-radius:14px;padding:0 17px 16px;box-shadow:0 4px 0 var(--butter-200),0 8px 18px #7a560a14}
@@ -126,9 +144,13 @@ h1{font:italic bold var(--fs-display)/1.04 Georgia,"Times New Roman",serif;lette
 .pass-title{gap:10px}.pass-icon{padding:7px;border:1px solid var(--sky-300);background:var(--white);border-radius:9px;color:var(--sky-700);display:grid}
 .pass-title h2,.panel h3{font-size:var(--fs-lg)}.pass-title h2{color:var(--sky-800)}.pass-title p{color:var(--sky-800);font-size:var(--fs-xs)}
 .pass-title b{margin-left:auto;border-radius:18px;padding:3px 11px;background:var(--white);border:1px solid var(--sky-300);font-size:var(--fs-xs);color:var(--sky-800);white-space:nowrap}
-.stamps{display:flex;margin-top:4px;padding-top:12px;justify-content:space-around;gap:5px}
+.stamp-groups{display:grid;grid-template-columns:3fr 5fr;gap:14px;margin-top:4px;padding-top:10px}
+.stamp-group h3{display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--sky-800);margin:0 0 6px}
+.stamps{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:5px;list-style:none;margin:0;padding:0}
+.stamp-group:first-child .stamps{--n:3}
 .stamp{display:grid;justify-items:center;align-content:start;gap:5px;font-size:var(--fs-xs);font-weight:bold;text-align:center;color:var(--text-muted);line-height:1.2;padding:4px;border-radius:10px}
 .stamp span{position:relative;display:grid;place-items:center;width:40px;height:40px;border:1.5px dashed #b9a6bb;border-radius:50%;background:#f8f4f8;color:#7d6880}
+.stamp-walk span img{width:100%;height:100%;border-radius:50%;object-fit:cover;opacity:.55}.stamp-walk.earned span img,.stamp-walk:hover span img{opacity:1}
 .stamp.earned{color:var(--text)}
 .stamp.earned span,.stamp:hover span{color:color-mix(in srgb,var(--ink),#000 28%);border:2.5px solid var(--ink);background:#fff;box-shadow:0 2px 0 color-mix(in srgb,var(--ink),transparent 60%)}
 .stamp.earned span::after{content:'✓';position:absolute;top:-7px;right:-9px;width:18px;height:18px;border-radius:50%;background:color-mix(in srgb,var(--ink),#000 28%);color:#fff;font-size:12px;line-height:18px;text-align:center}
@@ -200,22 +222,21 @@ dialog .dialog-actions>button:not(.primary):hover{background:var(--a50)}
 #announcer{position:fixed;bottom:18px;left:50%;z-index:10;max-width:90vw;transform:translate(-50%,12px);border-radius:12px;background:var(--text);color:white;padding:12px 18px;font-size:var(--fs-md);box-shadow:0 4px 14px #3d234040,inset 0 -3px 0 var(--a500);opacity:0;pointer-events:none;transition:.18s}#announcer.shown{opacity:1;transform:translate(-50%,0)}
 
 @media(min-width:1550px){main{padding-top:40px}}
-@media(max-width:950px){.bar-inner{gap:18px}nav{gap:2px}nav a{padding:7px 9px}.brand img{width:155px}.map-layout{gap:14px;grid-template-columns:minmax(0,1fr) 230px}.player-body{padding:16px 12px 13px}.map-art{aspect-ratio:1.42}.pin{gap:4px;padding-right:8px;min-height:32px}.pin i{width:25px;height:25px}.pin i svg{width:16px}.pin strong{font-size:.875rem}.challenge{padding:0 13px 13px}.challenge .eyeline{margin:0 -13px 10px;padding:8px 13px}.rail,.map-column{gap:14px}.stamps{gap:3px}}
+@media(max-width:950px){.bar-inner{gap:18px}nav{gap:2px}nav a{padding:7px 9px}.brand img{width:155px}.map-layout{gap:14px;grid-template-columns:minmax(0,1fr) 230px}.player-body{padding:16px 12px 13px}.map-art{aspect-ratio:1.42}.challenge{padding:0 13px 13px}.challenge .eyeline{margin:0 -13px 10px;padding:8px 13px}.rail,.map-column{gap:14px}.stamps{gap:3px}}
 @media(max-width:700px){
   .bar-inner{flex-wrap:wrap;gap:0;padding:9px 16px 7px}.brand img{width:142px}.header-tools{order:1}
   nav{width:100%;order:2;justify-content:space-around;margin-top:7px;gap:3px}nav a{justify-content:center;flex:1;font-size:var(--fs-xs);padding:6px 4px;min-height:44px;text-align:center;line-height:1.15}.bar-inner nav svg{width:17px;flex:none}
   main{padding:22px 16px 28px}.heading{align-items:center;margin-bottom:16px}.heading h1{font-size:2.6rem}.heading p{font-size:var(--fs-md)}.heading-sparks{font-size:17px;margin-left:7px}.heading-sparks small{font-size:11px;top:12px;left:10px}
   .guide{font-size:0;padding:9px;min-width:44px;min-height:44px;justify-content:center}.guide svg{width:20px;height:20px}
   .map-layout{display:flex;flex-direction:column}.map-column,.rail{width:100%}.map-column{display:contents}.map-case{width:100%;order:0}.rail{order:1;grid-template-columns:1fr 1fr;align-items:start}.passport{order:2;width:100%}.map-art{aspect-ratio:1.42}
-  /* map pins: labels may wrap to two short lines on a phone instead of shrinking */
-  .pin{white-space:normal;max-width:36%;min-height:30px;padding:2px 8px 2px 2px;gap:4px;border-radius:18px}.pin strong{font-size:.8125rem;line-height:1.05}.pin i{width:22px;height:22px}.pin i svg{width:14px}
+  .map-bar>span:first-child{display:none}.map-bar{justify-content:center}
   .player header{padding:9px 11px}.player header h2{font-size:var(--fs-md)}.player-body{padding:14px 9px 11px}.portrait-print{margin:0 5px 11px}.card-portrait{aspect-ratio:1.3}.caption{font-size:var(--fs-md)}.flower-sticker{width:35px}
   .switch button{font-size:var(--fs-xs);min-height:40px;padding:4px}
   .challenge h2{font-size:var(--fs-xl)}.challenge p{font-size:var(--fs-sm)}.player .primary{font-size:var(--fs-xs);padding:7px 8px}
   .workbench{grid-template-columns:1fr;gap:14px}.doll-stage{height:42vh;min-height:285px}.panel{padding:17px}.score{margin:-17px -17px 0;padding:10px 17px}.game-details>.eyeline{margin:0 -17px 12px;padding:10px 17px}
   .outfits img{max-height:135px;object-fit:contain;background:var(--a100)}.memory{max-height:88px}.controls{gap:13px}.flower-picks span{font-size:1.4rem}.bouquet{height:200px}
   .game-details dl div{padding:7px 0}.album-grid{grid-template-columns:1fr 1fr;gap:12px}.album-card{padding:6px 6px 8px}.album-card>div{flex-wrap:wrap}.album-card button{font-size:var(--fs-xs);flex:1;justify-content:center;padding:5px 6px}
-  .stamps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}.stamp{font-size:var(--fs-badge);overflow-wrap:anywhere;hyphens:auto;padding:4px 1px}
+  .stamp-groups{grid-template-columns:1fr}.stamp{font-size:var(--fs-badge);overflow-wrap:anywhere;hyphens:auto;padding:4px 1px}
 }
 @media(max-width:380px){.heading h1{font-size:2.35rem}.rail{grid-template-columns:1fr}.card-portrait{aspect-ratio:2}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}.pin:hover,.pin:focus-visible{transform:translate(-50%,-50%)}.album-card{transform:none!important}}
@@ -250,3 +271,19 @@ dialog .dialog-actions>button:not(.primary):hover{background:var(--a50)}
 .footer-link{min-height:36px;padding:4px 8px;border-radius:8px;color:var(--text-soft);font-size:var(--fs-sm);text-decoration:underline;text-decoration-color:var(--a500);text-underline-offset:3px}.footer-link:hover{color:var(--a800);text-decoration-color:currentColor}
 .footer-credit{color:var(--text-soft);font-size:var(--fs-sm);white-space:nowrap}.footer-credit a{display:inline-block;padding:6px 2px;border-radius:6px;text-decoration:underline;text-decoration-color:var(--a500);text-underline-offset:3px}.footer-credit a:hover{color:var(--a800);text-decoration-color:currentColor}
 @media(max-width:480px){.site-footer::before,.site-footer::after,.footer-dot{display:none}.footer-credit{flex-basis:100%;text-align:center}}
+
+/* Compact pins when the map is narrow: badges only; a label appears on hover or keyboard focus, and the
+   next step's pin keeps its label. Every place is also listed in the passport under the map. */
+@media(max-width:1180px){
+  .pin strong{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;opacity:0;pointer-events:none;transition:opacity .12s}
+  .pin-walk strong{margin-top:10px}
+  .pin:hover strong,.pin:focus-visible strong,.pin.is-next strong{opacity:1}
+  .pin:hover,.pin:focus-visible{z-index:4}
+}
+@media(max-width:700px){
+  .pin-room i{width:32px;height:32px}.pin-room i svg{width:17px;height:17px}
+  .pin-walk i{width:42px;height:42px;border-width:2.5px}
+  .pin-walk i::after{width:11px;height:11px;left:calc(50% - 5.5px);bottom:-9px}
+  .map-quest{padding:8px 9px;gap:8px}.map-quest .hud-text strong{font-size:var(--fs-sm)}.map-quest .map-quest-go{flex:1 1 100%}
+}
+@media(prefers-reduced-motion:reduce){.pin:hover,.pin:focus-visible{transform:translate(-50%,-50%)}}
