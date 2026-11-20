@@ -1,0 +1,370 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "4160494ea7e4"
+ },
+ "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 814,
+   "haze_far_max": 12,
+   "haze_far_p99_9": 10.4,
+   "glow_ring_nonzero_frac": 0.0221,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0001,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 8190,
+     "dRGB": [
+      39.3,
+      33.1,
+      28.3
+     ],
+     "dLum": 34.4
+    },
+    "64-160": {
+     "n": 8879,
+     "dRGB": [
+      22.9,
+      17.0,
+      12.9
+     ],
+     "dLum": 18.3
+    },
+    "160-255": {
+     "n": 17446,
+     "dRGB": [
+      3.3,
+      -0.4,
+      -2.7
+     ],
+     "dLum": 0.4
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 8,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 15371,
+  "haze_px_removed": 21842,
+  "wisp_px_kept": {
+   "aqua-velour-tracksuit/0": 0,
+   "aqua-velour-tracksuit/1": 0,
+   "aqua-velour-tracksuit/2": 0,
+   "aqua-velour-tracksuit/3": 0,
+   "tennis-dress/0": 0,
+   "tennis-dress/1": 0,
+   "tennis-dress/2": 0,
+   "tennis-dress/3": 0,
+   "baby-tee-cargo/0": 0,
+   "baby-tee-cargo/1": 0,
+   "baby-tee-cargo/2": 0,
+   "baby-tee-cargo/3": 0
+  }
+ },
+ "splits": {
+  "baby-tee-cargo-front": {
+   "axis": "y",
+   "at": 262,
+   "gap_px": 10
+  },
+  "baby-tee-cargo-left": {
+   "axis": "y",
+   "at": 259,
+   "gap_px": 7
+  },
+  "baby-tee-cargo-right": {
+   "axis": "y",
+   "at": 259,
+   "gap_px": 7
+  },
+  "baby-tee-cargo-back": {
+   "axis": "y",
+   "at": 260,
+   "gap_px": 9
+  }
+ },
+ "items": {
+  "aqua-velour-tracksuit": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/aqua-velour-tracksuit-front.webp",
+     "width": 339,
+     "height": 576,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       196,
+       11,
+       339,
+       576
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/aqua-velour-tracksuit-left.webp",
+     "width": 138,
+     "height": 580,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       833,
+       10,
+       138,
+       580
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/aqua-velour-tracksuit-right.webp",
+     "width": 138,
+     "height": 579,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       1417,
+       10,
+       138,
+       579
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/aqua-velour-tracksuit-back.webp",
+     "width": 337,
+     "height": 577,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       1855,
+       11,
+       337,
+       577
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "tennis-dress": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/tennis-dress-front.webp",
+     "width": 366,
+     "height": 567,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       182,
+       611,
+       366,
+       567
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/tennis-dress-left.webp",
+     "width": 286,
+     "height": 557,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       761,
+       611,
+       286,
+       557
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/tennis-dress-right.webp",
+     "width": 287,
+     "height": 557,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       1341,
+       611,
+       287,
+       557
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/tennis-dress-back.webp",
+     "width": 367,
+     "height": 566,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       1840,
+       612,
+       367,
+       566
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "baby-tee-cargo": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/baby-tee-cargo-front.webp",
+     "width": 327,
+     "height": 572,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       202,
+       1207,
+       327,
+       572
+      ],
+      "column": 0
+     },
+     "parts": {
+      "top": {
+       "file": "outfits-adult/baby-tee-cargo-front-top.webp",
+       "width": 327,
+       "height": 259,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "capris": {
+       "file": "outfits-adult/baby-tee-cargo-front-capris.webp",
+       "width": 269,
+       "height": 307,
+       "offset": [
+        28,
+        265
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "outfits-adult/baby-tee-cargo-left.webp",
+     "width": 193,
+     "height": 572,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       817,
+       1207,
+       193,
+       572
+      ],
+      "column": 1
+     },
+     "parts": {
+      "top": {
+       "file": "outfits-adult/baby-tee-cargo-left-top.webp",
+       "width": 182,
+       "height": 258,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "capris": {
+       "file": "outfits-adult/baby-tee-cargo-left-capris.webp",
+       "width": 188,
+       "height": 311,
+       "offset": [
+        5,
+        261
+       ]
+      }
+     }
+    },
+    "right": {
+     "file": "outfits-adult/baby-tee-cargo-right.webp",
+     "width": 192,
+     "height": 572,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       1378,
+       1207,
+       192,
+       572
+      ],
+      "column": 2
+     },
+     "parts": {
+      "top": {
+       "file": "outfits-adult/baby-tee-cargo-right-top.webp",
+       "width": 181,
+       "height": 258,
+       "offset": [
+        11,
+        0
+       ]
+      },
+      "capris": {
+       "file": "outfits-adult/baby-tee-cargo-right-capris.webp",
+       "width": 188,
+       "height": 312,
+       "offset": [
+        0,
+        260
+       ]
+      }
+     }
+    },
+    "back": {
+     "file": "outfits-adult/baby-tee-cargo-back.webp",
+     "width": 326,
+     "height": 573,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-d.webp",
+      "box": [
+       1860,
+       1207,
+       326,
+       573
+      ],
+      "column": 3
+     },
+     "parts": {
+      "top": {
+       "file": "outfits-adult/baby-tee-cargo-back-top.webp",
+       "width": 326,
+       "height": 258,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "capris": {
+       "file": "outfits-adult/baby-tee-cargo-back-capris.webp",
+       "width": 267,
+       "height": 311,
+       "offset": [
+        30,
+        262
+       ]
+      }
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}
