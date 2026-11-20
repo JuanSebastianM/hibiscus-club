@@ -46,6 +46,9 @@ Edge cleanup (measured on these sheets; different generator than pack 1)
   pixels toward the nearby opaque (outline) color in proportion to their
   transparency. Pure glows are not touched (no opaque pixels nearby or not
   lighter than the bulb they surround).
+* Faint specks (cleaned alpha < FAINT) more than 8 px from an item's solid
+  pixels are dropped, so a stray alpha-1 dot at the sheet border cannot
+  stretch a sprite's bounds (it did for the pennant banner).
 * RGB under alpha 0 is zeroed.
 * Downscaling works on premultiplied color (Pillow "RGBa") with Lanczos.
 """
@@ -72,6 +75,7 @@ HAZE_ALPHA = 5
 POOL = 4
 REACH = 48          # px: farthest a pixel may be from its item's solid mask
 PAD = 2
+FAINT = 8           # cleaned alpha below this, >8 px from the item, is a speck
 TARGET_MAX = 520    # longest side of the largest furniture piece after scaling
 THUMB = 128
 ROOM_W = 1536       # reference room width for defaultScale
@@ -156,9 +160,9 @@ META = {
     "trinket-shelf": ("Trinket Bookcase", "Librero de tesoritos", "floor", 1.8, True),
     "standing-mirror": ("Twirl Mirror", "Espejo de cuerpo entero", "floor", 1.65, True),
     # bathroom
-    "bathtub": ("Bubble Bath Tub", "Tina de burbujas", "floor", 1.6, False),
-    "shower": ("Sparkle Shower", "Ducha brillante", "floor", 2.1, False),
-    "sink-vanity": ("Bathroom Sink", "Lavamanos con mueble", "floor", 1.2, False),
+    "bathtub": ("Bubble Bath Tub", "Tina de burbujas", "floor", 1.6, True),
+    "shower": ("Sparkle Shower", "Ducha brillante", "floor", 2.1, True),
+    "sink-vanity": ("Bathroom Sink", "Lavamanos con mueble", "floor", 1.2, True),
     "toilet": ("Toilet", "Inodoro", "floor", 0.85, True),
     "towel-rack": ("Fluffy Towel Rack", "Toallero esponjoso", "floor", 1.0, True),
     "laundry-basket": ("Laundry Basket", "Canasta de ropa", "floor", 0.6, True),
@@ -195,7 +199,7 @@ META = {
     "lemonade-stand": ("Lemonade Stand", "Puesto de limonada", "floor", 1.9, True),
     "potted-palm": ("Potted Palm", "Palmerita en maceta", "floor", 1.3, True),
     # walls
-    "framed-picture": ("Beach Day Painting", "Cuadro de playa", "wall", 0.9, False),
+    "framed-picture": ("Beach Day Painting", "Cuadro de playa", "wall", 0.9, True),
     "poster": ("Hibiscus Poster", "Póster de hibiscos", "wall", 0.75, True),
     "wall-clock": ("Flower Clock", "Reloj de flor", "wall", 0.5, False),
     "curtain-window": ("Curtained Window", "Ventana con cortinas", "wall", 1.4, True),
@@ -205,7 +209,7 @@ META = {
     "heart-mirror": ("Heart Mirror", "Espejo de corazón", "wall", 0.7, True),
     "pennant-banner": ("Party Pennants", "Banderines de fiesta", "wall", 1.4, True),
     "hanging-plant": ("Macramé Hanging Plant", "Maceta colgante de macramé", "wall", 0.95, True),
-    "wall-lamp": ("Lantern Sconce", "Farolito de pared", "wall", 0.55, False),
+    "wall-lamp": ("Lantern Sconce", "Farolito de pared", "wall", 0.55, True),
     "star-decals": ("Star Stickers", "Estrellitas de pared", "wall", 0.9, True),
     # floor decor
     "round-rug": ("Mandala Rug", "Tapete mandala", "rug", 2.0, True),
@@ -215,12 +219,16 @@ META = {
     "puppy-bed": ("Puppy Nap Basket", "Canasta con perrito", "floor", 0.8, True),
     "fish-tank": ("Fishy Aquarium", "Pecera con mueble", "floor", 1.1, True),
     "flower-vase": ("Tropical Bouquet", "Florero tropical", "floor", 1.0, True),
-    "disco-ball": ("Disco Ball", "Bola disco", "surface", 0.45, True),
-    "lava-lamp": ("Lava Lamp", "Lámpara de lava", "surface", 0.45, True),
+    "disco-ball": ("Disco Ball", "Bola disco", "surface", 0.4, True),
+    "lava-lamp": ("Lava Lamp", "Lámpara de lava", "surface", 0.38, True),
     "gift-boxes": ("Surprise Gifts", "Regalitos sorpresa", "floor", 0.6, True),
     "balloon-bunch": ("Balloon Bunch", "Racimo de globos", "floor", 1.6, True),
     "potted-hibiscus": ("Potted Hibiscus", "Hibisco en maceta", "floor", 0.8, True),
 }
+
+# Floor items whose contact band is measured on their largest piece only
+# (the shower's little bath mat lies in front of it, lower than its base)
+MAIN_PIECE_ANCHOR = {"shower"}
 
 # Wall items that hang from a point at their top (anchor = top centre)
 HANG_TOP = {"pot-rack", "hanging-plant", "poster", "fairy-lights", "pennant-banner"}
@@ -349,6 +357,8 @@ def slice_sheet(fname: str, room: str, ids: list[str], report: dict):
         near = dilate(own, REACH)
         region = (owner == c + 1) & near
         a_item = np.where(region, alpha, 0).astype(np.uint8)
+        # faint specks away from the item (not part of a real glow) -> 0
+        a_item[(a_item < FAINT) & ~dilate(own, 8)] = 0
         lost = (owner == c + 1) & ~near & (alpha > 0)
         if lost.any():
             rep.setdefault("outside_reach", {})[iid] = dict(
@@ -378,6 +388,10 @@ def geometry(spr: Image.Image, placement: str, iid: str):
     a = np.array(spr)[..., 3]
     h, w = a.shape
     sol = a >= 128
+    if iid in MAIN_PIECE_ANCHOR:
+        lab, n = label(sol[::2, ::2])
+        big = 1 + int(np.argmax(np.bincount(lab.ravel())[1:]))
+        sol = np.repeat(np.repeat(lab == big, 2, 0), 2, 1)[:h, :w] & sol
     x0, y0, x1, y1 = trim_box(sol)
     if placement in ("floor", "surface"):
         band = sol[max(y0, y1 - max(3, int(0.12 * (y1 - y0)))):y1]
