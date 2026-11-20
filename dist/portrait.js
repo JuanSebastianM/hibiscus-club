@@ -772,7 +772,7 @@ function composeDoll(raw,view='front'){
       !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
     ]);
     const arm=sideView(view)?await armLayer(shot,view,body):null;
-    const bodyPic=shoes?fitFeet(body,shoes,catalogItem(shot.shoes).fit[doll][view],dv,view):body;
+    const bodyPic=shoes?fitFeet(body,shoes,catalogItem(shot.shoes).fit[doll][view],dv,doll):body;
     const c=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),g=c.getContext('2d');
     g.imageSmoothingQuality='high';
     const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
@@ -818,8 +818,8 @@ function softClip(src,ox,oy,shapes){
   g.globalCompositeOperation='source-in';g.drawImage(src,0,0);
   return c;
 }
-/* The bare foot inside a shoe (doll-local fit.foot / fit.trim of the shoe's view fit, side views fall
-   back to the view's footTop for the trim):
+/* The bare foot inside a shoe (doll-local fit.foot / fit.trim of the shoe's view fit; the trim defaults
+   to the doll's footTop, just under the ankle, in every view):
    - foot = {top, bed:[[x,y],...], sx, cx, ramp}: below doll y `top` every column of the body is
      stretched vertically so the sole (the lowest opaque pixel of the column) lands on the shoe's
      footbed line `bed` (piecewise linear in x), which raises the heel onto a heeled insole and puts the
@@ -828,8 +828,8 @@ function softClip(src,ox,oy,shapes){
    - trim = doll y below which body pixels outside the shoe's silhouette (alpha > trimAlpha) are
      removed, so no heel, toe or calf pokes out of the shoe; above it the leg is untouched. The open
      parts of a sandal are kept through the shoe layers' mask (shoe silhouette plus `keep` polygons). */
-function fitFeet(body,shoes,fit,dv,view){
-  const foot=fit?.foot,trimY=fit?.trim??(sideView(view)?dv.footTop:undefined);
+function fitFeet(body,shoes,fit,dv,doll){
+  const foot=fit?.foot,trimY=fit?.trim??dollView(doll,'left').footTop;
   if(!foot&&trimY===undefined)return body;
   const [ox,oy]=dv.origin,W=body.width,H=body.height;
   const c=makeCanvas(W,H),g=ctx2d(c);g.drawImage(body,0,0);
