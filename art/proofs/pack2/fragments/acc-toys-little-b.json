@@ -1,0 +1,269 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "8bf814c699be"
+ },
+ "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 174,
+   "haze_far_max": 1,
+   "haze_far_p99_9": 1.0,
+   "glow_ring_nonzero_frac": 0.0122,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0001,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 8005,
+     "dRGB": [
+      -44.5,
+      -43.6,
+      -32.2
+     ],
+     "dLum": -42.6
+    },
+    "64-160": {
+     "n": 9091,
+     "dRGB": [
+      -40.8,
+      -41.9,
+      -31.6
+     ],
+     "dLum": -40.4
+    },
+    "160-255": {
+     "n": 19070,
+     "dRGB": [
+      -51.7,
+      -54.9,
+      -43.3
+     ],
+     "dLum": -52.6
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 5980,
+  "haze_px_removed": 17573,
+  "wisp_px_kept": {
+   "sand-bucket/0": 0,
+   "sand-bucket/1": 0,
+   "sand-bucket/2": 0,
+   "sand-bucket/3": 2,
+   "pull-duck/0": 0,
+   "pull-duck/1": 1,
+   "pull-duck/2": 0,
+   "pull-duck/3": 0,
+   "yarn-doll/0": 0,
+   "yarn-doll/1": 0,
+   "yarn-doll/2": 0,
+   "yarn-doll/3": 1
+  }
+ },
+ "splits": {},
+ "items": {
+  "sand-bucket": {
+   "category": "toys-little",
+   "views": {
+    "front": {
+     "file": "toys-little/sand-bucket-front.webp",
+     "width": 393,
+     "height": 519,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       126,
+       39,
+       393,
+       519
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "toys-little/sand-bucket-left.webp",
+     "width": 346,
+     "height": 513,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       730,
+       45,
+       346,
+       513
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "toys-little/sand-bucket-right.webp",
+     "width": 346,
+     "height": 515,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       1312,
+       44,
+       346,
+       515
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "toys-little/sand-bucket-back.webp",
+     "width": 393,
+     "height": 519,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       1869,
+       40,
+       393,
+       519
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "pull-duck": {
+   "category": "toys-little",
+   "views": {
+    "front": {
+     "file": "toys-little/pull-duck-front.webp",
+     "width": 308,
+     "height": 479,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       169,
+       676,
+       308,
+       479
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "toys-little/pull-duck-left.webp",
+     "width": 489,
+     "height": 447,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       630,
+       676,
+       489,
+       447
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "toys-little/pull-duck-right.webp",
+     "width": 490,
+     "height": 447,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       1267,
+       676,
+       490,
+       447
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "toys-little/pull-duck-back.webp",
+     "width": 307,
+     "height": 441,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       1912,
+       675,
+       307,
+       441
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "yarn-doll": {
+   "category": "toys-little",
+   "views": {
+    "front": {
+     "file": "toys-little/yarn-doll-front.webp",
+     "width": 411,
+     "height": 522,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       117,
+       1233,
+       411,
+       522
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "toys-little/yarn-doll-left.webp",
+     "width": 273,
+     "height": 521,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       781,
+       1234,
+       273,
+       521
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "toys-little/yarn-doll-right.webp",
+     "width": 273,
+     "height": 521,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       1334,
+       1234,
+       273,
+       521
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "toys-little/yarn-doll-back.webp",
+     "width": 410,
+     "height": 519,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little-b.webp",
+      "box": [
+       1860,
+       1234,
+       410,
+       519
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

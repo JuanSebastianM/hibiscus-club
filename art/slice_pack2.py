@@ -74,7 +74,7 @@ WISP_REACH = 16     # px a low-alpha wisp may extend beyond the solid pixels
 MAX_H = 720
 OUTER_EDGE = 2      # decontaminate only pixels this close to empty background
 FRINGE_MARGIN = 20  # lum excess over the local opaque color that counts as fringe
-SCRIPT_VERSION = "1"
+SCRIPT_VERSION = "2"
 
 # ------------------------------------------------------------------ config
 # (sheet path under art/source/pack2, category, [row ids]); None = row not
@@ -501,6 +501,32 @@ def split_parts(iid: str, view: str, spr: Image.Image, report: dict):
     return {}
 
 
+def face_hole_robust(alpha: np.ndarray):
+    """S.face_hole, but when the hair has detached lower pieces (braids that
+    start below the ears) the side hair does not close the face window and
+    S.face_hole returns the open gap between the braids (a box spanning most
+    of the sprite width). Then the window is measured only down to the bottom
+    of the main (largest) hair piece, and marked topPieceOnly=true."""
+    h, w = alpha.shape
+    hole = S.face_hole(alpha)
+    if hole and hole["face"]["w"] < 0.75 * w:
+        return hole
+    P = 4
+    hh, ww = (h + P - 1) // P, (w + P - 1) // P
+    pad = np.zeros((hh * P, ww * P), bool)
+    pad[:h, :w] = alpha >= 128
+    lab, n = S.label(pad.reshape(hh, P, ww, P).any(axis=(1, 3)))
+    if n < 2:
+        return hole
+    big = 1 + int(np.argmax(np.bincount(lab.ravel())[1:]))
+    y_end = min(h, (int(np.nonzero((lab == big).any(1))[0][-1]) + 1) * P)
+    hole2 = S.face_hole(alpha[:y_end])
+    if hole2:
+        hole2["topPieceOnly"] = True
+        return hole2
+    return hole
+
+
 # ----------------------------------------------------------- registration
 
 def xcorr_valid(I: np.ndarray, K: np.ndarray) -> np.ndarray:
@@ -541,9 +567,19 @@ def proof_figure_box(worn_raw: np.ndarray, masks: dict, cell) -> list:
     return [x0, y0, x1, y1]
 
 
-def register_one(spr: Image.Image, box, worn_rgba: np.ndarray, search: int = 96):
+def register_one(spr: Image.Image, box, worn_rgba: np.ndarray, search: int = 48,
+                 anchor: str = "full"):
     """Find (dx, dy) so that the sprite placed at box + (dx, dy) on the worn
-    sheet (padded coords) matches the item painted there."""
+    sheet (padded coords) matches the item painted there.
+
+    Masked RGB template matching (SSD over the sprite's solid pixels). With
+    anchor="scalp" (hair) only the top 40% of the sprite is matched, so a
+    redrawn length or silhouette lower down cannot pull the hairline off the
+    head. The item and worn sheets share one layout, so (0, 0) is kept unless
+    a shift is clearly better (>3% lower error and not at the window edge).
+    Residual: each third of the sprite is matched alone within +-12 px of the
+    chosen shift; a band counts as displaced only if moving it improves its
+    error by >10%."""
     t = np.array(spr).astype(np.float32)
     mask = t[..., 3] >= 200
     tmpl = t[..., :3]
@@ -556,12 +592,25 @@ def register_one(spr: Image.Image, box, worn_rgba: np.ndarray, search: int = 96)
     wa = worn_rgba[sy0:sy1, sx0:sx1].astype(np.float32)
     al = wa[..., 3:4] / 255.0
     region[sy0 - gy0:sy1 - gy0, sx0 - gx0:sx1 - gx0] = wa[..., :3] * al + 128.0 * (1 - al)
-    mp = ssd_map(region, tmpl, mask)
-    yy, xx = np.unravel_index(int(np.argmin(mp)), mp.shape)
-    dx, dy = int(xx) - search, int(yy) - search
-    rmse = float(np.sqrt(max(mp[yy, xx], 0)))
-    # sub-band check: best offset of the top / middle / bottom third alone
     ys = np.nonzero(mask.any(1))[0]
+    am = mask
+    if anchor == "scalp" and len(ys) > 30:
+        am = mask.copy()
+        am[int(ys[0] + 0.4 * (ys[-1] - ys[0])):] = False
+    mp = ssd_map(region, tmpl, am)
+    yy, xx = np.unravel_index(int(np.argmin(mp)), mp.shape)
+    bdx, bdy = int(xx) - search, int(yy) - search
+    ssd0 = float(mp[search, search])
+    edge = abs(bdx) >= search - 1 or abs(bdy) >= search - 1
+    if edge or ssd0 <= float(mp[yy, xx]) * 1.03:
+        dx, dy, how = 0, 0, ("kept (0,0): search hit window edge" if edge and (bdx, bdy) != (0, 0)
+                             else "kept (0,0)")
+    else:
+        dx, dy, how = bdx, bdy, f"{anchor} match"
+    cy, cx = dy + search, dx + search
+    full = ssd_map(region, tmpl, mask) if am is not mask else mp
+    rmse = float(np.sqrt(max(full[cy, cx], 0)))
+    fy, fx = np.unravel_index(int(np.argmin(full)), full.shape)
     bands = {}
     if len(ys) > 30:
         cuts = np.linspace(ys[0], ys[-1] + 1, 4).astype(int)
@@ -571,13 +620,17 @@ def register_one(spr: Image.Image, box, worn_rgba: np.ndarray, search: int = 96)
             if mk.sum() < 200:
                 continue
             mb = ssd_map(region, tmpl, mk)
-            # restrict to +-20 px around the global optimum
-            r0, r1 = max(yy - 20, 0), min(yy + 21, mb.shape[0])
-            c0, c1 = max(xx - 20, 0), min(xx + 21, mb.shape[1])
+            r0, r1 = max(cy - 12, 0), min(cy + 13, mb.shape[0])
+            c0, c1 = max(cx - 12, 0), min(cx + 13, mb.shape[1])
             sub = mb[r0:r1, c0:c1]
             by, bx = np.unravel_index(int(np.argmin(sub)), sub.shape)
-            bands[nm] = [int(bx + c0 - xx), int(by + r0 - yy)]
-    return dx, dy, rmse, bands, region, mp
+            gain = 1 - float(sub[by, bx]) / max(float(mb[cy, cx]), 1e-6)
+            bands[nm] = {"shift": [int(bx + c0 - cx), int(by + r0 - cy)] if gain > 0.10 else [0, 0],
+                         "gain": round(gain, 3),
+                         "rmse": round(float(np.sqrt(max(mb[cy, cx], 0))), 1)}
+    info = {"method": how, "anchor": anchor, "best_anchor_shift": [bdx, bdy],
+            "best_full_mask_shift": [int(fx) - search, int(fy) - search]}
+    return dx, dy, rmse, bands, info
 
 
 def classify_item(proof: np.ndarray, spr_a: np.ndarray, off, spr_rgb: np.ndarray):
@@ -610,7 +663,18 @@ def classify_item(proof: np.ndarray, spr_a: np.ndarray, off, spr_rgb: np.ndarray
     is_item = (nll(flat, item_px) < nll(flat, rest_px)).reshape(ph, pw) & fig
     # light closing to fill highlights
     is_item = ~S.dilate(~S.dilate(is_item, 2), 2) & fig
-    return is_item
+    # drop blobs not touching the placed sprite (eyebrows, eyes, shadows)
+    P = S.POOL
+    hh, ww = (ph + P - 1) // P, (pw + P - 1) // P
+    pad = np.zeros((hh * P, ww * P), bool)
+    pad[:ph, :pw] = is_item
+    pooled = pad.reshape(hh, P, ww, P).any(axis=(1, 3))
+    lab, n = S.label(pooled)
+    pp = np.zeros((hh * P, ww * P), bool)
+    pp[:ph, :pw] = placed
+    touch = np.unique(lab[pp.reshape(hh, P, ww, P).any(axis=(1, 3)) & (lab > 0)])
+    keep = np.repeat(np.repeat(np.isin(lab, touch), P, 0), P, 1)[:ph, :pw]
+    return is_item & keep
 
 
 # ------------------------------------------------------------------- build
@@ -656,7 +720,7 @@ def process_sheet(sheet: str, cat: str, ids, force: bool) -> dict:
                 entry["parts"][pname] = {"file": prel, "width": part.width,
                                          "height": part.height, "offset": off}
         if cat == "hair" and view == "front":
-            entry["faceHole"] = S.face_hole(np.array(spr)[..., 3])
+            entry["faceHole"] = face_hole_robust(np.array(spr)[..., 3])
         item = frag["items"].setdefault(iid, {"category": cat, "views": {}})
         item["views"][view] = entry
         sprites[(iid, view)] = (spr, it)
@@ -686,7 +750,8 @@ def make_proofs(sheet, cat, ids, sprites, worn_path: Path) -> dict:
         bx, by = x + EDGE, y + EDGE           # padded coords
         cell = (ids.index(iid), it["column"])
         fx0, fy0, fx1, fy1 = proof_figure_box(worn_raw, wmasks, cell)
-        dx, dy, rmse, bands, _, _ = register_one(spr, [bx, by, w, h], worn)
+        dx, dy, rmse, bands, rinfo = register_one(spr, [bx, by, w, h], worn,
+                                                  anchor="scalp" if cat == "hair" else "full")
         # proof box: the sprite's own box (where it was painted) united with
         # the figure (head, neck, shoulders / feet, legs)
         px0, py0 = min(bx + dx, fx0) - S.PAD, min(by + dy, fy0) - S.PAD
@@ -714,8 +779,14 @@ def make_proofs(sheet, cat, ids, sprites, worn_path: Path) -> dict:
         iou = float(inter / max(union, 1))
         uncovered = float((item_mask & ~placed_any).sum() / max(item_mask.sum(), 1))
         overhang = float((placed & (crop[..., 3] < 128)).sum() / max(placed.sum(), 1))
-        band_dev = max([max(abs(b[0]), abs(b[1])) for b in bands.values()] or [0])
+        sub = crop[ys0:ys1, xs0:xs1].astype(np.int32)
+        sp = sa[ys0 - off[1]:ys1 - off[1], xs0 - off[0]:xs1 - off[0]].astype(np.int32)
+        sm = sp[..., 3] >= 250
+        same = float(((np.abs(sp[..., :3] - sub[..., :3]).max(-1) <= 24) & (sub[..., 3] >= 200))[sm].mean())
+        band_dev = max([max(abs(b["shift"][0]), abs(b["shift"][1])) for b in bands.values()] or [0])
         flag = []
+        if same < (0.85 if cat == "hair" else 0.5):
+            flag.append(f"drawing differs from proof (only {same:.0%} of pixels identical)")
         if iou < 0.8:
             flag.append("shape differs (IoU < 0.8)")
         if band_dev > 6:
@@ -727,9 +798,9 @@ def make_proofs(sheet, cat, ids, sprites, worn_path: Path) -> dict:
                  "sprite": f"../../../dist/assets/pack2/{cat}/{iid}-{view}.webp",
                  "sprite_box": [x, y, w, h],
                  "offset": off,
-                 "registration": {"shift_vs_sprite_box": [dx, dy], "rgb_rmse": round(rmse, 1),
+                 "registration": {"shift_vs_sprite_box": [dx, dy], **rinfo, "rgb_rmse": round(rmse, 1),
                                   "band_offsets": bands, "max_band_dev_px": band_dev,
-                                  "iou": round(iou, 3), "proof_item_uncovered": round(uncovered, 3),
+                                  "identical_px": round(same, 3), "iou": round(iou, 3), "proof_item_uncovered": round(uncovered, 3),
                                   "sprite_over_background": round(overhang, 3)},
                  "flags": flag}
         # shoes: register each part on its own too
@@ -737,7 +808,7 @@ def make_proofs(sheet, cat, ids, sprites, worn_path: Path) -> dict:
             parts = split_parts(iid, view, spr, {})
             entry["parts"] = {}
             for pname, (part, poff, _) in parts.items():
-                pdx, pdy, prm, _, _, _ = register_one(
+                pdx, pdy, prm, _, _ = register_one(
                     part, [bx + poff[0], by + poff[1], part.width, part.height], worn, 32)
                 entry["parts"][pname] = {
                     "offset": [int(bx + poff[0] + pdx - px0), int(by + poff[1] + pdy - py0)],
@@ -834,9 +905,13 @@ def assemble(frags: list[dict]):
                       "the proof crop, measured by masked RGB template matching of the sprite "
                       "against the worn sheet (the two sheets are separate generations). "
                       "registration.shift_vs_sprite_box = how far the item sits on the worn "
-                      "sheet from where it sits on the item sheet; band_offsets = best extra "
-                      "shift of the top/middle/bottom third alone (a measure of residual "
-                      "misalignment / shape difference); iou = overlap of the sprite with the "
+                      "sheet from where it sits on the item sheet (hair is matched on its top 40%, "
+                      "the scalp, so the hairline sits right even where lengths were redrawn); "
+                      "band_offsets = best extra shift of the top/middle/bottom third alone, "
+                      "counted only if it lowers that band's error by >10% (residual "
+                      "misalignment); identical_px = fraction of the sprite's opaque pixels "
+                      "identical to the proof at the offset (the item sheets are mostly "
+                      "cut-outs of the worn sheets; low values = redrawn); iou = overlap of the sprite with the "
                       "proof pixels classified as the item; proof_item_uncovered = fraction of "
                       "those proof pixels the sprite does not cover. Shoe pairs also list per-"
                       "part offsets.",

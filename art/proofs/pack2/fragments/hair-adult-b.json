@@ -1,6 +1,6 @@
 {
  "signature": {
-  "script": "2d7c03ab2eb3-v1",
+  "script": "bb0956e31976-v2",
   "source": "4ba9ac44bc40",
   "worn": "2dcff6c17732"
  },
@@ -334,29 +334,50 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     -1
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 60.8,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      -1,
-      20
-     ],
-     "bottom": [
-      0,
-      -1
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 66.6
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.077,
+      "rmse": 82.2
+     },
+     "bottom": {
+      "shift": [
+       0,
+       -1
+      ],
+      "gain": 0.193,
+      "rmse": 12.9
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.878,
-    "proof_item_uncovered": 0.031,
+    "max_band_dev_px": 1,
+    "identical_px": 0.884,
+    "iou": 0.887,
+    "proof_item_uncovered": 0.021,
     "sprite_over_background": 0.001
    },
-   "flags": [
-    "parts drawn 20px apart"
-   ]
+   "flags": []
   },
   "sleek-curtain-bangs/left": {
    "proof": "hair/sleek-curtain-bangs-left.webp",
@@ -383,24 +404,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 15.4,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      -1
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.01,
+      "rmse": 11.1
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.1
+     }
     },
-    "max_band_dev_px": 1,
-    "iou": 0.973,
-    "proof_item_uncovered": 0.007,
+    "max_band_dev_px": 0,
+    "identical_px": 0.982,
+    "iou": 0.975,
+    "proof_item_uncovered": 0.005,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -430,24 +474,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 16.2,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 18.6
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.0
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.971,
-    "proof_item_uncovered": 0.007,
+    "identical_px": 0.981,
+    "iou": 0.973,
+    "proof_item_uncovered": 0.005,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -477,24 +544,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 11.7,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      -1
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 11.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.002,
+      "rmse": 9.3
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.0
+     }
     },
-    "max_band_dev_px": 1,
+    "max_band_dev_px": 0,
+    "identical_px": 0.993,
     "iou": 0.982,
-    "proof_item_uncovered": 0.003,
+    "proof_item_uncovered": 0.002,
     "sprite_over_background": 0.0
    },
    "flags": []
@@ -524,24 +614,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 17.8,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      -1
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.062,
+      "rmse": 20.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.5
+     }
     },
-    "max_band_dev_px": 1,
-    "iou": 0.946,
-    "proof_item_uncovered": 0.027,
+    "max_band_dev_px": 0,
+    "identical_px": 0.973,
+    "iou": 0.956,
+    "proof_item_uncovered": 0.017,
     "sprite_over_background": 0.003
    },
    "flags": []
@@ -571,24 +684,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 16.1,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.9
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.0
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.969,
-    "proof_item_uncovered": 0.008,
+    "identical_px": 0.979,
+    "iou": 0.971,
+    "proof_item_uncovered": 0.006,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -618,23 +754,46 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 16.0,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.4
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 13.9
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 18.8
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.968,
+    "identical_px": 0.979,
+    "iou": 0.969,
     "proof_item_uncovered": 0.007,
     "sprite_over_background": 0.002
    },
@@ -665,24 +824,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 12.7,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 13.4
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 9.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.7
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.989,
-    "proof_item_uncovered": 0.004,
+    "identical_px": 0.99,
+    "iou": 0.992,
+    "proof_item_uncovered": 0.001,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -712,24 +894,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 25.5,
     "band_offsets": {
-     "top": [
-      0,
-      -1
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.002,
+      "rmse": 26.2
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 25.9
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 23.6
+     }
     },
-    "max_band_dev_px": 1,
-    "iou": 0.918,
-    "proof_item_uncovered": 0.035,
+    "max_band_dev_px": 0,
+    "identical_px": 0.949,
+    "iou": 0.943,
+    "proof_item_uncovered": 0.007,
     "sprite_over_background": 0.004
    },
    "flags": []
@@ -759,24 +964,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 19.5,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 18.9
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 21.8
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.956,
-    "proof_item_uncovered": 0.014,
+    "identical_px": 0.956,
+    "iou": 0.966,
+    "proof_item_uncovered": 0.003,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -806,24 +1034,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 18.9,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      -1
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.023,
+      "rmse": 23.4
+     }
     },
-    "max_band_dev_px": 1,
-    "iou": 0.956,
-    "proof_item_uncovered": 0.013,
+    "max_band_dev_px": 0,
+    "identical_px": 0.957,
+    "iou": 0.967,
+    "proof_item_uncovered": 0.001,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -833,9 +1084,9 @@
    "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
    "proof_box": [
     1786,
-    1220,
+    1221,
     505,
-    574
+    573
    ],
    "sprite": "../../../dist/assets/pack2/hair/long-braids-back.webp",
    "sprite_box": [
@@ -851,30 +1102,54 @@
    "registration": {
     "shift_vs_sprite_box": [
      0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
      -1
     ],
-    "rgb_rmse": 86.4,
+    "rgb_rmse": 86.5,
     "band_offsets": {
-     "top": [
-      0,
-      1
-     ],
-     "middle": [
-      0,
-      -20
-     ],
-     "bottom": [
-      8,
-      20
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 13.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       -12
+      ],
+      "gain": 0.335,
+      "rmse": 60.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.039,
+      "rmse": 211.0
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.823,
-    "proof_item_uncovered": 0.005,
-    "sprite_over_background": 0.004
+    "max_band_dev_px": 12,
+    "identical_px": 0.833,
+    "iou": 0.825,
+    "proof_item_uncovered": 0.004,
+    "sprite_over_background": 0.001
    },
    "flags": [
-    "parts drawn 20px apart"
+    "drawing differs from proof (only 83% of pixels identical)",
+    "parts drawn 12px apart"
    ]
   }
  }

@@ -1,0 +1,285 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "57193898c8eb"
+ },
+ "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 145,
+   "haze_far_max": 2,
+   "haze_far_p99_9": 2.0,
+   "glow_ring_nonzero_frac": 0.0068,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0001,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 5758,
+     "dRGB": [
+      52.8,
+      62.8,
+      62.5
+     ],
+     "dLum": 59.8
+    },
+    "64-160": {
+     "n": 7449,
+     "dRGB": [
+      23.0,
+      27.5,
+      29.1
+     ],
+     "dLum": 26.3
+    },
+    "160-255": {
+     "n": 17782,
+     "dRGB": [
+      -31.1,
+      -35.0,
+      -28.9
+     ],
+     "dLum": -33.2
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 31659,
+  "haze_px_removed": 12823,
+  "crosses_grid": [
+   [
+    "05-accessories/acc-toys-little.webp",
+    [
+     0,
+     0
+    ]
+   ],
+   [
+    "05-accessories/acc-toys-little.webp",
+    [
+     0,
+     3
+    ]
+   ]
+  ],
+  "wisp_px_kept": {
+   "plush-bunny/0": 0,
+   "plush-bunny/1": 0,
+   "plush-bunny/2": 0,
+   "plush-bunny/3": 0,
+   "teddy-bear/0": 1,
+   "teddy-bear/1": 0,
+   "teddy-bear/2": 0,
+   "teddy-bear/3": 2,
+   "kitten-plush/0": 0,
+   "kitten-plush/1": 0,
+   "kitten-plush/2": 0,
+   "kitten-plush/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "plush-bunny": {
+   "category": "toys-little",
+   "views": {
+    "front": {
+     "file": "toys-little/plush-bunny-front.webp",
+     "width": 501,
+     "height": 520,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       99,
+       48,
+       501,
+       520
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "toys-little/plush-bunny-left.webp",
+     "width": 374,
+     "height": 520,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       727,
+       48,
+       374,
+       520
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "toys-little/plush-bunny-right.webp",
+     "width": 373,
+     "height": 518,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       1287,
+       50,
+       373,
+       518
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "toys-little/plush-bunny-back.webp",
+     "width": 500,
+     "height": 517,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       1787,
+       47,
+       500,
+       517
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "teddy-bear": {
+   "category": "toys-little",
+   "views": {
+    "front": {
+     "file": "toys-little/teddy-bear-front.webp",
+     "width": 437,
+     "height": 528,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       132,
+       641,
+       437,
+       528
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "toys-little/teddy-bear-left.webp",
+     "width": 363,
+     "height": 539,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       719,
+       632,
+       363,
+       539
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "toys-little/teddy-bear-right.webp",
+     "width": 361,
+     "height": 538,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       1306,
+       631,
+       361,
+       538
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "toys-little/teddy-bear-back.webp",
+     "width": 439,
+     "height": 518,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       1817,
+       642,
+       439,
+       518
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "kitten-plush": {
+   "category": "toys-little",
+   "views": {
+    "front": {
+     "file": "toys-little/kitten-plush-front.webp",
+     "width": 387,
+     "height": 520,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       158,
+       1237,
+       387,
+       520
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "toys-little/kitten-plush-left.webp",
+     "width": 428,
+     "height": 521,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       727,
+       1234,
+       428,
+       521
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "toys-little/kitten-plush-right.webp",
+     "width": 431,
+     "height": 521,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       1231,
+       1234,
+       431,
+       521
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "toys-little/kitten-plush-back.webp",
+     "width": 395,
+     "height": 519,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-toys-little.webp",
+      "box": [
+       1840,
+       1238,
+       395,
+       519
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

@@ -1,0 +1,269 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "7bed91f90136"
+ },
+ "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 449,
+   "haze_far_max": 2,
+   "haze_far_p99_9": 2.0,
+   "glow_ring_nonzero_frac": 0.008,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0008,
+   "interior_frac_below_200": 0.0001,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 6515,
+     "dRGB": [
+      -49.6,
+      -44.2,
+      -45.5
+     ],
+     "dLum": -46.0
+    },
+    "64-160": {
+     "n": 7892,
+     "dRGB": [
+      -53.7,
+      -53.3,
+      -50.2
+     ],
+     "dLum": -53.1
+    },
+    "160-255": {
+     "n": 20610,
+     "dRGB": [
+      -58.2,
+      -64.0,
+      -55.2
+     ],
+     "dLum": -61.3
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 10538,
+  "haze_px_removed": 14858,
+  "wisp_px_kept": {
+   "mini-shoulder-bag/0": 0,
+   "mini-shoulder-bag/1": 0,
+   "mini-shoulder-bag/2": 0,
+   "mini-shoulder-bag/3": 0,
+   "beaded-tote/0": 0,
+   "beaded-tote/1": 0,
+   "beaded-tote/2": 0,
+   "beaded-tote/3": 0,
+   "mini-backpack/0": 0,
+   "mini-backpack/1": 0,
+   "mini-backpack/2": 0,
+   "mini-backpack/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "mini-shoulder-bag": {
+   "category": "bags-adult",
+   "views": {
+    "front": {
+     "file": "bags-adult/mini-shoulder-bag-front.webp",
+     "width": 358,
+     "height": 480,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       149,
+       61,
+       358,
+       480
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "bags-adult/mini-shoulder-bag-left.webp",
+     "width": 353,
+     "height": 483,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       735,
+       61,
+       353,
+       483
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "bags-adult/mini-shoulder-bag-right.webp",
+     "width": 353,
+     "height": 483,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       1300,
+       61,
+       353,
+       483
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "bags-adult/mini-shoulder-bag-back.webp",
+     "width": 356,
+     "height": 480,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       1882,
+       61,
+       356,
+       480
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "beaded-tote": {
+   "category": "bags-adult",
+   "views": {
+    "front": {
+     "file": "bags-adult/beaded-tote-front.webp",
+     "width": 369,
+     "height": 487,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       143,
+       658,
+       369,
+       487
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "bags-adult/beaded-tote-left.webp",
+     "width": 158,
+     "height": 486,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       818,
+       658,
+       158,
+       486
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "bags-adult/beaded-tote-right.webp",
+     "width": 157,
+     "height": 486,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       1412,
+       658,
+       157,
+       486
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "bags-adult/beaded-tote-back.webp",
+     "width": 367,
+     "height": 487,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       1877,
+       657,
+       367,
+       487
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "mini-backpack": {
+   "category": "bags-adult",
+   "views": {
+    "front": {
+     "file": "bags-adult/mini-backpack-front.webp",
+     "width": 358,
+     "height": 483,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       145,
+       1256,
+       358,
+       483
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "bags-adult/mini-backpack-left.webp",
+     "width": 388,
+     "height": 483,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       723,
+       1256,
+       388,
+       483
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "bags-adult/mini-backpack-right.webp",
+     "width": 388,
+     "height": 483,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       1277,
+       1256,
+       388,
+       483
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "bags-adult/mini-backpack-back.webp",
+     "width": 356,
+     "height": 483,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult.webp",
+      "box": [
+       1886,
+       1256,
+       356,
+       483
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}
