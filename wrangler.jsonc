@@ -5,5 +5,7 @@
   "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "./dist"
-  }
+  },
+  // Lets Workers Builds run `wrangler preview` for non-production branches.
+  "previews": {}
 }
