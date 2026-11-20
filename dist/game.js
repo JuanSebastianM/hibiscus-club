@@ -222,6 +222,14 @@ function paintDoll(c){
     }catch{dollPuppet=null}
   }).catch(()=>say(t('common.portraitError')));
 }
+/* Sparkles back on: the dolls on screen start moving again (they stopped and showed the still). */
+function restartPuppets(){
+  try{
+    if(isMakeoverRoute())paintStage();
+    else if(isDistrictRoute(route)){if(worldView&&!worldView.puppet?.active)attachPuppets(worldView,currentShot())}
+    else{const c=document.querySelector('#preview, #card-preview');if(c&&!(dollPuppet?.active&&dollPuppet.canvas===c))paintDoll(c)}
+  }catch{}
+}
 function setPageTitle(){
   document.title=t('meta.title',{page:places.find(p=>p.id===route)?.name||districtOf(route)?.name||t('page.'+route)});
 }
@@ -286,7 +294,7 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('button,a');if(!b||b.disabled)return;
   if(!b.classList.contains('sound'))tone();
   if(b.classList.contains('sound')){state.sound=!state.sound;persist();HibiscusMusic.setEnabled(state.sound);navBar();tone();track('sound',state.sound?'on':'off');return;}
-  if(b.classList.contains('sparkle-toggle')){state.sparkle=!state.sparkle;persist();track('sparkle',state.sparkle?'on':'off');try{HibiscusFx.setEnabled(state.sparkle);if(state.sparkle){const r=b.getBoundingClientRect();HibiscusFx.burst(r.left+r.width/2,r.top+r.height/2)}}catch{}navBar();return;}
+  if(b.classList.contains('sparkle-toggle')){state.sparkle=!state.sparkle;persist();track('sparkle',state.sparkle?'on':'off');try{HibiscusFx.setEnabled(state.sparkle);if(state.sparkle){const r=b.getBoundingClientRect();HibiscusFx.burst(r.left+r.width/2,r.top+r.height/2)}}catch{}navBar();if(state.sparkle)restartPuppets();return;}
   const d=b.dataset;
   if(d.lang){setLanguage(d.lang);return;}
   if(makeoverClick(b,d))return;

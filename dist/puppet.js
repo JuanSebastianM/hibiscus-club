@@ -32,7 +32,7 @@ const HibiscusPuppet=(()=>{
   // allowSoftwareGL: also run on a software renderer (?softgl in the address, for automated checks)
   const config={maxLive:4,grid:8,headGrid:2,hairGrid:10,maxModels:8,warmModels:5,allowSoftwareGL:/[?&]softgl\b/.test(location.search),quality:'auto',debugPieces:false};
   const W=600,H=1060,NB=R.NB,B=R.B;
-  let enabled=true,threeP=null,T=null,ctxGL=null,webgl2=null,raf=0,ticker=0,lastNow=0,frameEma=16,level=0;
+  let enabled=true,threeP=null,T=null,ctxGL=null,webgl2=null,raf=0,ticker=0,lastNow=0,frameEma=16,costEma=0,level=0;
   const instances=new Set(),models=new Map(),building=new Map();
   const later=()=>new Promise(r=>setTimeout(r,0));
   const clamp=R.clamp,smooth=R.smooth,lerp=R.lerp;
@@ -651,7 +651,8 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
     if(p){models.delete(key);models.set(key,p)}
     else{
       p=building.get(key);
-      if(!p){p=make().then(m=>{building.delete(key);m.key=key;models.set(key,m);trimModels();return m},e=>{building.delete(key);throw e});building.set(key,p);return p}
+      const t0=performance.now();
+      if(!p){p=make().then(m=>{building.delete(key);m.key=key;m.buildMs=performance.now()-t0;models.set(key,m);trimModels();return m},e=>{building.delete(key);throw e});building.set(key,p);return p}
       return p;
     }
     return Promise.resolve(p);
@@ -834,7 +835,7 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       try{p.update(dt);p.render();ran++}catch(e){p.fail(e)}
     }
     if(ran){
-      const cost=performance.now()-t0;frameEma+=(Math.max(cost,dt*1000)-frameEma)*.05;
+      const cost=performance.now()-t0;frameEma+=(Math.max(cost,dt*1000)-frameEma)*.05;costEma+=(cost-costEma)*.05;
       if(config.quality==='auto'&&frameEma>24&&level<2){level++;frameEma=16}
       raf=requestAnimationFrame(frame);
     }else lastNow=0;
@@ -887,7 +888,7 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       return p;
     },
     supported,setEnabled(on){enabled=!!on;tick()},config,
-    stats:()=>({live:instances.size,active:[...instances].filter(p=>p.active).length,models:models.size,building:building.size,level,frameMs:+frameEma.toFixed(1),
+    stats:()=>({live:instances.size,active:[...instances].filter(p=>p.active).length,models:models.size,building:building.size,level,frameMs:+frameEma.toFixed(1),puppetMs:+costEma.toFixed(2),buildMs:[...models.values()].map(m=>m.buildMs|0),
       gpuModels:[...models.values()].filter(m=>m.gpu).length,three:T?'loaded':threeP?'loading':'not loaded',
       memory:ctxGL?{...ctxGL.renderer.info.memory}:null}),
     /* lab and tests: build a model and render one pose into a canvas (no animation loop) */

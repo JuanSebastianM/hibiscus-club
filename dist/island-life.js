@@ -162,6 +162,7 @@ function stopWalk(save=false){
    are off or fail, the still pictures and the glide stay exactly as before. */
 function attachPuppets(w,shot){
   if(typeof HibiscusPuppet==='undefined'||!HibiscusPuppet.supported())return;
+  try{w.puppet?.destroy();w.resident?.destroy()}catch{}
   const dpr=()=>Math.min(2,window.devicePixelRatio||1);
   const crop=WALKER_CROP,maxDepth=walkerDepth(.94);
   try{
@@ -187,7 +188,7 @@ function residentPuppet(img,id,role){
   try{
     const p=HibiscusPuppet.create(c,{resident:id,role,
       layout:()=>{place();const d=Math.min(2,window.devicePixelRatio||1),h=Math.max(20,Math.round(img.offsetHeight*d)),cw=Math.round(h*176/432);return {size:[cw,h],dest:[0,0,cw,h]}},
-      onActive:on=>{img.style.visibility=on?'hidden':'';c.hidden=!on}});
+      onActive:on=>{img.style.visibility=on?'hidden':'';c.hidden=!on;if(!on)c.remove()}});
     if(!p){c.remove();return null}
     return p;
   }catch{c.remove();return null}
