@@ -92,9 +92,9 @@ const sheets={
       L('adult',{outfit:'denim-jacket-skirt',hair:'side-ponytail',hairColor:'bubblegum',shoes:'pink-chunky-sneakers',earrings:'star-studs',necklace:'none',clip:'gold-star',lips:'cherry',shadow:'lilac',backdrop:3}),
       L('little',{outfit:'star-pajamas',hair:'curly-bob',hairColor:'strawberry',shoes:'strawberry-rain-boots',clip:'butterfly-clip',lips:'strawberry-tint',gem:'star-freckles',backdrop:0}),
       L('adult',{outfit:'black-flares-set',hair:'curly-bob',hairColor:'jet',shoes:'black-platform-sandals',earrings:'gold-hoops',earringsTint:'silver',clip:'red-bow',lips:'berry',shadow:'bronze',backdrop:2}),
-      L('little',{outfit:'mint-cardigan-dress',hair:'half-up-curls',hairColor:'honey',shoes:'red-mary-janes',shoesTint:'original',clip:'hibiscus-clip',gem:'glitter',backdrop:1}),
+      L('little',{outfit:'mint-cardigan-dress',hair:'curly-bob',hairColor:'honey',shoes:'red-mary-janes',shoesTint:'original',clip:'hibiscus-clip',gem:'glitter',backdrop:1}),
       L('adult',{outfit:'pink-velour-cargo',outfitTint:'lilac',hair:'ringlet-pigtails',hairColor:'lilac',shoes:'pink-chunky-sneakers',clip:'peach-blossom',gem:'crystals',lips:'peach-gloss',shadow:'aqua',backdrop:0}),
-      L('little',{outfit:'lilac-cord-pinafore',hair:'side-ponytail',shoes:'white-velcro-sneakers',clip:'satin-bow',earrings:'pearl-studs',gem:'butterfly',backdrop:3}),
+      L('little',{outfit:'lilac-cord-pinafore',hair:'curly-buns',shoes:'white-velcro-sneakers',clip:'satin-bow',earrings:'pearl-studs',gem:'butterfly',backdrop:3}),
       L('adult',{outfit:'green-hibiscus-sundress',hair:'long-waves',hairColor:'chestnut',shoes:'lilac-mary-jane-heels',necklace:'butterfly-necklace',earrings:'heart-studs',clip:'hibiscus-clip',lips:'rose-nude',blush:'rose',backdrop:1})];
     for(const look of looks){const c=document.createElement('canvas');await paintPortrait(c,look,q.get('postcard')==='1');c.style.width=(c.width*scale)+'px';const f=document.createElement('figure');const cap=document.createElement('figcaption');cap.textContent=look.doll+' '+look.outfit+' bd'+look.backdrop;f.append(c,cap);section.append(f)}},
   async parts(){for(const d of dolls){heading('Limb parts · '+d);for(const it of catalogOptions('outfit',d)){if(!want(it.id))continue;
@@ -127,7 +127,7 @@ Object.assign(sheets,{
     for(const id of catalogOptions('necklace',d).map(i=>i.id))if(want(id))for(const v of views)
       await tile(id+' '+v,L(d,{necklace:id,earrings:'none',clip:'none',hair:q.get('hair')||'curly-buns',...extra}),vopt(d,v,v==='back'?(d==='adult'?[110,100,180,170]:[100,150,200,170]):(d==='adult'?[10,100,170,170]:[0,150,200,170])));
   }},
-  async vclips(){for(const d of dolls)for(const h of CATALOG.itemList.filter(i=>i.category==='hair'&&i.id!=='lab-none'))if(want(h.id)){heading('Clips on '+h.id+' · '+d);
+  async vclips(){for(const d of dolls)for(const h of CATALOG.itemList.filter(i=>i.category==='hair'&&i.id!=='lab-none'&&i.dolls.includes(d)))if(want(h.id)){heading('Clips on '+h.id+' · '+d);
     for(const id of catalogOptions('clip',d).map(i=>i.id))for(const v of views)await tile(id+' '+v,L(d,{hair:h.id,clip:id,...extra}),{...vopt(d,v,headBox(d,v)),scale:zoom?scale:.6})}},
   async vcolors(){for(const d of dolls){heading('Hair colours per view · '+d);for(const h of (q.get('hair')||'long-waves,curly-bob').split(','))for(const hc of CATALOG.hairColors)for(const v of ['front',...views])
     await tile(h+' '+hc.id+' '+v,L(d,{hair:h,hairColor:hc.id,clip:'none',...extra}),{...vopt(d,v,headBox(d,v)),scale:.5})}},
@@ -146,11 +146,11 @@ Object.assign(sheets,{
       L('adult',{outfit:'denim-jacket-skirt',hair:'side-ponytail',hairColor:'bubblegum',shoes:'pink-chunky-sneakers',earrings:'star-studs',necklace:'none',clip:'gold-star',lips:'cherry',shadow:'lilac'}),
       L('little',{outfit:'star-pajamas',hair:'curly-bob',hairColor:'strawberry',shoes:'strawberry-rain-boots',clip:'butterfly-clip',lips:'strawberry-tint',gem:'star-freckles'}),
       L('adult',{outfit:'black-flares-set',hair:'curly-bob',hairColor:'jet',shoes:'black-platform-sandals',earrings:'gold-hoops',earringsTint:'silver',clip:'red-bow',lips:'berry',shadow:'bronze'}),
-      L('little',{outfit:'mint-cardigan-dress',hair:'half-up-curls',hairColor:'honey',shoes:'red-mary-janes',clip:'hibiscus-clip',gem:'glitter'}),
+      L('little',{outfit:'mint-cardigan-dress',hair:'curly-bob',hairColor:'honey',shoes:'red-mary-janes',clip:'hibiscus-clip',gem:'glitter'}),
       L('adult',{outfit:'pink-velour-cargo',outfitTint:'lilac',hair:'ringlet-pigtails',hairColor:'lilac',shoes:'pink-chunky-sneakers',clip:'peach-blossom',gem:'crystals',lips:'peach-gloss',shadow:'aqua'}),
-      L('little',{outfit:'lilac-cord-pinafore',hair:'side-ponytail',shoes:'white-velcro-sneakers',clip:'satin-bow',earrings:'pearl-studs',gem:'butterfly'}),
+      L('little',{outfit:'lilac-cord-pinafore',hair:'curly-buns',shoes:'white-velcro-sneakers',clip:'satin-bow',earrings:'pearl-studs',gem:'butterfly'}),
       L('adult',{outfit:'green-hibiscus-sundress',hair:'long-waves',hairColor:'chestnut',shoes:'lilac-mary-jane-heels',necklace:'butterfly-necklace',earrings:'heart-studs',clip:'hibiscus-clip',lips:'rose-nude',blush:'rose'}),
-      L('little',{outfit:'pink-gingham-bow-dress',hair:'long-waves',shoes:'red-mary-janes',clip:'red-bow',necklace:'pearl-starfish-necklace'})];
+      L('little',{outfit:'pink-gingham-bow-dress',hair:'ringlet-pigtails',shoes:'red-mary-janes',clip:'red-bow',necklace:'pearl-starfish-necklace'})];
     const order=['front','left','back','right'];
     for(const look of looks){const row=document.createElement('canvas');const sc=Number(q.get('scale')||.42);row.width=Math.round(600*4*sc);row.height=Math.round(1060*sc);
       const g=row.getContext('2d');g.fillStyle='#cfe6d4';g.fillRect(0,0,row.width,row.height);
@@ -164,7 +164,7 @@ Object.assign(sheets,{
       little:{front:[95,-80,210,280],back:[95,-80,210,280],left:[-15,-80,240,280],right:[-18,-80,240,280]}};
     const hv=q.get('views')?views:CATALOG.views,styles=(q.get('hair')||'lab-none,'+CATALOG.itemList.filter(i=>i.category==='hair'&&i.id!=='lab-none').map(i=>i.id).join(',')).split(',');
     const colors=q.get('colors')?(q.get('colors')==='all'?CATALOG.hairColors.map(c=>c.id):q.get('colors').split(',')):[null];
-    for(const d of dolls){heading('Heads · '+d);for(const h of styles)for(const c of colors)for(const v of hv)
+    for(const d of dolls){heading('Heads · '+d);for(const h of styles.filter(h=>catalogItem(h)?.dolls.includes(d)))for(const c of colors)for(const v of hv)
       await tile(h+' '+(c?c+' ':'')+v,L(d,{hair:h,clip:'none',earrings:'none',necklace:'none',...(c?{hairColor:c}:{}),...extra}),{zoom:box[d][v],scale:q.get('scale')?scale:(d==='adult'?1.6:1.2),grid,view:v})}},
   async portraits(){heading('paintPortrait per view');for(const d of dolls)for(const v of CATALOG.views){const c=document.createElement('canvas');await paintPortrait(c,L(d,{backdrop:Number(q.get('bd')||0),...extra}),q.get('postcard')==='1',v);c.style.width=(c.width*scale)+'px';const f=document.createElement('figure');const cap=document.createElement('figcaption');cap.textContent=d+' '+v;f.append(c,cap);section.append(f)}}
 });

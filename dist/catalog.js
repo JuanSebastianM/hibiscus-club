@@ -73,6 +73,11 @@ const T=(id,name,swatch,o)=>({id,name,swatch,...o});
 /* Hue-shift tint for the source hue range [a,b] (wrapping), moving its centre to hue `to`. */
 const H=(id,name,swatch,range,to,o={})=>{const [a,b]=range,span=((b-a)%360+360)%360,mid=a+span/2;
   return {id,name,swatch,range,hue:to-mid,minSat:.12,feather:14,...o}};
+/* Hair styles each doll can wear. A style is offered to a doll only if it is listed
+   here and has a fit for her; a new kid style is its item (art + fit.little) plus its id in `little`.
+   Looks that name a style the doll does not have fall back to her default (readLook). */
+const HAIR_STYLES={adult:['long-waves','side-ponytail','half-up-curls','ringlet-pigtails','curly-buns','curly-bob'],
+  little:['ringlet-pigtails','curly-buns','curly-bob']};
 const items=[
   /* ----- outfits: adult ----- */
   {id:'hibiscus-flares',category:'outfit',dolls:['adult'],art:art('outfits-adult','hibiscus-flares'),
@@ -147,24 +152,21 @@ const items=[
     fit:{little:{front:{left:{x:99,y:750,w:75},right:{x:228,y:750,w:75},collar:.3}}}},
   {id:'strawberry-rain-boots',category:'shoes',dolls:['little'],art:art('shoes-little','strawberry-rain-boots',['left','right']),
     tints:[original,H('sky','Sky','#9cd0f2',[35,75],205,{sat:.8}),H('mint','Mint','#9ce2c0',[35,75],150,{sat:.75}),H('lilac','Lilac','#c0a6ec',[35,75],270,{sat:.8,light:-.03})],
-    fit:{little:{front:{left:{x:101,y:728,w:72},right:{x:229,y:728,w:72},collar:.12}}}},
-  /* ----- hair ----- */
-  {id:'long-waves',category:'hair',dolls:['adult','little'],art:art('hair','long-waves'),
-    fit:{adult:{front:hf('long-waves',[150,250,43],1,{front:ARMS_CLEAR.adult,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:160,y:43,rot:-25}})},
-         little:{front:hf('long-waves',[124,278,67],1,{front:ARMS_CLEAR.little,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:140,y:69,rot:-25}})}}},
-  {id:'side-ponytail',category:'hair',dolls:['adult','little'],art:art('hair','side-ponytail'),
-    fit:{adult:{front:hf('side-ponytail',[150,266,36],.9,{front:ARMS_CLEAR.adult,backFill:{sx:.7,dy:4},clip:{x:244,y:28,rot:20}})},
-         little:{front:hf('side-ponytail',[124,292,58],.9,{front:ARMS_CLEAR.little,backFill:{sx:.7,dy:4},clip:{x:266,y:48,rot:20}})}}},
-  {id:'half-up-curls',category:'hair',dolls:['adult','little'],art:art('hair','half-up-curls'),
-    fit:{adult:{front:hf('half-up-curls',[150,250,43],1,{front:ARMS_CLEAR.adult,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:166,y:35,rot:-20}})},
-         little:{front:hf('half-up-curls',[124,278,67],1,{front:ARMS_CLEAR.little,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:146,y:55,rot:-20}})}}},
-  {id:'ringlet-pigtails',category:'hair',dolls:['adult','little'],art:art('hair','ringlet-pigtails'),
+    fit:{little:{front:{left:{x:97,y:728,w:80,h:135},right:{x:225,y:728,w:80,h:135.7},collar:.12}}}},
+  /* ----- hair (which doll wears which style: HAIR_STYLES below) ----- */
+  {id:'long-waves',category:'hair',art:art('hair','long-waves'),
+    fit:{adult:{front:hf('long-waves',[150,250,43],1,{front:ARMS_CLEAR.adult,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:160,y:43,rot:-25}})}}},
+  {id:'side-ponytail',category:'hair',art:art('hair','side-ponytail'),
+    fit:{adult:{front:hf('side-ponytail',[150,266,36],.9,{front:ARMS_CLEAR.adult,backFill:{sx:.7,dy:4},clip:{x:244,y:28,rot:20}})}}},
+  {id:'half-up-curls',category:'hair',art:art('hair','half-up-curls'),
+    fit:{adult:{front:hf('half-up-curls',[150,250,43],1,{front:ARMS_CLEAR.adult,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:166,y:35,rot:-20}})}}},
+  {id:'ringlet-pigtails',category:'hair',art:art('hair','ringlet-pigtails'),
     fit:{adult:{front:hf('ringlet-pigtails',[134,266,41],1.08,{clip:{x:142,y:17,rot:-20}})},
          little:{front:hf('ringlet-pigtails',[112,290,63],1,{clip:{x:132,y:33,rot:-20}})}}},
-  {id:'curly-buns',category:'hair',dolls:['adult','little'],art:art('hair','curly-buns'),
+  {id:'curly-buns',category:'hair',art:art('hair','curly-buns'),
     fit:{adult:{front:hf('curly-buns',[140,260,43],1.04,{clip:{x:146,y:21,rot:-20}})},
          little:{front:hf('curly-buns',[120,282,66],1,{clip:{x:130,y:42,rot:-20}})}}},
-  {id:'curly-bob',category:'hair',dolls:['adult','little'],art:art('hair','curly-bob'),
+  {id:'curly-bob',category:'hair',art:art('hair','curly-bob'),
     fit:{adult:{front:hf('curly-bob',[146,254,41],1,{backFill:{sx:.72,dy:4},clip:{x:176,y:31,rot:-15}})},
          little:{front:hf('curly-bob',[120,282,65],1,{backFill:{sx:.72,dy:4},clip:{x:154,y:57,rot:-15}})}}},
   /* ----- earrings ----- */
@@ -189,6 +191,7 @@ const items=[
   {id:'satin-bow',category:'clip',dolls:['adult','little'],proc:2,art:{}},
   {id:'gold-star',category:'clip',dolls:['adult','little'],proc:3,art:{}}
 ];
+for(const it of items)if(it.category==='hair')it.dolls=Object.keys(HAIR_STYLES).filter(d=>HAIR_STYLES[d].includes(it.id));
 /* Display names: sprite items use the names in assets/items/manifest.json. */
 const names={'hibiscus-flares':"Hibiscus Flares",'lilac-satin-bow-dress':"Lilac Satin Bow Dress",'denim-jacket-skirt':"Double Denim Darling",'green-hibiscus-sundress':"Hibiscus Sundae Sundress",'black-flares-set':"Midnight Mall Flares",'pink-velour-cargo':"Pink Velour Weekend",'long-waves':"Beach Babe Waves",'side-ponytail':"Sassy Side Pony",'half-up-curls':"Half-Up Curl Cascade",'ringlet-pigtails':"Ringlet Pigtails",'curly-buns':"Cutie Curl Buns",'curly-bob':"Bouncy Curly Bob",'yellow-dot-dress':"Lemon Drop Dot Dress",'lilac-cord-pinafore':"Lilac Daisy Pinafore",'pink-gingham-bow-dress':"Pink Picnic Gingham Dress",'denim-overalls':"Peachy Heart Overalls",'mint-cardigan-dress':"Mint Blossom Cardi Dress",'star-pajamas':"Starry Sleepover PJs",'gold-hoops':"Golden Glam Hoops",'pearl-starfish-necklace':"Pearl & Starfish Necklace",'butterfly-necklace':"Butterfly Kisses Necklace",'hibiscus-clip':"Hibiscus Hair Clip",'butterfly-clip':"Flutter Butterfly Clip",'red-bow':"Cherry Red Bow",'black-platform-sandals':"Black Platform Sandals",'lilac-mary-jane-heels':"Lilac Mary Jane Heels",'pink-chunky-sneakers':"Pink Chunky Sneakers",'red-mary-janes':"Cherry Mary Janes",'white-velcro-sneakers':"Sweetheart Velcro Sneakers",'strawberry-rain-boots':"Strawberry Puddle Boots",'pearl-studs':'Pearl Studs','heart-studs':'Sweetheart Studs','star-studs':'Twinkle Star Studs','peach-blossom':'Peach Blossom Clip','satin-bow':'Satin Bow','gold-star':'Golden Star Clip'};
 /* ===== side and back views =====
@@ -351,33 +354,31 @@ vf('lilac-mary-jane-heels','adult',{left:{near:{x:11,y:760,w:123}},back:{left:{x
 vf('pink-chunky-sneakers','adult',{left:{near:{x:7,y:772,w:126.5}},back:{left:{x:107.6,y:772.6,w:65.8},right:{x:222.4,y:772.6,w:66.1}}});
 vf('red-mary-janes','little',{left:{near:{x:19.7,y:775.3,w:140.1}},back:{left:{x:103.2,y:763.2,w:71.1},right:{x:230,y:763.2,w:70.3}}});
 vf('white-velcro-sneakers','little',{left:{near:{x:10.5,y:763.8,w:136.3}},back:{left:{x:103.5,y:754.9,w:70.8},right:{x:229.1,y:754.9,w:71.6}}});
-vf('strawberry-rain-boots','little',{left:{near:{x:20,y:706,w:140}},back:{left:{x:102.8,y:728,w:72.2},right:{x:227.9,y:728,w:73}}});
+vf('strawberry-rain-boots','little',{left:{near:{x:20,y:706,w:140}},back:{left:{x:98.8,y:728,w:80,h:133.8},right:{x:223.9,y:728,w:80,h:133.7},collar:.06}});
 /* ----- hair ----- */
 const HV=(id,view,x,y,w,extra={})=>({x,y,w,h:w*VS[id][view][1]/VS[id][view][0],...extra});
 /* side views: the head region is in front of the body, hair below the neck hangs behind the back and
    shoulders (FRONT_SIDE); fringes that would hang in front of the profile are trimmed (cutDoll);
    earsUnder = the style covers the ear, so earrings are drawn under it. Back views: all in front. */
 /* in front: everything above a line from under the chin, past the ear lobe, to the back of the skull */
-const FRONT_SIDE={adult:[{poly:[[-300,-300],[600,-300],[600,95],[166,104],[140,127],[118,140],[60,162],[-300,162]]}],
-  little:[{poly:[[-300,-300],[600,-300],[600,128],[200,138],[172,172],[142,194],[70,216],[-300,216]]}]};
+/* (feathered, so long hair passing behind the neck fades there instead of ending in a cut line) */
+const FRONT_SIDE={adult:[{poly:[[-300,-300],[600,-300],[600,95],[166,104],[140,127],[118,140],[60,162],[-300,162]],feather:3}],
+  little:[{poly:[[-300,-300],[600,-300],[600,128],[200,138],[172,172],[142,194],[70,216],[-300,216]],feather:3}]};
 /* the fringe in front of the profile is trimmed along a rounded hairline: pts run from above the
    head down the front of the hair to the forehead edge and on below the brow (eye, nose, mouth clear) */
 const trimFront=pts=>[{poly:[[-300,pts[0][1]],...pts,[pts[pts.length-1][0],400],[-300,400]],feather:1}];
 const HAIRLINE={adult:[[-10,-40],[-2,-12],[6,4],[14,18],[22,30],[29,40],[34,49],[37,57],[39,66],[40,76]],
   little:[[-22,-40],[-10,-14],[0,4],[8,22],[14,38],[19,52],[23,64],[27,76],[29,88]]};
 const SIDE=(doll,extra)=>({front:FRONT_SIDE[doll],...extra});
-vf('long-waves','adult',{left:HV('long-waves','left',11.2,-28.1,217.5,SIDE('adult',{earsUnder:true,clip:{x:118,y:22,rot:0}})),back:HV('long-waves','back',64,-28.1,269.1,{earsUnder:true,clip:{x:236,y:40,rot:20,scale:.85}})});
-vf('long-waves','little',{left:HV('long-waves','left',0,-38,290,SIDE('little',{earsUnder:true,clip:{x:140,y:50,rot:0}})),back:HV('long-waves','back',-5.7,-40.7,414.4,{earsUnder:true,clip:{x:258,y:62,rot:20,scale:.85}})});
-vf('side-ponytail','adult',{left:HV('side-ponytail','left',-20,-60,205,SIDE('adult',{cutDoll:trimFront(HAIRLINE.adult),clip:{x:120,y:-2,rot:0}})),back:HV('side-ponytail','back',103.4,-69.9,190.2,{clip:{x:152,y:22}})});
-vf('side-ponytail','little',{left:HV('side-ponytail','left',-35,-75,272,SIDE('little',{cutDoll:trimFront(HAIRLINE.little),clip:{x:140,y:10}})),back:HV('side-ponytail','back',63.7,-95.4,275.5,{clip:{x:136,y:40}})});
-vf('half-up-curls','adult',{left:HV('half-up-curls','left',0,-55,215,SIDE('adult',{earsUnder:true,cutDoll:trimFront(HAIRLINE.adult),clip:{x:105,y:2}})),back:HV('half-up-curls','back',60.9,-67.4,275.3,{earsUnder:true,clip:{x:230,y:20}})});
-vf('half-up-curls','little',{left:HV('half-up-curls','left',-12,-70,286,SIDE('little',{earsUnder:true,cutDoll:trimFront(HAIRLINE.little),clip:{x:125,y:20}})),back:HV('half-up-curls','back',-10.5,-101.2,423.9,{earsUnder:true,clip:{x:256,y:40}})});
+vf('long-waves','adult',{left:HV('long-waves','left',30.6,-13.3,198,SIDE('adult',{earsUnder:true,clip:{x:128,y:32,rot:0}})),back:HV('long-waves','back',78.5,-22.9,240,{earsUnder:true,clip:{x:232,y:38,rot:20,scale:.85}})});
+vf('side-ponytail','adult',{left:HV('side-ponytail','left',8.9,-40,176,SIDE('adult',{cutDoll:trimFront(HAIRLINE.adult),clip:{x:129,y:10,rot:0}})),back:HV('side-ponytail','back',103.4,-69.9,190.2,{clip:{x:152,y:22}})});
+vf('half-up-curls','adult',{left:HV('half-up-curls','left',21.4,-38.6,186,SIDE('adult',{earsUnder:true,cutDoll:trimFront(HAIRLINE.adult),clip:{x:113,y:14}})),back:HV('half-up-curls','back',78.5,-56.2,240,{earsUnder:true,clip:{x:226,y:20}})});
 vf('ringlet-pigtails','adult',{left:HV('ringlet-pigtails','left',12,-48,170,SIDE('adult',{clip:{x:118,y:2}})),back:HV('ringlet-pigtails','back',112,-24,172,{h:220,clip:{x:250,y:8}})});
 vf('ringlet-pigtails','little',{left:HV('ringlet-pigtails','left',8,-60,226,SIDE('little',{clip:{x:135,y:14}})),back:HV('ringlet-pigtails','back',78,-26,246,{h:302.5,clip:{x:270,y:22}})});
 vf('curly-buns','adult',{left:HV('curly-buns','left',18,-60,172,SIDE('adult',{clip:{x:112,y:6}})),back:HV('curly-buns','back',95,-38,206,{h:209,clip:{x:246,y:16}})});
 vf('curly-buns','little',{left:HV('curly-buns','left',16,-78,229,SIDE('little',{clip:{x:130,y:20}})),back:HV('curly-buns','back',48,-52,306,{h:300,clip:{x:272,y:32}})});
 vf('curly-bob','adult',{left:HV('curly-bob','left',20.2,-32.8,175.9,SIDE('adult',{earsUnder:true,clip:{x:110,y:18}})),back:HV('curly-bob','back',87.6,-33.4,221.9,{earsUnder:true,clip:{x:222,y:28,rot:15,scale:.85}})});
-vf('curly-bob','little',{left:HV('curly-bob','left',12,-42,234,SIDE('little',{earsUnder:true,clip:{x:130,y:40}})),back:HV('curly-bob','back',35.1,-45.2,332.8,{earsUnder:true,clip:{x:248,y:52,rot:15,scale:.85}})});
+vf('curly-bob','little',{left:HV('curly-bob','left',12,-42,234,SIDE('little',{earsUnder:true,clip:{x:130,y:40}})),back:HV('curly-bob','back',51.7,-34.7,299.5,{earsUnder:true,clip:{x:243,y:51,rot:15,scale:.85}})});
 /* ----- jewelry ----- */
 vf('gold-hoops','adult',{left:{left:{x:104,y:107,w:8,part:'left'}},back:{left:{x:153,y:103,w:20},right:{x:243,y:103,w:20}}});
 vf('gold-hoops','little',{left:{left:{x:104,y:159,w:9,part:'left'}},back:{left:{x:137,y:156,w:22},right:{x:266,y:156,w:22}}});
@@ -411,6 +412,23 @@ shoeFit('black-platform-sandals','adult','left',{near:{
     keep:[[[0,.45],[.16,.42],[.16,.75],[0,.75]],[[.42,-.1],[.9,-.1],[.9,.47],[.6,.55],[.42,.68]]]},
   foot:{top:772,bed:[[0,840],[50,839],[70,834],[100,808],[140,805]],sx:.93,cx:128,ramp:40},trim:772});
 shoeFit('black-platform-sandals','adult','back',{collar:.12,...pair({keep:[[[.15,.05],[.85,.05],[.85,.4],[.15,.4]]]}),trim:790});
+/* the leg channel above a closed shoe's opening (keep), from the top of the sprite part */
+const channel=(u0,u1,v,v1=v)=>[[[u0,-1.5],[u1,-1.5],[u1,v1],[u0,v]]];
+shoeFit('lilac-mary-jane-heels','adult','front',{...pair({over:[[[0,.29],[1,.29],[1,.42],[0,.42]]],open:[[[.2,.41],[.8,.41],[.8,.55],[.65,.6],[.35,.6],[.2,.55]]]}),
+  foot:{top:790,bed:[[0,848],[400,848]]}});
+shoeFit('lilac-mary-jane-heels','adult','left',{near:{open:[[[.25,.475],[.42,.43],[.6,.43],[.6,.49],[.3,.53]]],keep:[[[.28,.1],[.6,-.6],[.97,-.6],[.97,.1],[.75,.45],[.28,.52]]]},
+  foot:{top:772,bed:[[0,841],[55,838],[75,828],[95,805],[140,798]],sx:.9,cx:130,ramp:40},trim:780});
+shoeFit('lilac-mary-jane-heels','adult','back',{...pair({keep:channel(.08,.92,.24)}),trim:765});
+shoeFit('pink-chunky-sneakers','adult','left',{near:{keep:channel(.45,1.2,.3,.3)},trim:792});
+shoeFit('pink-chunky-sneakers','adult','back',{...pair({keep:channel(.08,.92,.22)}),trim:790});
+shoeFit('red-mary-janes','little','front',{...pair({over:[[[0,.18],[1,.18],[1,.34],[0,.34]]],open:[[[.12,.34],[.88,.34],[.86,.57],[.5,.61],[.14,.57]]]})});
+shoeFit('red-mary-janes','little','left',{near:{keep:channel(.38,1.15,.3,.2)},trim:792});
+shoeFit('red-mary-janes','little','back',{...pair({keep:channel(.12,.88,.2)}),trim:790});
+shoeFit('white-velcro-sneakers','little','left',{near:{keep:channel(.4,1.2,.3,.3)},trim:790});
+shoeFit('white-velcro-sneakers','little','back',{...pair({keep:channel(.1,.9,.2)}),trim:790});
+shoeFit('strawberry-rain-boots','little','front',{...pair({keep:channel(.05,.95,.1)}),trim:745});
+shoeFit('strawberry-rain-boots','little','left',{collar:.045,near:{keep:channel(.05,.95,.1)},trim:735});
+shoeFit('strawberry-rain-boots','little','back',{...pair({keep:channel(.05,.95,.1)}),trim:745});
 
 /* bodysuit straps / back neckline repainted as skin above every side/back outfit (only lilac pixels change) */
 const SKIN_DEFAULT={adult:{left:[{rect:[0,140,182,580]}],back:[{rect:[0,140,397,580]}]},little:{left:[{rect:[0,180,208,500]}],back:[{rect:[0,180,403,500]}]}};
@@ -454,12 +472,9 @@ const SCALP_REGION={
     left:[[-20,64],[22,66],[38,70],[54,76],[70,84],[84,94],[96,106],[103,118],[108,114],[112,108],[124,105],[136,108],[143,118],[146,138],[148,160],[150,182],[230,182],[230,-40],[-20,-40]],
     back:[[110,98],[128,106],[131,128],[138,146],[150,160],[170,168],[203,171],[236,168],[256,160],[268,146],[275,128],[278,106],[298,98],[298,-40],[110,-40]]}};
 const SCALP_FLOW={
-  'long-waves':{adult:{front:{part:203,to:[[128,130],[278,130]]},left:{to:[[150,150]]},back:{to:[[200,200]]}},
-    little:{front:{part:206,to:[[110,170],[300,170]]},left:{to:[[160,200]]},back:{to:[[203,240]]}}},
-  'side-ponytail':{adult:{front:{to:[[182,-28]]},left:{to:[[112,-28]]},back:{to:[[200,-30]]}},
-    little:{front:{to:[[172,-40]]},left:{to:[[125,-40]]},back:{to:[[203,-40]]}}},
-  'half-up-curls':{adult:{front:{to:[[203,-30]]},left:{to:[[110,-20]]},back:{to:[[200,10]]}},
-    little:{front:{to:[[206,-30]]},left:{to:[[115,-30]]},back:{to:[[203,10]]}}},
+  'long-waves':{adult:{front:{part:203,to:[[128,130],[278,130]]},left:{to:[[150,150]]},back:{to:[[200,200]]}}},
+  'side-ponytail':{adult:{front:{to:[[182,-28]]},left:{to:[[112,-28]]},back:{to:[[200,-30]]}}},
+  'half-up-curls':{adult:{front:{to:[[203,-30]]},left:{to:[[110,-20]]},back:{to:[[200,10]]}}},
   'ringlet-pigtails':{adult:{front:{part:203,to:[[146,7],[260,7]]},left:{to:[[115,-12]]},back:{part:200,to:[[150,0],[250,0]]}},
     little:{front:{part:206,to:[[130,11],[282,11]]},left:{to:[[130,-20]]},back:{part:203,to:[[135,0],[270,0]]}}},
   'curly-buns':{adult:{front:{part:203,to:[[146,-5],[260,-5]]},left:{to:[[120,-20]]},back:{part:200,to:[[150,-5],[250,-5]]}},
@@ -545,7 +560,7 @@ const legacy={
   clip:{adult:['hibiscus-clip','peach-blossom','satin-bow','gold-star'],little:['red-bow','peach-blossom','satin-bow','gold-star']},
   gem:['none','heart','star-freckles']
 };
-return {version:2,views:['front','left','right','back'],dolls,items:byId,itemList:items,makeup,hairColors,defaults,legacy,
+return {version:2,views:['front','left','right','back'],dolls,items:byId,itemList:items,hairStyles:HAIR_STYLES,makeup,hairColors,defaults,legacy,
   categories:['outfit','shoes','hair','earrings','necklace','clip'],
   optional:['shoes','earrings','necklace','clip']};
 })();

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Living scenes lab</title>
+<!-- Living-scenes lab. Serve the repo root (e.g. python3 -m http.server 4205) and open /art/scenes-lab.html
+     Params: scene=island,boardwalk,market,pavilion (default all) · size=desktop|phone|both (default both)
+     debug=1 (fx mask: R water, G flow, B lights, white stars) | 2 (motion: R/G |vector|, B speed) | 3 (aux: R wind, G foam, B parallax, grey dapple)
+     still=1 (WebGL with every effect at zero: framing check) · nofx=1 (plain CSS backgrounds only) · soft=1 (allow software WebGL)
+     quality=auto|high · pins=0 (hide fake overlays). window.lab exposes the handles for scripted tests. -->
+<style>
+:root{--ink:#3a2340}
+body{margin:0;background:#f7e9f1;color:var(--ink);font:14px/1.4 "Trebuchet MS",system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid #e3bfd3;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0 10px 0 0}
+header button,header select{font:inherit;border:1px solid #c994b2;background:#fff5fa;border-radius:7px;padding:4px 9px;cursor:pointer}
+main{padding:16px;display:grid;gap:26px}
+section h2{font-size:15px;margin:0 0 8px}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+figure{margin:0}
+figcaption{font-size:12px;color:#7d5b72;margin-top:4px}
+.stage{position:relative;isolation:isolate;overflow:hidden;border:1px solid #c694b0;background:#d0ecec var(--scene) center/100% 100% no-repeat;user-select:none;touch-action:none}
+.desktop .stage{width:900px;max-width:calc(100vw - 34px)}
+.phone .stage{width:343px}
+.stage.scene{aspect-ratio:16/10}.phone .stage.scene{aspect-ratio:1.47}
+.stage.map{aspect-ratio:1.71;border-radius:0 0 10px 10px}.phone .stage.map{aspect-ratio:1.42}
+.pin{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);background:#fff;border:2px solid #fff;outline:1.5px solid var(--c);border-radius:20px;padding:2px 9px 2px 3px;display:flex;gap:5px;align-items:center;font:bold 12px/1 "Trebuchet MS",sans-serif;box-shadow:0 3px 6px #30313c52;white-space:nowrap}
+.pin i{width:16px;height:16px;border-radius:50%;background:var(--c)}
+.pin::after{content:'';position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:#e0007a;box-shadow:0 0 0 1px #fff}
+.phone .pin{font-size:9px;padding:1px 5px 1px 2px}.phone .pin i{width:11px;height:11px}
+.actor{position:absolute;left:0;top:0;width:0;height:0;cursor:grab;z-index:50}
+.actor b{position:absolute;left:-14px;bottom:0;width:28px;height:84px;border-radius:14px 14px 9px 9px;background:linear-gradient(#ffb6d5,#e0558f);box-shadow:0 2px 0 #9b3466,0 6px 8px #3a234055;display:block}
+.actor b::before{content:'';position:absolute;left:5px;top:-17px;width:18px;height:18px;border-radius:50%;background:#f6d0b3;box-shadow:0 -3px 0 #7a4a2a}
+.actor span{position:absolute;bottom:92px;left:0;transform:translateX(-50%);background:#fff0f7;border:1px solid #f1b6cd;border-radius:12px;padding:1px 7px;font:bold 11px sans-serif;white-space:nowrap}
+.phone .actor b{transform:scale(.6);transform-origin:50% 100%}.phone .actor span{bottom:56px;font-size:9px}
+.state{font:11px monospace;color:#8a6680}
+</style>
+</head>
+<body>
+<header><h1>Living scenes lab</h1>
+<button id="pause">Pause all</button><button id="remount">Remount all</button><button id="unmount">Unmount all</button><button id="toggle">Disable effects</button>
+<select id="debug"><option value="0">Normal</option><option value="1">Mask: fx</option><option value="2">Mask: motion</option><option value="3">Mask: aux</option></select>
+<span class="state" id="summary"></span></header>
+<main id="out"></main>
+<script src="../dist/scene-data.js"></script>
+<script src="../dist/scene-fx.js"></script>
+<script>
+const q=new URLSearchParams(location.search);
+const want=(q.get('scene')||'island,boardwalk,market,pavilion').split(',');
+const sizes=q.get('size')==='desktop'?['desktop']:q.get('size')==='phone'?['phone']:['desktop','phone'];
+HibiscusScenes.config.debug=+(q.get('debug')||0);
+if(q.get('soft')==='1')HibiscusScenes.config.allowSoftwareGL=true;
+if(q.get('quality'))HibiscusScenes.config.quality=q.get('quality');
+document.querySelector('#debug').value=String(HibiscusScenes.config.debug);
+const pins={
+  island:[['Wardrobe','#e55095',24,38],['Salon','#a272cb',65,30],['Arcade','#548cd5',80,58],['Garden','#6aaf81',20,68],['Photo booth','#e3924f',49,81]],
+  boardwalk:[['Mara','#67bdc9',60,73],['Shell stall','#67bdc9',82,49]],
+  market:[['Rosa','#8ebd89',57,73],['Flower stall','#8ebd89',82,54]],
+  pavilion:[['Kit','#aa92c9',58,70],['Stage lamp','#aa92c9',28,48]]
+};
+const start={island:[.5,.62],boardwalk:[.43,.86],market:[.43,.86],pavilion:[.43,.86]};
+const lab=window.lab={stages:[],handles:[]};
+const out=document.querySelector('#out');
+for(const id of want){
+  const sec=document.createElement('section');sec.innerHTML=`<h2>${id}</h2><div class="row"></div>`;out.append(sec);
+  for(const size of sizes){
+    const fig=document.createElement('figure');fig.className=size;
+    const img=id==='island'?'../dist/assets/island.jpg':`../dist/assets/scenes/${id}.jpg`;
+    fig.innerHTML=`<div class="stage ${id==='island'?'map':'scene'}" data-scene="${id}" style="--scene:url('${img}')">${q.get('pins')==='0'?'':pins[id].map(([n,c,x,y])=>`<a class="pin" style="--x:${x}%;--y:${y}%;--c:${c}"><i></i>${n}</a>`).join('')}${q.get('pins')==='0'?'':'<div class="actor"><b></b><span>drag me</span></div>'}</div><figcaption>${size} · <span class="state"></span></figcaption>`;
+    sec.querySelector('.row').append(fig);
+    const stage=fig.querySelector('.stage'),actor=stage.querySelector('.actor'),entry={id,size,stage,actor,pos:start[id].slice(),handle:null,label:fig.querySelector('.state')};
+    lab.stages.push(entry);
+    if(actor){
+      const place=()=>{actor.style.transform=`translate(${entry.pos[0]*stage.clientWidth}px,${entry.pos[1]*stage.clientHeight}px)`;entry.handle?.setActor(entry.pos[0],entry.pos[1])};
+      entry.place=place;new ResizeObserver(place).observe(stage);
+      actor.addEventListener('pointerdown',e=>{actor.setPointerCapture(e.pointerId);entry.drag=true;e.preventDefault()});
+      actor.addEventListener('pointermove',e=>{if(!entry.drag)return;const r=stage.getBoundingClientRect();entry.pos=[Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))];place()});
+      actor.addEventListener('pointerup',()=>{entry.drag=false});
+    }
+  }
+}
+lab.mountAll=()=>{for(const e of lab.stages){e.handle?.unmount();e.handle=q.get('nofx')==='1'?null:HibiscusScenes.mount(e.stage,e.id,{still:q.get('still')==='1'});e.place?.()}lab.handles=lab.stages.map(e=>e.handle)};
+lab.unmountAll=()=>{for(const e of lab.stages){e.handle?.unmount();e.handle=null}};
+lab.mountAll();
+let paused=false;
+document.querySelector('#pause').onclick=e=>{paused=!paused;for(const s of lab.stages)s.handle?.setPaused(paused);e.target.textContent=paused?'Resume all':'Pause all'};
+document.querySelector('#remount').onclick=()=>lab.mountAll();
+document.querySelector('#unmount').onclick=()=>lab.unmountAll();
+document.querySelector('#toggle').onclick=e=>{HibiscusScenes.setEnabled(!HibiscusScenes.isEnabled());e.target.textContent=HibiscusScenes.isEnabled()?'Disable effects':'Enable effects'};
+document.querySelector('#debug').onchange=e=>{const u=new URL(location.href);u.searchParams.set('debug',e.target.value);location.href=u};
+setInterval(()=>{
+  for(const s of lab.stages){const i=s.handle?.info();s.label.textContent=i?`${i.state}${i.still?' (still)':''} · level ${i.level} · ${i.ema.toFixed(1)} ms · ${i.particles} particles`:'not mounted'}
+  document.querySelector('#summary').textContent=JSON.stringify(HibiscusScenes.stats());
+},500);
+</script>
+</body>
+</html>

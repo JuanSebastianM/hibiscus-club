@@ -470,6 +470,9 @@ function hairLayers(doll,view,id,colorId){
     const scalp=await scalpLayer(doll,view,item,fit,colorId);
     const [full,g]=dollLayer(doll,view);if(scalp)g.drawImage(scalp,0,0);drawFitted(g,src,fit);
     if(fit.cutDoll)eraseShapes(doll,view,full,fit.cutDoll);
+    const dv=dollView(doll,view);
+    softenHairline(full,await spriteCanvas(dv.art),dv.origin,fit.soften);
+    const done=r=>({...r,shade:hairShade(r.front,fit.shade)});
     let back=null;
     if(fit.backFill||fit.front){
       const [b,bg]=dollLayer(doll,view);back=b;
@@ -484,15 +487,52 @@ function hairLayers(doll,view,id,colorId){
       }
       if(fit.front){bg.save();bg.setTransform(1,0,0,1,0,0);bg.drawImage(full,0,0);bg.restore();}
     }
-    if(!fit.front)return {back,front:full};
+    if(!fit.front)return done({back,front:full});
     // Only the given doll-local regions of the style are drawn again in front of the body (a shape's
     // feather softens where the hair passes behind, e.g. behind the arms in the front view).
-    if(fit.front.some(s=>s.feather)){const [ox,oy]=dollView(doll,view).origin;return {back,front:softClip(full,ox,oy,fit.front)}}
+    if(fit.front.some(s=>s.feather)){const [ox,oy]=dollView(doll,view).origin;return done({back,front:softClip(full,ox,oy,fit.front)})}
     const [front,fg]=dollLayer(doll,view);
     fg.save();fg.beginPath();fit.front.forEach(s=>shapePathInto(fg,s));fg.clip();
     fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);fg.restore();
-    return {back,front};
+    return done({back,front});
   });
+}
+/* Where the hair sprite ends over skin (the hairline round the face, sideburns, nape, a fringe) its
+   cut-out edge is softened: alpha is multiplied by a ramp of the locally blurred alpha, so the edge
+   fades over ~radius px and stray wisps turn translucent, like real baby hairs, instead of a hard
+   painted line. Only pixels over the base doll are touched (the outer silhouette stays crisp).
+   Within `reach` px of that edge the hair is also darkened by up to `root` (shadowed roots).
+   opts = fit.soften: {radius, floor, root, reach} (floor = the least alpha factor at the very edge). */
+function softenHairline(full,base,[ox,oy],opts={}){
+  if(opts===false)return;
+  const W=full.width,H=full.height,radius=opts.radius??1.8,floor=opts.floor??.35,root=opts.root??.24,reach=opts.reach??6;
+  const blurred=r=>{const m=makeCanvas(W,H),mg=ctx2d(m);mg.shadowColor='#000';mg.shadowBlur=r*2;mg.shadowOffsetX=W;mg.drawImage(full,-W,0);return mg.getImageData(0,0,W,H).data};
+  const bd=blurred(radius),wd=blurred(reach),g=ctx2d(full),im=g.getImageData(0,0,W,H),d=im.data;
+  const BW=base.width,BH=base.height,sk=ctx2d(base).getImageData(0,0,BW,BH).data;
+  const X0=Math.round(ox),Y0=Math.round(oy);
+  for(let y=0;y<H;y++){const by=y-Y0;if(by<0||by>=BH)continue;
+    for(let x=0;x<W;x++){const o=(y*W+x)*4;if(!d[o+3])continue;const bx=x-X0;if(bx<0||bx>=BW)continue;
+      const skin=sk[(by*BW+bx)*4+3]/255;if(!skin)continue;
+      const b=bd[o+3]/255,t=Math.min(1,Math.max(0,(b-.3)/.55)),k=floor+(1-floor)*t*t*(3-2*t);
+      d[o+3]*=1-(1-k)*skin;
+      // roots: hair near its edge over skin is a little darker (shadowed, denser at the roots), so the
+      // lighter wisps of the drawn hairline do not read as a pale painted band in light colours
+      const e=Math.min(1,Math.max(0,(1-wd[o+3]/255)/.5))*root*skin; // warm shadow: blue darkens most
+      d[o]*=1-e*.7;d[o+1]*=1-e;d[o+2]*=1-e*1.2;
+    }}
+  g.putImageData(im,0,0);
+}
+/* Contact shadow of the hair: a soft, slightly lowered blur of the front hair layer, outside the hair
+   itself, drawn source-atop over the body and outfit (portrait composeDoll), so the hair sits on the
+   forehead, temples, neck and shoulders instead of floating above them. opts = fit.shade:
+   {blur, dy, alpha} or false. */
+function hairShade(front,opts={}){
+  if(opts===false)return null;
+  const W=front.width,H=front.height,c=makeCanvas(W,H),g=c.getContext('2d');
+  g.shadowColor=`rgba(58,26,20,${opts.alpha??.34})`;g.shadowBlur=(opts.blur??4)*2;g.shadowOffsetX=W;g.shadowOffsetY=opts.dy??1.5;
+  g.drawImage(front,-W,0);
+  g.shadowColor='transparent';g.globalCompositeOperation='destination-out';g.drawImage(front,0,0);
+  return c;
 }
 function shapePathInto(g,s){
   if(s.poly){s.poly.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath()}
@@ -800,6 +840,7 @@ function composeDoll(raw,view='front'){
     if(outfit.over)g.drawImage(outfit.over,0,0);
     if(necklace)g.drawImage(necklace,0,0);
     if(earsUnder){if(earrings)g.drawImage(earrings,0,0);if(stud)drawStuds()}
+    if(hair.shade){g.save();g.globalCompositeOperation='source-atop';g.drawImage(hair.shade,0,0);g.restore()}
     g.drawImage(hair.front,0,0);
     if(!earsUnder){if(earrings)g.drawImage(earrings,0,0);if(stud)drawStuds()}
     if(!clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
@@ -860,7 +901,7 @@ function fitFeet(body,shoes,fit,dv,doll){
   if(trimY!==undefined){
     const mk=shoes.mask||shoes.back,SW=mk.width,sd=ctx2d(mk).getImageData(0,0,SW,mk.height).data,lim=fit?.trimAlpha??60;
     for(let y=Math.max(0,Math.floor(trimY));y<H;y++)for(let x=0;x<W;x++){
-      const X=x+ox,Y=y+oy,o=(y*W+x)*4;if(!d[o+3])continue;
+      const X=Math.round(x+ox),Y=Math.round(y+oy),o=(y*W+x)*4;if(!d[o+3])continue;
       const sa=X<0||Y<0||X>=SW||Y>=mk.height?0:sd[(Y*SW+X)*4+3];
       if(sa<lim)d[o+3]=0;else if(sa<255)d[o+3]=d[o+3]*Math.min(1,(sa-lim)/(255-lim)*1.6);
     }

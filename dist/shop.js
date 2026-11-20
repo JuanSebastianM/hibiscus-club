@@ -7,26 +7,19 @@
      lips:<id> blush:<id> shadow:<id> gem:<id> nails:<id>   makeup shades and face gems
    An option without a price is free. The default looks of both dolls are always free. */
 const Shop=(()=>{
+  /* Most of the wardrobe is free; a few clearly special pieces are star rewards (about a quarter or
+     less of each category). Every other option, including every colourway, is free. */
   const explicit={
-    // outfits: three free per doll, the rest 15-25
-    'item:lilac-satin-bow-dress':20,'item:denim-jacket-skirt':15,'item:black-flares-set':25,
-    'item:lilac-cord-pinafore':15,'item:mint-cardigan-dress':20,'item:star-pajamas':25,
-    // shoes, hair, jewelry
-    'item:lilac-mary-jane-heels':12,'item:strawberry-rain-boots':12,
-    'item:half-up-curls':15,'item:curly-buns':18,
-    'item:star-studs':8,'item:butterfly-necklace':12,'item:butterfly-clip':10,
-    'tint:gold-hoops:rose-gold':6,
-    // premium hair colours
-    'hair-color:strawberry':10,'hair-color:bubblegum':20,'hair-color:lilac':20,
-    // makeup shades and gems
-    'lips:bubblegum':8,'lips:cherry':10,'lips:berry':10,'lips:cherry-gloss':6,
-    'blush:berry':6,
-    'shadow:gold':8,'shadow:aqua':8,'shadow:bronze':10,
-    'gem:glitter':6,'gem:crystals':8,'gem:butterfly':10,
-    'nails:cherry':6,'nails:lilac':6,'nails:pearl':8
+    // one outfit per character
+    'item:lilac-satin-bow-dress':20,'item:star-pajamas':25,
+    // shoes, hair, jewelry, hair accessories
+    'item:lilac-mary-jane-heels':12,'item:half-up-curls':15,
+    'item:butterfly-necklace':12,'tint:gold-hoops:rose-gold':6,'item:butterfly-clip':10,
+    // fantasy hair colours
+    'hair-color:bubblegum':20,'hair-color:lilac':20,
+    // sparkly makeup
+    'shadow:gold':8,'gem:crystals':8
   };
-  /* An item's first alternative colourway is free; later ones cost TINT_PRICE unless priced above. */
-  const TINT_PRICE=5;
   const ITEM_FIELDS=['outfit','shoes','hair','earrings','necklace','clip'];
   const MAKEUP_FIELDS=['lips','blush','shadow','gem','nails'];
   /* Fields that are bought and tried on together (an item and its colourway). */
@@ -45,7 +38,7 @@ const Shop=(()=>{
   const prices={};
   for(const it of CATALOG.itemList){
     if(explicit['item:'+it.id])prices['item:'+it.id]=explicit['item:'+it.id];
-    (it.tints||[]).forEach((t,i)=>{const k='tint:'+it.id+':'+t.id;if(explicit[k])prices[k]=explicit[k];else if(i>=2)prices[k]=TINT_PRICE});
+    for(const t of it.tints||[]){const k='tint:'+it.id+':'+t.id;if(explicit[k])prices[k]=explicit[k]}
   }
   for(const h of CATALOG.hairColors)if(explicit['hair-color:'+h.id])prices['hair-color:'+h.id]=explicit['hair-color:'+h.id];
   for(const f of MAKEUP_FIELDS)for(const o of CATALOG.makeup[f])if(explicit[f+':'+o.id])prices[f+':'+o.id]=explicit[f+':'+o.id];
@@ -67,8 +60,16 @@ const Shop=(()=>{
     const o=CATALOG.makeup[kind]?.find(o=>o.id===a);
     return o?(['nails','shadow','blush'].includes(kind)?t('shop.'+kind,{name:o.name}):o.name):a;
   }
-  /* Saved ownership: only real, priced keys. */
-  function readOwned(raw){return Array.isArray(raw)?[...new Set(raw.filter(k=>typeof k==='string'&&Object.hasOwn(prices,k)))]:[]}
+  /* Saved ownership: keys of real options. Keys of options that are free now (they cost stars in
+     earlier versions) are kept, so a purchase is never forgotten if prices change again. */
+  function realKey(key){
+    const [kind,a,b,...rest]=key.split(':');if(rest.length)return false;
+    if(kind==='item')return !!catalogItem(a)&&b===undefined;
+    if(kind==='tint')return tintOptions(a).some(t=>t.id===b&&t.id!=='original');
+    if(kind==='hair-color')return CATALOG.hairColors.some(h=>h.id===a)&&b===undefined;
+    return MAKEUP_FIELDS.includes(kind)&&CATALOG.makeup[kind].some(o=>o.id===a)&&b===undefined;
+  }
+  function readOwned(raw){return Array.isArray(raw)?[...new Set(raw.filter(k=>typeof k==='string'&&k.length<120&&realKey(k)))]:[]}
 
   /* ---------- colour families for coordinated surprises ---------- */
   const baseFamily={'hibiscus-flares':'pink','lilac-satin-bow-dress':'lilac','denim-jacket-skirt':'blue','green-hibiscus-sundress':'mint','black-flares-set':'neutral','pink-velour-cargo':'pink',
@@ -213,6 +214,23 @@ const Shop=(()=>{
       return c;
     });
   }
+  /* Style challenges (`briefs` in game.js, which loads after this file) must stay achievable by both
+     characters with free options. A brief that names one hairstyle for both, now that Little Me has
+     her own kid styles, gets a per-character need instead: her counterpart from KID_HAIR, else her
+     default style. Done once the page's scripts have run; an open challenge card is redrawn. */
+  const KID_HAIR={'side-ponytail':'curly-buns','long-waves':'curly-bob','half-up-curls':'ringlet-pigtails'};
+  function fitBriefs(){
+    if(typeof briefs==='undefined'||!Array.isArray(briefs))return;
+    let changed=false;
+    for(const b of briefs){
+      const h=b.need?.hair;if(typeof h!=='string')continue;
+      const per={};
+      for(const doll of ['adult','little'])per[doll]=catalogOptions('hair',doll).some(i=>i.id===h)?h:(doll==='little'&&KID_HAIR[h]&&catalogOptions('hair',doll).some(i=>i.id===KID_HAIR[h])?KID_HAIR[h]:defaultLook(doll).hair);
+      if(per.adult!==h||per.little!==h){b.need.hair=per;changed=true}
+    }
+    if(changed&&typeof challenge==='function')try{document.querySelectorAll('aside.challenge').forEach(el=>{el.outerHTML=challenge()})}catch{}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fitBriefs,{once:true});else setTimeout(fitBriefs);
   return {price,owned,keyFor,lookKeys,missing,groupOwned,keyName,readOwned,surprise,itemImg,gemImg,dollImg,
     GROUPS,STYLE_FIELDS,ITEM_FIELDS,MAKEUP_FIELDS,themes,
     get prices(){return {...prices}}};
