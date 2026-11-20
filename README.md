@@ -10,21 +10,88 @@ Use Node.js 16.14 or later and a modern browser. From the project directory, run
 node serve.cjs
 ```
 
-Open [Hibiscus Club on this computer](http://127.0.0.1:4173). The server binds to your computer’s loopback address. Stop it with Ctrl+C. If that port is busy, run `node serve.cjs 4180` and open the address printed in the terminal. The game uses bundled artwork and runs offline while the local server is running. There are no packages to install.
+Open [Hibiscus Club on this computer](http://127.0.0.1:4173). The server binds to your computer’s loopback address. Stop it with Ctrl+C. If that port is busy, run `node serve.cjs 4180` and open the address printed in the terminal. The game uses bundled artwork and runs offline while the local server is running. There are no packages to install. Play statistics are switched off on a local address, so `serve.cjs` never sends anything.
 
 You can also put the contents of `dist/` on a static web host. Serve the files together from the same origin so the browser can export postcard images.
 
 ## Deploy to Cloudflare Workers
 
-`wrangler.jsonc` configures an assets-only Worker named `hibiscus-club` that serves `dist/`. There is no Worker script, and rooms use URL hashes, so no routing rules are needed. From the project directory, run the following command. Wrangler asks you to sign in to Cloudflare the first time.
+`wrangler.jsonc` configures a Worker named `hibiscus-club`. The game is the static assets in `dist/`, and rooms use URL hashes, so no routing rules are needed. A small Worker script, `worker/index.js`, runs only for `/api/*` and `/stats` (the anonymous play statistics, below). `assets.run_worker_first` lists those two paths, so every game file is served straight from static assets without invoking the script. The game keeps working even if the script fails or runs out of free requests. From the project directory, run the following command. Wrangler asks you to sign in to Cloudflare the first time.
 
 ```sh
 npx wrangler deploy
 ```
 
-Add `--dry-run` to check the configuration without uploading anything.
+Add `--dry-run` to check the configuration without uploading anything. It should list the `EVENTS` Analytics Engine dataset and the `ASSETS` binding.
 
-The repository can also be connected to Cloudflare with Workers Builds (Workers & Pages → Create → Import a repository). Cloudflare then reads `wrangler.jsonc` and redeploys on every push to `main`. The Worker's page lists its public address under Settings → Domains & Routes.
+The repository can also be connected to Cloudflare with Workers Builds (Workers & Pages → Create → Import a repository). Cloudflare then reads `wrangler.jsonc` and redeploys on every push to `main`. The Worker's page lists its public address under Settings → Domains & Routes. Preview builds of other branches get no Analytics Engine dataset or secrets (the `previews` block is empty), so on a Preview URL events are accepted and dropped, and `/stats` shows its setup page.
+
+## Visitor and play statistics
+
+The game counts visits and play anonymously, so the owner can see how many people visit, when, from which countries, and what they play. There are two parts. Cloudflare Web Analytics, which is optional, counts page views. The game’s own events go to a Workers Analytics Engine dataset named `hibiscus_club_events`, and the private page at `/stats` shows them.
+
+### What is collected
+
+Each event stores the event name, a short detail from a fixed list, the character (`adult` or `little`), the game language (`en` or `es`), a count, the two-letter country Cloudflare derives for the request, and a coarse device class (`phone`, `tablet` or `desktop`). The Worker works out the device class from the browser’s User-Agent and then discards the User-Agent. Analytics Engine adds a timestamp. Purchases also store a price band.
+
+Nothing else is stored or logged: no IP addresses, User-Agents, referrers, player-chosen names, cookies, local-storage identifiers, fingerprints, or any value that could link two visits by the same person. Visits are page loads, not people. The Worker rejects a request whole if it contains anything outside the lists below (`worker/events.js`), if it comes from another site, or if it is larger than 4 KB.
+
+| Event | Detail | When |
+| --- | --- | --- |
+| `visit` | the room the page opened on | page load |
+| `room` | `map`, `wardrobe`, `salon`, `booth`, `scrapbook`, `arcade`, `garden`, `runway`, `life` | a room opens |
+| `district` | `boardwalk`, `market`, `pavilion` | Island Life travel |
+| `lang` | `en`, `es` | language switched |
+| `character` | `adult`, `little` | character switched |
+| `makeover` | `outfit`, `shoes`, `jewelry`, `hair`, `hair-color`, `makeup`, `nails`, `accessory` | something she owns is put on (counted per category, sent with a count) |
+| `tryon` | the same categories | a locked option is tried on (counted like `makeover`) |
+| `purchase` | the same categories, plus price band `1-9`, `10-19` or `20-plus` | each option bought |
+| `surprise` | `wardrobe`, `salon` | Surprise me! |
+| `favorite` | `saved`, `worn` | a favorite look is saved or worn |
+| `game-start`, `game-done` | `memory`, `bouquet`, `runway` | first card, first flower or rehearsal start; win |
+| `chat` | `boardwalk`, `market`, `pavilion` | she walks up to a resident |
+| `errand` | `story-1`, `story-2`, `story-3` | an Island Life errand is finished |
+| `photo` | `studio`, `boardwalk`, `market`, `pavilion` (the scenery) | a postcard is taken |
+| `challenge` | the brief: `picnic`, `disco`, `seashell`, `mall`, `rosy`, `midnight`, `homecoming`, `bob` | a style challenge is completed |
+| `postcard` | `png` | a postcard is downloaded |
+| `sound`, `sparkle` | `on`, `off` | the top-bar toggles |
+
+`dist/analytics.js` checks every event against the same lists, adds up makeover and try-on changes, and sends batches with `navigator.sendBeacon` (or `fetch` with `keepalive`) when the page is hidden or every 20 seconds. Sending never delays the game, and a failed request is dropped. Nothing is sent from `localhost`, `127.0.0.1` or a `file:` page, when the browser sends Global Privacy Control or Do Not Track, or when the player turns sharing off. A small **Privacy** link at the bottom of every page opens a dialog that explains this in plain words in both languages and has the on/off switch. The island guide (**How to play**) points to it. The switch is saved with the game as `state.analytics` and is on by default.
+
+To add an event, add it to `SCHEMA` in both `worker/events.js` and `dist/analytics.js`, call `track('event','detail')` in the game, and run the tests. The tests fail if the two lists differ or if the game uses a name that is not listed.
+
+Analytics Engine keeps events for three months. It is available on the Workers Free plan (100,000 data points written and 10,000 read queries a day). The dataset is created on the first write. Each `/stats` page view runs three read queries.
+
+### Set up the stats page
+
+1. Create an API token: My Profile → API Tokens → Create Token → Create Custom Token. Give it one permission, **Account → Account Analytics → Read**, limited to your account.
+2. In Workers & Pages → hibiscus-club → Settings → Variables and Secrets, add three variables of type **Secret**:
+   - `STATS_KEY`: a long random password of at least 16 characters, for example from `openssl rand -base64 24`
+   - `CF_ACCOUNT_ID`: your account ID (shown on the Workers & Pages overview)
+   - `CF_API_TOKEN`: the token from step 1
+
+   Alternatively, run `npx wrangler secret put STATS_KEY` (and the same for the other two). Never put them in `wrangler.jsonc`.
+3. Open `https://<your worker address>/stats` and enter the stats key. A private cookie (HttpOnly, Secure, SameSite=Strict, limited to `/stats`) keeps you signed in for seven days. It holds a signed expiry, not the key. **Sign out** removes it. Changing `STATS_KEY` signs everyone out.
+
+Until all three secrets are set, `/stats` shows these steps and no data. The page shows visits per day (per hour for 24 hours), top countries, devices, the game language, rooms, mini-game starts against completions, makeover changes and try-ons by category, purchases by category and price band, postcards, challenges, favorites, Surprise me!, Island Life, and settings, for 24 hours, 7 days, 30 days or 90 days. It is server-rendered, makes no third-party requests and is marked `noindex`. Analytics Engine may sample busy events. Every stored row stands for `_sample_interval` real events, so the page counts `SUM(_sample_interval * double1)` and says so when any figure is an estimate.
+
+### Cloudflare Web Analytics (optional)
+
+1. In the Cloudflare dashboard, open Web Analytics → Add a site, and enter the game’s hostname (for example `hibiscus-club.<your-subdomain>.workers.dev`).
+2. In Manage site, copy the `token` value from the JS snippet. It is 32 hexadecimal characters.
+3. In `dist/index.html`, paste it between the quotes of `<meta name="cf-web-analytics-token" content="">` in the `<head>`, then deploy.
+
+`analytics.js` loads Cloudflare’s beacon only when that token is present, and under the same rules as the game’s events: not on a local address, not with Global Privacy Control or Do Not Track, and not when the player turned sharing off. Turning the switch off takes effect for the beacon at the next page load. The beacon follows single-page navigation automatically. Room changes are also counted by the game’s own `room` events.
+
+### Run it locally
+
+`node serve.cjs` plays the whole game with statistics silently off. To exercise the Worker, run `npx wrangler dev --port 8790` and open `http://localhost:8790`. To try `/stats`, put test values for the three secrets in a `.dev.vars` file next to `wrangler.jsonc` (it is git-ignored). Locally, Analytics Engine writes are discarded, and the stats page calls the real SQL API with whatever account and token you give it. The browser side stays off on `localhost`, so test it under another hostname. Run `node --test` to check the event lists, validation and translation keys.
+
+### Turn it off
+
+- One player: the switch in the **Privacy** dialog (link at the bottom of every page), Global Privacy Control, or Do Not Track.
+- Web Analytics: empty the token in `index.html`, or remove the site in the dashboard.
+- Everything: remove `main`, `binding`, `run_worker_first` and `analytics_engine_datasets` from `wrangler.jsonc` to return to an assets-only Worker. The game then sends to a missing `/api/e`, which is harmless. Alternatively, also remove the `analytics.js` script tag from `index.html`. Delete the secrets and the API token when you no longer need them.
 
 ## A first trip around the island
 
@@ -94,7 +161,8 @@ The island is an original AI-generated illustration with five HTML links positio
 
 | File | Responsibility |
 | --- | --- |
-| `dist/index.html` | Page shell, navigation, accessible dialogs, script loading |
+| `dist/index.html` | Page shell, navigation, page footer (Privacy link and “Built by jmendozaperez.dev” credit, which opens in a new tab), accessible dialogs, script loading, Web Analytics token |
+| `dist/analytics.js` | Anonymous play statistics: event lists, batching, privacy checks, optional Web Analytics beacon |
 | `dist/i18n.js` | Translation layer (`t()`, plurals, language choice) and the English dictionary |
 | `dist/i18n-es.js` | Spanish dictionary |
 | `dist/style.css` | Responsive island layout, booth, game tables, and scrapbook |
@@ -112,7 +180,11 @@ The island is an original AI-generated illustration with five HTML links positio
 | `dist/assets/` | Doll bases, item sprites, scenes, wordmark, and island art |
 | `art/` | Source sheets, the slicing, cropping and fitting scripts, and the contact-sheet lab |
 | `serve.cjs` | Dependency-free local HTTP server |
-| `wrangler.jsonc` | Cloudflare Workers static-assets configuration |
+| `wrangler.jsonc` | Cloudflare Workers configuration: static assets, the Worker routes and the Analytics Engine dataset |
+| `worker/index.js` | Worker script for `/api/e` (event intake) and `/stats` |
+| `worker/events.js` | Event lists and validation shared by the Worker and the tests |
+| `worker/stats.js` | Private stats page: sign-in, SQL API queries, server-rendered HTML |
+| `test/analytics.test.mjs` | `node --test`: event lists in sync, validation, privacy rules, translation keys |
 
 To add a wearable, put its sprite in `dist/assets/items/`, add an entry with its fit to `catalog.js`, and give it a price in `shop.js` if it should be sold. Option thumbnails are drawn lazily, one per frame, and cached for the visit. Choosing an option rebuilds only the controls and repaints the existing doll canvas, so the doll never blinks out. The studio’s turn control lists the views in `CATALOG.views`.
 
@@ -137,7 +209,7 @@ To add a string, add the same key to both dictionaries and call `t('group.key', 
 
 ## Saves and compatibility
 
-The game stores character looks, stars, stamps, challenge progress, delivered bouquets, best memory score, audio preference, and scrapbook in the browser’s `localStorage` under `hibiscus-club-v1`. `lang` holds the language the player picked (`en` or `es`), or `null` until the player chooses one. The shop adds `spent` (stars spent, while `stars` stays the lifetime total), `owned` (bought option keys such as `item:butterfly-clip`, `tint:gold-hoops:rose-gold`, `hair-color:lilac` or `lips:cherry`) and `favorites` (up to six looks per character). Everything read back is validated. Older saves keep working: integer-style looks are mapped to the catalog, and anything a saved look or favorite already wears stays owned. An unfinished memory round, bouquet, or rehearsal lasts for the current page session. Leaving the runway ends that rehearsal.
+The game stores character looks, stars, stamps, challenge progress, delivered bouquets, best memory score, audio preference, and scrapbook in the browser’s `localStorage` under `hibiscus-club-v1`. `lang` holds the language the player picked (`en` or `es`), or `null` until the player chooses one. The shop adds `spent` (stars spent, while `stars` stays the lifetime total), `owned` (bought option keys such as `item:butterfly-clip`, `tint:gold-hoops:rose-gold`, `hair-color:lilac` or `lips:cherry`) and `favorites` (up to six looks per character). `analytics` is `false` when the player has turned off anonymous play counts (anything else counts as on). Everything read back is validated. Older saves keep working: integer-style looks are mapped to the catalog, and anything a saved look or favorite already wears stays owned. An unfinished memory round, bouquet, or rehearsal lasts for the current page session. Leaving the runway ends that rehearsal.
 
 Each browser profile and site address has its own save. Using a different port gives you a separate game. Private browsing or clearing site data can erase progress. If the browser blocks storage, the current session remains playable. Exported PNGs remain wherever you downloaded them.
 

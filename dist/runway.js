@@ -27,7 +27,7 @@ function startRunway(){
   const previous=rehearsal;
   resetRunway();
   rehearsal.sequence=previous.sequence.length&&previous.phase!=='won'?previous.sequence:Array.from({length:3},()=>Math.floor(Math.random()*3));
-  rehearsal.phase='watch';showCue(0);
+  rehearsal.phase='watch';showCue(0);track('game-start','runway');
 }
 function performPose(i){
   const r=rehearsal;
@@ -37,7 +37,7 @@ function performPose(i){
     r.phase='retry';r.note=['runway.note.retry'];
   }else if(++r.step===r.sequence.length){
     r.phase='won';r.note=['runway.note.won'];
-    state.stars+=6;persist();tone(true);say(t('runway.won'));
+    state.stars+=6;persist();tone(true);say(t('runway.won'));track('game-done','runway');
   }else r.note=['runway.note.correct',{n:r.step+1}];
   draw();
 }

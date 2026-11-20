@@ -1,11 +1,25 @@
-// Cloudflare Workers static assets: no Worker script, just the files in ./dist.
+// Cloudflare Workers: the game is static assets in ./dist; a small Worker script (worker/index.js)
+// handles only the anonymous analytics endpoint and the private stats page.
 // Deploy with `npx wrangler deploy` from the repository root.
 {
   "name": "hibiscus-club",
   "compatibility_date": "2026-11-01",
+  "main": "./worker/index.js",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Only these paths run the Worker. Every other request (all game files) is answered straight
+    // from static assets, without invoking the Worker or counting as a Worker request.
+    "run_worker_first": ["/api/*", "/stats"]
   },
-  // Lets Workers Builds run `wrangler preview` for non-production branches.
+  // Gameplay events. The dataset is created by Cloudflare on the first write.
+  "analytics_engine_datasets": [
+    { "binding": "EVENTS", "dataset": "hibiscus_club_events" }
+  ],
+  // Secrets (set in the dashboard or with `npx wrangler secret put`, never in this file):
+  //   STATS_KEY, CF_ACCOUNT_ID, CF_API_TOKEN. See README.md, "Visitor and play statistics".
+  // Lets Workers Builds run `wrangler preview` for non-production branches. Previews get no Analytics
+  // Engine binding or secrets from this block, so on a Preview the endpoint accepts and drops events
+  // and /stats shows its setup page.
   "previews": {}
 }

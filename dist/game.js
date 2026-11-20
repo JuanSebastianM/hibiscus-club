@@ -23,6 +23,7 @@ function loadGame(){
     life:loadIslandLife(raw.life),
     looks:{adult:readLook(raw.looks?.adult,'adult'),little:readLook(raw.looks?.little,'little')},
     stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound!==false,sparkle:raw.sparkle!==false,
+    analytics:raw.analytics!==false, // anonymous play counts (analytics.js); the Privacy dialog has the switch
     visits:places.filter(p=>Array.isArray(raw.visits)&&raw.visits.includes(p.id)).map(p=>p.id),
     missions:smallInt(raw.missions,Number.MAX_SAFE_INTEGER),
     bouquets:smallInt(raw.bouquets,Number.MAX_SAFE_INTEGER),
@@ -42,10 +43,12 @@ function loadGame(){
   return game;
 }
 const state=loadGame();
+/* Anonymous play counts: event and detail must be listed in analytics.js (and worker/events.js). */
+const track=(e,d,band)=>{try{HibiscusAnalytics.track(e,d,band)}catch{}}; // a missing analytics.js never breaks play
 const main=document.querySelector('#game');
 const help=document.querySelector('#help');
 const announcer=document.querySelector('#announcer');
-let route='',timer,announceTimer,round=null,stems=[],gardenNote='',storageFailed=false;
+let route='',timer,announceTimer,round=null,stems=[],gardenNote='',storageFailed=false,bouquetStarted=false;
 function persist(){
   try{localStorage.setItem(saveKey,JSON.stringify(state));storageFailed=false}
   catch{storageFailed=true;}
@@ -179,6 +182,7 @@ function navigate(){
   const id=location.hash.slice(1),leaving=route;
   const dropped=leaving&&leaving!==id&&dropTrial();
   route=[...places.map(p=>p.id),'scrapbook','runway','life'].includes(id)?id:'map';
+  if(route!==leaving)track('room',route);
   clearTimeout(timer);if(round)round.up=[];resetRunway();
   if(places.some(p=>p.id===route)&&!state.visits.includes(route)){state.visits.push(route);persist();}
   setPageTitle();
@@ -192,11 +196,13 @@ function takePhoto(){
   shot.id=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
   state.photos.unshift(shot);
   const b=brief(),won=briefMet(b,shot);
-  if(won){state.missions++;state.stars+=10;}
+  if(won){state.missions++;state.stars+=10;track('challenge',b.key);}
+  track('photo',['studio',...districts.map(d=>d.id)][shot.backdrop]||'studio');
   persist();draw();tone(true);say(t(won?'booth.savedWon':'booth.saved'));
 }
 function flipCard(i){
   if(round.done||round.up.length===2||round.up.includes(i)||round.matched.includes(i))return;
+  if(!round.turns&&!round.up.length)track('game-start','memory'); // first card of a round
   round.up.push(i);
   if(round.up.length===2){
     round.turns++;const [a,b]=round.up;
@@ -204,7 +210,7 @@ function flipCard(i){
       round.matched.push(a,b);round.up=[];tone(true);
       if(round.matched.length===12){
         round.done=true;state.stars+=8;state.best=state.best?Math.min(state.best,round.turns):round.turns;
-        persist();say(t('arcade.won'));
+        persist();say(t('arcade.won'));track('game-done','memory');
       }
     }else timer=setTimeout(()=>{round.up=[];draw()},850);
   }
@@ -216,28 +222,28 @@ function wrapBouquet(){
   if([...stems].sort().join()!==[...order].sort().join()){
     gardenNote='garden.wrong';draw();return; // gardenNote holds a key, so it follows the language
   }
-  state.bouquets++;state.stars+=5;stems=[];gardenNote='garden.next';
+  state.bouquets++;state.stars+=5;stems=[];gardenNote='garden.next';bouquetStarted=false;track('game-done','bouquet');
   persist();draw();tone(true);say(t('garden.delivered'));
 }
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button,a');if(!b||b.disabled)return;
   if(!b.classList.contains('sound'))tone();
-  if(b.classList.contains('sound')){state.sound=!state.sound;persist();HibiscusMusic.setEnabled(state.sound);navBar();tone();return;}
-  if(b.classList.contains('sparkle-toggle')){state.sparkle=!state.sparkle;persist();try{HibiscusFx.setEnabled(state.sparkle);if(state.sparkle){const r=b.getBoundingClientRect();HibiscusFx.burst(r.left+r.width/2,r.top+r.height/2)}}catch{}navBar();return;}
+  if(b.classList.contains('sound')){state.sound=!state.sound;persist();HibiscusMusic.setEnabled(state.sound);navBar();tone();track('sound',state.sound?'on':'off');return;}
+  if(b.classList.contains('sparkle-toggle')){state.sparkle=!state.sparkle;persist();track('sparkle',state.sparkle?'on':'off');try{HibiscusFx.setEnabled(state.sparkle);if(state.sparkle){const r=b.getBoundingClientRect();HibiscusFx.burst(r.left+r.width/2,r.top+r.height/2)}}catch{}navBar();return;}
   const d=b.dataset;
   if(d.lang){setLanguage(d.lang);return;}
   if(makeoverClick(b,d))return;
   if(d.pose!==undefined){performPose(Number(d.pose));return;}
   if(route==='life'&&(d.travel!==undefined||d.lifeAction||d.taskStep!==undefined)){handleLifeAction(b);return;}
-  if(d.doll){detachWorld();state.doll=d.doll;persist();draw();return;}
+  if(d.doll){detachWorld();if(d.doll!==state.doll)track('character',d.doll);state.doll=d.doll;persist();draw();return;}
   if(d.field){const v=['frame','sticker','backdrop'].includes(d.field)?Number(d.value):d.value;state.looks[state.doll]=readLook({...look(),[d.field]:v},state.doll);persist();draw();return;}
   if(d.card!==undefined){flipCard(Number(d.card));return;}
-  if(d.flower!==undefined){if(stems.length<3)stems.push(Number(d.flower));gardenNote='';draw();return;}
+  if(d.flower!==undefined){if(!bouquetStarted){bouquetStarted=true;track('game-start','bouquet')}if(stems.length<3)stems.push(Number(d.flower));gardenNote='';draw();return;}
   if(d.download){
     try{
       const canvas=document.createElement('canvas');await paintPortrait(canvas,state.photos.find(p=>p.id===d.download),true);
       const link=document.createElement('a');link.download='hibiscus-postcard-'+d.download+'.png';
-      link.href=canvas.toDataURL('image/png');link.click();
+      link.href=canvas.toDataURL('image/png');link.click();track('postcard','png');
     }catch{say(t('scrapbook.downloadError'));}
     return;
   }
@@ -246,6 +252,7 @@ document.addEventListener('click',async e=>{
   }
   switch(d.action){
     case 'help':help.showModal();break;
+    case 'privacy':syncPrivacy();privacyDialog.showModal();break;
     case 'snap':takePhoto();break;
     case 'rehearse':startRunway();break;
     case 'restart':clearTimeout(timer);startRound();draw();break;
@@ -263,8 +270,25 @@ window.addEventListener('hashchange',()=>{navigate();main.focus({preventScroll:t
 function setLanguage(code){
   if(!I18N.SUPPORTED.includes(code))return;
   state.lang=code;persist();
-  I18N.setLang(code);
+  if(I18N.setLang(code))track('lang',code);
 }
+/* Privacy dialog (footer link on every page): the switch is saved with the game; off stops all counting at once. */
+const privacyDialog=document.querySelector('#privacy');
+function syncPrivacy(){
+  const box=document.querySelector('#analytics-switch'),optOut=(()=>{try{return HibiscusAnalytics.browserOptOut}catch{return false}})();
+  box.checked=state.analytics;box.disabled=optOut;
+  document.querySelector('.privacy-browser').hidden=!optOut;
+}
+document.addEventListener('change',e=>{
+  if(e.target.id!=='analytics-switch')return;
+  state.analytics=e.target.checked;persist();
+  try{HibiscusAnalytics.setEnabled(state.analytics)}catch{}
+});
+/* Focus goes back to the footer link, unless something else (a room change) already took it. */
+privacyDialog.addEventListener('close',()=>{
+  const a=document.activeElement;
+  if(!a||a===document.body||privacyDialog.contains(a))document.querySelector('.footer-link').focus({preventScroll:true});
+});
 window.addEventListener('langchange',()=>{
   const y=window.scrollY,x=window.scrollX;
   setPageTitle();
@@ -279,4 +303,7 @@ window.addEventListener('langchange',()=>{
 HibiscusMusic.setEnabled(state.sound);
 try{HibiscusFx.setEnabled(state.sparkle)}catch{}
 I18N.applyStatic(); // i18n.js picked the language: the saved choice, else the browser's
+try{HibiscusAnalytics.init(state.analytics,()=>({c:state.doll,l:I18N.lang}))}catch{}
+syncPrivacy();
 navigate();
+track('visit',route);
