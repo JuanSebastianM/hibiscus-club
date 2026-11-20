@@ -171,14 +171,16 @@ function shapePath(g,s){
   else if(s.rect){g.beginPath();g.rect(...s.rect)}
   else if(s.ellipse){const [x,y,rx,ry,rot]=s.ellipse;g.beginPath();g.ellipse(x,y,rx,ry,(rot||0)*Math.PI/180,0,Math.PI*2)}
 }
-/* Remove (or keep only) polygon regions of a sprite. */
-function maskSprite(src,{cut,keep}){
+/* Remove (or keep only) polygon regions of a sprite; `feather` (sprite px) softens the cut edges. */
+function maskSprite(src,{cut,keep,feather}){
   if(!cut&&!keep)return src;
   const c=makeCanvas(src.width,src.height),g=c.getContext('2d');g.drawImage(src,0,0);
   if(keep){ // union of keep polygons
     const m=makeCanvas(src.width,src.height),mg=m.getContext('2d');mg.fillStyle='#000';keep.forEach(p=>{pathPoly(mg,p);mg.fill()});
     g.globalCompositeOperation='destination-in';g.drawImage(m,0,0);g.globalCompositeOperation='source-over';}
-  if(cut){g.globalCompositeOperation='destination-out';g.fillStyle='#000';cut.forEach(p=>{pathPoly(g,p);g.fill()})}
+  if(cut){g.globalCompositeOperation='destination-out';g.fillStyle='#000';
+    if(feather){g.shadowColor='#000';g.shadowBlur=feather*2;g.shadowOffsetX=4000;g.translate(-4000,0)}
+    cut.forEach(p=>{pathPoly(g,p);g.fill()})}
   return c;
 }
 /* Row warp: rows are [spriteY, dollY, spriteXa, dollXa, spriteXb, dollXb]. Between rows the vertical
@@ -289,11 +291,14 @@ function outfitLayer(doll,view,id,tintId){
     for(const piece of fit.pieces){
       let src=await itemSprite(item,view,piece.part,tintId);
       const parts=piece.parts||[];
-      const body=maskSprite(src,{cut:parts.map(p=>p.cut||p.poly).concat(piece.cut||[]),keep:piece.keep});
-      for(const p of parts.filter(p=>p.under))drawPiece(g,src,p);
+      // a part may take its pixels from another view's sprite of the same piece (p.view, e.g. plain
+      // body fabric from the back to fill in behind a side sleeve that was moved onto the arm)
+      const psrc=new Map();for(const p of parts)psrc.set(p,p.view?await itemSprite(item,p.view,piece.part,tintId):src);
+      const body=maskSprite(src,{cut:parts.filter(p=>!p.view).map(p=>p.cut||p.poly).concat(piece.cut||[]),keep:piece.keep,feather:piece.cutFeather});
+      for(const p of parts.filter(p=>p.under))drawPiece(g,psrc.get(p),p);
       drawFitted(g,body,piece);
-      for(const p of parts.filter(p=>!p.under&&!p.over))drawPiece(g,src,p);
-      for(const p of parts.filter(p=>p.over)){if(!over)[over,og]=dollLayer(doll,view);drawPiece(og,src,p)}
+      for(const p of parts.filter(p=>!p.under&&!p.over))drawPiece(g,psrc.get(p),p);
+      for(const p of parts.filter(p=>p.over)){if(!over)[over,og]=dollLayer(doll,view);drawPiece(og,psrc.get(p),p)}
     }
     if(fit.erase)eraseShapes(doll,view,c,fit.erase);
     const res={front:c,back:null,over};
@@ -667,7 +672,8 @@ function composeDoll(raw,view='front'){
     g.drawImage(outfit.front,0,0);
     if(shoes&&outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
     if(arm&&outfitFit.arm!=='hidden'){
-      if(outfitFit.armClip){g.save();g.translate(ox,oy);g.beginPath();outfitFit.armClip.forEach(s=>shapePathInto(g,s));g.setTransform(1,0,0,1,0,0);g.clip();g.drawImage(arm,0,0);g.restore()}
+      if(outfitFit.armClip?.some(s=>s.feather))g.drawImage(softClip(arm,ox,oy,outfitFit.armClip),0,0);
+      else if(outfitFit.armClip){g.save();g.translate(ox,oy);g.beginPath();outfitFit.armClip.forEach(s=>shapePathInto(g,s));g.setTransform(1,0,0,1,0,0);g.clip();g.drawImage(arm,0,0);g.restore()}
       else g.drawImage(arm,0,0);
     }
     if(outfit.over)g.drawImage(outfit.over,0,0);
@@ -678,6 +684,18 @@ function composeDoll(raw,view='front'){
     if(!clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
     return c;
   });
+}
+/* Keep only the parts of a layer inside doll-local shapes; a shape's `feather` (px) softens its edge
+   (offset-shadow blur, so no ctx.filter), letting the near arm fade in under a sleeve hem. */
+function softClip(src,ox,oy,shapes){
+  const c=makeCanvas(src.width,src.height),g=c.getContext('2d');
+  for(const s of shapes){
+    g.save();g.fillStyle='#000';
+    if(s.feather){g.shadowColor='#000';g.shadowBlur=s.feather*2;g.shadowOffsetX=4000;g.setTransform(1,0,0,1,ox-4000,oy)}else g.setTransform(1,0,0,1,ox,oy);
+    g.beginPath();shapePathInto(g,s);g.fill();g.restore();
+  }
+  g.globalCompositeOperation='source-in';g.drawImage(src,0,0);
+  return c;
 }
 /* Side views: the base foot is flat, a heeled shoe is shorter, so below the ankle (doll y footTop) the
    bare foot is kept only within each row's span of the shoe (bare heel/toes would poke out). */
