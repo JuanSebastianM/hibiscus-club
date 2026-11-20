@@ -1,0 +1,1143 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "432ec19718b5",
+  "worn": "38b232d305ee"
+ },
+ "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 8171,
+   "haze_far_max": 3,
+   "haze_far_p99_9": 2.0,
+   "glow_ring_nonzero_frac": 0.026,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0022,
+   "interior_frac_below_200": 0.0001,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 6770,
+     "dRGB": [
+      22.4,
+      33.7,
+      25.9
+     ],
+     "dLum": 29.4
+    },
+    "64-160": {
+     "n": 8705,
+     "dRGB": [
+      12.0,
+      19.9,
+      14.5
+     ],
+     "dLum": 17.0
+    },
+    "160-255": {
+     "n": 21216,
+     "dRGB": [
+      -2.5,
+      1.2,
+      -0.8
+     ],
+     "dLum": -0.1
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 15145,
+  "haze_px_removed": 26085,
+  "wisp_px_kept": {
+   "toddler-sandals/0": 0,
+   "toddler-sandals/1": 0,
+   "toddler-sandals/2": 0,
+   "toddler-sandals/3": 0,
+   "jelly-shoes/0": 0,
+   "jelly-shoes/1": 0,
+   "jelly-shoes/2": 0,
+   "jelly-shoes/3": 1,
+   "bunny-slippers/0": 0,
+   "bunny-slippers/1": 0,
+   "bunny-slippers/2": 0,
+   "bunny-slippers/3": 0
+  }
+ },
+ "splits": {
+  "toddler-sandals-front": {
+   "axis": "x",
+   "at": 261,
+   "gap_px": 22
+  },
+  "toddler-sandals-back": {
+   "axis": "x",
+   "at": 256,
+   "gap_px": 23
+  },
+  "jelly-shoes-front": {
+   "axis": "x",
+   "at": 263,
+   "gap_px": 28
+  },
+  "jelly-shoes-back": {
+   "axis": "x",
+   "at": 260,
+   "gap_px": 19
+  },
+  "bunny-slippers-front": {
+   "axis": "x",
+   "at": 263,
+   "gap_px": 27
+  },
+  "bunny-slippers-back": {
+   "axis": "x",
+   "at": 257,
+   "gap_px": 20
+  }
+ },
+ "items": {
+  "toddler-sandals": {
+   "category": "shoes-little",
+   "views": {
+    "front": {
+     "file": "shoes-little/toddler-sandals-front.webp",
+     "width": 521,
+     "height": 379,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       40,
+       117,
+       521,
+       379
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/toddler-sandals-front-l.webp",
+       "width": 252,
+       "height": 378,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/toddler-sandals-front-r.webp",
+       "width": 251,
+       "height": 379,
+       "offset": [
+        270,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-little/toddler-sandals-left.webp",
+     "width": 510,
+     "height": 293,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       645,
+       172,
+       510,
+       293
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-little/toddler-sandals-right.webp",
+     "width": 511,
+     "height": 291,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       1232,
+       173,
+       511,
+       291
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-little/toddler-sandals-back.webp",
+     "width": 513,
+     "height": 309,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       1832,
+       155,
+       513,
+       309
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/toddler-sandals-back-l.webp",
+       "width": 248,
+       "height": 309,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/toddler-sandals-back-r.webp",
+       "width": 249,
+       "height": 308,
+       "offset": [
+        264,
+        0
+       ]
+      }
+     }
+    }
+   }
+  },
+  "jelly-shoes": {
+   "category": "shoes-little",
+   "views": {
+    "front": {
+     "file": "shoes-little/jelly-shoes-front.webp",
+     "width": 526,
+     "height": 392,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       38,
+       705,
+       526,
+       392
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/jelly-shoes-front-l.webp",
+       "width": 251,
+       "height": 391,
+       "offset": [
+        0,
+        1
+       ]
+      },
+      "right": {
+       "file": "shoes-little/jelly-shoes-front-r.webp",
+       "width": 252,
+       "height": 391,
+       "offset": [
+        274,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-little/jelly-shoes-left.webp",
+     "width": 525,
+     "height": 288,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       634,
+       763,
+       525,
+       288
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-little/jelly-shoes-right.webp",
+     "width": 525,
+     "height": 289,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       1230,
+       762,
+       525,
+       289
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-little/jelly-shoes-back.webp",
+     "width": 520,
+     "height": 325,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       1828,
+       742,
+       520,
+       325
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/jelly-shoes-back-l.webp",
+       "width": 253,
+       "height": 324,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/jelly-shoes-back-r.webp",
+       "width": 253,
+       "height": 325,
+       "offset": [
+        267,
+        0
+       ]
+      }
+     }
+    }
+   }
+  },
+  "bunny-slippers": {
+   "category": "shoes-little",
+   "views": {
+    "front": {
+     "file": "shoes-little/bunny-slippers-front.webp",
+     "width": 527,
+     "height": 361,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       37,
+       1323,
+       527,
+       361
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/bunny-slippers-front-l.webp",
+       "width": 254,
+       "height": 361,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/bunny-slippers-front-r.webp",
+       "width": 253,
+       "height": 361,
+       "offset": [
+        274,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-little/bunny-slippers-left.webp",
+     "width": 501,
+     "height": 358,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       656,
+       1320,
+       501,
+       358
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-little/bunny-slippers-right.webp",
+     "width": 500,
+     "height": 358,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       1231,
+       1320,
+       500,
+       358
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-little/bunny-slippers-back.webp",
+     "width": 516,
+     "height": 375,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-b.webp",
+      "box": [
+       1831,
+       1309,
+       516,
+       375
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/bunny-slippers-back-l.webp",
+       "width": 250,
+       "height": 375,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/bunny-slippers-back-r.webp",
+       "width": 253,
+       "height": 375,
+       "offset": [
+        263,
+        0
+       ]
+      }
+     }
+    }
+   }
+  }
+ },
+ "proofs": {
+  "toddler-sandals/front": {
+   "proof": "shoes-little/toddler-sandals-front.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    38,
+    110,
+    525,
+    388
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/toddler-sandals-front.webp",
+   "sprite_box": [
+    40,
+    117,
+    521,
+    379
+   ],
+   "offset": [
+    2,
+    7
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 51.7,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.873,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.002
+   },
+   "flags": [],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      7
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 51.4
+    },
+    "right": {
+     "offset": [
+      272,
+      7
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 52.0
+    }
+   }
+  },
+  "toddler-sandals/left": {
+   "proof": "shoes-little/toddler-sandals-left.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    643,
+    110,
+    514,
+    357
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/toddler-sandals-left.webp",
+   "sprite_box": [
+    645,
+    172,
+    510,
+    293
+   ],
+   "offset": [
+    2,
+    62
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 46.5,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.867,
+    "proof_item_uncovered": 0.012,
+    "sprite_over_background": 0.002
+   },
+   "flags": []
+  },
+  "toddler-sandals/right": {
+   "proof": "shoes-little/toddler-sandals-right.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    1230,
+    110,
+    515,
+    356
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/toddler-sandals-right.webp",
+   "sprite_box": [
+    1232,
+    173,
+    511,
+    291
+   ],
+   "offset": [
+    2,
+    63
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 45.9,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.87,
+    "proof_item_uncovered": 0.011,
+    "sprite_over_background": 0.002
+   },
+   "flags": []
+  },
+  "toddler-sandals/back": {
+   "proof": "shoes-little/toddler-sandals-back.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    1830,
+    110,
+    517,
+    356
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/toddler-sandals-back.webp",
+   "sprite_box": [
+    1832,
+    155,
+    513,
+    309
+   ],
+   "offset": [
+    2,
+    45
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 55.7,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.845,
+    "proof_item_uncovered": 0.002,
+    "sprite_over_background": 0.002
+   },
+   "flags": [],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      45
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 55.2
+    },
+    "right": {
+     "offset": [
+      266,
+      45
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 56.1
+    }
+   }
+  },
+  "jelly-shoes/front": {
+   "proof": "shoes-little/jelly-shoes-front.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    36,
+    703,
+    530,
+    396
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/jelly-shoes-front.webp",
+   "sprite_box": [
+    38,
+    705,
+    526,
+    392
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 58.5,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.737,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.002
+   },
+   "flags": [
+    "shape differs (IoU < 0.8)"
+   ],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      3
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 59.1
+    },
+    "right": {
+     "offset": [
+      276,
+      2
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 57.9
+    }
+   }
+  },
+  "jelly-shoes/left": {
+   "proof": "shoes-little/jelly-shoes-left.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    632,
+    705,
+    529,
+    348
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/jelly-shoes-left.webp",
+   "sprite_box": [
+    634,
+    763,
+    525,
+    288
+   ],
+   "offset": [
+    2,
+    58
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 65.5,
+    "band_offsets": {
+     "top": [
+      -14,
+      20
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      -3,
+      -20
+     ]
+    },
+    "max_band_dev_px": 20,
+    "iou": 0.784,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "shape differs (IoU < 0.8)",
+    "parts drawn 20px apart"
+   ]
+  },
+  "jelly-shoes/right": {
+   "proof": "shoes-little/jelly-shoes-right.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    1228,
+    705,
+    529,
+    348
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/jelly-shoes-right.webp",
+   "sprite_box": [
+    1230,
+    762,
+    525,
+    289
+   ],
+   "offset": [
+    2,
+    57
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 70.7,
+    "band_offsets": {
+     "top": [
+      15,
+      20
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      7,
+      -20
+     ]
+    },
+    "max_band_dev_px": 20,
+    "iou": 0.782,
+    "proof_item_uncovered": 0.005,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "shape differs (IoU < 0.8)",
+    "parts drawn 20px apart"
+   ]
+  },
+  "jelly-shoes/back": {
+   "proof": "shoes-little/jelly-shoes-back.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    1826,
+    705,
+    524,
+    364
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/jelly-shoes-back.webp",
+   "sprite_box": [
+    1828,
+    742,
+    520,
+    325
+   ],
+   "offset": [
+    2,
+    37
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 58.8,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      -20
+     ]
+    },
+    "max_band_dev_px": 20,
+    "iou": 0.716,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.002
+   },
+   "flags": [
+    "shape differs (IoU < 0.8)",
+    "parts drawn 20px apart"
+   ],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      37
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 59.0
+    },
+    "right": {
+     "offset": [
+      269,
+      37
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 58.6
+    }
+   }
+  },
+  "bunny-slippers/front": {
+   "proof": "shoes-little/bunny-slippers-front.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    35,
+    1303,
+    531,
+    383
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/bunny-slippers-front.webp",
+   "sprite_box": [
+    37,
+    1323,
+    527,
+    361
+   ],
+   "offset": [
+    2,
+    20
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 38.4,
+    "band_offsets": {
+     "top": [
+      0,
+      1
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 1,
+    "iou": 0.93,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.001
+   },
+   "flags": [],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      20
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 39.0
+    },
+    "right": {
+     "offset": [
+      276,
+      20
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 37.8
+    }
+   }
+  },
+  "bunny-slippers/left": {
+   "proof": "shoes-little/bunny-slippers-left.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    654,
+    1303,
+    505,
+    377
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/bunny-slippers-left.webp",
+   "sprite_box": [
+    656,
+    1320,
+    501,
+    358
+   ],
+   "offset": [
+    2,
+    17
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 36.1,
+    "band_offsets": {
+     "top": [
+      -3,
+      6
+     ],
+     "middle": [
+      0,
+      1
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 6,
+    "iou": 0.921,
+    "proof_item_uncovered": 0.002,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "bunny-slippers/right": {
+   "proof": "shoes-little/bunny-slippers-right.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    1229,
+    1303,
+    504,
+    377
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/bunny-slippers-right.webp",
+   "sprite_box": [
+    1231,
+    1320,
+    500,
+    358
+   ],
+   "offset": [
+    2,
+    17
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 36.8,
+    "band_offsets": {
+     "top": [
+      3,
+      6
+     ],
+     "middle": [
+      0,
+      1
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 6,
+    "iou": 0.921,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "bunny-slippers/back": {
+   "proof": "shoes-little/bunny-slippers-back.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-little-b-worn.webp",
+   "proof_box": [
+    1829,
+    1303,
+    520,
+    383
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-little/bunny-slippers-back.webp",
+   "sprite_box": [
+    1831,
+    1309,
+    516,
+    375
+   ],
+   "offset": [
+    2,
+    6
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 70.8,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.755,
+    "proof_item_uncovered": 0.003,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "shape differs (IoU < 0.8)"
+   ],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      6
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 70.7
+    },
+    "right": {
+     "offset": [
+      265,
+      6
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 70.9
+    }
+   }
+  }
+ }
+}

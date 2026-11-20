@@ -1,0 +1,416 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "72911ab70cc6"
+ },
+ "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 1423,
+   "haze_far_max": 10,
+   "haze_far_p99_9": 8.0,
+   "glow_ring_nonzero_frac": 0.0195,
+   "glow_ring_p95": 3.0,
+   "interior_frac_below_255": 0.0,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 6156,
+     "dRGB": [
+      15.2,
+      25.6,
+      15.3
+     ],
+     "dLum": 21.3
+    },
+    "64-160": {
+     "n": 7313,
+     "dRGB": [
+      5.6,
+      13.9,
+      6.3
+     ],
+     "dLum": 10.6
+    },
+    "160-255": {
+     "n": 17091,
+     "dRGB": [
+      -4.7,
+      1.2,
+      -2.5
+     ],
+     "dLum": -0.9
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 8,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 9179,
+  "haze_px_removed": 20707,
+  "wisp_px_kept": {
+   "plaid-knit-vest-set/0": 0,
+   "plaid-knit-vest-set/1": 0,
+   "plaid-knit-vest-set/2": 0,
+   "plaid-knit-vest-set/3": 0,
+   "hoodie-dress-leg-warmers/0": 0,
+   "hoodie-dress-leg-warmers/1": 0,
+   "hoodie-dress-leg-warmers/2": 0,
+   "hoodie-dress-leg-warmers/3": 0,
+   "denim-overall-dress/0": 0,
+   "denim-overall-dress/1": 0,
+   "denim-overall-dress/2": 0,
+   "denim-overall-dress/3": 0
+  }
+ },
+ "splits": {
+  "hoodie-dress-leg-warmers-front": {
+   "axis": "y",
+   "at": 431,
+   "gap_px": 44
+  },
+  "hoodie-dress-leg-warmers-front-legwarmers": {
+   "axis": "x",
+   "at": 108,
+   "gap_px": 32
+  },
+  "hoodie-dress-leg-warmers-left": {
+   "axis": "y",
+   "at": 432,
+   "gap_px": 42
+  },
+  "hoodie-dress-leg-warmers-right": {
+   "axis": "y",
+   "at": 431,
+   "gap_px": 42
+  },
+  "hoodie-dress-leg-warmers-back": {
+   "axis": "y",
+   "at": 431,
+   "gap_px": 47
+  },
+  "hoodie-dress-leg-warmers-back-legwarmers": {
+   "axis": "x",
+   "at": 107,
+   "gap_px": 32
+  }
+ },
+ "items": {
+  "plaid-knit-vest-set": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/plaid-knit-vest-set-front.webp",
+     "width": 339,
+     "height": 557,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       196,
+       18,
+       339,
+       557
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/plaid-knit-vest-set-left.webp",
+     "width": 255,
+     "height": 553,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       790,
+       18,
+       255,
+       553
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/plaid-knit-vest-set-right.webp",
+     "width": 254,
+     "height": 553,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       1344,
+       18,
+       254,
+       553
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/plaid-knit-vest-set-back.webp",
+     "width": 339,
+     "height": 556,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       1854,
+       18,
+       339,
+       556
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "hoodie-dress-leg-warmers": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/hoodie-dress-leg-warmers-front.webp",
+     "width": 393,
+     "height": 575,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       169,
+       609,
+       393,
+       575
+      ],
+      "column": 0
+     },
+     "parts": {
+      "dress": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-front-dress.webp",
+       "width": 393,
+       "height": 412,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "legwarmers": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-front-legwarmers.webp",
+       "width": 215,
+       "height": 124,
+       "offset": [
+        88,
+        451
+       ]
+      },
+      "legwarmers-left": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-front-legwarmers-l.webp",
+       "width": 95,
+       "height": 124,
+       "offset": [
+        88,
+        451
+       ]
+      },
+      "legwarmers-right": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-front-legwarmers-r.webp",
+       "width": 93,
+       "height": 124,
+       "offset": [
+        210,
+        451
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "outfits-adult/hoodie-dress-leg-warmers-left.webp",
+     "width": 197,
+     "height": 577,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       814,
+       609,
+       197,
+       577
+      ],
+      "column": 1
+     },
+     "parts": {
+      "dress": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-left-dress.webp",
+       "width": 197,
+       "height": 413,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "legwarmers": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-left-legwarmers.webp",
+       "width": 108,
+       "height": 127,
+       "offset": [
+        51,
+        450
+       ]
+      }
+     }
+    },
+    "right": {
+     "file": "outfits-adult/hoodie-dress-leg-warmers-right.webp",
+     "width": 199,
+     "height": 576,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       1376,
+       610,
+       199,
+       576
+      ],
+      "column": 2
+     },
+     "parts": {
+      "dress": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-right-dress.webp",
+       "width": 199,
+       "height": 412,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "legwarmers": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-right-legwarmers.webp",
+       "width": 107,
+       "height": 127,
+       "offset": [
+        38,
+        449
+       ]
+      }
+     }
+    },
+    "back": {
+     "file": "outfits-adult/hoodie-dress-leg-warmers-back.webp",
+     "width": 391,
+     "height": 574,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       1828,
+       611,
+       391,
+       574
+      ],
+      "column": 3
+     },
+     "parts": {
+      "dress": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-back-dress.webp",
+       "width": 391,
+       "height": 410,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "legwarmers": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-back-legwarmers.webp",
+       "width": 213,
+       "height": 122,
+       "offset": [
+        88,
+        452
+       ]
+      },
+      "legwarmers-left": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-back-legwarmers-l.webp",
+       "width": 93,
+       "height": 121,
+       "offset": [
+        88,
+        452
+       ]
+      },
+      "legwarmers-right": {
+       "file": "outfits-adult/hoodie-dress-leg-warmers-back-legwarmers-r.webp",
+       "width": 92,
+       "height": 121,
+       "offset": [
+        209,
+        453
+       ]
+      }
+     }
+    }
+   }
+  },
+  "denim-overall-dress": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/denim-overall-dress-front.webp",
+     "width": 347,
+     "height": 554,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       192,
+       1221,
+       347,
+       554
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/denim-overall-dress-left.webp",
+     "width": 268,
+     "height": 560,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       784,
+       1212,
+       268,
+       560
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/denim-overall-dress-right.webp",
+     "width": 266,
+     "height": 560,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       1337,
+       1213,
+       266,
+       560
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/denim-overall-dress-back.webp",
+     "width": 346,
+     "height": 553,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-f.webp",
+      "box": [
+       1850,
+       1220,
+       346,
+       553
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

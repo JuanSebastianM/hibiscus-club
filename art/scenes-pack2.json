@@ -1,0 +1,1431 @@
+{
+ "scenes": {
+  "beach": {
+   "source": "art/source/pack2/06-island-places/scene-beach.webp",
+   "image": "assets/scenes/beach.jpg",
+   "crop": [
+    136,
+    0,
+    2593.6,
+    1536
+   ],
+   "jpeg": {
+    "quality": 81,
+    "bytes": 208472
+   },
+   "poi": {
+    "name": "sandcastle kit by the towel",
+    "at": [
+     0.73,
+     0.84
+    ],
+    "box": [
+     0.6,
+     0.68,
+     0.955,
+     0.955
+    ]
+   },
+   "resident": [
+    0.575,
+    0.76
+   ],
+   "approach": [
+    0.54,
+    0.88
+   ],
+   "floor": 0.62,
+   "floorNote": "dry sand; the wet shoreline runs from y~0.55 (centre) to ~0.66 (right edge), so keep feet below 0.62 right of x=0.5",
+   "animate": [
+    {
+     "name": "sea",
+     "type": "water",
+     "key": "water",
+     "poly": [
+      0.42,
+      0.46,
+      1,
+      0.46,
+      1,
+      0.67,
+      0.87,
+      0.66,
+      0.6,
+      0.6,
+      0.43,
+      0.53
+     ]
+    },
+    {
+     "name": "surf line",
+     "type": "foam",
+     "key": "foam",
+     "poly": [
+      0.42,
+      0.5,
+      0.62,
+      0.55,
+      0.8,
+      0.6,
+      1,
+      0.6,
+      1,
+      0.68,
+      0.86,
+      0.68,
+      0.6,
+      0.62,
+      0.42,
+      0.55
+     ]
+    },
+    {
+     "name": "clouds",
+     "type": "sway",
+     "key": "sky",
+     "poly": [
+      0.18,
+      0.05,
+      1,
+      0.05,
+      1,
+      0.43,
+      0.6,
+      0.45,
+      0.18,
+      0.35
+     ],
+     "note": "beach-sky overlay is not usable (different clouds); use the sky key"
+    },
+    {
+     "name": "sailboat",
+     "type": "sway",
+     "ellipse": [
+      0.735,
+      0.43,
+      0.035,
+      0.06
+     ]
+    },
+    {
+     "name": "palm left",
+     "type": "sway",
+     "key": "foliage",
+     "poly": [
+      0,
+      0,
+      0.32,
+      0,
+      0.32,
+      0.3,
+      0.1,
+      0.35,
+      0,
+      0.3
+     ]
+    },
+    {
+     "name": "palm and hibiscus right",
+     "type": "sway",
+     "key": "foliage",
+     "poly": [
+      0.53,
+      0,
+      1,
+      0,
+      1,
+      0.45,
+      0.85,
+      0.3,
+      0.7,
+      0.2,
+      0.53,
+      0.1
+     ]
+    },
+    {
+     "name": "beach umbrellas",
+     "type": "sway",
+     "polys": [
+      [
+       0.09,
+       0.31,
+       0.2,
+       0.31,
+       0.2,
+       0.39,
+       0.09,
+       0.39
+      ],
+      [
+       0.04,
+       0.46,
+       0.11,
+       0.46,
+       0.11,
+       0.5,
+       0.04,
+       0.5
+      ],
+      [
+       0.205,
+       0.445,
+       0.27,
+       0.445,
+       0.27,
+       0.49,
+       0.205,
+       0.49
+      ],
+      [
+       0.255,
+       0.445,
+       0.35,
+       0.445,
+       0.35,
+       0.51,
+       0.255,
+       0.51
+      ]
+     ]
+    },
+    {
+     "name": "hill palms",
+     "type": "wind",
+     "key": "foliage",
+     "poly": [
+      0,
+      0.2,
+      0.55,
+      0.28,
+      0.55,
+      0.42,
+      0,
+      0.42
+     ]
+    },
+    {
+     "name": "flower bushes",
+     "type": "wind",
+     "key": "foliage",
+     "polys": [
+      [
+       0,
+       0.45,
+       0.08,
+       0.45,
+       0.08,
+       0.75,
+       0,
+       0.75
+      ],
+      [
+       0.9,
+       0.55,
+       1,
+       0.55,
+       1,
+       0.8,
+       0.9,
+       0.8
+      ]
+     ]
+    }
+   ],
+   "overlays": {
+    "water": "assets/scenes/fx/beach-water.webp",
+    "foliage": "assets/scenes/fx/beach-foliage.webp",
+    "sky": null
+   },
+   "registration": {
+    "water_source": {
+     "mean_abs_diff_at_0": 18.01,
+     "p99_max_channel_diff": 169,
+     "opaque_px": 402293,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 18.01
+    },
+    "water_mismatch_cut_px": 59954,
+    "water_cleaned": {
+     "mean_abs_diff_at_0": 7.14,
+     "p99_max_channel_diff": 44,
+     "opaque_px": 311620,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 7.14
+    },
+    "water_crop": {
+     "mean_abs_diff_at_0": 6.08,
+     "p99_max_channel_diff": 37,
+     "opaque_px": 67945,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 6.08
+    },
+    "foliage_source": {
+     "mean_abs_diff_at_0": 13.99,
+     "p99_max_channel_diff": 85,
+     "opaque_px": 669920,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 13.99
+    },
+    "foliage_mismatch_cut_px": 0,
+    "foliage_cleaned": {
+     "mean_abs_diff_at_0": 13.99,
+     "p99_max_channel_diff": 85,
+     "opaque_px": 669920,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 13.99
+    },
+    "foliage_crop": {
+     "mean_abs_diff_at_0": 12.23,
+     "p99_max_channel_diff": 71,
+     "opaque_px": 96658,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 12.23
+    },
+    "sky_source": {
+     "mean_abs_diff_at_0": 45.32,
+     "p99_max_channel_diff": 170,
+     "opaque_px": 563974,
+     "best_shift": [
+      1,
+      -3
+     ],
+     "mean_abs_diff_best": 45.12
+    }
+   },
+   "lights": [],
+   "notes": [
+    "Good fit: open sand across the whole lower 40%, POI on the right third, horizon and palms frame it like boardwalk.jpg.",
+    "Big soft palm-shadow shapes on the sand at bottom-left and bottom-right are painted in; characters walking through them will not be shaded (cosmetic).",
+    "Lifeguard chair and umbrellas sit on the upper sand (y 0.42-0.65 left): keep the walk floor at 0.62 there or characters will walk into the chair.",
+    "Perspective is gentle (horizon ~0.47); a constant-size character reads fine.",
+    "No text or people. Sailboat could be animated (it is masked out of the water overlay)."
+   ],
+   "overlayBytes": {
+    "water": {
+     "full": 22146,
+     "half": 8670
+    },
+    "foliage": {
+     "full": 110830,
+     "half": 38866
+    }
+   },
+   "overlayDropped": {
+    "sky": "clouds painted in different places than the background's clouds (53% of opaque pixels differ by >48); covers hills and palms. Use the scene-data 'sky' colour key instead."
+   }
+  },
+  "park": {
+   "source": "art/source/pack2/06-island-places/scene-park.webp",
+   "image": "assets/scenes/park.jpg",
+   "crop": [
+    272,
+    0,
+    2729.6,
+    1536
+   ],
+   "jpeg": {
+    "quality": 72,
+    "bytes": 211644
+   },
+   "poi": {
+    "name": "kite stand (kite rack + kite shop booth)",
+    "at": [
+     0.76,
+     0.6
+    ],
+    "box": [
+     0.57,
+     0.15,
+     1.0,
+     0.8
+    ]
+   },
+   "resident": [
+    0.56,
+    0.86
+   ],
+   "approach": [
+    0.68,
+    0.9
+   ],
+   "floor": 0.74,
+   "floorNote": "stone paving starts at y~0.73 left of the booth and ~0.8 in front of it; the lawn above is visually walkable but cut by the fountain beds",
+   "animate": [
+    {
+     "name": "fountain pool",
+     "type": "water",
+     "key": "water",
+     "poly": [
+      0.09,
+      0.585,
+      0.2,
+      0.56,
+      0.33,
+      0.56,
+      0.41,
+      0.59,
+      0.38,
+      0.63,
+      0.2,
+      0.635,
+      0.1,
+      0.615
+     ]
+    },
+    {
+     "name": "fountain jets",
+     "type": "flow",
+     "poly": [
+      0.15,
+      0.23,
+      0.32,
+      0.23,
+      0.32,
+      0.61,
+      0.15,
+      0.61
+     ],
+     "keyNote": "white/light-blue water streams"
+    },
+    {
+     "name": "sea glimpse",
+     "type": "water",
+     "key": "water",
+     "rect": [
+      0.13,
+      0.425,
+      0.4,
+      0.47
+     ]
+    },
+    {
+     "name": "clouds",
+     "type": "sway",
+     "key": "sky",
+     "poly": [
+      0.1,
+      0.05,
+      0.58,
+      0.05,
+      0.58,
+      0.3,
+      0.4,
+      0.33,
+      0.2,
+      0.33,
+      0.1,
+      0.25
+     ]
+    },
+    {
+     "name": "bougainvillea top left",
+     "type": "sway",
+     "key": "foliage",
+     "poly": [
+      0,
+      0,
+      0.35,
+      0,
+      0.35,
+      0.12,
+      0.15,
+      0.2,
+      0.05,
+      0.3,
+      0,
+      0.3
+     ]
+    },
+    {
+     "name": "palm over the booth",
+     "type": "sway",
+     "key": "foliage",
+     "poly": [
+      0.5,
+      0,
+      0.82,
+      0,
+      0.82,
+      0.15,
+      0.6,
+      0.18,
+      0.5,
+      0.1
+     ]
+    },
+    {
+     "name": "background palms",
+     "type": "sway",
+     "polys": [
+      [
+       0.05,
+       0.19,
+       0.16,
+       0.19,
+       0.16,
+       0.3,
+       0.05,
+       0.3
+      ],
+      [
+       0.39,
+       0.2,
+       0.5,
+       0.2,
+       0.5,
+       0.3,
+       0.39,
+       0.3
+      ],
+      [
+       0.35,
+       0.32,
+       0.44,
+       0.32,
+       0.44,
+       0.4,
+       0.35,
+       0.4
+      ]
+     ]
+    },
+    {
+     "name": "flower beds",
+     "type": "wind",
+     "key": "foliage",
+     "polys": [
+      [
+       0,
+       0.53,
+       0.2,
+       0.55,
+       0.2,
+       0.72,
+       0,
+       0.72
+      ],
+      [
+       0.3,
+       0.53,
+       0.48,
+       0.53,
+       0.48,
+       0.71,
+       0.3,
+       0.71
+      ]
+     ]
+    },
+    {
+     "name": "foreground flowers",
+     "type": "wind",
+     "key": "foliage",
+     "poly": [
+      0,
+      0.75,
+      0.18,
+      0.82,
+      0.18,
+      1,
+      0,
+      1
+     ]
+    },
+    {
+     "name": "hanging kites",
+     "type": "sway",
+     "polys": [
+      [
+       0.58,
+       0.32,
+       0.66,
+       0.32,
+       0.66,
+       0.66,
+       0.58,
+       0.66
+      ],
+      [
+       0.68,
+       0.56,
+       0.9,
+       0.56,
+       0.9,
+       0.8,
+       0.68,
+       0.8
+      ],
+      [
+       0.7,
+       0.3,
+       1,
+       0.3,
+       1,
+       0.5,
+       0.7,
+       0.5
+      ]
+     ],
+     "motionNote": "bend from the top of each kite; tails flutter"
+    },
+    {
+     "name": "swing",
+     "type": "sway",
+     "rect": [
+      0.4,
+      0.43,
+      0.46,
+      0.51
+     ]
+    }
+   ],
+   "overlays": {
+    "water": "assets/scenes/fx/park-water.webp",
+    "foliage": "assets/scenes/fx/park-foliage.webp",
+    "sky": "assets/scenes/fx/park-sky.webp"
+   },
+   "registration": {
+    "water_source": {
+     "mean_abs_diff_at_0": 12.99,
+     "p99_max_channel_diff": 69,
+     "opaque_px": 29702,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 12.99
+    },
+    "water_mismatch_cut_px": 0,
+    "water_cleaned": {
+     "mean_abs_diff_at_0": 12.99,
+     "p99_max_channel_diff": 69,
+     "opaque_px": 29702,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 12.99
+    },
+    "water_crop": {
+     "mean_abs_diff_at_0": 11.36,
+     "p99_max_channel_diff": 64,
+     "opaque_px": 6378,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 11.36
+    },
+    "foliage_source": {
+     "mean_abs_diff_at_0": 15.07,
+     "p99_max_channel_diff": 125,
+     "opaque_px": 861074,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 15.07
+    },
+    "foliage_mismatch_cut_px": 12679,
+    "foliage_cleaned": {
+     "mean_abs_diff_at_0": 14.12,
+     "p99_max_channel_diff": 91,
+     "opaque_px": 843551,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 14.12
+    },
+    "foliage_crop": {
+     "mean_abs_diff_at_0": 13.81,
+     "p99_max_channel_diff": 84,
+     "opaque_px": 108684,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 13.81
+    },
+    "sky_source": {
+     "mean_abs_diff_at_0": 16.57,
+     "p99_max_channel_diff": 146,
+     "opaque_px": 117917,
+     "best_shift": [
+      1,
+      -2
+     ],
+     "mean_abs_diff_best": 16.33
+    },
+    "sky_mismatch_cut_px": 44130,
+    "sky_cleaned": {
+     "mean_abs_diff_at_0": 3.2,
+     "p99_max_channel_diff": 14,
+     "opaque_px": 82393,
+     "best_shift": [
+      0,
+      -1
+     ],
+     "mean_abs_diff_best": 3.18
+    },
+    "sky_crop": {
+     "mean_abs_diff_at_0": 3.1,
+     "p99_max_channel_diff": 14,
+     "opaque_px": 18148,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 3.1
+    }
+   },
+   "lights": [],
+   "notes": [
+    "Kite booth is huge (right 43% of the frame, up to y 0.8); the resident at x~0.56-0.6 stands in front of the freestanding kite rack. Fine, but the booth cannot move further right without cutting it.",
+    "Clutter on the walk floor: a flower clump in the bottom-left corner (x<0.18, y>0.75) and the potted plant at the bottom-right of the booth (x>0.93, y 0.62-0.82).",
+    "Paving recedes in visible perspective (stones shrink toward y~0.75); characters drawn at one size look fine in the band 0.8-1.",
+    "Style matches market.jpg closely (same pink paving, striped awning stall). No text or people."
+   ],
+   "overlayBytes": {
+    "water": {
+     "full": 27044,
+     "half": 10066
+    },
+    "foliage": {
+     "full": 146162,
+     "half": 52048
+    },
+    "sky": {
+     "full": 43224,
+     "half": 16182
+    }
+   }
+  },
+  "icecream": {
+   "source": "art/source/pack2/06-island-places/scene-icecream.webp",
+   "image": "assets/scenes/icecream.jpg",
+   "crop": [
+    272,
+    0,
+    2729.6,
+    1536
+   ],
+   "jpeg": {
+    "quality": 74,
+    "bytes": 214023
+   },
+   "poi": {
+    "name": "ice-cream cart",
+    "at": [
+     0.83,
+     0.75
+    ],
+    "box": [
+     0.7,
+     0.38,
+     0.96,
+     0.9
+    ]
+   },
+   "resident": [
+    0.585,
+    0.8
+   ],
+   "approach": [
+    0.66,
+    0.9
+   ],
+   "floor": 0.72,
+   "floorNote": "cobbled plaza from y~0.71; the raised sidewalk in front of the shops (x<0.45, y 0.68-0.85) is also walkable but has a kerb step",
+   "animate": [
+    {
+     "name": "sea",
+     "type": "water",
+     "key": "water",
+     "poly": [
+      0.53,
+      0.53,
+      0.8,
+      0.53,
+      0.8,
+      0.61,
+      0.53,
+      0.61
+     ]
+    },
+    {
+     "name": "sea behind the cart",
+     "type": "water",
+     "key": "water",
+     "poly": [
+      0.8,
+      0.53,
+      0.96,
+      0.53,
+      0.96,
+      0.62,
+      0.8,
+      0.62
+     ],
+     "note": "mostly hidden by the cart"
+    },
+    {
+     "name": "sunset clouds",
+     "type": "sway",
+     "key": "sky",
+     "poly": [
+      0.45,
+      0,
+      1,
+      0,
+      1,
+      0.4,
+      0.5,
+      0.35,
+      0.45,
+      0.2
+     ]
+    },
+    {
+     "name": "palm left of centre",
+     "type": "sway",
+     "key": "foliage",
+     "poly": [
+      0.25,
+      0,
+      0.62,
+      0,
+      0.62,
+      0.22,
+      0.4,
+      0.25,
+      0.25,
+      0.15
+     ]
+    },
+    {
+     "name": "palm centre",
+     "type": "sway",
+     "key": "foliage",
+     "ellipse": [
+      0.565,
+      0.29,
+      0.075,
+      0.1
+     ]
+    },
+    {
+     "name": "palm right",
+     "type": "sway",
+     "key": "foliage",
+     "poly": [
+      0.76,
+      0,
+      1,
+      0,
+      1,
+      0.3,
+      0.9,
+      0.25,
+      0.76,
+      0.15
+     ]
+    },
+    {
+     "name": "bougainvillea",
+     "type": "wind",
+     "key": "magenta",
+     "polys": [
+      [
+       0,
+       0.1,
+       0.1,
+       0.1,
+       0.1,
+       0.32,
+       0,
+       0.32
+      ],
+      [
+       0.18,
+       0.18,
+       0.28,
+       0.18,
+       0.28,
+       0.33,
+       0.18,
+       0.33
+      ],
+      [
+       0.28,
+       0.36,
+       0.42,
+       0.36,
+       0.42,
+       0.56,
+       0.28,
+       0.56
+      ]
+     ]
+    },
+    {
+     "name": "flower pots",
+     "type": "wind",
+     "key": "foliage",
+     "polys": [
+      [
+       0.24,
+       0.58,
+       0.42,
+       0.58,
+       0.42,
+       0.7,
+       0.24,
+       0.7
+      ],
+      [
+       0.94,
+       0.58,
+       1,
+       0.58,
+       1,
+       0.75,
+       0.94,
+       0.75
+      ]
+     ]
+    },
+    {
+     "name": "shop windows",
+     "type": "flicker",
+     "polys": [
+      [
+       0.0,
+       0.47,
+       0.25,
+       0.47,
+       0.25,
+       0.65,
+       0.0,
+       0.65
+      ],
+      [
+       0.4,
+       0.5,
+       0.52,
+       0.5,
+       0.52,
+       0.67,
+       0.4,
+       0.67
+      ]
+     ],
+     "keyNote": "warm yellow glass"
+    }
+   ],
+   "overlays": {},
+   "registration": {},
+   "lights": [
+    {
+     "at": [
+      0.33,
+      0.236
+     ],
+     "r": 16,
+     "color": "#ffd58a",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.352,
+      0.276
+     ],
+     "r": 16,
+     "color": "#ffd58a",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.384,
+      0.3
+     ],
+     "r": 18,
+     "color": "#ffd58a",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.417,
+      0.326
+     ],
+     "r": 18,
+     "color": "#ffd58a",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.447,
+      0.34
+     ],
+     "r": 18,
+     "color": "#ffd58a",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.48,
+      0.354
+     ],
+     "r": 18,
+     "color": "#ffd58a",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.54,
+      0.378
+     ],
+     "r": 18,
+     "color": "#ffd58a",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.587,
+      0.378
+     ],
+     "r": 20,
+     "color": "#ffd58a",
+     "i": 0.5,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.638,
+      0.375
+     ],
+     "r": 18,
+     "color": "#ffd58a",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.694,
+      0.368
+     ],
+     "r": 20,
+     "color": "#ffd58a",
+     "i": 0.5,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.755,
+      0.347
+     ],
+     "r": 18,
+     "color": "#ffd58a",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.818,
+      0.324
+     ],
+     "r": 22,
+     "color": "#ffd58a",
+     "i": 0.5,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.894,
+      0.278
+     ],
+     "r": 20,
+     "color": "#ffd58a",
+     "i": 0.5,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.039,
+      0.086
+     ],
+     "r": 16,
+     "color": "#ffc15e",
+     "i": 0.4,
+     "flicker": 0.2
+    },
+    {
+     "at": [
+      0.05,
+      0.514
+     ],
+     "r": 16,
+     "color": "#ffc15e",
+     "i": 0.4,
+     "flicker": 0.2
+    },
+    {
+     "at": [
+      0.165,
+      0.525
+     ],
+     "r": 16,
+     "color": "#ffc15e",
+     "i": 0.4,
+     "flicker": 0.2
+    },
+    {
+     "at": [
+      0.323,
+      0.521
+     ],
+     "r": 16,
+     "color": "#ffc15e",
+     "i": 0.4,
+     "flicker": 0.2
+    },
+    {
+     "at": [
+      0.714,
+      0.535
+     ],
+     "r": 18,
+     "color": "#ffc15e",
+     "i": 0.45,
+     "flicker": 0.25
+    },
+    {
+     "at": [
+      0.864,
+      0.535
+     ],
+     "r": 18,
+     "color": "#ffc15e",
+     "i": 0.45,
+     "flicker": 0.25
+    }
+   ],
+   "notes": [
+    "Closest in mood to pavilion.jpg (sunset, string lights). Cart sits on the right third; open cobbles across the middle and front.",
+    "Perspective is the strongest of the four: the cobbles converge toward a vanishing point near (0.62, 0.5) and the kerb runs diagonally, so a character walking up to y~0.72 should be scaled down ~15-20% or it will look too big next to the shop doors.",
+    "Clutter: the kerb step and planter box at x 0.25-0.42, y 0.65-0.72; nothing on the plaza itself.",
+    "No baked text (shop signs are shells, no letters) and no people."
+   ]
+  },
+  "treehouse": {
+   "source": "art/source/pack2/06-island-places/scene-treehouse.webp",
+   "image": "assets/scenes/treehouse.jpg",
+   "crop": [
+    0,
+    0,
+    2457.6,
+    1536
+   ],
+   "jpeg": {
+    "quality": 70,
+    "bytes": 212372
+   },
+   "poi": {
+    "name": "treasure chest",
+    "at": [
+     0.235,
+     0.77
+    ],
+    "box": [
+     0.15,
+     0.66,
+     0.32,
+     0.87
+    ]
+   },
+   "resident": [
+    0.585,
+    0.88
+   ],
+   "approach": [
+    0.36,
+    0.89
+   ],
+   "floor": 0.8,
+   "floorNote": "dirt path and grass in front of the pool; only ~20% of the height is walkable",
+   "animate": [
+    {
+     "name": "waterfall",
+     "type": "flow",
+     "poly": [
+      0.382,
+      0.48,
+      0.477,
+      0.48,
+      0.477,
+      0.65,
+      0.382,
+      0.65
+     ]
+    },
+    {
+     "name": "pool",
+     "type": "water",
+     "key": "water",
+     "poly": [
+      0.33,
+      0.66,
+      0.55,
+      0.64,
+      0.78,
+      0.69,
+      0.78,
+      0.76,
+      0.6,
+      0.79,
+      0.4,
+      0.78,
+      0.33,
+      0.74
+     ]
+    },
+    {
+     "name": "waterfall mist",
+     "type": "foam",
+     "ellipse": [
+      0.43,
+      0.64,
+      0.07,
+      0.035
+     ]
+    },
+    {
+     "name": "clouds",
+     "type": "sway",
+     "key": "sky",
+     "poly": [
+      0.22,
+      0.04,
+      0.56,
+      0.04,
+      0.56,
+      0.28,
+      0.22,
+      0.2
+     ]
+    },
+    {
+     "name": "palm top left",
+     "type": "sway",
+     "key": "foliage",
+     "poly": [
+      0,
+      0,
+      0.27,
+      0,
+      0.27,
+      0.2,
+      0.1,
+      0.25,
+      0,
+      0.2
+     ]
+    },
+    {
+     "name": "palm top right",
+     "type": "sway",
+     "key": "foliage",
+     "poly": [
+      0.89,
+      0,
+      1,
+      0,
+      1,
+      0.25,
+      0.89,
+      0.15
+     ]
+    },
+    {
+     "name": "tree canopy",
+     "type": "wind",
+     "key": "foliage",
+     "poly": [
+      0.39,
+      0,
+      0.92,
+      0,
+      0.92,
+      0.18,
+      0.39,
+      0.18
+     ]
+    },
+    {
+     "name": "hanging vines",
+     "type": "wind",
+     "key": "foliage",
+     "poly": [
+      0.57,
+      0.35,
+      0.75,
+      0.35,
+      0.75,
+      0.6,
+      0.57,
+      0.6
+     ]
+    },
+    {
+     "name": "banana leaves right",
+     "type": "sway",
+     "key": "foliage",
+     "poly": [
+      0.9,
+      0.25,
+      1,
+      0.25,
+      1,
+      0.56,
+      0.9,
+      0.56
+     ]
+    },
+    {
+     "name": "bougainvillea left",
+     "type": "wind",
+     "key": "magenta",
+     "poly": [
+      0,
+      0.25,
+      0.25,
+      0.28,
+      0.25,
+      0.47,
+      0,
+      0.47
+     ]
+    },
+    {
+     "name": "rope bridge",
+     "type": "sway",
+     "poly": [
+      0.28,
+      0.31,
+      0.6,
+      0.31,
+      0.6,
+      0.46,
+      0.28,
+      0.46
+     ],
+     "motionNote": "tiny vertical bend, sagging middle"
+    },
+    {
+     "name": "foreground ferns",
+     "type": "wind",
+     "key": "foliage",
+     "polys": [
+      [
+       0,
+       0.78,
+       0.17,
+       0.78,
+       0.2,
+       1,
+       0,
+       1
+      ],
+      [
+       0.86,
+       0.6,
+       1,
+       0.6,
+       1,
+       1,
+       0.86,
+       1
+      ]
+     ]
+    },
+    {
+     "name": "leaf light on the path",
+     "type": "dapple",
+     "rect": [
+      0.25,
+      0.8,
+      0.85,
+      1
+     ]
+    }
+   ],
+   "overlays": {},
+   "registration": {},
+   "lights": [
+    {
+     "at": [
+      0.61,
+      0.257
+     ],
+     "r": 16,
+     "color": "#ffc15e",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.673,
+      0.25
+     ],
+     "r": 16,
+     "color": "#ffc15e",
+     "i": 0.45,
+     "flicker": 0.3
+    },
+    {
+     "at": [
+      0.723,
+      0.261
+     ],
+     "r": 20,
+     "color": "#ffd58a",
+     "i": 0.35,
+     "flicker": 0.15
+    }
+   ],
+   "notes": [
+    "Least suitable of the four as a walk scene: the open ground is only the band y 0.8-1 (the brief asks for the lower 40%), the pool comes down to y~0.79 in the middle, and the chest itself sits at y 0.66-0.87 so the approach spot is right of it on the path.",
+    "Clutter on the walk floor: ferns in the bottom-left corner (x<0.18) and a large plant clump bottom-right (x>0.86, y>0.6); grass tufts and small flowers dot the path.",
+    "Style mismatch: much darker and greener, dense jungle detail, no pink paving or rail; it reads as a different painter next to boardwalk/market/pavilion. A light pink-gold grade (or the scene's ambient tint) would help.",
+    "Rainbow and waterfall are painted in (could be animated). No text or people."
+   ]
+  }
+ },
+ "note": "Generated by art/crop_scenes_pack2.py. Coordinates are normalized to the 1152x720 crop. crop = window in the source [x0, y0, x1, y1] px. floor = highest y a character's feet can reach. resident/approach = feet positions. animate = suggested living-scene layers in the spirit of dist/scene-data.js (shapes only; keys/motion to tune)."
+}

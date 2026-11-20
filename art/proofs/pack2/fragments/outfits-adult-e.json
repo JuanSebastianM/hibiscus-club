@@ -1,0 +1,269 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "ce3ca9b5660a"
+ },
+ "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 1417,
+   "haze_far_max": 11,
+   "haze_far_p99_9": 10.0,
+   "glow_ring_nonzero_frac": 0.02,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0001,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 6284,
+     "dRGB": [
+      20.4,
+      29.2,
+      21.0
+     ],
+     "dLum": 25.6
+    },
+    "64-160": {
+     "n": 7574,
+     "dRGB": [
+      8.4,
+      14.8,
+      9.3
+     ],
+     "dLum": 12.2
+    },
+    "160-255": {
+     "n": 15976,
+     "dRGB": [
+      -2.1,
+      1.5,
+      -1.2
+     ],
+     "dLum": 0.1
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 8,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 10141,
+  "haze_px_removed": 18801,
+  "wisp_px_kept": {
+   "sequin-halter-dress/0": 0,
+   "sequin-halter-dress/1": 0,
+   "sequin-halter-dress/2": 0,
+   "sequin-halter-dress/3": 0,
+   "butterfly-satin-skirt/0": 0,
+   "butterfly-satin-skirt/1": 0,
+   "butterfly-satin-skirt/2": 0,
+   "butterfly-satin-skirt/3": 0,
+   "puffer-vest-slip-dress/0": 0,
+   "puffer-vest-slip-dress/1": 0,
+   "puffer-vest-slip-dress/2": 0,
+   "puffer-vest-slip-dress/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "sequin-halter-dress": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/sequin-halter-dress-front.webp",
+     "width": 358,
+     "height": 573,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       186,
+       13,
+       358,
+       573
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/sequin-halter-dress-left.webp",
+     "width": 255,
+     "height": 571,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       785,
+       13,
+       255,
+       571
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/sequin-halter-dress-right.webp",
+     "width": 255,
+     "height": 570,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       1348,
+       14,
+       255,
+       570
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/sequin-halter-dress-back.webp",
+     "width": 359,
+     "height": 574,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       1844,
+       12,
+       359,
+       574
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "butterfly-satin-skirt": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/butterfly-satin-skirt-front.webp",
+     "width": 323,
+     "height": 576,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       203,
+       609,
+       323,
+       576
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/butterfly-satin-skirt-left.webp",
+     "width": 245,
+     "height": 574,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       778,
+       608,
+       245,
+       574
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/butterfly-satin-skirt-right.webp",
+     "width": 244,
+     "height": 574,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       1365,
+       608,
+       244,
+       574
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/butterfly-satin-skirt-back.webp",
+     "width": 323,
+     "height": 575,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       1861,
+       609,
+       323,
+       575
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "puffer-vest-slip-dress": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/puffer-vest-slip-dress-front.webp",
+     "width": 284,
+     "height": 576,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       223,
+       1206,
+       284,
+       576
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/puffer-vest-slip-dress-left.webp",
+     "width": 214,
+     "height": 572,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       802,
+       1204,
+       214,
+       572
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/puffer-vest-slip-dress-right.webp",
+     "width": 214,
+     "height": 572,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       1371,
+       1204,
+       214,
+       572
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/puffer-vest-slip-dress-back.webp",
+     "width": 284,
+     "height": 576,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-e.webp",
+      "box": [
+       1881,
+       1204,
+       284,
+       576
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

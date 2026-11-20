@@ -1,0 +1,269 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "03eb416360d6"
+ },
+ "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 4209,
+   "haze_far_max": 2,
+   "haze_far_p99_9": 2.0,
+   "glow_ring_nonzero_frac": 0.0088,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.1305,
+   "interior_frac_below_200": 0.0446,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 4234,
+     "dRGB": [
+      13.7,
+      30.2,
+      28.9
+     ],
+     "dLum": 25.1
+    },
+    "64-160": {
+     "n": 6077,
+     "dRGB": [
+      9.1,
+      22.8,
+      23.0
+     ],
+     "dLum": 18.7
+    },
+    "160-255": {
+     "n": 14459,
+     "dRGB": [
+      0.3,
+      9.2,
+      10.8
+     ],
+     "dLum": 6.7
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 10667,
+  "haze_px_removed": 15620,
+  "wisp_px_kept": {
+   "tulle-party-dress/0": 0,
+   "tulle-party-dress/1": 0,
+   "tulle-party-dress/2": 0,
+   "tulle-party-dress/3": 0,
+   "bear-onesie/0": 0,
+   "bear-onesie/1": 0,
+   "bear-onesie/2": 0,
+   "bear-onesie/3": 0,
+   "ballet-wrap-set/0": 0,
+   "ballet-wrap-set/1": 0,
+   "ballet-wrap-set/2": 0,
+   "ballet-wrap-set/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "tulle-party-dress": {
+   "category": "outfits-little",
+   "views": {
+    "front": {
+     "file": "outfits-little/tulle-party-dress-front.webp",
+     "width": 530,
+     "height": 543,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       40,
+       32,
+       530,
+       543
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-little/tulle-party-dress-left.webp",
+     "width": 455,
+     "height": 536,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       675,
+       33,
+       455,
+       536
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-little/tulle-party-dress-right.webp",
+     "width": 454,
+     "height": 535,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       1258,
+       32,
+       454,
+       535
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-little/tulle-party-dress-back.webp",
+     "width": 526,
+     "height": 544,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       1814,
+       31,
+       526,
+       544
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "bear-onesie": {
+   "category": "outfits-little",
+   "views": {
+    "front": {
+     "file": "outfits-little/bear-onesie-front.webp",
+     "width": 367,
+     "height": 559,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       116,
+       618,
+       367,
+       559
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-little/bear-onesie-left.webp",
+     "width": 220,
+     "height": 566,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       801,
+       613,
+       220,
+       566
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-little/bear-onesie-right.webp",
+     "width": 218,
+     "height": 567,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       1366,
+       613,
+       218,
+       567
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-little/bear-onesie-back.webp",
+     "width": 367,
+     "height": 560,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       1905,
+       617,
+       367,
+       560
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "ballet-wrap-set": {
+   "category": "outfits-little",
+   "views": {
+    "front": {
+     "file": "outfits-little/ballet-wrap-set-front.webp",
+     "width": 513,
+     "height": 521,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       48,
+       1233,
+       513,
+       521
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-little/ballet-wrap-set-left.webp",
+     "width": 440,
+     "height": 524,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       688,
+       1227,
+       440,
+       524
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-little/ballet-wrap-set-right.webp",
+     "width": 441,
+     "height": 523,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       1259,
+       1228,
+       441,
+       523
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-little/ballet-wrap-set-back.webp",
+     "width": 512,
+     "height": 520,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-e.webp",
+      "box": [
+       1828,
+       1234,
+       512,
+       520
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

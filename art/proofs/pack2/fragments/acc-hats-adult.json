@@ -1,0 +1,285 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "a88690d913a0"
+ },
+ "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 1052,
+   "haze_far_max": 2,
+   "haze_far_p99_9": 2.0,
+   "glow_ring_nonzero_frac": 0.0188,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 5535,
+     "dRGB": [
+      -80.3,
+      -72.1,
+      -68.0
+     ],
+     "dLum": -74.1
+    },
+    "64-160": {
+     "n": 6511,
+     "dRGB": [
+      -59.1,
+      -57.2,
+      -51.4
+     ],
+     "dLum": -57.1
+    },
+    "160-255": {
+     "n": 12836,
+     "dRGB": [
+      -46.3,
+      -50.2,
+      -42.3
+     ],
+     "dLum": -48.2
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 1284,
+  "haze_px_removed": 12091,
+  "crosses_grid": [
+   [
+    "05-accessories/acc-hats-adult.webp",
+    [
+     1,
+     0
+    ]
+   ],
+   [
+    "05-accessories/acc-hats-adult.webp",
+    [
+     1,
+     3
+    ]
+   ]
+  ],
+  "wisp_px_kept": {
+   "bucket-hat/0": 0,
+   "bucket-hat/1": 1,
+   "bucket-hat/2": 0,
+   "bucket-hat/3": 0,
+   "sun-hat/0": 0,
+   "sun-hat/1": 0,
+   "sun-hat/2": 0,
+   "sun-hat/3": 0,
+   "baseball-cap/0": 0,
+   "baseball-cap/1": 0,
+   "baseball-cap/2": 0,
+   "baseball-cap/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "bucket-hat": {
+   "category": "hats-adult",
+   "views": {
+    "front": {
+     "file": "hats-adult/bucket-hat-front.webp",
+     "width": 505,
+     "height": 360,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       63,
+       120,
+       505,
+       360
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "hats-adult/bucket-hat-left.webp",
+     "width": 497,
+     "height": 360,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       651,
+       120,
+       497,
+       360
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hats-adult/bucket-hat-right.webp",
+     "width": 495,
+     "height": 359,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       1241,
+       121,
+       495,
+       359
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hats-adult/bucket-hat-back.webp",
+     "width": 504,
+     "height": 364,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       1820,
+       120,
+       504,
+       364
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "sun-hat": {
+   "category": "hats-adult",
+   "views": {
+    "front": {
+     "file": "hats-adult/sun-hat-front.webp",
+     "width": 567,
+     "height": 352,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       32,
+       713,
+       567,
+       352
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "hats-adult/sun-hat-left.webp",
+     "width": 541,
+     "height": 357,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       629,
+       716,
+       541,
+       357
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hats-adult/sun-hat-right.webp",
+     "width": 542,
+     "height": 358,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       1217,
+       715,
+       542,
+       358
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hats-adult/sun-hat-back.webp",
+     "width": 565,
+     "height": 368,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       1789,
+       713,
+       565,
+       368
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "baseball-cap": {
+   "category": "hats-adult",
+   "views": {
+    "front": {
+     "file": "hats-adult/baseball-cap-front.webp",
+     "width": 414,
+     "height": 380,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       108,
+       1298,
+       414,
+       380
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "hats-adult/baseball-cap-left.webp",
+     "width": 544,
+     "height": 302,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       611,
+       1316,
+       544,
+       302
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hats-adult/baseball-cap-right.webp",
+     "width": 544,
+     "height": 302,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       1233,
+       1316,
+       544,
+       302
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hats-adult/baseball-cap-back.webp",
+     "width": 415,
+     "height": 370,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult.webp",
+      "box": [
+       1865,
+       1298,
+       415,
+       370
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}
