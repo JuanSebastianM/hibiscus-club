@@ -186,6 +186,8 @@ const I18N=(()=>{
     'help.p3':'Earn stars by matching cards, delivering bouquets, rehearsing on the runway, helping islanders and photographing style challenges. Spend them on anything with a lock: tap it to try it on, then choose <b>Buy</b> to keep it. Try-ons go back to the shop when you leave the room. Golden hour, the gold postcard frame, unlocks once you have earned 10 stars in all.',
     'help.p4':'Use a mouse, touch, or Tab and Enter. Arrow keys move between room tabs. EN | ES in the top bar switches the language. Your looks, stars, wardrobe and scrapbook save in this browser.',
     'help.back':'Back to the island',
+    'footer.builtBy':'Built by',
+    'footer.creditLabel':'Built by jmendozaperez.dev (opens the builder’s website in a new tab)',
     'help.privacy':'Anonymous play counts, and the switch to turn them off, are under <b>Privacy</b> at the bottom of every page.',
     'privacy.title':'Privacy',
     'privacy.text':'The game counts visits and play anonymously: which rooms and games are used, and which country a visit comes from. It never collects names, IP addresses, cookies or anything that identifies a player.',

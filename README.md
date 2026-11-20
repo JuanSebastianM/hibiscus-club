@@ -161,7 +161,7 @@ The island is an original AI-generated illustration with five HTML links positio
 
 | File | Responsibility |
 | --- | --- |
-| `dist/index.html` | Page shell, navigation, Privacy footer link, accessible dialogs, script loading, Web Analytics token |
+| `dist/index.html` | Page shell, navigation, page footer (Privacy link and “Built by jmendozaperez.dev” credit, which opens in a new tab), accessible dialogs, script loading, Web Analytics token |
 | `dist/analytics.js` | Anonymous play statistics: event lists, batching, privacy checks, optional Web Analytics beacon |
 | `dist/i18n.js` | Translation layer (`t()`, plurals, language choice) and the English dictionary |
 | `dist/i18n-es.js` | Spanish dictionary |
