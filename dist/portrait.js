@@ -1057,14 +1057,17 @@ async function paintPortrait(canvas, shot, postcard=false, view='front') {
   c.restore();
   portraitExtras(c,shot,postcard,geo);
 }
-/* The portrait without the doll (puppet.js draws a moving doll over it). Resolves to the geometry. */
-async function paintPortraitBackdrop(canvas,shot){
+/* The portrait without the doll, as two canvases around it (puppet.js draws a moving doll between
+   them): back = frame, scenery or studio backdrop; front = the postcard's sticker and caption (null
+   for a plain portrait). Resolves to {back, front, geo}. */
+async function paintPortraitParts(shot,postcard=false){
   const scenic=shot.backdrop>0,scene=scenic?districts[shot.backdrop-1]:null;
   const background=scenic?await asset('assets/scenes/'+scene.id+'.jpg'):null;
-  const geo=portraitGeometry(shot,false);
-  canvas.width=geo.w;canvas.height=geo.h;
-  portraitBackground(canvas.getContext('2d'),shot,false,geo,background);
-  return geo;
+  const geo=portraitGeometry(shot,postcard);
+  const back=makeCanvas(geo.w,geo.h);portraitBackground(back.getContext('2d'),shot,postcard,geo,background);
+  let front=null;
+  if(postcard){front=makeCanvas(geo.w,geo.h);portraitExtras(front.getContext('2d'),shot,postcard,geo)}
+  return {back,front,geo};
 }
 function portraitBackground(c,shot,postcard,geo,background){
   const scenic=shot.backdrop>0;

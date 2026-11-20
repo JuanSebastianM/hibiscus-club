@@ -200,9 +200,18 @@ function relocalizeRoom(){
   const purse=main.querySelector('.stage-purse');if(purse)purse.innerHTML=stagePurse();
   refreshRoom();
 }
+/* The stage doll is a moving puppet (puppet.js) when it can be: the still picture is painted first and
+   stays whenever the puppet is off. `stageEmote` is a reaction to play once the new look is on. */
+let stagePuppet=null,stageEmote=null;
 function paintStage(){
-  const c=document.querySelector('#preview');
-  if(c)paintCanvas(c,displayShot(),false,route==='wardrobe'?stageView:'front').catch(()=>say(t('common.portraitError')));
+  const c=document.querySelector('#preview');if(!c)return;
+  const shot=displayShot(),view=route==='wardrobe'?stageView:'front',emote=stageEmote;stageEmote=null;
+  if(stagePuppet&&!stagePuppet.dead&&stagePuppet.canvas===c&&stagePuppet.active&&stagePuppet.doll===shot.doll){stagePuppet.setLookPortrait(shot,view,emote);return}
+  if(stagePuppet?.doll!==shot.doll){stagePuppet?.destroy();stagePuppet=null}
+  paintCanvas(c,shot,false,view).then(()=>{
+    if(!c.isConnected||(stagePuppet&&!stagePuppet.dead&&stagePuppet.canvas===c))return;
+    try{stagePuppet?.destroy();stagePuppet=HibiscusPuppet.portrait(c,{shot,view,role:'stage',onActive:on=>{if(!on){stagePuppet=null;paintStage()}}})}catch{stagePuppet=null}
+  }).catch(()=>say(t('common.portraitError')));
 }
 /* Paints offscreen, then copies, so the visible doll only ever changes from one finished picture
    to the next, and a slow earlier paint can never overwrite a newer one. */
@@ -250,6 +259,7 @@ function choose(field,value){
   const next={...shown,[field]:value};
   if(Shop.ITEM_FIELDS.includes(field)&&(field+'Tint') in next)next[field+'Tint']='original';
   const committed=settle(readLook(next,state.doll));
+  stageEmote=field==='outfit'||field==='outfitTint'?'sway':state.doll==='little'?'shy':'smile';
   persist();refreshRoom();
   const bill=trialBill();
   if(bill.keys.length&&bill.keys.join()!==before){
@@ -277,7 +287,7 @@ function confirmBuy(){
   state.spent+=bill.cost;
   bill.keys.forEach(k=>{if(!state.owned.includes(k))state.owned.push(k);freshKeys.add(k);
     const p=Shop.price(k);track('purchase',keyCategory(k),p<10?'1-9':p<20?'10-19':'20-plus')});
-  state.looks[state.doll]=displayLook();trial=null;
+  state.looks[state.doll]=displayLook();trial=null;stageEmote='cheer';
   persist();navBar();
   const wallet=document.querySelector('#wallet');wallet.classList.remove('spent');void wallet.offsetWidth;wallet.classList.add('spent');
   refreshRoom();
@@ -290,7 +300,7 @@ function surpriseMe(){
   if(!res)return;
   const keep=look();
   state.looks[state.doll]=readLook({...res.look,frame:keep.frame,sticker:keep.sticker,backdrop:keep.backdrop},state.doll);
-  persist();refreshRoom();
+  stageEmote='sway';persist();refreshRoom();
   const stage=document.querySelector('#stage');
   if(stage){stage.classList.remove('twirl');void stage.offsetWidth;stage.classList.add('twirl');}
   [0,140,280].forEach((t,i)=>setTimeout(()=>sparkleOnDoll(['hair','outfit','shoes'][i],.8),t));

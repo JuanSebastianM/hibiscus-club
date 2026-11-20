@@ -198,13 +198,29 @@ function draw(){
   if(isDistrictRoute(route))attachWorld();
   if(route==='map')try{HibiscusScenes.mount(main.querySelector('.map-art'),'island')}catch{} // living scene; plain picture if unavailable
   if(isMakeoverRoute())paintStage();
-  else{const c=document.querySelector('#preview, #card-preview');
-    if(c)paintCanvas(c,currentShot(),route==='booth').catch(()=>say(t('common.portraitError')));}
+  else{const c=document.querySelector('#preview, #card-preview');if(c)paintDoll(c);}
   main.querySelectorAll('[data-photo]').forEach(el=>paintPortrait(el,state.photos.find(s=>s.id===el.dataset.photo),true).catch(()=>say(t('scrapbook.loadError'))));
   if(key&&val!==null){
     const buttons=Array.from(main.querySelectorAll('button'));
     buttons.find(b=>b.dataset[key]===val&&(!focused.hasAttribute('data-value')||b.dataset.value===focused.dataset.value))?.focus({preventScroll:true});
   }
+}
+/* The doll on the player card (a subtle idle), the booth preview and the runway: the still picture,
+   then, when puppets are on (puppet.js), the same picture moving. Saved postcards and their PNGs stay
+   still pictures from composeDoll. The runway keeps one puppet across its redraws. */
+let dollPuppet=null;
+function paintDoll(c){
+  const shot=currentShot(),postcard=route==='booth';
+  const p=dollPuppet;
+  if(route==='runway'&&p&&!p.dead&&p.active&&p.opts.role==='runway'&&p.doll===shot.doll){p.retarget(c);runwayMotion(p);return}
+  paintCanvas(c,shot,postcard).then(()=>{
+    if(!c.isConnected)return;
+    try{dollPuppet?.destroy()}catch{}
+    try{
+      const q=dollPuppet=HibiscusPuppet.portrait(c,{shot,postcard,role:route,energy:route==='map'?.55:1,onActive:on=>{if(!on&&c.isConnected)paintCanvas(c,currentShot(),postcard).catch(()=>{})}});
+      if(q&&route==='runway'){q.prefetch(['left','right']);q.ready.then(ok=>{if(ok)runwayMotion(q)})}
+    }catch{dollPuppet=null}
+  }).catch(()=>say(t('common.portraitError')));
 }
 function setPageTitle(){
   document.title=t('meta.title',{page:places.find(p=>p.id===route)?.name||districtOf(route)?.name||t('page.'+route)});

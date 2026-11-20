@@ -63,7 +63,7 @@ const DOLL={
       face:{eyes:[[[175,85],[180,82],[188,80.5],[196,81.5],[202,85],[196,87.5],[186,88],[179,87]],[[219,86],[224,82.5],[232,81],[240,82],[245,85],[239,87.5],[229,88],[222,87.5]]],
         mouth:[[183,120.5,0],[189,124,.45],[195,126,.85],[200,126.8,1],[206,127,1],[212,126.8,1],[218,126,.85],[224,124,.45],[230.5,120,0]],
         corners:[[183,120.5],[230.5,120]],cheeks:[[172,104,13],[242,102,13]],chin:147,jawMax:4.2,teeth:true,
-        lash:[.85,1.6],lidSample:3.2}},
+        lash:[.85,1.6],lidSample:3.2,lidGap:.8}},
     left:{
       joints:{root:[92,873],hips:[92,440],spine:[86,350],chest:[84,262],neck:[106,170],head:[100,150],
         sh0:[110,218],el0:[94,372],wr0:[79,492],hand0:[72,540],
@@ -87,7 +87,7 @@ const DOLL={
           [[222,123],[226,118],[232,115],[239,114],[246,116],[251,119],[254,123],[249,127],[242,129.5],[234,130],[227,128]]],
         mouth:[[186,176.5,0],[192,176.3,.5],[198,176.1,.9],[204,176,1],[210,176.1,1],[216,176,.9],[223,175.7,.5],[230,175.4,0]],
         corners:[[186,176.5],[230,175.4]],cheeks:[[166,160,17],[253,158,17]],chin:200,jawMax:4.6,teeth:false,
-        lash:[.7,1.1],lidSample:4.5}},
+        lash:[.75,1.2],lidSample:4,lidGap:3}},
     left:{
       joints:{root:[106,863],hips:[108,520],spine:[100,432],chest:[104,330],neck:[114,218],head:[108,198],
         sh0:[126,252],el0:[123,402],wr0:[113,496],hand0:[108,548],
@@ -95,13 +95,16 @@ const DOLL={
       hipLine:[[38,530],[180,520]],skirtTop:440,neckCut:212,dir:-1,
       face:{eyes:[[[23,117],[25,111],[30,108.5],[35,110],[39,114],[38,119],[32,122],[26,121.5]]],
         mouth:[[10,168.4,1],[14,168.6,1],[18,169.3,.75],[22,170,.35],[24.5,170.4,0]],
-        corners:[[24.5,170.4]],cheeks:[[46,152,14]],chin:186,jawMax:4,teeth:false,lash:[.7,1],lidSample:4}},
+        corners:[[24.5,170.4]],cheeks:[[46,152,14]],chin:186,jawMax:4,teeth:false,lash:[.75,1.1],lidSample:4,lidGap:2.2}},
     back:{joints:null,armCut0:[[126,226],[122,346]],armCut1:[[276,226],[282,346]],hipLine:[[92,505],[201,556],[310,505]],face:null}
   }
 };
 /* How a garment moves: 'trousers' (legs split and follow the legs), 'skirt' (below skirtTop it sways
    as one piece and the legs swing beneath; dresses too). An outfit not listed counts as a skirt, which
-   never tears. */
+   never tears. SKIRT_TOP moves the skirt line (doll-local y, every view) for outfits whose top hangs
+   below the usual waist (a jacket or cardigan over the skirt: its hem must not sway apart from its
+   sleeves). */
+const SKIRT_TOP={'denim-jacket-skirt':{adult:415},'mint-cardigan-dress':{little:462}};
 const OUTFIT_KIND={'hibiscus-flares':'trousers','black-flares-set':'trousers','pink-velour-cargo':'trousers',
   'lilac-satin-bow-dress':'skirt','denim-jacket-skirt':'skirt','green-hibiscus-sundress':'skirt',
   'yellow-dot-dress':'skirt','lilac-cord-pinafore':'skirt','pink-gingham-bow-dress':'skirt','mint-cardigan-dress':'skirt',
@@ -171,7 +174,7 @@ function rig(doll,view){
   if(src.face){
     const f=src.face;
     face={eyes:f.eyes.map(pts),mouth:f.mouth.map(([x,y,w])=>[...P([x,y]),w]),corners:pts(f.corners),cheeks:f.cheeks.map(([x,y,r])=>[...P([x,y]),r]),
-      chin:f.chin+ORIGINS[doll][srcView][1],jawMax:f.jawMax,teeth:f.teeth,lash:f.lash,lidSample:f.lidSample};
+      chin:f.chin+ORIGINS[doll][srcView][1],jawMax:f.jawMax,teeth:f.teeth,lash:f.lash,lidSample:f.lidSample,lidGap:f.lidGap};
     if(view==='right')face.mouth.reverse();
   }
   const dir=side?(view==='left'?-1:1):0;
@@ -501,7 +504,7 @@ function faceDisplace(face,f,x,y,below){
     for(const [kx,ky] of face.corners){
       const r=Math.max(4,hw*.42),d2=((x-kx)**2+(y-ky)**2)/(r*r),g=Math.exp(-d2*1.6);
       const out=face.corners.length>1?Math.sign(kx-cx):(kx>face.mouth[0][0]?1:-1);
-      dx+=g*out*(sm*hw*.05+wide*hw*.045);dy+=g*(-sm*hw*.07);
+      dx+=g*out*(sm*hw*.07+wide*hw*.05);dy+=g*(-sm*hw*.11);
     }
     for(const [kx,ky,r] of face.cheeks){const d2=((x-kx)**2+(y-ky)**2)/(r*r),g=Math.exp(-d2*1.3);dy-=g*sm*r*.1}
   }
@@ -519,7 +522,10 @@ const api={TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIN
   views,rig,residentRig,toCanvas,expressionFor,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
   restPose,copyPose,addPose,mixPose,localMatrix,forward,mul,apply,
   idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,
-  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt'};
+  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,
+  /* the rig of a view as dressed in an outfit (its own skirt line, canvas px) */
+  dressedRig(doll,view,outfit){const rg=rig(doll,view),y=SKIRT_TOP[outfit]?.[doll];if(y===undefined)return rg;
+    const srcView=view==='right'?'left':view;return {...rg,skirtTop:y+ORIGINS[doll][srcView][1]}}};
 root.HibiscusPuppetRig=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

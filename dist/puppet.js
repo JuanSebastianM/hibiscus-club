@@ -29,7 +29,8 @@ const HibiscusPuppet=(()=>{
   const base=(document.currentScript&&document.currentScript.src)||location.href;
   const THREE_URL=new URL('vendor/three/three.module.min.js',base).href;
   const reducedQuery=matchMedia('(prefers-reduced-motion: reduce)');
-  const config={maxLive:4,grid:8,headGrid:2,hairGrid:10,maxModels:8,allowSoftwareGL:false,quality:'auto',debugPieces:false};
+  // allowSoftwareGL: also run on a software renderer (?softgl in the address, for automated checks)
+  const config={maxLive:4,grid:8,headGrid:2,hairGrid:10,maxModels:8,warmModels:5,allowSoftwareGL:/[?&]softgl\b/.test(location.search),quality:'auto',debugPieces:false};
   const W=600,H=1060,NB=R.NB,B=R.B;
   let enabled=true,threeP=null,T=null,ctxGL=null,webgl2=null,raf=0,ticker=0,lastNow=0,frameEma=16,level=0;
   const instances=new Set(),models=new Map(),building=new Map();
@@ -274,6 +275,11 @@ const HibiscusPuppet=(()=>{
       this.canvas=mk(this.box[2]*k,this.box[3]*k);this.g=this.canvas.getContext('2d');
       this.src=src;this.sd=pixelsOf(src);
       this.eyes=f.eyes.map(e=>this.prepEye(e));
+      // the face's own silhouette (slightly inset): nothing drawn here may leave it
+      const fm=mk(this.canvas.width,this.canvas.height),fg=fm.getContext('2d');
+      fg.imageSmoothingQuality='high';fg.drawImage(src,this.box[0],this.box[1],this.box[2],this.box[3],0,0,fm.width,fm.height);
+      const fd=fg.getImageData(0,0,fm.width,fm.height);for(let i=3;i<fd.data.length;i+=4)fd.data[i]=fd.data[i]>235?255:0;fg.putImageData(fd,0,0);
+      this.faceMask=fm;
       const m=f.mouth,cx=(Math.min(...m.map(p=>p[0]))+Math.max(...m.map(p=>p[0])))/2;
       this.mouthCx=cx;
       this.state='';
@@ -292,18 +298,24 @@ const HibiscusPuppet=(()=>{
       const faceMid=this.rg.side?null:(this.f.eyes.length>1?(this.f.eyes[0][0][0]+this.f.eyes[1][0][0])/2:x0);
       const outerRight=this.rg.side?this.rg.dir<0:(x0+x1)/2>faceMid;
       // the closed lid: the skin strip above the eye stretched down over it (keeps eyeshadow and shading)
-      const k=this.k,sample=this.f.lidSample||3,[bx,by]=this.box;
-      const lid=mk((x1-x0+2)*k,(h+sample+4)*k),lg=lid.getContext('2d');lg.imageSmoothingQuality='high';
-      const yTop=Math.min(...top.map(p=>p[1]))-sample-1;
+      // (skipping `lidGap` px of lashes right above the eye)
+      const k=this.k,sample=this.f.lidSample||3,gap=this.f.lidGap??1,[bx,by]=this.box;
+      const lid=mk((x1-x0+2)*k,(h+sample+gap+4)*k),lg=lid.getContext('2d');lg.imageSmoothingQuality='high';
+      const yTop=Math.min(...top.map(p=>p[1]))-sample-gap-1;
       for(let X=0;X<lid.width;X++){
-        const x=x0-1+X/k,t=at(top,x),b=at(bot,x);
+        const x=x0-1+X/k,t=at(top,x)-gap,b=at(bot,x);
         lg.drawImage(this.src,x,t-sample,1/k,sample,X,(t-sample-yTop)*k,1,(b+.8-(t-sample))*k);
       }
+      // smooth across (no streaks from single columns), then a soft convex shading of the lid
+      const sm=mk(Math.max(2,lid.width/(4*k)),lid.height),sg=sm.getContext('2d');sg.imageSmoothingQuality='high';sg.drawImage(lid,0,0,sm.width,sm.height);
+      lg.globalAlpha=.8;lg.imageSmoothingQuality='high';lg.drawImage(sm,0,0,lid.width,lid.height);lg.globalAlpha=1;
+      const sh=lg.createLinearGradient(0,0,0,lid.height);sh.addColorStop(0,'rgba(60,25,20,.10)');sh.addColorStop(.55,'rgba(255,235,220,.06)');sh.addColorStop(1,'rgba(60,25,20,.14)');
+      lg.globalCompositeOperation='source-atop';lg.fillStyle=sh;lg.fillRect(0,0,lid.width,lid.height);lg.globalCompositeOperation='source-over';
       // lash colour: the darkest pixels along the upper contour
       let best=[60,40,40],bl=1e9;
       for(let x=x0;x<=x1;x+=.5){const p=this.pixel(x,at(top,x)+.6),l=p[0]+p[1]+p[2];if(p[3]>200&&l<bl){bl=l;best=p}}
       const lash=`rgb(${Math.round(best[0]*.75)},${Math.round(best[1]*.7)},${Math.round(best[2]*.75)})`;
-      return {poly,top,bot,at,x0,x1,h,outerRight,lid,lidX:x0-1,lidY:yTop,lash};
+      return {poly,top,bot,at,x0,x1,h:h+gap,gap,outerRight,lid,lidX:x0-1,lidY:yTop,lash};
     }
     /* Redraws for face params f and the mouth points displaced by disp(x,y,below). Returns false when
        nothing needs drawing. */
@@ -317,6 +329,7 @@ const HibiscusPuppet=(()=>{
       let any=false;
       this.eyes.forEach((e,i)=>{const b=f.blink[Math.min(i,f.blink.length-1)];if(b>.02){this.drawLid(e,b);any=true}});
       if(f.jaw>.05){this.drawMouth(f,disp);any=true}
+      if(any){g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(this.faceMask,0,0);g.globalCompositeOperation='source-over'}
       this.visible=any;return any;
     }
     drawLid(e,b){
@@ -325,7 +338,7 @@ const HibiscusPuppet=(()=>{
       // lid skin above the moving edge
       g.save();
       g.beginPath();g.moveTo(e.x0-.6,e.at(e.top,e.x0)-.4);
-      for(let i=0;i<=N;i++){const x=e.x0+(e.x1-e.x0)*i/N;g.lineTo(x,e.at(e.top,x)-.9)}
+      for(let i=0;i<=N;i++){const x=e.x0+(e.x1-e.x0)*i/N,u=Math.sin(Math.PI*i/N);g.lineTo(x,e.at(e.top,x)-.9-e.gap*u*smooth(0,.35,b))}
       g.lineTo(e.x1+.6,e.at(e.top,e.x1)-.4);
       for(let i=N;i>=0;i--)g.lineTo(edge[i][0],edge[i][1]+.15);
       g.closePath();g.clip();
@@ -380,7 +393,7 @@ const HibiscusPuppet=(()=>{
      overlay, gpu} */
   async function buildDollModel(shot,view){
     const layers=await composeDollLayers(shot,view);await later();
-    const rg=R.rig(layers.doll,view),dv=dollView(layers.doll,view);
+    const rg=R.dressedRig(layers.doll,view,layers.shot.outfit),dv=dollView(layers.doll,view);
     const {lab,armMask}=await baseLabels(rg,dv);await later();
     const kindOutfit=R.outfitKind(layers.shot.outfit),outfitFit=catalogItem(layers.shot.outfit)?.fit?.[layers.doll]?.[view]||{};
     const armIdx=layers.layers.findIndex(l=>l.kind==='arm');
@@ -602,8 +615,12 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
     }
     return Promise.resolve(p);
   }
+  /* Unused models keep their GPU objects only while they are among the few most recent (turning back
+     and forth stays instant); beyond config.maxModels they are dropped altogether. */
   function trimModels(){
-    for(const [k,m] of models){if(models.size<=config.maxModels)break;if(m.refs>0)continue;disposeModel(m);models.delete(k)}
+    const idle=[...models].filter(([,m])=>m.refs<=0);
+    idle.slice(0,Math.max(0,idle.length-config.warmModels)).forEach(([,m])=>disposeModel(m));
+    for(const [k,m] of idle){if(models.size<=config.maxModels)break;disposeModel(m);models.delete(k)}
   }
   function modelFor(opts,view){
     if(opts.resident)return acquire('res|'+opts.resident,()=>buildResidentModel(opts.resident));
@@ -639,7 +656,7 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
     setModel(m,view){
       if(this.model===m)return;
       if(this.model){this.model.refs--;}
-      m.refs++;this.model=m;this.view=view;this.rig=m.rig;
+      m.refs++;this.model=m;this.view=view;this.rig=m.rig;trimModels();
     }
     /* New look (or backdrop): the old picture keeps moving until the new one is ready. */
     setLook(shot,opts={}){
@@ -663,6 +680,8 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
     prefetch(views){if(this.kind==='doll'&&supported())for(const v of views)modelFor(this.opts,v).catch(()=>{})}
     emote(name){if(this.dead)return;this.emoteQ={name,t:0};kick()}
     talk(seconds){this.talkUntil=Math.max(this.talkUntil,this.t+seconds);kick()}
+    /* walk in place at the natural pace for a while (the runway: the page moves the canvas) */
+    strut(seconds){this.strutUntil=this.t+seconds;kick()}
     walking(on){this.walk.on=!!on;if(on)this.walk.idle=0;kick()}
     /* travel in doll px (screen distance / display scale) advances the walk cycle exactly, so the
        stance foot stays planted */
@@ -673,7 +692,8 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       if(this.dead)return;
       if(config.debug)console.warn('puppet off:',e);
       const was=this.active;this.destroy();
-      if(was)try{this.opts.onActive?.(false)}catch{}
+      // a canvas that left the page needs no still picture; anything else gets it back
+      if(was&&e!=='detached')try{this.opts.onActive?.(false)}catch{}
     }
     destroy(){
       if(this.dead)return;
@@ -689,7 +709,9 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       if(this.turn){this.turn.t+=dt;if(this.turn.t>=this.turn.dur/2&&this.turn.to!==this.model){const to=this.turn.to;to.refs--;this.setModel(to,this.turn.view);this.lastBack=null}if(this.turn.t>=this.turn.dur)this.turn=null}
       const pose=R.idlePose(this.t,{...ctx,rig:this.rig});
       // walking weight: on while advances arrive, eases out after
-      const w=this.walk;w.idle+=dt;if(w.idle>.12)w.on=false;
+      const w=this.walk;
+      if(this.t<this.strutUntil&&this.kind==='doll'){w.phase+=dt*R.walkSpeed(this.doll,this.view)/R.cycleLength(this.doll,this.view);w.on=true;w.idle=0}
+      w.idle+=dt;if(w.idle>.12)w.on=false;
       w.w=clamp(w.w+(w.on?dt/.18:-dt/.28),0,1);
       if(w.w>0&&this.kind==='doll'){const wp=R.walkPose(w.phase,ctx);R.mixPose(pose,wp,smooth(0,1,w.w));pose.farAlpha=w.w}
       else if(!w.on)w.phase=Math.round(w.phase*2)/2; // settle on a double-support phase
@@ -710,7 +732,8 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
     render(){
       const m=this.model;if(!m)return;
       const gpu=uploadModel(m),G=getGL(),pose=this.pose;
-      const lay=this.opts.layout?.(this)||{};
+      const lay=this.opts.layout?this.opts.layout(this):{};
+      if(!lay)return;
       const canvas=this.canvas;
       if(lay.size){const [cw,ch]=lay.size;if(canvas.width!==cw||canvas.height!==ch){canvas.width=cw;canvas.height=ch;this.lastBack=null}}
       const crop=lay.crop||(m.resident?[0,0,...m.size]:[0,0,W,H]),dest=lay.dest||[0,0,canvas.width,canvas.height];
@@ -790,9 +813,31 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
        still picture again; energy (idle amplitude 0..1); seed. */
     create(canvas,opts={}){
       if(!canvas||!supported())return null;
+      for(const p of [...instances])if(!p.canvas.isConnected)p.fail('detached');
       if(instances.size>=config.maxLive)return null;
       const p=new Puppet(canvas,opts);instances.add(p);
       if(!ticker)ticker=setInterval(tick,1000);
+      return p;
+    },
+    /* A doll on a portrait canvas (studio and salon stage, player card, booth preview): the backdrop
+       (and the postcard's sticker and caption) come from paintPortraitParts, the doll moves between
+       them. setLook(shot, view, emote) swaps look and view (a view change alone turns her). */
+    portrait(canvas,opts={}){
+      let parts=null,shown=normalShot(opts.shot),view=opts.view||'front',token=0;
+      const partsKey=s=>[s.doll,s.backdrop,s.frame,s.sticker,s.outfit,opts.postcard?1:0].join('|');
+      const p=this.create(canvas,{...opts,layout:()=>parts&&{size:[parts.geo.w,parts.geo.h],back:parts.back,front:parts.front,dest:parts.geo.doll,
+        clip:[parts.geo.x,parts.geo.y,parts.geo.width,parts.geo.height]}});
+      if(!p)return null;
+      const load=s=>paintPortraitParts(s,!!opts.postcard).then(r=>r);
+      p.ready=Promise.all([p.ready,load(shown).then(r=>{parts=r})]).then(([ok])=>ok,()=>{p.fail('backdrop');return false});
+      p.setLookPortrait=(shot,v=view,emote)=>{
+        const next=normalShot(shot),same=lookKey(next,'x')===lookKey(shown,'x'),my=++token;
+        const turnOnly=same&&v!==view;view=v;
+        if(turnOnly){p.setView(v,true);if(emote)p.emote(emote);return}
+        if(same){if(emote)p.emote(emote);return}
+        const needParts=partsKey(next)!==partsKey(shown);shown=next;
+        (needParts?load(next):Promise.resolve(null)).then(r=>{if(my!==token||p.dead)return;if(r)parts=r;p.wantView=v;p.setLook(next,{view:v,emote});p.lastBack=null;kick()}).catch(e=>p.fail(e));
+      };
       return p;
     },
     supported,setEnabled(on){enabled=!!on;tick()},config,
