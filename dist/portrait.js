@@ -318,15 +318,41 @@ function outfitLayer(doll,view,id,tintId){
     return res;
   });
 }
-/* Shoes. Pairs: fit.left/right = {x,y,w,rot} for the sprite parts; the part below `collar` (fraction
-   of the shoe height) is in front of the leg. Side views: fit.near = {x,y,w,rot} for the single main
-   sprite, optional fit.far = {dx,dy,shade} draws it again behind the body for the far foot. */
+/* Shoes: {back, front}. `back` is the whole shoe, drawn behind the body: its sole, insole and lining sit
+   under the foot. `front` holds only the parts that are in front of the foot and leg: below the collar
+   line (fraction of the shoe height; above it the heel counter is behind the ankle), or inside the
+   part's `front` polygon, plus its `over` polygons (e.g. the front band of an ankle strap), minus its
+   `open` polygons (insole between sandal straps, a mary-jane throat), where the foot shows through.
+   Polygons are in sprite fractions [u, v]. Pairs: fit.left/right = {x,y,w,h,rot,front,over,open} for
+   the sprite parts. Side views: fit.near = the same for the single main sprite, optional
+   fit.far = {dx,dy,shade} draws it again behind the body for the far foot. `mask` = where the bare foot
+   may show (the shoe's silhouette plus each part's `keep` polygons: the open sides of a sandal), used
+   with fit.foot and fit.trim by fitFeet (the bare foot is moved into the shoe). */
 function shoeLayers(doll,view,id,tintId){
   const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
   if(!fit)return Promise.resolve(null);
   return memo(dollCaches.layer,['shoes',doll,view,id,tintId].join('|'),async()=>{
-    const [back,bg]=dollLayer(doll,view),[front,fg]=dollLayer(doll,view);
+    const [back,bg]=dollLayer(doll,view),[front,fg]=dollLayer(doll,view),[mask,mg]=dollLayer(doll,view);
     const place=(g,src,f)=>{const w=f.w,h=f.h??src.height*w/src.width;g.translate(f.x,f.y);if(f.rot)g.rotate(f.rot*Math.PI/180);return [w,h]};
+    const scaled=(poly,w,h)=>poly.map(([u,v])=>[u*w,v*h]);
+    // one shoe sprite: whole into `back`, its over-the-foot parts into `front`
+    const shoe=(src,f)=>{
+      bg.save();const [w,h]=place(bg,src,f);bg.drawImage(src,0,0,w,h);bg.restore();
+      mg.save();place(mg,src,f);mg.drawImage(src,0,0,w,h);mg.fillStyle='#000';for(const p of f.keep||[]){pathPoly(mg,scaled(p,w,h));mg.fill()}mg.restore();
+      const t=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),tg=t.getContext('2d');
+      tg.setTransform(fg.getTransform());place(tg,src,f);
+      tg.beginPath();
+      if(f.front)pathPoly(tg,scaled(f.front,w,h));else tg.rect(-5,h*(fit.collar||0),w+10,h*2);
+      for(const p of f.over||[]){const q=scaled(p,w,h);q.forEach(([x,y],i)=>i?tg.lineTo(x,y):tg.moveTo(x,y));tg.closePath()}
+      tg.save();tg.clip();tg.drawImage(src,0,0,w,h);tg.restore();
+      if(f.open){ // soft-edged holes where the foot shows through
+        tg.globalCompositeOperation='destination-out';tg.fillStyle='#000';
+        const m=tg.getTransform();tg.shadowColor='#000';tg.shadowBlur=(f.openFeather??1.2)*2;tg.shadowOffsetX=4000;
+        tg.setTransform(m.a,m.b,m.c,m.d,m.e-4000,m.f);
+        for(const p of f.open){pathPoly(tg,scaled(p,w,h));tg.fill()}
+      }
+      fg.save();fg.setTransform(1,0,0,1,0,0);fg.drawImage(t,0,0);fg.restore();
+    };
     if(fit.near){
       const src=await itemSprite(item,view,'main',tintId);
       if(fit.far){
@@ -336,23 +362,14 @@ function shoeLayers(doll,view,id,tintId){
         tg.setTransform(1,0,0,1,0,0);tg.globalCompositeOperation='source-atop';tg.fillStyle=`rgba(30,12,30,${fit.far.shade??.3})`;tg.fillRect(0,0,t.width,t.height);
         bg.save();bg.setTransform(1,0,0,1,0,0);bg.drawImage(t,0,0);bg.restore();
       }
-      fg.save();const [w,h]=place(fg,src,fit.near);
-      if(fit.collar){bg.save();place(bg,src,fit.near);bg.drawImage(src,0,0,w,h);bg.restore();fg.beginPath();fg.rect(-5,h*fit.collar,w+10,h);fg.clip()}
-      fg.drawImage(src,0,0,w,h);fg.restore();
-      return {back,front};
+      shoe(src,fit.near);
+      return {back,front,mask};
     }
     for(const side of ['left','right']){
       const f=fit[side];if(!f)continue;
-      const src=await itemSprite(item,view,side,tintId);
-      const w=f.w,h=f.h??src.height*w/src.width;
-      bg.save();bg.translate(f.x,f.y);if(f.rot)bg.rotate(f.rot*Math.PI/180);bg.drawImage(src,0,0,w,h);bg.restore();
-      // the part below the collar line is in front of the leg
-      fg.save();fg.translate(f.x,f.y);if(f.rot)fg.rotate(f.rot*Math.PI/180);
-      fg.beginPath();
-      if(f.front)pathPoly(fg,f.front.map(([u,v])=>[u*w,v*h]));else fg.rect(-5,h*(fit.collar||0),w+10,h);
-      fg.clip();fg.drawImage(src,0,0,w,h);fg.restore();
+      shoe(await itemSprite(item,view,side,tintId),f);
     }
-    return {back,front};
+    return {back,front,mask};
   });
 }
 /* Hair: {back, front}. fit.front shapes = doll-local regions drawn again in front of the body (the
@@ -755,7 +772,7 @@ function composeDoll(raw,view='front'){
       !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
     ]);
     const arm=sideView(view)?await armLayer(shot,view,body):null;
-    const bodyPic=shoes&&dv.footTop!==undefined?trimFeet(body,shoes,ox,oy,dv.footTop):body;
+    const bodyPic=shoes?fitFeet(body,shoes,catalogItem(shot.shoes).fit[doll][view],dv,view):body;
     const c=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),g=c.getContext('2d');
     g.imageSmoothingQuality='high';
     const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
@@ -801,16 +818,52 @@ function softClip(src,ox,oy,shapes){
   g.globalCompositeOperation='source-in';g.drawImage(src,0,0);
   return c;
 }
-/* Side views: the base foot is flat, a heeled shoe is shorter, so below the ankle (doll y footTop) the
-   bare foot is kept only within each row's span of the shoe (bare heel/toes would poke out). */
-function trimFeet(body,shoes,ox,oy,footTop){
-  const c=makeCanvas(body.width,body.height),g=ctx2d(c);g.drawImage(body,0,0);
-  const im=g.getImageData(0,0,c.width,c.height),d=im.data,W=c.width;
-  const sd=ctx2d(shoes.front).getImageData(0,0,shoes.front.width,shoes.front.height).data,SW=shoes.front.width;
-  for(let y=Math.max(0,Math.floor(footTop));y<c.height;y++){
-    const Y=y+oy;let a=-1,b=-1;
-    if(Y>=0&&Y<shoes.front.height)for(let X=0;X<SW;X++)if(sd[(Y*SW+X)*4+3]>40){if(a<0)a=X;b=X}
-    for(let x=0;x<W;x++){const X=x+ox;if(a>=0&&X>=a+1&&X<=b-1)continue;d[(y*W+x)*4+3]=0}
+/* The bare foot inside a shoe (doll-local fit.foot / fit.trim of the shoe's view fit, side views fall
+   back to the view's footTop for the trim):
+   - foot = {top, bed:[[x,y],...], sx, cx, ramp}: below doll y `top` every column of the body is
+     stretched vertically so the sole (the lowest opaque pixel of the column) lands on the shoe's
+     footbed line `bed` (piecewise linear in x), which raises the heel onto a heeled insole and puts the
+     toes on a platform; sx scales the foot horizontally about x = cx (fading in over `ramp` px below
+     top) so it is as long as the shoe. Toe polish moves with it (it is painted before this).
+   - trim = doll y below which body pixels outside the shoe's silhouette (alpha > trimAlpha) are
+     removed, so no heel, toe or calf pokes out of the shoe; above it the leg is untouched. The open
+     parts of a sandal are kept through the shoe layers' mask (shoe silhouette plus `keep` polygons). */
+function fitFeet(body,shoes,fit,dv,view){
+  const foot=fit?.foot,trimY=fit?.trim??(sideView(view)?dv.footTop:undefined);
+  if(!foot&&trimY===undefined)return body;
+  const [ox,oy]=dv.origin,W=body.width,H=body.height;
+  const c=makeCanvas(W,H),g=ctx2d(c);g.drawImage(body,0,0);
+  const im=g.getImageData(0,0,W,H),d=im.data;
+  if(foot){
+    const src=new Uint8ClampedArray(d),top=Math.max(0,Math.floor(foot.top)),ramp=foot.ramp??30,sx=foot.sx??1,cx=foot.cx??W/2;
+    const sole=new Float32Array(W).fill(-1);
+    for(let x=0;x<W;x++)for(let y=H-1;y>=top;y--)if(src[(y*W+x)*4+3]>128){sole[x]=y+.5;break}
+    const bed=foot.bed,bedAt=x=>{if(x<=bed[0][0])return bed[0][1];for(let i=1;i<bed.length;i++)if(x<=bed[i][0]){const [x0,y0]=bed[i-1],[x1,y1]=bed[i];return y0+(y1-y0)*(x-x0)/(x1-x0)}return bed[bed.length-1][1]};
+    const at=(x,y,j)=>x<0||y<0||x>=W||y>=H?0:src[(y*W+x)*4+j];
+    for(let y=top;y<H;y++){
+      const k=1+(sx-1)*Math.min(1,(y-top)/ramp);
+      for(let x=0;x<W;x++){
+        const o=(y*W+x)*4,xs=cx+(x+.5-cx)/k-.5,xi=Math.round(Math.min(W-1,Math.max(0,xs)));
+        const yb=sole[xi],yt=bedAt(x+.5);
+        let ys=-1;
+        if(yb>top&&yt>top)ys=top+(y+.5-top)*(yb-top)/(yt-top)-.5;
+        if(ys<0||ys>H){d[o+3]=0;continue}
+        // bilinear, premultiplied
+        const x0=Math.floor(xs),y0=Math.floor(ys),fx=xs-x0,fy=ys-y0;let r=0,gg=0,b=0,a=0;
+        for(let j=0;j<4;j++){const px=x0+(j&1),py=y0+(j>>1),w=((j&1)?fx:1-fx)*((j>>1)?fy:1-fy),al=at(px,py,3)*w;
+          r+=at(px,py,0)*al;gg+=at(px,py,1)*al;b+=at(px,py,2)*al;a+=al}
+        if(a<.5){d[o+3]=0;continue}
+        d[o]=r/a;d[o+1]=gg/a;d[o+2]=b/a;d[o+3]=a;
+      }
+    }
+  }
+  if(trimY!==undefined){
+    const mk=shoes.mask||shoes.back,SW=mk.width,sd=ctx2d(mk).getImageData(0,0,SW,mk.height).data,lim=fit?.trimAlpha??60;
+    for(let y=Math.max(0,Math.floor(trimY));y<H;y++)for(let x=0;x<W;x++){
+      const X=x+ox,Y=y+oy,o=(y*W+x)*4;if(!d[o+3])continue;
+      const sa=X<0||Y<0||X>=SW||Y>=mk.height?0:sd[(Y*SW+X)*4+3];
+      if(sa<lim)d[o+3]=0;else if(sa<255)d[o+3]=d[o+3]*Math.min(1,(sa-lim)/(255-lim)*1.6);
+    }
   }
   g.putImageData(im,0,0);return c;
 }

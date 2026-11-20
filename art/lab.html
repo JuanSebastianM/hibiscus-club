@@ -22,6 +22,7 @@ h2{margin:8px 8px 0;font-size:14px}
 </head>
 <body>
 <div id="out"></div>
+<script src="i18n.js"></script>
 <script src="catalog.js"></script>
 <script src="island-life.js"></script>
 <script src="portrait.js"></script>
@@ -119,7 +120,7 @@ Object.assign(sheets,{
   async vhair(){for(const d of dolls){heading('Hair · '+d);for(const it of CATALOG.itemList.filter(i=>i.category==='hair'&&i.id!=='lab-none'&&i.dolls.includes(d)))if(want(it.id)){
     for(const v of views)await tile(it.id+' '+v,L(d,{hair:it.id,...extra}),vopt(d,v,headBox(d,v)))}}},
   async vshoes(){for(const d of dolls){heading('Shoes · '+d);for(const id of ['none',...catalogOptions('shoes',d).map(i=>i.id)])if(want(id))for(const v of views)
-    await tile(id+' '+v,L(d,{shoes:id,outfit:q.get('outfit')||defaultLook(d).outfit,...extra}),vopt(d,v,v==='back'?(d==='adult'?[80,700,240,190]:[70,690,260,190]):(d==='adult'?[-20,700,200,190]:[-20,690,230,190])))}},
+    await tile(id+' '+v,L(d,{shoes:id,outfit:q.get('outfit')||defaultLook(d).outfit,...extra}),vopt(d,v,v==='back'||v==='front'?(d==='adult'?[80,700,240,190]:[70,690,260,190]):(d==='adult'?[-20,700,200,190]:[-20,690,230,190])))}},
   async vjewel(){for(const d of dolls){heading('Jewelry · '+d);
     for(const id of catalogOptions('earrings',d).map(i=>i.id))if(want(id))for(const t of tintOptions(id).length?tintOptions(id).slice(0,q.get('tints')?9:1):[original0])for(const v of views)
       await tile(id+' '+t.id+' '+v,L(d,{earrings:id,earringsTint:t.id,necklace:'none',clip:'none',hair:q.get('hair')||'ringlet-pigtails',...extra}),vopt(d,v,v==='back'?(d==='adult'?[100,40,200,150]:[80,80,250,170]):(d==='adult'?[20,40,160,150]:[0,80,190,170])));

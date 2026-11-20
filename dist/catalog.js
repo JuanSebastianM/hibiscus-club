@@ -130,7 +130,7 @@ const items=[
     fit:{little:{front:{pieces:[{part:'trousers',warp:[[12,409.5,33,112.0,191,296.7],[24,424.0,30,107.0,195,302.9],[36,438.5,24,102.0,200,305.6],[48,453.0,20,97.0,204,310.6],[60,467.5,18,93.0,206,314.7],[72,482.0,15,90.0,208,317.5],[84,496.5,14,88.0,210,319.7],[96,511.0,13,88.0,211,319.7],[108,525.5,11,89.0,212,317.4],[120,540.0,10,91.0,213,315.3],[132,557.2,9,95.0,213,310.1],[144,574.5,9,99.0,214,307.0],[156,591.7,8,103.0,214,301.9],[168,609.0,7,104.0,215,299.9],[180,626.2,6,106.0,215,297.9],[192,643.5,5,105.0,216,298.9],[204,660.7,4,99.0,216,303.0],[216,678.0,4,94.0,216,307.0],[228,695.2,4,93.0,216,309.0],[240,712.5,5,93.0,215,308.0],[252,729.7,11,96.0,209,305.0],[264,746.9,16,98.9,203,301.0],[276,764.2,17,104.0,202,296.0]]},{part:'top',warp:[[10,210,95,146,240,256],[40,232,86,106,246,296],[128,338,88,116,244,288],[140,351.7,85,115.9,247,284.0],[152,365.3,83,119.0,251,284.0],[164,379.0,80,119.0,254,284.0],[176,392.7,76,116.1,257,286.0],[188,406.3,75,128.4,258,274.8],[200,420.0,173,206.3,176,208.7]],
         parts:[limb([[0,20],[66,20],[98,50],[102,80],[88,128],[60,195],[0,200]],[75,40],[35,180],[104,230],[31,470],1.28,{under:true,cut:[[0,20],[86,20],[90,80],[88,128],[66,195],[0,200]]}),limb([[332,20],[266,20],[234,50],[230,80],[244,128],[272,195],[332,200]],[257,40],[297,180],[298,230],[371,470],1.28,{under:true,cut:[[332,20],[246,20],[242,80],[244,128],[266,195],[332,200]]})]}],skin:[{rect:[110,205,180,60]}]}}}},
   /* ----- shoes ----- */
-  {id:'black-platform-sandals',category:'shoes',dolls:['adult'],art:art('shoes-adult','black-platform-sandals',['left','right']),
+  {id:'black-platform-sandals',category:'shoes',dolls:['adult'],openToe:true,art:art('shoes-adult','black-platform-sandals',['left','right']),
     tints:[original],
     fit:{adult:{front:{left:{x:105,y:751,w:63},right:{x:228,y:751,w:63},collar:.3}}}},
   {id:'lilac-mary-jane-heels',category:'shoes',dolls:['adult'],art:art('shoes-adult','lilac-mary-jane-heels',['left','right']),
@@ -251,7 +251,10 @@ function mirrorFit(fit,M,size){
   const out={...fit};
   for(const key of ['skin','behind','front','cutDoll','armClip','overRegion','erase'])if(fit[key])out[key]=fit[key].map(shape);
   if(fit.pieces)out.pieces=fit.pieces.map(piece);
-  else if(fit.near){out.near={...fit.near,x:M-fit.near.x-fit.near.w,rot:fit.near.rot?-fit.near.rot:undefined};if(fit.far)out.far={...fit.far,dx:-(fit.far.dx||0)}}
+  else if(fit.near){const fp=l=>l&&l.map(p=>p.map(([u,v])=>[1-u,v]));
+    out.near={...fit.near,x:M-fit.near.x-fit.near.w,rot:fit.near.rot?-fit.near.rot:undefined,front:fp(fit.near.front&&[fit.near.front])?.[0],over:fp(fit.near.over),open:fp(fit.near.open),keep:fp(fit.near.keep)};
+    if(fit.far)out.far={...fit.far,dx:-(fit.far.dx||0)}}
+  if(fit.foot)out.foot={...fit.foot,bed:fit.foot.bed.map(([x,y])=>[M-x,y]).reverse(),cx:fit.foot.cx===undefined?undefined:M-fit.foot.cx};
   else if(fit.left||fit.right){delete out.left;delete out.right;
     for(const s of ['left','right'])if(fit[s])out[s]={...fit[s],x:mx(fit[s].x),rot:fit[s].rot?-fit[s].rot:undefined}}
   else if(fit.x!==undefined){const r=rect(fit,'main');Object.assign(out,{x:r.x,w:r.w,h:r.h,rot:r.rot});if(fit.cut)out.cut=fit.cut.map(c=>sp(c,size('main')[1]));if(fit.keep)out.keep=fit.keep.map(c=>sp(c,size('main')[1]))}
@@ -387,6 +390,28 @@ vf('butterfly-necklace','little',{left:strand(40,330,[22,5],[20,325],[124,176],[
 /* merge into the catalog */
 for(const [id,doll,view,extra] of VFX)Object.assign(VF[id][doll][view],extra);
 for(const [id,doll,view,i,extra] of VFP)Object.assign(VF[id][doll][view].pieces[i],extra);
+/* ----- shoes on the foot (portrait.js shoeLayers / fitFeet) -----
+   SHOE_FIT[id][doll][view]: merged into the shoe's fit (left/right/near merged one level deeper).
+   foot = how the bare foot is moved into the shoe (sole onto the footbed line `bed`, doll-local, length
+   scaled by sx about cx), trim = doll y below which no skin shows outside the shoe (mask); per sprite
+   part (sprite fractions [u, v]): over = drawn in front of the leg above the collar (front band of an
+   ankle strap), open = holes in the front layer where the foot shows (insole between straps, the throat
+   of a mary jane), keep = open sides where the foot shows outside the shoe's silhouette. The right view
+   is mirrored from left unless given. */
+const SHOE_FIT={};
+const shoeFit=(id,doll,view,extra)=>{((SHOE_FIT[id]??={})[doll]??={})[view]=extra};
+/* a pair's right sprite is the mirror of its left one */
+const flipU=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k,['front','over','open','keep'].includes(k)?(k==='front'?v.map(([u,v])=>[1-u,v]):v.map(p=>p.map(([u,v])=>[1-u,v]))):v]));
+const pair=(o,extra={})=>({left:o,right:flipU(o),...extra});
+shoeFit('black-platform-sandals','adult','front',{...pair({
+    over:[[[0,.12],[.35,.16],[.7,.19],[.95,.18],[1,.22],[1,.31],[0,.31]]],
+    open:[[[.15,.3],[.85,.3],[.9,.58],[.1,.58]],[[.1,.705],[.9,.705],[.88,.77],[.12,.77]]]}),
+  foot:{top:790,bed:[[0,848],[400,848]]},trim:796});
+shoeFit('black-platform-sandals','adult','left',{near:{
+    keep:[[[0,.45],[.16,.42],[.16,.75],[0,.75]],[[.42,-.1],[.9,-.1],[.9,.47],[.6,.55],[.42,.68]]]},
+  foot:{top:772,bed:[[0,840],[50,839],[70,834],[100,808],[140,805]],sx:.93,cx:128,ramp:40},trim:772});
+shoeFit('black-platform-sandals','adult','back',{collar:.12,...pair({keep:[[[.15,.05],[.85,.05],[.85,.4],[.15,.4]]]}),trim:790});
+
 /* bodysuit straps / back neckline repainted as skin above every side/back outfit (only lilac pixels change) */
 const SKIN_DEFAULT={adult:{left:[{rect:[0,140,182,580]}],back:[{rect:[0,140,397,580]}]},little:{left:[{rect:[0,180,208,500]}],back:[{rect:[0,180,403,500]}]}};
 for(const id in VF)for(const doll in VF[id])for(const view of ['left','back'])if(VF[id][doll][view]?.pieces&&!VF[id][doll][view].skin)VF[id][doll][view].skin=SKIN_DEFAULT[doll][view];
@@ -399,6 +424,14 @@ for(const it of items){
     const fit=it.fit[doll]??={};
     fit.left=f.left;fit.back=f.back;fit.right=f.right||(f.left&&mirrorFit(f.left,MIRROR[doll],size));
     for(const v of ['left','right','back'])if(!fit[v])delete fit[v];
+  }
+}
+for(const it of items)if(SHOE_FIT[it.id])for(const [doll,views] of Object.entries(SHOE_FIT[it.id])){
+  const fit=it.fit[doll];
+  for(const [view,extra] of Object.entries(views)){
+    const f=fit[view];
+    for(const [k,v] of Object.entries(extra))f[k]=['left','right','near'].includes(k)?{...f[k],...v}:v;
+    if(view==='left'&&!views.right)fit.right=mirrorFit(f,MIRROR[doll],()=>[1,1]);
   }
 }
 /* a clip on the far side of the head (seen from the left: her right side) goes behind the head */

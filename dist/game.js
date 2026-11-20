@@ -182,6 +182,7 @@ function navigate(){
   const id=location.hash.slice(1),leaving=route;
   const dropped=leaving&&leaving!==id&&dropTrial();
   route=[...places.map(p=>p.id),'scrapbook','runway','life'].includes(id)?id:'map';
+  document.documentElement.dataset.room=route; // style.css: each room's pastel theme
   if(route!==leaving)track('room',route);
   clearTimeout(timer);if(round)round.up=[];resetRunway();
   if(places.some(p=>p.id===route)&&!state.visits.includes(route)){state.visits.push(route);persist();}
