@@ -42,11 +42,12 @@ CONFIG = {
         "left": dict(k=1.321, top=132, hug=[(170, 420, 3, 3)], loose=1.0, blend=60),
         "back": dict(k=1.321, top=136, margin=5, core=[[[0, 20], [95, 20], [100, 60], [100, 100], [75, 170], [55, 240], [0, 240]]])},
     "green-hibiscus-sundress": {"doll": "adult",
-        "left": dict(k=1.947, top=168.9, hug=[(180, 400, 1, 1)], loose=1.0, blend=60),
-        "back": dict(k=1.947, top=168.9)},
+        # the front was shortened to end at the knee (it is a short sundress); the waist stays put
+        "left": dict(k=1.947, top=168.9, vmap=[(0, 168.9), (100, 355), (296, 655)], hug=[(180, 400, 1, 1)], loose=0.85, blend=60),
+        "back": dict(k=1.947, top=168.9, vmap=[(0, 168.9), (100, 355), (296, 655)])},
     "black-flares-set": {"doll": "adult",
         "left": dict(k=2.008, top=165.3, hug=[(170, 700, 1, 1)], loose=1.0, blend=60),
-        "back": dict(k=2.008, top=171.3, margin=9, core=[[[0, 0], [57, 0], [59, 25], [58, 45], [50, 70], [38, 105], [28, 140], [0, 140]]])},
+        "back": dict(k=2.008, top=171.3, margin=[(250, 5), (290, 14), (380, 14), (430, 5)], core=[[[0, 0], [57, 0], [59, 25], [58, 45], [50, 70], [38, 105], [28, 140], [0, 140]]])},
     "pink-velour-cargo": {"doll": "adult",
         "left": dict(k=1.803, top=146.4, hug=[(180, 760, 4, 4)], loose=1.0, blend=60),
         "back": dict(k=1.803, top=148.2, margin=5, core=[[[0, 0], [65, 0], [70, 25], [68, 60], [58, 100], [45, 140], [35, 160], [0, 160]]])},
@@ -66,10 +67,10 @@ CONFIG = {
         "left": dict(k=1.5, top=192.5, hug=[(205, 420, 3, 3)], loose=1.0, blend=60),
         "back": dict(k=1.5, top=194, margin=5, core=[[[0, 0], [82, 0], [88, 60], [86, 125], [80, 150], [75, 172], [0, 172]]])},
     "star-pajamas": {"doll": "little",
-        "left": [dict(part="trousers", k=1.388, top=201.3, off=(5, 155), hug=[(400, 780, 3, 3)], loose=1.0, blend=60),
-                 dict(part="top", k=1.388, top=201.3, off=(0, 0), hug=[(205, 460, 3, 3)], loose=1.0, blend=60)],
+        "left": [dict(part="trousers", k=1.388, top=201.3, off=(5, 155), hug=[(400, 780, 3, 6)], loose=1.0, blend=60),
+                 dict(part="top", k=1.388, top=201.3, off=(0, 0), hug=[(205, 418, 3, 6)], loose=1.0, blend=60)],
         "back": [dict(part="trousers", k=1.388, top=202.7, off=(39, 156), core=[]),
-                 dict(part="top", k=1.388, top=202.7, off=(0, 0), margin=5, core=[[[0, 0], [72, 0], [78, 60], [76, 120], [72, 160], [0, 160]]])]},
+                 dict(part="top", k=1.388, top=202.7, off=(0, 0), margin=5, core=[[[0, 0], [72, 0], [78, 60], [80, 120], [84, 170], [0, 170]]])]},
 }
 
 
@@ -131,7 +132,8 @@ def gen(id, view, cfg, doll, fpdir):
         mask = Image.new("L", (W, sa.shape[0]), 0)
         for poly in cfg["core"]:
             ImageDraw.Draw(mask).polygon([tuple(p) for p in poly], fill=255)
-            ImageDraw.Draw(mask).polygon([(W - x, y) for x, y in poly], fill=255)
+            if view == "back":
+                ImageDraw.Draw(mask).polygon([(W - x, y) for x, y in poly], fill=255)
         sa[np.array(mask) > 0] = 0
     ss = spans(sa)
     H = sa.shape[0]
@@ -164,6 +166,8 @@ def gen(id, view, cfg, doll, fpdir):
             Y = int(round(dolly(sy) + by))
             s = fs[Y] if 0 <= Y < len(fs) else None
             m = cfg.get("margin", 0)
+            if isinstance(m, list):  # [(dollY, margin), ...] interpolated
+                m = float(np.interp(dolly(sy), [p[0] for p in m], [p[1] for p in m]))
             target.append((2 * C - s[1] - bx - m, 2 * C - s[0] - bx + m) if s else None)
     src = smooth([ss[sy] for sy in rows_sy])
     target = smooth(target)
