@@ -9,27 +9,26 @@ const dollNames={adult:'Grown-up',little:'Little Me'};
 const saveKey='hibiscus-club-v1';
 
 const smallInt=(n,max)=>Number.isInteger(n)&&n>=0&&n<=max?n:0;
-function readLook(v={}){return {outfit:smallInt(v?.outfit,2),clip:smallInt(v?.clip,3),gem:smallInt(v?.gem,2),frame:smallInt(v?.frame,3),sticker:smallInt(v?.sticker,3),backdrop:smallInt(v?.backdrop,3)}}
 function loadGame(){
   let raw={};
   try{raw=JSON.parse(localStorage.getItem(saveKey))||{}}catch{}
   return {
     doll:raw.doll==='little'?'little':'adult',
     life:loadIslandLife(raw.life),
-    looks:{adult:readLook(raw.looks?.adult),little:readLook(raw.looks?.little)},
+    looks:{adult:readLook(raw.looks?.adult,'adult'),little:readLook(raw.looks?.little,'little')},
     stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound!==false,sparkle:raw.sparkle!==false,
     visits:places.filter(p=>Array.isArray(raw.visits)&&raw.visits.includes(p.id)).map(p=>p.id),
     missions:smallInt(raw.missions,Number.MAX_SAFE_INTEGER),
     bouquets:smallInt(raw.bouquets,Number.MAX_SAFE_INTEGER),
     best:smallInt(raw.best,Number.MAX_SAFE_INTEGER),
-    photos:(Array.isArray(raw.photos)?raw.photos:[]).filter(p=>p&&Object.hasOwn(dollNames,p.doll)&&typeof p.id==='string'&&/^[\w-]+$/.test(p.id)).slice(0,24).map(p=>({...readLook(p),doll:p.doll,id:p.id}))
+    photos:(Array.isArray(raw.photos)?raw.photos:[]).filter(p=>p&&Object.hasOwn(dollNames,p.doll)&&typeof p.id==='string'&&/^[\w-]+$/.test(p.id)).slice(0,24).map(p=>({...readLook(p,p.doll),doll:p.doll,id:p.id}))
   };
 }
 const state=loadGame();
 const main=document.querySelector('#game');
 const help=document.querySelector('#help');
 const announcer=document.querySelector('#announcer');
-let route='',timer,announceTimer,angle=null,round=null,stems=[],gardenNote='',storageFailed=false;
+let route='',timer,announceTimer,round=null,stems=[],gardenNote='',storageFailed=false;
 function persist(){
   try{localStorage.setItem(saveKey,JSON.stringify(state));storageFailed=false}
   catch{storageFailed=true;}
@@ -65,39 +64,41 @@ function sectionTitle(title,sub,room=false){
 function passport(){
   return `<section class="passport"><div class="pass-title"><span class="pass-icon">${icon('book',23)}</span><div><h2>Island Passport</h2><p>Visit each spot to collect its stamp.</p></div><b>${state.visits.length} / 5</b></div><div class="stamps">${places.map(p=>`<a href="#${p.id}" style="--ink:${p.color}" class="stamp ${state.visits.includes(p.id)?'earned':''}" aria-label="${p.name}, ${state.visits.includes(p.id)?'stamp collected':'visit to collect stamp'}"><span>${icon(p.icon,21)}</span>${p.name}</a>`).join('')}</div></section>`;
 }
+/* Style challenges name an outfit per doll and a hair accessory (catalog ids). */
 const briefs=[
-  {title:'Picnic in paradise',outfit:1,clip:1}, {title:'Disco by the sea',outfit:2,clip:3}, {title:'Island homecoming',outfit:0,clip:2}
+  {title:'Picnic in paradise',outfit:{adult:'green-hibiscus-sundress',little:'pink-gingham-bow-dress'},clip:'peach-blossom'},
+  {title:'Disco by the sea',outfit:{adult:'pink-velour-cargo',little:'denim-overalls'},clip:'gold-star'},
+  {title:'Island homecoming',outfit:{adult:'hibiscus-flares',little:'yellow-dot-dress'},clip:'satin-bow'}
 ];
 const brief=()=>briefs[state.missions%briefs.length];
 function challenge(){
   const b=brief();
-  return `<aside class="challenge"><div class="eyeline">${icon('ticket',18)} STYLE CHALLENGE</div><h2>${b.title}</h2><p>Photograph the ${wardrobes[state.doll][b.outfit].toLowerCase()} with the ${clips[b.clip].toLowerCase()} clip.</p><a class="challenge-link" href="#wardrobe">Plan my look <span>✧</span></a><span class="ticket-star" aria-hidden="true">☆</span></aside>`;
+  return `<aside class="challenge"><div class="eyeline">${icon('ticket',18)} STYLE CHALLENGE</div><h2>${b.title}</h2><p>Photograph the ${escapeText(itemName(b.outfit[state.doll]))} look with the ${escapeText(itemName(b.clip).toLowerCase())}.</p><a class="challenge-link" href="#wardrobe">Plan my look <span>✧</span></a><span class="ticket-star" aria-hidden="true">☆</span></aside>`;
 }
 function mapScreen(){
-  return sectionTitle('Hibiscus Island','Pick a place on the map and let’s play!')+`<div class="map-layout"><div class="map-column"><section class="map-case" aria-label="Interactive island map"><div class="map-bar"><span>${icon('compass',16)} Island Explorer</span><span aria-hidden="true">✧ &nbsp; ✦ &nbsp; ✧</span></div><div class="map-art">${places.map(p=>`<a class="pin pin-${p.id}" style="--x:${p.x}%;--y:${p.y}%;--ink:${p.color}" href="#${p.id}"><i>${icon(p.icon,20)}</i><strong>${p.name}</strong></a>`).join('')}<span class="compass" aria-label="North">N<span>✥</span></span></div></section>${passport()}</div><div class="rail"><section class="player"><header>${icon('id',20)} <h2>My Player Card</h2><span aria-hidden="true">✦</span></header><div class="player-body"><div class="portrait-print"><div class="card-portrait"><canvas id="card-preview" aria-label="${dollNames[state.doll]} in ${wardrobes[state.doll][look().outfit]}"></canvas></div><span class="tape" aria-hidden="true"></span><img class="flower-sticker" src="assets/flower.svg" alt=""><span class="caption">${escapeText(playerLabel())} <i>♡</i></span></div>${dollSwitch()}<a class="primary wide" href="#life">${icon('compass',17)} Explore Island Life</a><a class="sub-link" href="#wardrobe">Dress me up</a></div></section>${challenge()}</div></div>`;
+  return sectionTitle('Hibiscus Island','Pick a place on the map and let’s play!')+`<div class="map-layout"><div class="map-column"><section class="map-case" aria-label="Interactive island map"><div class="map-bar"><span>${icon('compass',16)} Island Explorer</span><span aria-hidden="true">✧ &nbsp; ✦ &nbsp; ✧</span></div><div class="map-art">${places.map(p=>`<a class="pin pin-${p.id}" style="--x:${p.x}%;--y:${p.y}%;--ink:${p.color}" href="#${p.id}"><i>${icon(p.icon,20)}</i><strong>${p.name}</strong></a>`).join('')}<span class="compass" aria-label="North">N<span>✥</span></span></div></section>${passport()}</div><div class="rail"><section class="player"><header>${icon('id',20)} <h2>My Player Card</h2><span aria-hidden="true">✦</span></header><div class="player-body"><div class="portrait-print"><div class="card-portrait"><canvas id="card-preview" aria-label="${dollNames[state.doll]} in ${escapeText(itemName(look().outfit))}"></canvas></div><span class="tape" aria-hidden="true"></span><img class="flower-sticker" src="assets/flower.svg" alt=""><span class="caption">${escapeText(playerLabel())} <i>♡</i></span></div>${dollSwitch()}<a class="primary wide" href="#life">${icon('compass',17)} Explore Island Life</a><a class="sub-link" href="#wardrobe">Dress me up</a></div></section>${challenge()}</div></div>`;
 }
 function group(label,body){return `<section class="option-group"><h3>${label}</h3>${body}</section>`}
 function options(field,names){
   return `<div class="choices">${names.map((name,i)=>`<button data-field="${field}" data-value="${i}" aria-pressed="${look()[field]===i}" ${field==='frame'&&i===3&&state.stars<10?'disabled':''}>${field==='frame'?`<span class="swatch" style="background:${frameColors[i][1]}"></span>`:''}${name}${field==='frame'&&i===3&&state.stars<10?' · 10 stars':''}</button>`).join('')}</div>`;
 }
+/* Choices for a string-id look field from a catalog list [{id,name}]. */
+function idOptions(field,list){
+  return `<div class="choices">${list.map(o=>`<button data-field="${field}" data-value="${o.id}" aria-pressed="${look()[field]===o.id}">${escapeText(o.name)}</button>`).join('')}</div>`;
+}
 function studio(){
   const p=places.find(p=>p.id===route);
   const booth=route==='booth',salon=route==='salon';
   const hint=booth?'Frame your portrait and save it to your scrapbook.':salon?'Pick a finishing touch for her hair.':'Try on a look for your next island adventure.';
-  const signature=state.doll==='adult'&&look().outfit===0;
-  const viewName=['front','side','back'][angle];
-  const viewFile=signature&&(!look().backdrop||angle===2)?'assets/adult-0-'+viewName+'.jpg':spritePath(state.doll,look().outfit,viewName);
-  const stand=angle!==null&&route==='wardrobe'?`<img class="angle" src="${viewFile}" alt="${wardrobes[state.doll][look().outfit]}, ${viewName} view">`:'<canvas id="preview" aria-label="Current styled doll portrait"></canvas>';
-  const rotate=route==='wardrobe'?`<div class="turns">${(signature?[null,0,1,2]:[null,0,1]).map((a,i)=>`<button data-angle="${a??'pose'}" aria-pressed="${angle===a}">${['Pose','Front','Side','Back'][i]}</button>`).join('')}</div>`:'';
-  const outfits=`<div class="outfits">${wardrobes[state.doll].map((name,i)=>`<button data-field="outfit" data-value="${i}" aria-pressed="${look().outfit===i}"><img src="assets/${state.doll}-${i}.jpg" alt=""><span>${name}</span></button>`).join('')}</div>`;
+  const stand=`<canvas id="preview" aria-label="${dollNames[state.doll]} in ${escapeText(itemName(look().outfit))}"></canvas>`;
+  const outfits=`<div class="outfits">${catalogOptions('outfit',state.doll).map(it=>`<button data-field="outfit" data-value="${it.id}" aria-pressed="${look().outfit===it.id}"><img src="${it.art.front.main}" alt="" loading="lazy"><span>${escapeText(it.name)}</span></button>`).join('')}</div>`;
   let controls=group('Character',dollSwitch());
-  if(booth) controls+=group('Postcard frame',options('frame',frames))+group('Corner sticker',options('sticker',['None','Flower','Bow','Star']));
-  else if(salon) controls+=group('Hair accessory',options('clip',clips))+group('Face gems',options('gem',gems));
+  if(booth) controls+=group('Postcard frame',options('frame',frames))+group('Corner sticker',options('sticker',stickers));
+  else if(salon) controls+=group('Hair accessory',idOptions('clip',[{id:'none',name:'No clip'},...catalogOptions('clip',state.doll)]))+group('Face gems',idOptions('gem',makeupOptions('gem',state.doll)));
   else controls+=group('Outfit rack',outfits);
   if(!salon)controls+=group('Scenery',options('backdrop',sceneryNames));
-  const backdropStyle=look().backdrop?` style="background: center / cover url('assets/scenes/${districts[look().backdrop-1].id}.jpg')"`:'';
   let next=booth?`<button class="primary wide" data-action="snap">${icon('camera')} Take photo</button>`:`<a class="primary wide" href="#${salon?'booth':'salon'}">${icon(salon?'camera':'wand')}${salon?'Visit photo booth':'Visit beauty salon'}</a>`;
-  return sectionTitle(p.name,hint,true)+`<div class="workbench"><section class="display"><div class="map-bar"><span>${icon(p.icon,16)} ${dollNames[state.doll]}</span><span>✧</span></div><div class="doll-stage ${booth?'photo-stage':salon?'salon-stage':''}"${angle!==null?backdropStyle:''}>${stand}</div>${rotate}</section><div class="controls"><div class="panel">${controls}${next}${booth?'<a class="sub-link" href="#scrapbook">Open scrapbook</a>':'<a class="sub-link" href="#runway">Walk the island runway</a>'}</div>${challenge()}</div></div>`;
+  return sectionTitle(p.name,hint,true)+`<div class="workbench"><section class="display"><div class="map-bar"><span>${icon(p.icon,16)} ${dollNames[state.doll]}</span><span>✧</span></div><div class="doll-stage ${booth?'photo-stage':salon?'salon-stage':''}">${stand}</div></section><div class="controls"><div class="panel">${controls}${next}${booth?'<a class="sub-link" href="#scrapbook">Open scrapbook</a>':'<a class="sub-link" href="#runway">Walk the island runway</a>'}</div>${challenge()}</div></div>`;
 }
 
 const deckIcons=['flower','star','heart','camera','music','hanger'];
@@ -122,7 +123,7 @@ function garden(){
   return sectionTitle('Flower Garden','Pick three blooms to fill the bouquet order.',true)+`<div class="workbench"><section class="panel garden"><div class="eyeline">${icon('flower')} BOUQUET TABLE</div><div class="bouquet" aria-label="Bouquet preview">${[0,1,2].map(i=>`<span class="stem stem-${i} ${stems[i]===undefined?'empty':''}">${stems[i]===undefined?'✧':flowerGlyph[stems[i]]}</span>`).join('')}<div class="vase"></div></div><div class="flower-picks">${flowers.map((n,i)=>`<button data-flower="${i}" ${stems.length===3?'disabled':''}><span>${flowerGlyph[i]}</span>${n}</button>`).join('')}</div></section><div class="panel game-details"><div class="eyeline">${icon('ticket')} FLOWER ORDER</div><h2>Bouquet for a friend</h2><p>Use one stem for every flower on the order. Any order works.</p><ul class="order">${order.map(i=>`<li>${flowerGlyph[i]} ${flowers[i]}</li>`).join('')}</ul><p class="garden-note" role="status">${gardenNote||'Your bouquet has '+stems.length+' of 3 stems.'}</p><button class="primary wide" data-action="wrap" ${stems.length!==3?'disabled':''}>Wrap bouquet · 5 stars</button><button class="sub-link" data-action="undo" ${!stems.length?'disabled':''}>Remove last bloom</button></div></div>`;
 }
 function scrapbook(){
-  return sectionTitle('My Scrapbook','Your island memories, one postcard at a time.',true)+`<div class="album-head"><b>${state.photos.length} / 24 postcards</b><a class="primary" href="#booth">${icon('camera',17)} Photo booth</a></div>`+(state.photos.length?`<div class="album-grid">${state.photos.map((s,i)=>`<article class="album-card"><canvas data-photo="${s.id}" aria-label="Photo ${i+1}, ${dollNames[s.doll]} in ${wardrobes[s.doll][s.outfit]}"></canvas><div><button data-download="${s.id}" aria-label="Download postcard ${i+1}">${icon('download',17)} PNG</button><button data-remove="${s.id}" aria-label="Remove postcard ${i+1}">Remove</button></div></article>`).join('')}</div>`:`<section class="album-empty"><span>${icon('book',48)}</span><h2>Your first page is waiting</h2><p>Take a picture at the photo booth to start your collection.</p><a class="primary" href="#booth">Take my first photo</a></section>`);
+  return sectionTitle('My Scrapbook','Your island memories, one postcard at a time.',true)+`<div class="album-head"><b>${state.photos.length} / 24 postcards</b><a class="primary" href="#booth">${icon('camera',17)} Photo booth</a></div>`+(state.photos.length?`<div class="album-grid">${state.photos.map((s,i)=>`<article class="album-card"><canvas data-photo="${s.id}" aria-label="Photo ${i+1}, ${dollNames[s.doll]} in ${escapeText(itemName(s.outfit))}"></canvas><div><button data-download="${s.id}" aria-label="Download postcard ${i+1}">${icon('download',17)} PNG</button><button data-remove="${s.id}" aria-label="Remove postcard ${i+1}">Remove</button></div></article>`).join('')}</div>`:`<section class="album-empty"><span>${icon('book',48)}</span><h2>Your first page is waiting</h2><p>Take a picture at the photo booth to start your collection.</p><a class="primary" href="#booth">Take my first photo</a></section>`);
 }
 function draw(){
   const focused=document.activeElement;
@@ -146,7 +147,6 @@ function navigate(){
   const id=location.hash.slice(1);
   route=[...places.map(p=>p.id),'scrapbook','runway','life'].includes(id)?id:'map';
   clearTimeout(timer);if(round)round.up=[];resetRunway();
-  angle=null;
   if(places.some(p=>p.id===route)&&!state.visits.includes(route)){state.visits.push(route);persist();}
   document.title=(places.find(p=>p.id===route)?.name|| (route==='map'?'Island Map':route==='life'?'Island Life':route==='runway'?'Island Runway':'My Scrapbook'))+' · Hibiscus Club';
   draw();window.scrollTo(0,0);
@@ -156,7 +156,7 @@ function takePhoto(){
   const shot=currentShot();
   shot.id=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
   state.photos.unshift(shot);
-  const b=brief(),won=b.outfit===shot.outfit&&b.clip===shot.clip;
+  const b=brief(),won=b.outfit[shot.doll]===shot.outfit&&b.clip===shot.clip;
   if(won){state.missions++;state.stars+=10;}
   persist();draw();tone(true);say(won?'Challenge complete! Postcard saved and 10 stars earned.':'Postcard saved to your scrapbook!');
 }
@@ -192,9 +192,8 @@ document.addEventListener('click',async e=>{
   const d=b.dataset;
   if(d.pose!==undefined){performPose(Number(d.pose));return;}
   if(route==='life'&&(d.travel!==undefined||d.lifeAction||d.taskStep!==undefined)){handleLifeAction(b);return;}
-  if(d.doll){detachWorld();state.doll=d.doll;angle=null;persist();draw();return;}
-  if(d.field){look()[d.field]=Number(d.value);angle=null;persist();draw();return;}
-  if(d.angle){angle=d.angle==='pose'?null:Number(d.angle);draw();return;}
+  if(d.doll){detachWorld();state.doll=d.doll;persist();draw();return;}
+  if(d.field){const v=['frame','sticker','backdrop'].includes(d.field)?Number(d.value):d.value;state.looks[state.doll]=readLook({...look(),[d.field]:v},state.doll);persist();draw();return;}
   if(d.card!==undefined){flipCard(Number(d.card));return;}
   if(d.flower!==undefined){if(stems.length<3)stems.push(Number(d.flower));gardenNote='';draw();return;}
   if(d.download){

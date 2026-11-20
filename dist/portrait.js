@@ -27,7 +27,7 @@ function lruCache(limit){
     clear(){map.clear()}, get size(){return map.size}
   };
 }
-const dollCaches={sprite:lruCache(48),layer:lruCache(40),body:lruCache(10),doll:lruCache(16)};
+const dollCaches={sprite:lruCache(48),layer:lruCache(20),body:lruCache(6),doll:lruCache(10)};
 function makeCanvas(w,h){const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));return c}
 const ctx2d=c=>c.getContext('2d',{willReadFrequently:true});
 function memo(cache,key,make){let p=cache.get(key);if(!p){p=Promise.resolve().then(make);cache.set(key,p);p.catch(()=>{if(cache.get(key)===p)cache.set(key,undefined)})}return p}
@@ -101,7 +101,7 @@ function hairColorCanvas(src,color){
   const stops=color.stops.map(([t,hex])=>[t,hexRgb(hex)]);
   const lut=new Uint8ClampedArray(256*3);
   for(let v=0;v<256;v++){
-    const t=Math.min(1,Math.max(0,(v-lo)/(hi-lo)));
+    const t=Math.pow(Math.min(1,Math.max(0,(v-lo)/(hi-lo))),color.gamma||1);
     let k=0;while(k<stops.length-2&&t>stops[k+1][0])k++;
     const [t0,c0]=stops[k],[t1,c1]=stops[k+1],u=Math.min(1,Math.max(0,(t-t0)/(t1-t0)));
     for(let j=0;j<3;j++)lut[v*3+j]=c0[j]+(c1[j]-c0[j])*u;
@@ -228,12 +228,17 @@ function outfitLayer(doll,view,id,tintId){
     for(const piece of fit.pieces){
       let src=await itemSprite(item,view,piece.part,tintId);
       const parts=piece.parts||[];
-      const body=maskSprite(src,{cut:parts.map(p=>p.poly).concat(piece.cut||[])});
+      const body=maskSprite(src,{cut:parts.map(p=>p.cut||p.poly).concat(piece.cut||[])});
       for(const p of parts.filter(p=>p.under))drawPiece(g,src,p);
       drawFitted(g,body,piece);
       for(const p of parts.filter(p=>!p.under))drawPiece(g,src,p);
     }
-    return c;
+    if(!fit.behind)return {front:c,back:null};
+    // pixels inside `behind` regions (hoods, back collars) go behind the body
+    const [back,bg]=dollLayer(doll);
+    bg.save();bg.beginPath();fit.behind.forEach(s=>shapePathInto(bg,s));bg.clip();bg.setTransform(1,0,0,1,0,0);bg.drawImage(c,0,0);bg.restore();
+    g.save();g.beginPath();fit.behind.forEach(s=>shapePathInto(g,s));g.clip();g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,c.width,c.height);g.restore();
+    return {front:c,back};
   });
 }
 function shoeLayers(doll,view,id,tintId){
@@ -261,13 +266,22 @@ function hairLayers(doll,view,id,colorId){
     let src=await itemSprite(item,view,'main',null,colorId);
     if(fit.cut)src=maskSprite(src,{cut:fit.cut});
     const [full,g]=dollLayer(doll);drawFitted(g,src,fit);
-    if(!fit.front)return {back:null,front:full};
-    // Back layer: the whole style behind the body. Front layer: only the regions that fall in
-    // front of the shoulders/face (polygons in doll-local space).
+    let back=null;
+    if(fit.backFill||fit.front){
+      const [b,bg]=dollLayer(doll);back=b;
+      if(fit.backFill){ // a squeezed, shaded copy behind the neck and shoulders: the hair at the back
+        const f=fit.backFill,cx=fit.x+fit.w/2;
+        bg.save();bg.translate(cx,fit.y+(f.dy||0));bg.scale(f.sx||.6,f.sy||1);bg.translate(-cx,-fit.y);drawFitted(bg,src,fit);bg.restore();
+        bg.save();bg.setTransform(1,0,0,1,0,0);bg.globalCompositeOperation='source-atop';bg.fillStyle=`rgba(25,10,18,${f.shade??.32})`;bg.fillRect(0,0,b.width,b.height);bg.restore();
+      }
+      if(fit.front){bg.save();bg.setTransform(1,0,0,1,0,0);bg.drawImage(full,0,0);bg.restore();}
+    }
+    if(!fit.front)return {back,front:full};
+    // Only the given doll-local regions of the style are drawn again in front of the body.
     const [front,fg]=dollLayer(doll);
     fg.save();fg.beginPath();fit.front.forEach(s=>shapePathInto(fg,s));fg.clip();
     fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);fg.restore();
-    return {back:full,front};
+    return {back,front};
   });
 }
 function shapePathInto(g,s){
@@ -388,19 +402,35 @@ function applyColor(d,m,rgb,strength,mode,opts={}){
     d[i]=r+(Math.min(255,nr)-r)*w;d[i+1]=g+(Math.min(255,ng)-g)*w;d[i+2]=b+(Math.min(255,nb)-b)*w;
   }
 }
-/* Lilac bodysuit pixels inside the outfit's cover regions are repainted in shaded skin tone. */
-function coverBodysuit(d,w,h,shapes,dollInfo){
-  const m=shapeMask(w,h,shapes,0);
-  const [sr,sg,sb]=dollInfo.skin,ref=dollInfo.suitLuma;
-  for(let i=0,p=0;p<m.length;p++,i+=4){
-    if(m[p]<=0||!d[i+3])continue;
-    const r=d[i],g=d[i+1],b=d[i+2];
-    // lilac-ness: blue close to red and green below blue (skin has blue far below red)
-    const ratio=b/(r||1),lil=Math.min(1,Math.max(0,(ratio-.62)/.26))*(g<b+4?1:0);
-    if(lil<=0)continue;
-    const l=luma(r,g,b),k=1+(l-ref)/ref*1.9;
-    const w2=lil*m[p];
-    d[i]=r+(Math.min(255,sr*k)-r)*w2;d[i+1]=g+(Math.min(255,sg*k)-g)*w2;d[i+2]=b+(Math.min(255,sb*k)-b)*w2;
+/* Bodysuit cover-up: inside an outfit's `skin` regions, lilac bodysuit pixels (and a 2px fringe)
+   are inpainted with the skin on either side of each run (dir 'h': left/right neighbours, 'v': the
+   pixels below/above), so straps or a shorts hem that would peek out read as bare skin. Only these
+   regions are touched and the outfit is always drawn over the result. */
+function coverBodysuit(d,w,h,shapes,info){
+  const lilac=i=>{const r=d[i],g=d[i+1],b=d[i+2];if(d[i+3]<40)return 0;return Math.min(1,Math.max(0,(b/(r||1)-.6)/.24))*(g<b+6?1:0)};
+  for(const shape of shapes){
+    const m=shapeMask(w,h,[shape],0),W=new Float32Array(w*h);
+    for(let p=0;p<m.length;p++)if(m[p]>0)W[p]=lilac(p*4);
+    // dilate by 2px so the soft strap edges are replaced too
+    const D=new Float32Array(w*h);
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){let v=0;for(let dy=-2;dy<=2;dy++){const yy=y+dy;if(yy<0||yy>=h)continue;for(let dx=-2;dx<=2;dx++){const xx=x+dx;if(xx<0||xx>=w)continue;const q=W[yy*w+xx];if(q>v)v=q}}if(v>.04&&m[y*w+x]>0)D[y*w+x]=Math.min(1,v*1.4)}
+    const vert=shape.dir==='v',outer=vert?w:h,inner=vert?h:w,idx=(o,i)=>vert?i*w+o:o*w+i;
+    const ok=p=>p>=0&&d[p*4+3]>200&&W[p]===0&&lilac(p*4)<.05;
+    const fallback=(p)=>{const i=p*4,l=luma(d[i],d[i+1],d[i+2]),k=1+(l-info.suitLuma)/info.suitLuma*1.9;return info.skin.map(c=>c*k)};
+    for(let o=0;o<outer;o++){
+      for(let i=0;i<inner;i++){
+        if(!D[idx(o,i)])continue;
+        let j=i;while(j<inner&&D[idx(o,j)])j++;
+        const a=i-2>=0?idx(o,i-2):-1,b=j+1<inner?idx(o,j+1):-1;
+        const ca=ok(a)?[d[a*4],d[a*4+1],d[a*4+2]]:null,cb=ok(b)?[d[b*4],d[b*4+1],d[b*4+2]]:null;
+        for(let t=i;t<j;t++){
+          const p=idx(o,t),q=p*4,f=(t-i+1)/(j-i+1);
+          const c=ca&&cb?ca.map((v,k)=>v+(cb[k]-v)*f):ca||cb||fallback(p);
+          const wgt=D[p];d[q]+=(c[0]-d[q])*wgt;d[q+1]+=(c[1]-d[q+1])*wgt;d[q+2]+=(c[2]-d[q+2])*wgt;
+        }
+        i=j;
+      }
+    }
   }
 }
 function bodyKey(shot,view){return [shot.doll,view,shot.outfit,shot.lips,shot.blush,shot.shadow,shot.nails,shot.shoes].join('|')}
@@ -416,8 +446,10 @@ function bodyLayer(shot,view){
     const opt=(list,id)=>CATALOG.makeup[list].find(o=>o.id===id);
     const shadow=opt('shadow',shot.shadow);
     if(shadow?.color&&face.lids){
-      applyColor(d,shapeMask(w,h,face.lids,face.lidBlur||2.5),hexRgb(shadow.color),shadow.strength||.5,'multiply',{});
-      if(shadow.shimmer)applyColor(d,shapeMask(w,h,face.lidShine||face.lids,2,1),hexRgb(shadow.shimmer),.35,'screen');
+      const m=shapeMask(w,h,face.lids,face.lidBlur||0);
+      if(face.eyes){const e=shapeMask(w,h,face.eyes.map(p=>({poly:p})),.6);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-e[i]*1.2)}
+      applyColor(d,m,hexRgb(shadow.color),shadow.strength||.5,'color',{ref:150,contrast:1,skipDark:60});
+      if(shadow.shimmer)applyColor(d,m,hexRgb(shadow.shimmer),.22,'screen');
     }
     const blush=opt('blush',shot.blush);
     if(blush?.color)applyColor(d,shapeMask(w,h,face.cheeks.map(([x,y,rx,ry])=>({gradient:[x,y,rx,ry,1]}))),hexRgb(blush.color),blush.strength||.4,'multiply');
@@ -499,21 +531,22 @@ function composeDoll(raw,view='front'){
     const c=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),g=c.getContext('2d');
     g.imageSmoothingQuality='high';
     if(hair.back)g.drawImage(hair.back,0,0);
+    if(outfit.back)g.drawImage(outfit.back,0,0);
     if(shoes)g.drawImage(shoes.back,0,0);
     g.drawImage(body,ox,oy);
     g.save();g.translate(ox,oy);drawGem(g,shot);g.restore();
     const outfitFit=catalogItem(shot.outfit).fit[doll][view];
     if(shoes&&!outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
-    g.drawImage(outfit,0,0);
+    g.drawImage(outfit.front,0,0);
     if(shoes&&outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
     if(necklace)g.drawImage(necklace,0,0);
     g.drawImage(hair.front,0,0);
     if(earrings)g.drawImage(earrings,0,0);
     const stud=catalogItem(shot.earrings)?.stud;
-    if(stud){g.save();g.translate(ox,oy);for(const [x,y] of info.face.lobes)drawStud(g,stud,x,y+info.face.unit*.06,info.face.unit*.11);g.restore()}
+    if(stud){g.save();g.translate(ox,oy);for(const [x,y] of info.face.lobes)drawStud(g,stud,x,y+info.face.unit*.06,info.face.unit*.15);g.restore()}
     if(clipLayer)g.drawImage(clipLayer,0,0);
     const proc=catalogItem(shot.clip)?.proc;
-    if(proc){const at=catalogItem(shot.hair).fit[doll][view].clip;g.save();g.translate(ox,oy);drawCharm(g,proc,at.x,at.y,info.face.unit*.62*(at.scale||1),((at.rot||0)-11)*Math.PI/180);g.restore()}
+    if(proc){const at=catalogItem(shot.hair).fit[doll][view].clip;g.save();g.translate(ox,oy);drawCharm(g,proc,at.x,at.y,info.face.unit*.92*(at.scale||1),((at.rot||0)-11)*Math.PI/180);g.restore()}
     return c;
   });
 }

@@ -6,7 +6,10 @@
 .walker{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none}
 .walker.walking{will-change:transform}
 .walker-shadow{position:absolute;left:0;bottom:0;width:calc(var(--size)*.28);height:calc(var(--size)*.045);border-radius:50%;background:#402d48;opacity:.29;transform:translate(-50%,10%);filter:blur(2px)}
-.walker-body{position:absolute;left:0;bottom:0;height:var(--size);aspect-ratio:2/3;transform:translate(-50%,1.7%) scaleX(var(--facing));transform-origin:50% 100%}
+.walker-body{position:absolute;left:0;bottom:0;height:var(--size);aspect-ratio:600/970;transform:translate(-50%,2.1%) scaleX(var(--facing,1));transform-origin:50% 100%}
+.walker.walking .walker-body canvas{animation:walker-bob .34s ease-in-out infinite alternate;transform-origin:50% 100%}
+@keyframes walker-bob{from{transform:translateY(0) rotate(-1.4deg)}to{transform:translateY(-2.6%) rotate(1.4deg)}}
+@media(prefers-reduced-motion:reduce){.walker.walking .walker-body canvas{animation:none}}
 .walker-body img,.walker-body canvas{display:block;width:100%;height:100%;object-fit:contain}
 .walker-body [hidden]{display:none}
 .walker-name,.world-person span,.world-object{border:1px solid #b874a1;background:#fff9f3f5;box-shadow:0 2px 2px #47254030;color:#6d3455;border-radius:18px;font:bold .83rem/1.2 "Trebuchet MS",sans-serif;white-space:nowrap}
