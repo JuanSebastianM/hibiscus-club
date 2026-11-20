@@ -1,0 +1,313 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "b47c0b5a79ea"
+ },
+ "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 77,
+   "haze_far_max": 1,
+   "haze_far_p99_9": 1.0,
+   "glow_ring_nonzero_frac": 0.0127,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0003,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 6429,
+     "dRGB": [
+      -6.1,
+      -4.1,
+      -9.3
+     ],
+     "dLum": -5.3
+    },
+    "64-160": {
+     "n": 8015,
+     "dRGB": [
+      -4.7,
+      -8.1,
+      -9.4
+     ],
+     "dLum": -7.2
+    },
+    "160-255": {
+     "n": 19278,
+     "dRGB": [
+      -26.9,
+      -35.4,
+      -30.9
+     ],
+     "dLum": -32.4
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 18894,
+  "haze_px_removed": 14299,
+  "crosses_grid": [
+   [
+    "05-accessories/acc-hats-adult-b.webp",
+    [
+     0,
+     3
+    ]
+   ],
+   [
+    "05-accessories/acc-hats-adult-b.webp",
+    [
+     0,
+     0
+    ]
+   ],
+   [
+    "05-accessories/acc-hats-adult-b.webp",
+    [
+     2,
+     0
+    ]
+   ],
+   [
+    "05-accessories/acc-hats-adult-b.webp",
+    [
+     2,
+     1
+    ]
+   ],
+   [
+    "05-accessories/acc-hats-adult-b.webp",
+    [
+     2,
+     2
+    ]
+   ],
+   [
+    "05-accessories/acc-hats-adult-b.webp",
+    [
+     2,
+     3
+    ]
+   ]
+  ],
+  "wisp_px_kept": {
+   "beret/0": 0,
+   "beret/1": 0,
+   "beret/2": 0,
+   "beret/3": 0,
+   "tiara/0": 0,
+   "tiara/1": 0,
+   "tiara/2": 0,
+   "tiara/3": 0,
+   "bow-headband/0": 0,
+   "bow-headband/1": 0,
+   "bow-headband/2": 0,
+   "bow-headband/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "beret": {
+   "category": "hats-adult",
+   "views": {
+    "front": {
+     "file": "hats-adult/beret-front.webp",
+     "width": 538,
+     "height": 390,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       65,
+       109,
+       538,
+       390
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "hats-adult/beret-left.webp",
+     "width": 491,
+     "height": 368,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       675,
+       135,
+       491,
+       368
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hats-adult/beret-right.webp",
+     "width": 489,
+     "height": 368,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       1223,
+       135,
+       489,
+       368
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hats-adult/beret-back.webp",
+     "width": 536,
+     "height": 390,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       1785,
+       109,
+       536,
+       390
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "tiara": {
+   "category": "hats-adult",
+   "views": {
+    "front": {
+     "file": "hats-adult/tiara-front.webp",
+     "width": 476,
+     "height": 428,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       111,
+       647,
+       476,
+       428
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "hats-adult/tiara-left.webp",
+     "width": 386,
+     "height": 428,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       725,
+       648,
+       386,
+       428
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hats-adult/tiara-right.webp",
+     "width": 384,
+     "height": 427,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       1278,
+       648,
+       384,
+       427
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hats-adult/tiara-back.webp",
+     "width": 479,
+     "height": 429,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       1801,
+       647,
+       479,
+       429
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "bow-headband": {
+   "category": "hats-adult",
+   "views": {
+    "front": {
+     "file": "hats-adult/bow-headband-front.webp",
+     "width": 520,
+     "height": 496,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       67,
+       1190,
+       520,
+       496
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "hats-adult/bow-headband-left.webp",
+     "width": 285,
+     "height": 495,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       747,
+       1190,
+       285,
+       495
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hats-adult/bow-headband-right.webp",
+     "width": 257,
+     "height": 496,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       1357,
+       1190,
+       257,
+       496
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hats-adult/bow-headband-back.webp",
+     "width": 519,
+     "height": 496,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-adult-b.webp",
+      "box": [
+       1801,
+       1190,
+       519,
+       496
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}
