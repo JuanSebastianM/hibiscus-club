@@ -227,7 +227,9 @@ mouth-open expression and a third with a big smile.
 
 ## 7. House decorator
 
-Attach: one existing scene image for style.
+Attach: `dist/assets/scenes/market.jpg` (the Flower Market picture) as the style reference. The
+house itself is new, so there is no house picture to attach; the reference only shows the painted
+storybook style, color mood and level of detail the rooms and furniture should match.
 
 Rooms: 1536 x 1024, opaque, empty rooms seen straight on like a dollhouse cutaway (back wall and
 floor, slight perspective), no furniture, soft daylight. Provide each room in three wall/floor
