@@ -130,21 +130,33 @@ const HibiscusPuppet=(()=>{
   }
 
   /* ---------- side views: fill under the near arm from the body on either side ---------- */
+  /* Each masked run of a row is filled with the texture just beside it (copied from one run length to
+     the left and to the right, cross-faded), so prints and satin sheen carry on behind the arm instead
+     of smearing; then a short vertical blur inside the mask evens out row-to-row jumps. Alpha keeps
+     the silhouette (raised to the sides' where both sides are opaque). */
   function inpaintUnder(d,mask){
+    const src=new Uint8ClampedArray(d),ok=i=>i>=0&&src[i*4+3]>200&&!mask[i];
     for(let y=0;y<H;y++){
       let x=0;
       while(x<W){
         if(!mask[y*W+x]){x++;continue}
-        const s=x;while(x<W&&mask[y*W+x])x++;const e=x-1;
-        const li=s-1,ri=e+1,okL=li>=0&&d[(y*W+li)*4+3]>200,okR=ri<W&&d[(y*W+ri)*4+3]>200;
+        const s=x;while(x<W&&mask[y*W+x])x++;const e=x-1,n=e-s+1;
+        const row=y*W,okL=s>0&&ok(row+s-1),okR=e<W-1&&ok(row+e+1);
         if(!okL&&!okR)continue;
         for(let k=s;k<=e;k++){
-          const o=(y*W+k)*4,t=(k-s+1)/(e-s+2);
-          for(let c=0;c<3;c++){const a=okL?d[(y*W+li)*4+c]:d[(y*W+ri)*4+c],b=okR?d[(y*W+ri)*4+c]:a;d[o+c]=a+(b-a)*t}
-          if(okL&&okR)d[o+3]=Math.max(d[o+3],Math.min(d[(y*W+li)*4+3],d[(y*W+ri)*4+3]));
+          const o=(row+k)*4,t=(k-s+.5)/n;
+          let wl=okL?1-t:0,wr=okR?t:0;const sum=wl+wr;wl/=sum;wr/=sum;
+          // texture source: mirrored about the run's edge, falling back to the edge pixel
+          const pick=(edge,dirn)=>{let q=edge+dirn*(dirn<0?k-s:e-k);for(let tries=0;tries<3&&!(q>=0&&q<W&&ok(row+q));tries++)q=Math.round((q+edge)/2);return ok(row+q)?row+q:row+edge};
+          const a=okL?pick(s-1,-1):0,b=okR?pick(e+1,1):0;
+          for(let c=0;c<3;c++)d[o+c]=(okL?src[a*4+c]*wl:0)+(okR?src[b*4+c]*wr:0);
+          if(okL&&okR)d[o+3]=Math.max(src[o+3],Math.min(src[(row+s-1)*4+3],src[(row+e+1)*4+3]));
         }
       }
     }
+    const f=new Uint8ClampedArray(d);
+    for(let y=2;y<H-2;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!mask[i])continue;
+      for(let c=0;c<3;c++){let s=0;for(let k=-2;k<=2;k++)s+=f[(i+k*W)*4+c];d[i*4+c]=s/5}}
   }
 
   /* ---------- pieces and meshes ---------- */
@@ -374,8 +386,11 @@ const HibiscusPuppet=(()=>{
     const armIdx=layers.layers.findIndex(l=>l.kind==='arm');
     const groups={hairB:[],far:[],torso:[],legs:[],skirt:[],arms:[],hairF:[]};
     let overlaySrc=null;
-    const armR=layers.doll==='little'?24:21,px=rg.px;
+    const armR=layers.doll==='little'?20:17,px=rg.px;
     const armNear=armMask&&dilate(armMask,W,H,1),overArm=armMask&&dilate(armMask,W,H,4);
+    // side views: how far the torso reaches under the top of the leg (deeper at the back: the seat)
+    const hipBand=new Float32Array(W);
+    if(rg.side){const [a,b]=rg.hipLine,k=layers.doll==='little'?.75:1;for(let x=0;x<W;x++){const t=clamp((x-a[0])/(b[0]-a[0]),0,1);hipBand[x]=hipLineY(rg,x)+k*lerp(45,120,t)}}
     for(let li=0;li<layers.layers.length;li++){
       const L=layers.layers[li];
       let canvas=L.canvas;
@@ -405,16 +420,21 @@ const HibiscusPuppet=(()=>{
       }
       if(rg.side&&li>armIdx&&L.kind==='over')for(let i=0;i<lb.length;i++)if(overArm[i])lb[i]=L_ARM0;
       if(kindOutfit==='skirt'&&['outfit','outfitBack','over'].includes(L.kind)){
+        // below skirtTop the garment is skirt, except a long sleeve's cuff round the forearm
+        const sleeveTo=[0,1].map(a=>{if(rg.side)return false;const m=[(px['el'+a][0]+px['wr'+a][0])/2,(px['el'+a][1]+px['wr'+a][1])/2];
+          return d[(Math.round(m[1])*W+Math.round(m[0]))*4+3]>200});
         for(let y=Math.ceil(rg.skirtTop);y<H;y++)for(let x=0;x<W;x++){
           const i=y*W+x,l=lb[i];
           if(l===L_TORSO||l===L_LEG0||l===L_LEG1)lb[i]=L_SKIRT;
-          else if(!rg.side&&(l===L_ARM0||l===L_ARM1)){const a=l===L_ARM0?0:1;if(Math.min(segDist([x,y],px['el'+a],px['wr'+a]),segDist([x,y],px['wr'+a],px['hand'+a]))>armR)lb[i]=L_SKIRT}
+          else if(!rg.side&&(l===L_ARM0||l===L_ARM1)){const a=l===L_ARM0?0:1;if(!sleeveTo[a]||segDist([x,y],px['el'+a],px['wr'+a])>armR)lb[i]=L_SKIRT}
         }
       }
       if(L.kind==='body')for(let y=0;y<Math.ceil(rg.neckCut);y++)for(let x=0;x<W;x++){const i=y*W+x;if(lb[i]===L_TORSO)lb[i]=L_HEAD}
       if(L.kind==='arm')lb.fill(L_ARM0);
       for(const P of ORDER){
-        const member=i=>lb[i]===P;
+        // side views: the torso keeps the top of the thigh under the leg, so a swinging leg never
+        // opens a hole at the hip (at rest the leg piece covers it exactly)
+        const member=rg.side&&P===L_TORSO?i=>lb[i]===P||(lb[i]===L_LEG0&&Math.floor(i/W)<hipBand[i%W]):i=>lb[i]===P;
         const kind=P===L_ARM0||P===L_ARM1?'arm':P===L_LEG0||P===L_LEG1?'leg':P===L_SKIRT?'skirt':'torso';
         const pc=makePiece(d,ex,member,{kind,limb:P===L_ARM1||P===L_LEG1?1:0,layer:L.kind,grid:P===L_HEAD?config.headGrid:config.grid,face:P===L_HEAD&&!!rg.face});
         if(!pc)continue;
@@ -552,8 +572,9 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       pair('aB0','aB1',pc.bones);pair('aF0','aF1',src.frs);pair('aD0','aD1',src.faceBasis||zeros(src.pos.length/2*8));
       geo.setIndex(new T.BufferAttribute(src.index,1));geo.boundingSphere=new T.Sphere(new T.Vector3(),1e5);
       const shade=pc.far&&!pc.farShoe;
+      const dbg=config.debugPieces&&({arm:[1,.55,.55],leg:[.55,.7,1],skirt:[.6,1,.6],hair:[1,1,.5],headItem:[1,.6,1],torso:pc.face?[1,.85,.6]:[1,1,1]}[pc.kind]);
       const mat=new T.RawShaderMaterial({glslVersion:T.GLSL3,vertexShader:VERT,fragmentShader:FRAG,
-        uniforms:{...shared,map:{value:tex},mask:{value:mtex},uTint:{value:new T.Vector4(shade?.74:1,shade?.68:1,shade?.76:1,1)},uShift:{value:new T.Vector2(...(pc.shift||[0,0]))}},
+        uniforms:{...shared,map:{value:tex},mask:{value:mtex},uTint:{value:dbg?new T.Vector4(...dbg,1):new T.Vector4(shade?.74:1,shade?.68:1,shade?.76:1,1)},uShift:{value:new T.Vector2(...(pc.shift||[0,0]))}},
         transparent:true,depthTest:false,depthWrite:false,side:T.DoubleSide,
         blending:T.CustomBlending,blendEquation:T.AddEquation,blendSrc:T.OneFactor,blendDst:T.OneMinusSrcAlphaFactor,blendSrcAlpha:T.OneFactor,blendDstAlpha:T.OneMinusSrcAlphaFactor});
       const mesh=new T.Mesh(geo,mat);mesh.frustumCulled=false;mesh.renderOrder=i;mesh.userData.piece=pc;

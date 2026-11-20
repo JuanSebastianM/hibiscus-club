@@ -414,7 +414,7 @@ function walkPose(phase,ctx){
       const l1=Math.hypot(K0[0]-rg.px['hip'+i][0],K0[1]-rg.px['hip'+i][1]),l2=Math.hypot(A0[0]-K0[0],A0[1]-K0[1]);
       // the ankle: on the path, then (heel up / toes down) rotated about the toe or the heel on the ground
       let A=[A0[0]+d*fp.fx,A0[1]+fp.fy];
-      const toe=[T0[0]+d*fp.fx,T0[1]+fp.fy],rot=-d*fp.rot; // screen rotation of the foot
+      const toe=[T0[0]+d*fp.fx,T0[1]+fp.fy],rot=d*fp.rot; // screen rotation of the foot (toes down > 0)
       if(fp.rot>0){const c=Math.cos(rot),s=Math.sin(rot),vx=A[0]-toe[0],vy=A[1]-toe[1];A=[toe[0]+c*vx-s*vy,toe[1]+s*vx+c*vy]}
       else{const heel=[A0[0]-d*10+d*fp.fx,rg.px.root[1]-4+fp.fy],c=Math.cos(rot),s=Math.sin(rot),vx=A[0]-heel[0],vy=A[1]-heel[1];A=[heel[0]+c*vx-s*vy,heel[1]+s*vx+c*vy]}
       const ik=solveIK(H,A,l1,l2,-d);
@@ -445,16 +445,18 @@ function walkPose(phase,ctx){
   hips.x=sway*(kid?3.6:2.8);hips.r=-sway*(kid?1.8:1.2)*DEG;
   bone(p,'chest').r=sway*.7*DEG;bone(p,'head').r=sway*.5*DEG+(kid?Math.sin(TAU*ph*2)*1.2*DEG:0);
   bone(p,'root').r=kid?Math.sin(TAU*ph)*1.4*DEG:0;
+  const W0=forward(rg,p);
   for(const i of [0,1]){
-    const q=((ph+(i?.5:0))%1+1)%1,legLen=rg.px['an'+i][1]-rg.px['hip'+i][1];
+    const q=((ph+(i?.5:0))%1+1)%1,A0=rg.px['an'+i],H0=rg.px['hip'+i],Hw=apply(W0[B.hips],H0),legLen=A0[1]-H0[1];
     let off,lift=0,bend=0;
     if(q<g.stance){const u=q/g.stance;off=(toward?1:-1)*(stanceTravel/2-stanceTravel*u)}
     else{const u=(q-g.stance)/(1-g.stance),ease=u*u*(3-2*u);off=(toward?1:-1)*(-stanceTravel/2+stanceTravel*ease);lift=Math.sin(Math.PI*u)*g.lift*L*.55;bend=Math.sin(Math.PI*u)}
-    // off > 0: the foot is in front (lower on screen, the leg comes toward us); lift raises the foot
-    const sy=(legLen+off-lift)/legLen;
-    const th=bone(p,'thigh'+i);th.sy=sy;th.r=(kid?(i?-1:1)*2.2*DEG:0);
-    bone(p,'shin'+i).sy=1-bend*.05;bone(p,'foot'+i).sy=1/(sy*(1-bend*.05));
-    bone(p,'foot'+i).y=0;
+    // off > 0: the foot is in front (lower on screen, the leg comes toward us); lift raises the foot.
+    // The leg is foreshortened so the ankle lands there wherever the bobbing hip is.
+    const th=bone(p,'thigh'+i),sh=1-bend*.05;
+    th.r=(kid?(i?-1:1)*2.2*DEG:0);
+    const sy=(A0[1]+off-lift-Hw[1])/(legLen*Math.cos(th.r));
+    bone(p,'shin'+i).sy=sh;th.sy=sy/sh;bone(p,'foot'+i).sy=1/sy;
   }
   for(const i of [0,1]){
     const sw=Math.cos(TAU*(ph+(i?.5:0))),o=i?-1:1;
