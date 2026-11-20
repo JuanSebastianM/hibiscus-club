@@ -24,6 +24,8 @@ npx wrangler deploy
 
 Add `--dry-run` to check the configuration without uploading anything.
 
+The repository can also be connected to Cloudflare with Workers Builds (Workers & Pages → Create → Import a repository). Cloudflare then reads `wrangler.jsonc` and redeploys on every push to `main`. The Worker's page lists its public address under Settings → Domains & Routes.
+
 ## A first trip around the island
 
 1. Pick **Grown-up** or **Little Me** on the player card. Each character remembers her own look.
