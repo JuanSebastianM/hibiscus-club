@@ -155,6 +155,8 @@ Each character is a layered paper doll with four views: front, left, right and b
 
 The music is synthesized live in the browser by `dist/music.js` with the Web Audio API. There are no audio files or samples. An original tune in C major at 118 beats per minute is written as note strings, one character per sixteenth note, and arranged in six sections (sparkle intro, verse, chorus, second verse, bridge, second chorus) that make a 44-bar cycle of about 90 seconds and repeat for as long as the game is open. A look-ahead scheduler wakes every 25 ms and queues the notes for the next 160 ms on the audio clock, so timing stays steady. Bell lead, plucked chords, pad, bass, kick, clap, hat and shaker are built from oscillators and filtered noise, and pass through a delay, a generated reverb, a compressor and a limiter. Click sparkles and the win fanfare use the same audio context and output chain. Browsers require a user gesture before audio, so the music fades in on the first click or key press. It pauses while the tab is hidden, and the speaker button fades everything out and remembers the choice.
 
+The island map and the three district pictures are still paintings, brought to life by `dist/scene-fx.js`. It draws the picture through WebGL with three.js at exactly the framing the page would use, so the pins and the walking character stay aligned on top. `dist/scene-data.js` marks regions of each picture (water, surf, waterfalls, palms, flower beds, lanterns, sky) and how each moves: water refracts and glints and ripples where you click, plants sway from their base, lights glow and flicker, clouds drift, the sailboat bobs, and petals, butterflies, gulls or fireflies drift through. three.js is stored in `dist/vendor/three/` and is fetched only when one of these scenes is shown. With the sparkle button off, the reduced-motion setting on, or no WebGL, the plain picture is shown instead.
+
 `dist/fx.js` draws the glitter pointer trail, click bursts and win confetti on one overlay canvas that ignores pointer input. Its animation loop stops when no particles are left. The sparkle button in the top bar turns the effects off, and the reduced-motion setting replaces them with a brief still sparkle.
 
 The island is an original AI-generated illustration with five HTML links positioned over its buildings. The gingham, paper frames, stamps, and game controls are drawn with CSS and vector icons.
@@ -174,6 +176,8 @@ The island is an original AI-generated illustration with five HTML links positio
 | `dist/makeover.js` | Dress-Up Studio and Beauty Salon controls, try-on and buying, favorite looks, and the turn control |
 | `dist/island-life.js` and `dist/island-life.css` | Movement, scene layout, character naming, conversations, inventory, and task progression |
 | `dist/music.js` | Procedural background music loop and sound effects synthesized with the Web Audio API |
+| `dist/scene-fx.js`, `dist/scene-data.js` | Living scenes: the island map and district pictures drawn through WebGL with moving water, swaying plants, glowing lights and particles |
+| `dist/vendor/three/` | three.js (MIT), bundled locally and loaded only when a living scene is shown |
 | `dist/fx.js` | Glitter pointer trail, sparkle bursts, and win confetti on one overlay canvas |
 | `dist/runway.js` | Spotlight sequence, replay, input checking, and rehearsal reward |
 | `dist/icons.js` | Interface icons |

@@ -16,7 +16,7 @@ const HibiscusScenes=(()=>{
   const THREE_URL=new URL('vendor/three/three.module.min.js',base).href;
   const reducedQuery=matchMedia('(prefers-reduced-motion: reduce)');
   const TAU=Math.PI*2,MOTION_MAX=8,SPEED_MAX=8,MAX_RIPPLES=4;
-  const config={allowSoftwareGL:false,maxPixelRatio:2,quality:'auto',debug:0};
+  const config={allowSoftwareGL:false,maxPixelRatio:2,quality:'auto',debug:0,lodBias:-.5};
   let enabled=true,threePromise=null,webgl2=null,noise=null,ticker=0;
   const mounts=new Set(),byElement=new WeakMap(),pool=[],maskCache=new Map();
 
@@ -98,9 +98,11 @@ const HibiscusScenes=(()=>{
   }
   function morph(src,w,h,r,grow){
     if(r<.5)return src;
-    r=Math.round(r);const tmp=new Float32Array(src.length),out=new Float32Array(src.length),pick=grow?Math.max:Math.min;
-    for(let y=0;y<h;y++)for(let x=0;x<w;x++){let m=src[y*w+x];for(let i=Math.max(0,x-r),e=Math.min(w-1,x+r);i<=e;i++)m=pick(m,src[y*w+i]);tmp[y*w+x]=m}
-    for(let y=0;y<h;y++)for(let x=0;x<w;x++){let m=tmp[y*w+x];for(let i=Math.max(0,y-r),e=Math.min(h-1,y+r);i<=e;i++)m=pick(m,tmp[i*w+x]);out[y*w+x]=m}
+    r=Math.round(r);const tmp=new Float32Array(src.length),out=new Float32Array(src.length);
+    for(let y=0;y<h;y++){const o=y*w;for(let x=0;x<w;x++){let m=src[o+x];const e=Math.min(w-1,x+r);
+      if(grow){for(let i=Math.max(0,x-r);i<=e;i++)if(src[o+i]>m)m=src[o+i]}else{for(let i=Math.max(0,x-r);i<=e;i++)if(src[o+i]<m)m=src[o+i]}tmp[o+x]=m}}
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){let m=tmp[y*w+x];const e=Math.min(h-1,y+r);
+      if(grow){for(let i=Math.max(0,y-r);i<=e;i++)if(tmp[i*w+x]>m)m=tmp[i*w+x]}else{for(let i=Math.max(0,y-r);i<=e;i++)if(tmp[i*w+x]<m)m=tmp[i*w+x]}out[y*w+x]=m}
     return out;
   }
   function pixelsOf(img,w,h){
@@ -114,7 +116,7 @@ const HibiscusScenes=(()=>{
       this.r=new Float32Array(n);this.g=new Float32Array(n);this.b=new Float32Array(n);
       this.hue=new Float32Array(n);this.sat=new Float32Array(n);this.val=new Float32Array(n);this.lum=new Float32Array(n);this.local={};
       for(let i=0;i<n;i++){
-        const r=d[i*4]/255,g=d[i*4+1]/255,b=d[i*4+2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn;
+        const r=d[i*4]/255,g=d[i*4+1]/255,b=d[i*4+2]/255,mx=r>g?(r>b?r:b):(g>b?g:b),mn=r<g?(r<b?r:b):(g<b?g:b),c=mx-mn;
         let hh=0;if(c>1e-6){hh=mx===r?((g-b)/c+6)%6:mx===g?(b-r)/c+2:(r-g)/c+4;hh*=60}
         this.r[i]=r;this.g[i]=g;this.b[i]=b;this.hue[i]=hh;this.sat[i]=mx?c/mx:0;this.val[i]=mx;this.lum[i]=.299*r+.587*g+.114*b;
       }
@@ -129,12 +131,13 @@ const HibiscusScenes=(()=>{
   }
   // A key spec is {h:[lo,hi], s:[lo,hi], v:[lo,hi], bmr:[lo,hi] (blue minus red), peak:[radius,min], dark:[radius,min], soft}
   // with all its fields ANDed; a key is a list of specs ORed together. Radii are in reference-image pixels.
-  function keyMask(pic,specs,pxScale){
-    const n=pic.w*pic.h,out=new Float32Array(n);
+  // Everything below works on a window R={x,y,w,h} of the mask (a layer's bounding box plus margin).
+  function keyMask(pic,specs,pxScale,R){
+    const out=new Float32Array(R.w*R.h);
     for(const s of specs){
       const soft=s.soft||{},sh=soft.h||14,ss=soft.s||.07,sv=soft.v||.07;
       const pk=s.peak&&pic.blurredLum(Math.max(1,Math.round(s.peak[0]*pxScale))),dk=s.dark&&pic.blurredLum(Math.max(1,Math.round(s.dark[0]*pxScale)));
-      for(let i=0;i<n;i++){
+      for(let y=0,j=0;y<R.h;y++)for(let x=0,i=(R.y+y)*pic.w+R.x;x<R.w;x++,i++,j++){
         let m=1;
         if(s.h)m*=hueBand(pic.hue[i],s.h[0],s.h[1],sh);
         if(m&&s.s)m*=band(pic.sat[i],s.s[0],s.s[1],ss);
@@ -142,14 +145,14 @@ const HibiscusScenes=(()=>{
         if(m&&s.bmr)m*=band(pic.b[i]-pic.r[i],s.bmr[0],s.bmr[1],.06);
         if(m&&pk)m*=clamp((pic.lum[i]-pk[i]-s.peak[1])/(s.peak[1]*.8),0,1);
         if(m&&dk)m*=clamp((dk[i]-pic.lum[i]-s.dark[1])/(s.dark[1]*.8),0,1);
-        if(m>out[i])out[i]=m;
+        if(m>out[j])out[j]=m;
       }
     }
     return out;
   }
-  function shapeMask(shapes,w,h){
-    const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d',{willReadFrequently:true});
-    g.fillStyle='#fff';
+  function shapeMask(shapes,w,h,R){
+    const c=document.createElement('canvas');c.width=R.w;c.height=R.h;const g=c.getContext('2d',{willReadFrequently:true});
+    g.fillStyle='#fff';g.translate(-R.x,-R.y);
     for(const s of shapes){
       g.beginPath();
       if(s.poly){const p=s.poly;g.moveTo(p[0]*w,p[1]*h);for(let i=2;i<p.length;i+=2)g.lineTo(p[i]*w,p[i+1]*h);g.closePath()}
@@ -157,10 +160,20 @@ const HibiscusScenes=(()=>{
       else if(s.rect){const r=s.rect;g.rect(r[0]*w,r[1]*h,(r[2]-r[0])*w,(r[3]-r[1])*h)}
       g.fill();
     }
-    const d=g.getImageData(0,0,w,h).data,out=new Float32Array(w*h);
+    const d=g.getImageData(0,0,R.w,R.h).data,out=new Float32Array(R.w*R.h);
     for(let i=0;i<out.length;i++)out[i]=d[i*4+3]/255;
     return out;
   }
+  function boundsOf(shapes,w,h){
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;const add=(x,y)=>{if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y};
+    for(const s of shapes){
+      if(s.poly)for(let i=0;i<s.poly.length;i+=2)add(s.poly[i]*w,s.poly[i+1]*h);
+      else if(s.ellipse){const e=s.ellipse;add((e[0]-e[2])*w,(e[1]-e[3])*h);add((e[0]+e[2])*w,(e[1]+e[3])*h)}
+      else if(s.rect){add(s.rect[0]*w,s.rect[1]*h);add(s.rect[2]*w,s.rect[3]*h)}
+    }
+    return [x0,y0,x1,y1];
+  }
+  const cropOf=(full,w,R)=>{const out=new Float32Array(R.w*R.h);for(let y=0;y<R.h;y++)out.set(full.subarray((R.y+y)*w+R.x,(R.y+y)*w+R.x+R.w),y*R.w);return out};
   const shapesOf=L=>{
     const list=[];
     if(L.poly)list.push({poly:L.poly});if(L.polys)for(const p of L.polys)list.push({poly:p});
@@ -173,13 +186,10 @@ const HibiscusScenes=(()=>{
     for(let i=0;i<out.length;i++)out[i]=opaque?(.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2])/255:d[i*4+3]/255;
     return out;
   }
-  function motionVector(m,px,py,ref){
-    if(Array.isArray(m)){let x=0,y=0;for(const part of m){const v=motionVector(part,px,py,ref);x+=v[0];y+=v[1]}return [x,y]}
-    if(m.rotate){const [cx,cy,deg]=m.rotate,a=deg*Math.PI/180,dx=px-cx*ref[0],dy=py-cy*ref[1];
-      return [dx*Math.cos(a)-dy*Math.sin(a)-dx,dx*Math.sin(a)+dy*Math.cos(a)-dy]}
-    if(m.shift)return m.shift;
-    if(m.bend){const [y0,y1,dx,dy]=m.bend,t=clamp((py/ref[1]-y0)/(y1-y0),0,1),k=t*t*(3-2*t)*.6+t*.4;return [dx*k,dy*k]}
-    return [0,0];
+  // motion → [{rx,ry,cos,sin} | {sx,sy} | {y0,y1,dx,dy}] in reference pixels, summed per pixel
+  function motionParts(m,ref){
+    return [].concat(m).map(p=>p.rotate?{kind:0,cx:p.rotate[0]*ref[0],cy:p.rotate[1]*ref[1],c:Math.cos(p.rotate[2]*Math.PI/180)-1,s:Math.sin(p.rotate[2]*Math.PI/180)}
+      :p.shift?{kind:1,dx:p.shift[0],dy:p.shift[1]}:p.bend?{kind:2,y0:p.bend[0]*ref[1],y1:p.bend[1]*ref[1],dx:p.bend[2],dy:p.bend[3]}:{kind:1,dx:0,dy:0});
   }
   async function buildMasks(scene,img,overlays){
     const ref=scene.size||[img.naturalWidth,img.naturalHeight],ms=scene.mask||.5;
@@ -190,74 +200,89 @@ const HibiscusScenes=(()=>{
       wind:new Float32Array(n),foam:new Float32Array(n),parallax:new Float32Array(n),dapple:new Float32Array(n)};
     const vx=new Float32Array(n),vy=new Float32Array(n),ps=new Float32Array(n),pc=new Float32Array(n),sp=new Float32Array(n),sw=new Float32Array(n);
     const keys=Object.assign({},typeof HibiscusSceneData!=='undefined'?HibiscusSceneData.keys:null,scene.keys);
-    const keyCache={};
-    const resolveKey=k=>{
+    const resolveKey=(k,R)=>{
       if(!k)return null;
       if(typeof k==='string'){
-        if(overlays[k])return overlays[k];
-        if(keyCache[k])return keyCache[k];
-        const spec=keys[k];if(!spec)return null;
-        return keyCache[k]=keyMask(pic,spec,pxs);
+        if(overlays[k])return cropOf(overlays[k],w,R);
+        const spec=keys[k];return spec?keyMask(pic,spec,pxs,R):null;
       }
       if(Array.isArray(k)&&k.some(x=>typeof x==='string')){
-        const out=new Float32Array(n);
-        for(const part of k){const m=resolveKey(part);if(m)for(let i=0;i<n;i++)if(m[i]>out[i])out[i]=m[i]}
+        const out=new Float32Array(R.w*R.h);
+        for(const part of k){const m=resolveKey(part,R);if(m)for(let i=0;i<m.length;i++)if(m[i]>out[i])out[i]=m[i]}
         return out;
       }
-      return keyMask(pic,Array.isArray(k)?k:[k],pxs);
+      return keyMask(pic,Array.isArray(k)?k:[k],pxs,R);
     };
-    scene.layers.forEach((L,index)=>{L._index=index});
+    let index=0;
     for(const L of scene.layers){
-      let m;const shapes=shapesOf(L);
-      if(shapes.length){m=shapeMask(shapes,w,h);if(L.feather)m=boxBlur(m,w,h,L.feather*pxs*.5)}
-      else m=new Float32Array(n).fill(1);
-      let k=resolveKey(L.key);
-      if(k){
-        if(L.grow)k=morph(k,w,h,L.grow*pxs,true);
-        if(L.shrink)k=morph(k,w,h,L.shrink*pxs,false);
-        for(let i=0;i<n;i++)m[i]*=k[i];
+      const li=index++,shapes=shapesOf(L);
+      let R={x:0,y:0,w,h};
+      if(shapes.length){
+        const b=boundsOf(shapes,w,h),pad=Math.ceil(((L.feather||0)+(L.grow||0)+(L.soften||0))*pxs)+4;
+        const x0=clamp(Math.floor(b[0])-pad,0,w),y0=clamp(Math.floor(b[1])-pad,0,h),x1=clamp(Math.ceil(b[2])+pad,0,w),y1=clamp(Math.ceil(b[3])+pad,0,h);
+        if(x1-x0<1||y1-y0<1)continue;
+        R={x:x0,y:y0,w:x1-x0,h:y1-y0};
       }
-      const not=resolveKey(L.not);
-      if(not)for(let i=0;i<n;i++)m[i]*=1-not[i];
-      if(L.cut){const c=boxBlur(shapeMask(L.cut,w,h),w,h,(L.cutFeather??L.feather??4)*pxs*.5);for(let i=0;i<n;i++)m[i]*=1-c[i]}
-      if(L.soften)m=boxBlur(m,w,h,L.soften*pxs*.5);
-      const amt=L.amount??1;
+      const rn=R.w*R.h;
+      let m;
+      if(shapes.length){m=shapeMask(shapes,w,h,R);if(L.feather)m=boxBlur(m,R.w,R.h,L.feather*pxs*.5)}
+      else m=new Float32Array(rn).fill(1);
+      let k=resolveKey(L.key,R);
+      if(k){
+        if(L.grow)k=morph(k,R.w,R.h,L.grow*pxs,true);
+        if(L.shrink)k=morph(k,R.w,R.h,L.shrink*pxs,false);
+        for(let i=0;i<rn;i++)m[i]*=k[i];
+      }
+      const not=resolveKey(L.not,R);
+      if(not)for(let i=0;i<rn;i++)m[i]*=1-not[i];
+      if(L.cut){const c=boxBlur(shapeMask(L.cut,w,h,R),R.w,R.h,(L.cutFeather??L.feather??4)*pxs*.5);for(let i=0;i<rn;i++)m[i]*=1-c[i]}
+      if(L.soften)m=boxBlur(m,R.w,R.h,L.soften*pxs*.5);
+      const amt=L.amount??1,phase=(L.phase??(li*.618034)%1)*TAU,sinP=Math.sin(phase),cosP=Math.cos(phase);
       if(L.motion){
-        const phase=(L.phase??(L._index*.618034)%1)*TAU,speed=L.speed??1.2;
-        for(let y=0,i=0;y<h;y++)for(let x=0;x<w;x++,i++){
-          const a=m[i]*amt;if(a<.002)continue;
-          const v=motionVector(L.motion,(x+.5)/pxs,(y+.5)/pxs,ref);
-          vx[i]+=v[0]*a;vy[i]+=v[1]*a;
-          const wt=a*(Math.hypot(v[0],v[1])+.05);ps[i]+=Math.sin(phase)*wt;pc[i]+=Math.cos(phase)*wt;sp[i]+=speed*wt;sw[i]+=wt;
+        const speed=L.speed??1.2,parts=motionParts(L.motion,ref);
+        for(let y=0,j=0;y<R.h;y++){
+          const py=(R.y+y+.5)/pxs;
+          for(let x=0,i=(R.y+y)*w+R.x;x<R.w;x++,i++,j++){
+            const a=m[j]*amt;if(a<.002)continue;
+            const px=(R.x+x+.5)/pxs;let ux=0,uy=0;
+            for(const q of parts){
+              if(q.kind===0){const dx=px-q.cx,dy=py-q.cy;ux+=dx*q.c-dy*q.s;uy+=dx*q.s+dy*q.c}
+              else if(q.kind===1){ux+=q.dx;uy+=q.dy}
+              else{const t=clamp((py-q.y0)/(q.y1-q.y0),0,1),f=t*t*(3-2*t)*.6+t*.4;ux+=q.dx*f;uy+=q.dy*f}
+            }
+            vx[i]+=ux*a;vy[i]+=uy*a;
+            const wt=a*(Math.sqrt(ux*ux+uy*uy)+.05);ps[i]+=sinP*wt;pc[i]+=cosP*wt;sp[i]+=speed*wt;sw[i]+=wt;
+          }
         }
       }else if(L.type==='flicker'){
-        const phase=(L.phase??(L._index*.618034)%1)*TAU,speed=L.speed??1.7;
-        for(let i=0;i<n;i++){const a=m[i]*amt*.05;if(a<1e-4)continue;ps[i]+=Math.sin(phase)*a;pc[i]+=Math.cos(phase)*a;sp[i]+=speed*a;sw[i]+=a}
+        const speed=L.speed??1.7;
+        for(let y=0,j=0;y<R.h;y++)for(let x=0,i=(R.y+y)*w+R.x;x<R.w;x++,i++,j++){const a=m[j]*amt*.05;if(a<1e-4)continue;ps[i]+=sinP*a;pc[i]+=cosP*a;sp[i]+=speed*a;sw[i]+=a}
       }
-      const target=ch[{water:'water',flow:'flow',flicker:'flicker',stars:'stars',wind:'wind',foam:'foam',parallax:'parallax',dapple:'dapple'}[L.type]];
-      if(target){const v=L.type==='parallax'?(L.depth??1):1;for(let i=0;i<n;i++){const a=m[i]*amt*v;if(a>target[i])target[i]=a}}
+      const target=ch[L.type];
+      if(target){const v=L.type==='parallax'?(L.depth??1):1;for(let y=0,j=0;y<R.h;y++)for(let x=0,i=(R.y+y)*w+R.x;x<R.w;x++,i++,j++){const a=m[j]*amt*v;if(a>target[i])target[i]=a}}
       await later();
     }
     const fx=new Uint8Array(n*4),mo=new Uint8Array(n*4),aux=new Uint8Array(n*4);
-    const b=v=>Math.round(clamp(v,0,1)*255);
+    const b=v=>v<=0?0:v>=1?255:Math.round(v*255);
     for(let i=0;i<n;i++){
       fx[i*4]=b(ch.water[i]);fx[i*4+1]=b(ch.flow[i]);fx[i*4+2]=b(ch.flicker[i]);fx[i*4+3]=b(ch.stars[i]);
       mo[i*4]=Math.round(128+clamp(vx[i]/MOTION_MAX,-1,1)*127);mo[i*4+1]=Math.round(128+clamp(vy[i]/MOTION_MAX,-1,1)*127);
       const ph=sw[i]?(Math.atan2(ps[i],pc[i])/TAU+1)%1:0;mo[i*4+2]=b(ph);mo[i*4+3]=sw[i]?b(sp[i]/sw[i]/SPEED_MAX):0;
       aux[i*4]=b(ch.wind[i]);aux[i*4+1]=b(ch.foam[i]);aux[i*4+2]=b(ch.parallax[i]);aux[i*4+3]=b(ch.dapple[i]);
     }
-    return {w,h,fx,mo,aux,water:ch.water};
+    return {w,h,fx,mo,aux};
   }
   async function masksFor(id,scene,img,src){
     const key=id+'|'+src;
     if(maskCache.has(key)){const v=maskCache.get(key);maskCache.delete(key);maskCache.set(key,v);return v}
-    const overlays={};
+    const overlays={},mw=Math.max(8,Math.round(img.naturalWidth*(scene.mask||.5))),mh=Math.max(8,Math.round(img.naturalHeight*(scene.mask||.5)));
     for(const [name,url] of Object.entries(scene.overlays||{})){
-      try{const o=await loadImage(new URL(url,base).href);overlays[name]=overlayMask(o,Math.round(img.naturalWidth*(scene.mask||.5)),Math.round(img.naturalHeight*(scene.mask||.5)))}catch{}
+      try{const o=await loadImage(new URL(url,base).href);overlays[name]=overlayMask(o,mw,mh)}catch{}
     }
     const p=buildMasks(scene,img,overlays);
     maskCache.set(key,p);
-    while(maskCache.size>2)maskCache.delete(maskCache.keys().next().value);
+    p.catch(()=>maskCache.delete(key));
+    while(maskCache.size>4)maskCache.delete(maskCache.keys().next().value);
     return p;
   }
 
@@ -269,9 +294,8 @@ uniform sampler2D uImg,uFx,uMo,uAux,uNoise;
 uniform vec2 uImgSize,uView,uPointer;
 uniform vec4 uRect,uWater,uWater2,uRip[${MAX_RIPPLES}];
 uniform vec3 uHover;
-uniform float uTime,uAmp,uParallax,uWindPx,uFlowSpeed,uFlowLen,uRipAspect,uDebug,uFoam;
+uniform float uBias,uTime,uAmp,uParallax,uWindPx,uFlowSpeed,uFlowLen,uRipAspect,uDebug,uFoam;
 varying vec2 vUv;
-float hash(vec2 c){return fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453);}
 void main(){
   vec2 uv=(vUv*uView-uRect.xy)/uRect.zw;
   if(uv.x<0.||uv.y<0.||uv.x>1.||uv.y>1.){gl_FragColor=vec4(0.);return;}
@@ -285,7 +309,7 @@ void main(){
   float osc=sin(uTime*sp+ph)*.78+sin(uTime*sp*2.31+ph*1.7)*.22;
   off+=v*osc*uAmp;
   if(aux.r>.002){vec2 wn=texture2D(uNoise,p/vec2(420.,330.)+uTime*vec2(.011,.005)).rg-.5;off+=aux.r*wn*2.2*uWindPx*uAmp;}
-  float wm=fx.r,f=1.,shim=0.;vec2 q=vec2(0.);
+  float wm=fx.r,f=1.,shim=0.,rl=0.;vec2 q=vec2(0.);
   if(wm>.002){
     if(uWater2.x>0.)f=clamp((uv.y-uWater2.x)/uWater2.y,.1,1.);
     q=p/(uWater.y*f)*vec2(1./uWater2.z,1.);
@@ -297,19 +321,19 @@ void main(){
       vec4 r=uRip[i];if(r.w<=0.)continue;
       vec2 d=(p-r.xy)*vec2(1.,uRipAspect);float dist=length(d),x=dist-r.z*70.;
       float env=exp(-x*x/500.)*r.w;
-      off+=wm*(d/max(dist,1.))*sin(x*.3)*env*3.;shim+=env*cos(x*.3)*.8;
+      off+=wm*(d/max(dist,1.))*sin(x*.28)*env*4.5;rl+=env*cos(x*.28);
     }
   }
   vec2 sp2=p+off;vec3 col;
   if(fx.g>.002){
     float ft=uTime*uFlowSpeed+texture2D(uNoise,p/140.).a*2.;
-    float f1=fract(ft),f2=fract(ft+.5),w=abs(1.-2.*f1);
-    vec3 c1=texture2D(uImg,(sp2-vec2(0.,f1*uFlowLen*fx.g))/uImgSize).rgb,c2=texture2D(uImg,(sp2-vec2(0.,f2*uFlowLen*fx.g))/uImgSize).rgb;
+    float f1=fract(ft),f2=fract(ft+.5),w=abs(1.-2.*f1),L=uFlowLen*fx.g*uAmp;
+    vec3 c1=texture2D(uImg,(sp2-vec2(0.,f1*L))/uImgSize,uBias).rgb,c2=texture2D(uImg,(sp2-vec2(0.,f2*L))/uImgSize,uBias).rgb;
     col=mix(c1,c2,w);
-  }else col=texture2D(uImg,sp2/uImgSize).rgb;
+  }else col=texture2D(uImg,sp2/uImgSize,uBias).rgb;
   if(wm>.002){
     float lum=dot(col,vec3(.299,.587,.114));
-    col*=1.+wm*shim*.07*uAmp;
+    col*=1.+wm*(shim*.07+rl*.16)*uAmp;
     float g1=texture2D(uNoise,q*.21+uTime*vec2(.017,.031)).b,g2=texture2D(uNoise,q*.17+vec2(.5,.2)-uTime*vec2(.023,.012)).b;
     float pch=smoothstep(.38,.72,texture2D(uNoise,q*.012+uTime*vec2(.004,-.003)).r);
     float gl=smoothstep(uWater2.w,uWater2.w+.16,g1*g2+pch*.08)*pch*smoothstep(uWater.w-.25,uWater.w+.1,lum);
@@ -321,13 +345,13 @@ void main(){
   }
   float hov=uHover.z*(1.-smoothstep(0.,110.,distance(p,uHover.xy)));
   if(fx.b>.002){
-    float h=hash(floor(p/5.));
-    float fl=sin(uTime*1.3+ph)*.45+sin(uTime*3.7+ph*2.+h*6.3)*.35+sin(uTime*(7.+5.*h)+h*40.)*.2;
+    float h=texture2D(uNoise,p*.0035+vec2(uTime*.021,0.)).b;
+    float fl=sin(uTime*1.3+ph)*.45+sin(uTime*3.7+ph*2.)*.25+(h-.5)*.9;
     col*=1.+fx.b*(fl*.16*uAmp+hov*.3);
   }
   if(fx.a>.002){
-    float h=hash(floor(p/7.)),tw=.5+.5*sin(uTime*(1.1+2.6*h)+h*61.);
-    col*=mix(1.,.5+tw*tw*.95,fx.a*uAmp);
+    float tw=texture2D(uNoise,p*.0042+vec2(uTime*.03,uTime*.011)).b*texture2D(uNoise,p*.0031-vec2(uTime*.017,0.)).b*2.4;
+    col*=mix(1.,.45+tw*tw*.8,fx.a*uAmp);
   }
   if(aux.a>.002){
     float n=texture2D(uNoise,p/260.+uTime*vec2(.009,.005)).g;
@@ -484,6 +508,9 @@ void main(){
         const img=await loadImage(src);if(this.state!=='loading')return;
         const masks=await masksFor(this.id,this.data,img,src);if(this.state!=='loading')return;
         this.build(T,img,masks);
+        if(this.renderer.compileAsync&&this.renderer.extensions.has('KHR_parallel_shader_compile'))await this.renderer.compileAsync(this.scene,this.camera);
+        if(this.state!=='loading')return;
+        if(this.shaderFailed)throw new Error('shader');
         this.state='live';
         this.observe();
         this.kick();
@@ -518,7 +545,7 @@ void main(){
         uWater:{value:new T.Vector4((W.px??1.2)*this.k,(W.scale??40)*this.k,W.glint??.8,W.glintLum??.5)},
         uWater2:{value:new T.Vector4(W.horizon??0,W.depth??.3,W.stretch??1.6,W.glintAt??.4)},
         uRip:{value:Array.from({length:MAX_RIPPLES},()=>new T.Vector4())},uRipAspect:{value:d.rippleAspect??1},
-        uDebug:{value:config.debug|0},uFoam:{value:d.foam??1}
+        uDebug:{value:config.debug|0},uBias:{value:config.lodBias},uFoam:{value:d.foam??1}
       };
       const scene=this.scene=new T.Scene(),cam=this.camera=new T.OrthographicCamera(-1,1,1,-1,0,1);
       const quad=this.quad=new T.BufferGeometry();quad.setAttribute('position',new T.BufferAttribute(new Float32Array([-1,-1,0,3,-1,0,-1,3,0]),3));
@@ -571,7 +598,7 @@ void main(){
       this.hover=p;this.pointerTarget=[clamp(cx/r.width*2-1,-1,1),clamp(cy/r.height*2-1,-1,1)];
       if(e.type==='pointerdown'){
         const m=this.masks,mx=clamp(Math.floor(p[0]/this.img[0]*m.w),0,m.w-1),my=clamp(Math.floor(p[1]/this.img[1]*m.h),0,m.h-1);
-        if(m.water[my*m.w+mx]>.25){this.ripples.push({x:p[0],y:p[1],t:0});if(this.ripples.length>MAX_RIPPLES)this.ripples.shift()}
+        if(m.fx[(my*m.w+mx)*4]>64){this.ripples.push({x:p[0],y:p[1],t:0});if(this.ripples.length>MAX_RIPPLES)this.ripples.shift()}
       }
       this.kick();
     }

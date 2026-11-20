@@ -106,7 +106,7 @@ function stopWalk(save=false){
 }
 function detachWorld(){
   if(!worldView)return;
-  stopWalk(true);worldView.observer.disconnect();worldView=null;
+  stopWalk(true);worldView.observer.disconnect();try{worldView.fx?.unmount()}catch{}worldView=null;
 }
 function setWorldStatus(text){
   const label=document.querySelector('.world-status span');
@@ -141,6 +141,7 @@ function attachWorld(){
   const el=document.querySelector('#world'),actor=el.querySelector('.walker');
   const canvas=actor.querySelector('canvas');
   const w=worldView={el,actor,canvas,views:{},shown:null,ring:el.querySelector('.destination-ring'),width:el.clientWidth,height:el.clientHeight,frame:0,reduced:matchMedia('(prefers-reduced-motion: reduce)')};
+  try{w.fx=HibiscusScenes.mount(el,district().id,{actor:'.walker'})}catch{} // living scene behind the walker
   el.querySelector('.world-person').style.zIndex=String(Math.round(district().person[1]*100));
   const shot=currentShot();
   composeDoll(shot,'front').then(doll=>{

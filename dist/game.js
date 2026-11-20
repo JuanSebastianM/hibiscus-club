@@ -164,6 +164,7 @@ function draw(){
   navBar();
   main.innerHTML=route==='life'?lifeScene():route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():isMakeoverRoute()?makeoverRoom():studio();
   if(route==='life')attachWorld();
+  if(route==='map')try{HibiscusScenes.mount(main.querySelector('.map-art'),'island')}catch{} // living scene; plain picture if unavailable
   if(isMakeoverRoute())paintStage();
   else{const c=document.querySelector('#preview, #card-preview');
     if(c)paintCanvas(c,currentShot(),route==='booth').catch(()=>say(t('common.portraitError')));}
