@@ -469,6 +469,7 @@ function showCoach(){
   const text=coach===0?t('tour.walk'):coach===1?(who?t('tour.marker',{who}):t('tour.markerAway')):t('tour.hud');
   box.innerHTML=`<div class="coach-card" role="group" aria-label="${t('tour.label')}"><span class="coach-step">${t('tour.step',{n:coach+1,total:COACH_STEPS})}</span><p>${escapeText(text)}</p><div class="coach-actions"><button class="primary" data-coach="next">${t(coach===COACH_STEPS-1?'tour.done':'tour.next')}</button><button data-coach="skip">${t('tour.skip')}</button></div></div>`;
   document.documentElement.dataset.tour=String(coach);
+  if(box.id==='coach')box.scrollIntoView({block:'nearest'}); // phones: the tip sits under the scene
   sceneSay(text);
 }
 function hideCoach(){delete document.documentElement.dataset.tour;document.querySelectorAll('#coach,.coach-slot').forEach(box=>box.innerHTML='');}
