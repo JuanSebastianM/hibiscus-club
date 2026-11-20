@@ -58,7 +58,7 @@ function dayKey(date=new Date()){
 function currentDay(){
   const today=dayKey();
   if(state.dayMax&&today<state.dayMax)return state.dayMax;
-  if(today!==state.dayMax)state.dayMax=today;
+  if(today!==state.dayMax){state.dayMax=today;if(typeof persist==='function')persist();}
   return today;
 }
 function hoursToMidnight(){const now=new Date(),next=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);return Math.max(1,Math.ceil((next-now)/36e5))}

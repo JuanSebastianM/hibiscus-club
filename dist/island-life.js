@@ -15,7 +15,7 @@ function travelStrip(o){
 /* The quest HUD over the scene: the next step in one line, where it is, one tap to travel there. */
 function hud(){
   const o=objective(),s=dailySummary(),elsewhere=o.at&&o.at!==here();
-  const where=o.kind==='rest'?t('quest.sparklesLeft',{count:s.spots-s.found}):elsewhere?objectiveWhere(o):o.target==='token'?t('quest.lookAround'):objectiveWhere(o);
+  const where=o.kind==='rest'?(s.spots>s.found?t('quest.sparklesLeft',{count:s.spots-s.found}):t('quest.allFound')):elsewhere?objectiveWhere(o):o.target==='token'?t('quest.lookAround'):objectiveWhere(o);
   return `<div class="hud-main"><span class="hud-badge" aria-hidden="true">${o.kind==='rest'?icon('check',16):'★'}</span><div class="hud-text"><span class="hud-label">${t(o.kind==='rest'?'quest.restLabel':'quest.label')}</span><strong>${escapeText(o.text)}</strong>${where?`<span class="hud-where">${icon('pin',13)} ${escapeText(where)}</span>`:''}</div>${elsewhere?`<a class="primary hud-go" href="#${o.at}">${t('quest.go',{place:districtOf(o.at).name})} ›</a>`:''}</div><button class="hud-today" data-life-action="journal" aria-label="${escapeText(t('quest.todayLabel',{done:s.done,total:s.total,found:s.found,spots:s.spots}))}">${icon('ticket',14)} ${t('quest.today',{done:s.done,total:s.total})} <span aria-hidden="true">·</span> ✦ ${I18N.num(s.found)}/${I18N.num(s.spots)}</button>`;
 }
 /* Sparkles (one star each) and the things a "find" errand hides, as buttons on the ground. */
