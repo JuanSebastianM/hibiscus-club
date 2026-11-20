@@ -1,8 +1,10 @@
-.life-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(245px,25%);gap:20px;align-items:start}
+/* Island Life: walkable scene, travel cards, profile, task journal, conversation and name dialogs.
+   Uses the tokens and the room theme from style.css (Island Life = aqua). */
+.life-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,26%);gap:20px;align-items:start}
 .life-left,.life-right{min-width:0;display:grid;gap:16px}
-#world{position:relative;isolation:isolate;overflow:hidden;aspect-ratio:16/10;background:#d0ecec var(--scene) center/100% 100% no-repeat;cursor:crosshair;user-select:none;touch-action:manipulation;border:1px solid #c694b0;contain:layout paint}
+#world{position:relative;isolation:isolate;overflow:hidden;aspect-ratio:16/10;background:#d0ecec var(--scene) center/100% 100% no-repeat;cursor:crosshair;user-select:none;touch-action:manipulation;border:1px solid var(--a300);contain:layout paint}
 #world:focus-visible{outline-offset:-4px}
-.world-status{display:flex;align-items:center;gap:6px;min-height:28px;padding:4px 9px;font-size:.84rem;color:#83506e}
+.world-status{display:flex;align-items:center;gap:6px;min-height:32px;padding:5px 10px;font-size:var(--fs-sm);color:var(--a800);font-weight:bold}
 .walker{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none}
 .walker.walking{will-change:transform}
 .walker-shadow{position:absolute;left:0;bottom:0;width:calc(var(--size)*.28);height:calc(var(--size)*.045);border-radius:50%;background:#402d48;opacity:.29;transform:translate(-50%,10%);filter:blur(2px)}
@@ -20,31 +22,55 @@
 @media(prefers-reduced-motion:reduce){.walker.walking .walker-body canvas,.walker.walking .walker-shadow{animation:none}.walker-body canvas{transition:none}}
 .walker-body img,.walker-body canvas{display:block;width:100%;height:100%;object-fit:contain}
 .walker-body [hidden]{display:none}
-.walker-name,.world-person span,.world-object{border:1px solid #b874a1;background:#fff9f3f5;box-shadow:0 2px 2px #47254030;color:#6d3455;border-radius:18px;font:bold .83rem/1.2 "Trebuchet MS",sans-serif;white-space:nowrap}
-.walker-name{position:absolute;bottom:calc(var(--size) + 3px);left:0;transform:translateX(-50%);padding:3px 9px;max-width:117px;overflow:hidden;text-overflow:ellipsis;border-color:#f1b6cd;background:#fff0f7}
-.world-person{position:absolute;padding:0;width:auto;height:27%;aspect-ratio:176/432;transform:translate(-50%,-100%);color:#713b69}
+/* name tags floating over the scene */
+.walker-name,.world-person span,.world-object{border:1.5px solid var(--a500);background:#fffffff2;box-shadow:0 2px 3px #3d234038;color:var(--text);border-radius:18px;font:bold var(--fs-sm)/1.2 "Trebuchet MS",sans-serif;white-space:nowrap}
+.walker-name{position:absolute;bottom:calc(var(--size) + 3px);left:0;transform:translateX(-50%);padding:3px 10px;max-width:130px;overflow:hidden;text-overflow:ellipsis;border-color:var(--pink-300);background:var(--pink-50);color:var(--pink-800)}
+.world-person{position:absolute;padding:0;width:auto;height:27%;aspect-ratio:176/432;transform:translate(-50%,-100%);color:var(--a800)}
 .world-person img{height:100%;width:100%;object-fit:contain;display:block;filter:drop-shadow(1px 2px 1px #48223f45)}
-.world-person span,.world-object{display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 9px}
-.world-person span{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:3px}
-.world-person:hover span,.world-object:hover{background:#ffdded}
-.world-object{position:absolute;z-index:96;transform:translate(-50%,-100%);min-height:28px}
-.world-object:after{content:"";width:7px;height:7px;background:#fff9f3;position:absolute;left:calc(50% - 4px);bottom:-5px;transform:rotate(45deg);border-right:1px solid #b874a1;border-bottom:1px solid #b874a1}
-.destination-ring{position:absolute;width:26px;height:11px;border:2px solid white;border-radius:50%;box-shadow:0 0 0 2px #b64787;background:#f690bd60;transform:translate(-50%,-50%);pointer-events:none}
-.destinations,.life-profile,.journal{background:var(--paper);border:1px solid #d59ab9;border-radius:14px;box-shadow:0 3px 0 #e5bed5;padding:15px}
-.destinations h2,.life-profile h2,.journal h2{font:bold 1.07rem/1.22 "Trebuchet MS",sans-serif}.destinations h2{margin:0 0 9px}
-.travel-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.travel-cards button{display:grid;grid-template-columns:56px 1fr;align-items:center;gap:8px;text-align:left;overflow:hidden;border:1px solid #d4adc5;background:#fff5fa;border-radius:9px;padding:4px 7px 4px 4px;font-size:.87rem;font-weight:bold;line-height:1.15}.travel-cards img{display:block;width:56px;height:43px;object-fit:cover;border-radius:5px}.travel-cards button[aria-pressed=true]{border-color:#cb5091;background:#ffe1ef;box-shadow:inset 0 0 0 1px #d98ab0}
+.world-person span,.world-object{display:flex;align-items:center;justify-content:center;gap:4px;padding:4px 10px}
+.world-person span{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:3px;color:var(--a800)}
+.world-person:hover span,.world-object:hover{background:var(--a100)}
+.world-object{position:absolute;z-index:96;transform:translate(-50%,-100%);min-height:32px;color:var(--a800)}
+.world-object:after{content:"";width:8px;height:8px;background:#fff;position:absolute;left:calc(50% - 4px);bottom:-6px;transform:rotate(45deg);border-right:1.5px solid var(--a500);border-bottom:1.5px solid var(--a500)}
+.destination-ring{position:absolute;width:26px;height:11px;border:2px solid white;border-radius:50%;box-shadow:0 0 0 2px var(--a700);background:#7fd5cb80;transform:translate(-50%,-50%);pointer-events:none}
+/* side cards: neutral paper, aqua header text; the journal gets a notebook header band */
+.destinations,.life-profile,.journal{background:var(--paper);border:1.5px solid var(--a300);border-radius:14px;box-shadow:0 4px 0 var(--a200),0 8px 18px #3d234012;padding:16px}
+.destinations h2,.life-profile h2,.journal h2{font:bold var(--fs-lg)/1.22 "Trebuchet MS",sans-serif;color:var(--a800)}.destinations h2{margin:0 0 10px}
+.travel-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.travel-cards button{position:relative;display:grid;grid-template-columns:58px 1fr;align-items:center;gap:9px;min-height:54px;text-align:left;overflow:hidden;border:1.5px solid var(--a200);background:var(--white);border-radius:10px;padding:4px 8px 4px 4px;font-size:var(--fs-sm);font-weight:bold;line-height:1.2;color:var(--text-soft)}
+.travel-cards button:hover{border-color:var(--a500);color:var(--a800)}
+.travel-cards img{display:block;width:58px;height:44px;object-fit:cover;border-radius:6px}
+.travel-cards button[aria-pressed=true]{border-color:var(--a700);background:var(--a100);box-shadow:inset 0 0 0 1.5px var(--a700);color:var(--a800)}
+.travel-cards button[aria-pressed=true]::after{content:'✓';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--a700);color:#fff;font-size:12px;line-height:20px;text-align:center;box-shadow:0 0 0 2px #fff}
 .profile-title,.journal-head,.inventory strong,.encounter-head,.responses button,.scene-photo{display:flex;align-items:center;gap:7px}
-.profile-title{margin-bottom:11px}.profile-title h2{overflow-wrap:anywhere}
-.profile-actions{display:flex;justify-content:space-between;gap:5px}.profile-actions .sub-link{margin:9px 0 0}
-.journal{padding:0;overflow:hidden}.journal-head{padding:11px 13px;background:linear-gradient(#fee7f4,#f9d8e8);border-bottom:1px solid #e4accb}.journal-head b{margin-left:auto;color:#924e76;font-size:.82rem}
-.story-list{list-style:none;padding:0 13px;margin:0}.story-list li{display:flex;align-items:flex-start;gap:9px;padding:11px 0}.story-list li+li{border-top:1px dashed #e4c3d7}.story-list strong{display:block;font-size:.92rem}.story-list p{font-size:.83rem;color:#785670;line-height:1.35;margin-top:2px}.story-seal{margin-top:1px;border-radius:50%;background:#f4e6ef;border:1px solid #dfc5d7;display:grid;place-items:center;width:26px;height:26px;flex:none;color:#9b6a88}.active .story-seal{background:#ffdfac;color:#93652d;border-color:#e8c18d}.finished .story-seal{background:#ddf1e3;border-color:#a8cab4;color:#46765b}
-.inventory{display:grid;gap:4px;border-top:1px solid #e8cce0;padding:11px 14px;background:#faf0f7;font-size:.83rem}.inventory span{color:#795c72}.scene-photo{justify-content:center;border-radius:9px}
-#encounter,#name-dialog{width:min(440px,92vw);padding:20px}
-.encounter-head{gap:13px}.encounter-head span{font-size:.85rem;color:#8c607a}.resident-photo{width:62px;height:65px;overflow:hidden;background:linear-gradient(#fbe6f1,#dfcee9);border-radius:12px;border:1px solid #d5a7c2;display:flex;justify-content:center;align-items:flex-start}.resident-photo img{height:235%;width:auto;margin-top:2px}.speech{padding:13px 14px;border:1px solid #e6c6d7;border-radius:4px 14px 14px;background:#fffdfd;line-height:1.5}
-.responses{display:grid;gap:6px}.responses button{border-radius:8px;border:1px solid #dfbad0;background:#fff7fc;padding:8px 10px;text-align:left;font-size:.92rem}.responses button:first-child{background:#ffe2ef;border-color:#d585ad;color:#85345e}.responses button:hover{background:#fce3ef}.responses button:last-child{color:#835a72}
-#name-form{display:grid;gap:10px;margin-top:14px}#name-form label{font-size:.89rem;font-weight:bold}#character-name{font:inherit;border:1px solid #c994b2;border-radius:7px;padding:8px 10px;color:var(--plum);width:100%}
-@media(max-width:1000px){.life-layout{gap:12px;grid-template-columns:minmax(0,1fr) 230px}.travel-cards button{display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:4px;text-align:center}.travel-cards img{width:100%;height:42px}.travel-cards span{padding:2px 0 4px}}
-@media(max-width:760px){.life-layout{grid-template-columns:1fr}.life-right{grid-template-columns:1fr 1.15fr;align-items:start}.life-right .scene-photo{grid-column:1}.life-right .journal{grid-column:2;grid-row:1 / 3}.bar-inner{gap:7px}.life-left,.life-right{gap:12px}.travel-cards button{font-size:.84rem}.world-person span,.world-object,.walker-name{font-size:.72rem}}
-@media(max-width:700px){.bar-inner{gap:0}.bar-inner nav a{font-size:.77rem;gap:3px;padding:6px 3px}.bar-inner nav svg{width:14px}}
-@media(max-width:480px){.life-right{grid-template-columns:1fr}.life-right .journal,.life-right .scene-photo{grid-column:auto;grid-row:auto}#world{aspect-ratio:1.47}.world-object{min-height:24px}.world-person span,.world-object{padding:3px 6px}.destinations,.life-profile{padding:12px}.travel-cards{gap:6px}.walker-name{max-width:86px}.bar-inner nav svg{display:none}}
-
+.profile-title{margin-bottom:12px;color:var(--a800)}.profile-title h2{overflow-wrap:anywhere}
+.profile-actions{display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px 10px}.profile-actions .sub-link{margin:10px 0 0;font-size:var(--fs-sm)}
+.journal{padding:0;overflow:hidden}
+.journal-head{padding:12px 14px;background:linear-gradient(var(--a100),var(--a200));border-bottom:1.5px solid var(--a300);color:var(--a800)}
+.journal-head b{margin-left:auto;color:var(--a800);font-size:var(--fs-xs);background:var(--white);border:1px solid var(--a300);border-radius:16px;padding:2px 10px;white-space:nowrap}
+.story-list{list-style:none;padding:0 14px;margin:0;background:repeating-linear-gradient(transparent 0 27px,var(--a50) 27px 28px)}
+.story-list li{display:flex;align-items:flex-start;gap:10px;padding:12px 0}.story-list li+li{border-top:1.5px dashed var(--a200)}
+.story-list strong{display:block;font-size:var(--fs-md);color:var(--text)}.story-list p{font-size:var(--fs-sm);color:var(--text-soft);line-height:1.4;margin-top:2px}
+.story-seal{margin-top:1px;border-radius:50%;background:#f6f1f6;border:1.5px solid #cdbccd;display:grid;place-items:center;width:28px;height:28px;flex:none;color:var(--text-muted)}
+.active .story-seal{background:var(--butter-100);color:var(--butter-800);border-color:var(--butter-500)}
+.finished .story-seal{background:var(--mint-100);border-color:var(--mint-500);color:var(--mint-700)}
+.finished strong{text-decoration:line-through;text-decoration-color:var(--mint-500);text-decoration-thickness:2px}
+.inventory{display:grid;gap:4px;border-top:1.5px solid var(--a200);padding:12px 14px;background:var(--a50);font-size:var(--fs-sm)}.inventory strong{color:var(--a800)}.inventory span{color:var(--text-soft)}
+.scene-photo{justify-content:center;border-radius:11px;min-height:44px;font-size:var(--fs-md)!important;color:var(--a800)!important;border-color:var(--a300)!important}
+#encounter,#name-dialog{width:min(460px,92vw);padding:0 20px 20px}
+#encounter::before,#name-dialog::before{margin:0 -20px 18px}
+.encounter-head{gap:13px;color:var(--a800)}.encounter-head h2{font-size:var(--fs-2xl)}.encounter-head span{font-size:var(--fs-sm);color:var(--text-soft)}
+.resident-photo{width:64px;height:68px;flex:none;overflow:hidden;background:linear-gradient(var(--a100),var(--b200));border-radius:12px;border:1.5px solid var(--a300);display:flex;justify-content:center;align-items:flex-start}.resident-photo img{height:235%;width:auto;margin-top:2px}
+.speech{padding:14px 15px;border:1.5px solid var(--a200);border-radius:4px 14px 14px;background:var(--a50);line-height:1.55;font-size:var(--fs-md)}
+.responses{display:grid;gap:7px}
+.responses button{min-height:44px;border-radius:10px;border:1.5px solid var(--a200);background:var(--white);padding:8px 12px;text-align:left;font-size:var(--fs-md);color:var(--text);line-height:1.3}
+.responses button:first-child{background:var(--a100);border-color:var(--a500);color:var(--a800);font-weight:bold}
+.responses button:hover{background:var(--a50);border-color:var(--a500)}
+.responses button:last-child{color:var(--text-soft)}
+#name-form{display:grid;gap:10px;margin-top:14px}#name-form label{font-size:var(--fs-sm);font-weight:bold;color:var(--a800)}
+#character-name{font:inherit;font-size:var(--fs-md);min-height:44px;border:1.5px solid var(--a300);border-radius:9px;padding:8px 11px;color:var(--text);background:var(--white);width:100%}
+#character-name:focus-visible{outline-offset:1px}
+@media(max-width:1000px){.life-layout{gap:12px;grid-template-columns:minmax(0,1fr) 240px}.travel-cards button{display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:4px;text-align:center}.travel-cards img{width:100%;height:42px}.travel-cards span{padding:2px 0 4px}}
+@media(max-width:760px){.life-layout{grid-template-columns:1fr}.life-right{grid-template-columns:1fr 1.15fr;align-items:start}.life-right .scene-photo{grid-column:1}.life-right .journal{grid-column:2;grid-row:1 / 3}.bar-inner{gap:7px}.life-left,.life-right{gap:12px}.travel-cards button{font-size:var(--fs-xs)}.world-person span,.world-object,.walker-name{font-size:var(--fs-badge)}}
+@media(max-width:700px){.bar-inner{gap:0}.bar-inner nav a{gap:3px;padding:6px 3px}.bar-inner nav svg{width:15px}}
+@media(max-width:480px){.life-right{grid-template-columns:1fr}.life-right .journal,.life-right .scene-photo{grid-column:auto;grid-row:auto}#world{aspect-ratio:1.47}.world-object{min-height:26px}.world-person span,.world-object{padding:3px 7px}.destinations,.life-profile{padding:13px}.travel-cards{gap:6px}.walker-name{max-width:96px}.bar-inner nav svg{display:none}}

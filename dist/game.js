@@ -92,7 +92,7 @@ const briefs=[
   {key:'picnic',need:{outfit:{adult:'green-hibiscus-sundress',little:'pink-gingham-bow-dress'},clip:'peach-blossom'}},
   {key:'disco',need:{outfit:{adult:'pink-velour-cargo',little:'denim-overalls'},hairColor:'honey'}},
   {key:'seashell',need:{necklace:'pearl-starfish-necklace',earrings:'pearl-studs'}},
-  {key:'mall',need:{shoes:{adult:'pink-chunky-sneakers',little:'white-velcro-sneakers'},hair:'side-ponytail'}},
+  {key:'mall',need:{shoes:{adult:'pink-chunky-sneakers',little:'white-velcro-sneakers'},hair:{adult:'side-ponytail',little:'curly-buns'}}},
   {key:'rosy',need:{blush:'rose',gem:'heart'}},
   {key:'midnight',need:{hairColor:'jet',clip:'gold-star'}},
   {key:'homecoming',need:{outfit:{adult:'hibiscus-flares',little:'yellow-dot-dress'},clip:'satin-bow'}},
@@ -164,6 +164,7 @@ function draw(){
   navBar();
   main.innerHTML=route==='life'?lifeScene():route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():isMakeoverRoute()?makeoverRoom():studio();
   if(route==='life')attachWorld();
+  if(route==='map')try{HibiscusScenes.mount(main.querySelector('.map-art'),'island')}catch{} // living scene; plain picture if unavailable
   if(isMakeoverRoute())paintStage();
   else{const c=document.querySelector('#preview, #card-preview');
     if(c)paintCanvas(c,currentShot(),route==='booth').catch(()=>say(t('common.portraitError')));}
@@ -182,6 +183,7 @@ function navigate(){
   const id=location.hash.slice(1),leaving=route;
   const dropped=leaving&&leaving!==id&&dropTrial();
   route=[...places.map(p=>p.id),'scrapbook','runway','life'].includes(id)?id:'map';
+  document.documentElement.dataset.room=route; // style.css: each room's pastel theme
   if(route!==leaving)track('room',route);
   clearTimeout(timer);if(round)round.up=[];resetRunway();
   if(places.some(p=>p.id===route)&&!state.visits.includes(route)){state.visits.push(route);persist();}

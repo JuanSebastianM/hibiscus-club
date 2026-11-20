@@ -1,0 +1,4 @@
+three 0.187.0 (npm "three", MIT, see LICENSE)
+three.module.min.js = build/three.module.js + build/three.core.js bundled and minified into one ES module:
+  esbuild build/three.module.js --bundle --minify --format=esm --legal-comments=inline
+(three no longer ships .min.js files). Loaded only by scene-fx.js, with import(), when a living scene mounts.
