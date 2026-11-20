@@ -44,6 +44,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
+sys.dont_write_bytecode = True   # don't leave art/__pycache__ behind
 _spec = importlib.util.spec_from_file_location("hc_slice", HERE / "slice.py")
 S = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(S)
