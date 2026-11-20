@@ -1,0 +1,934 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "bd2c56146dc4",
+  "worn": "ae3d8c47bd93"
+ },
+ "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 636,
+   "haze_far_max": 11,
+   "haze_far_p99_9": 10.4,
+   "glow_ring_nonzero_frac": 0.0139,
+   "glow_ring_p95": 3.0,
+   "interior_frac_below_255": 0.0809,
+   "interior_frac_below_200": 0.0252,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 3103,
+     "dRGB": [
+      76.3,
+      79.4,
+      79.9
+     ],
+     "dLum": 78.5
+    },
+    "64-160": {
+     "n": 4948,
+     "dRGB": [
+      49.5,
+      51.0,
+      51.6
+     ],
+     "dLum": 50.6
+    },
+    "160-255": {
+     "n": 16323,
+     "dRGB": [
+      16.3,
+      16.7,
+      17.5
+     ],
+     "dLum": 16.7
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 8,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 30679,
+  "haze_px_removed": 31348,
+  "crosses_grid": [
+   [
+    "01-hair/hair-little-a.webp",
+    [
+     0,
+     0
+    ]
+   ],
+   [
+    "01-hair/hair-little-a.webp",
+    [
+     0,
+     3
+    ]
+   ],
+   [
+    "01-hair/hair-little-a.webp",
+    [
+     1,
+     0
+    ]
+   ],
+   [
+    "01-hair/hair-little-a.webp",
+    [
+     1,
+     3
+    ]
+   ],
+   [
+    "01-hair/hair-little-a.webp",
+    [
+     2,
+     0
+    ]
+   ],
+   [
+    "01-hair/hair-little-a.webp",
+    [
+     2,
+     3
+    ]
+   ]
+  ],
+  "wisp_px_kept": {
+   "ringlet-pigtails/0": 0,
+   "ringlet-pigtails/1": 0,
+   "ringlet-pigtails/2": 0,
+   "ringlet-pigtails/3": 0,
+   "curly-buns/0": 0,
+   "curly-buns/1": 0,
+   "curly-buns/2": 0,
+   "curly-buns/3": 0,
+   "curly-bob/0": 0,
+   "curly-bob/1": 0,
+   "curly-bob/2": 0,
+   "curly-bob/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "ringlet-pigtails": {
+   "category": "hair",
+   "views": {
+    "front": {
+     "file": "hair/ringlet-pigtails-front.webp",
+     "width": 521,
+     "height": 553,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       105,
+       24,
+       521,
+       553
+      ],
+      "column": 0
+     },
+     "faceHole": {
+      "x": 76,
+      "y": 172,
+      "w": 366,
+      "h": 378,
+      "area": 95228,
+      "closedBelow": false,
+      "face": {
+       "x": 76,
+       "y": 172,
+       "w": 366,
+       "h": 378
+      }
+     }
+    },
+    "left": {
+     "file": "hair/ringlet-pigtails-left.webp",
+     "width": 374,
+     "height": 558,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       726,
+       19,
+       374,
+       558
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hair/ringlet-pigtails-right.webp",
+     "width": 375,
+     "height": 558,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       1286,
+       19,
+       375,
+       558
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hair/ringlet-pigtails-back.webp",
+     "width": 528,
+     "height": 546,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       1757,
+       25,
+       528,
+       546
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "curly-buns": {
+   "category": "hair",
+   "views": {
+    "front": {
+     "file": "hair/curly-buns-front.webp",
+     "width": 590,
+     "height": 504,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       65,
+       633,
+       590,
+       504
+      ],
+      "column": 0
+     },
+     "faceHole": {
+      "x": 156,
+      "y": 210,
+      "w": 290,
+      "h": 284,
+      "area": 60004,
+      "closedBelow": false,
+      "face": {
+       "x": 156,
+       "y": 210,
+       "w": 290,
+       "h": 284
+      }
+     }
+    },
+    "left": {
+     "file": "hair/curly-buns-left.webp",
+     "width": 398,
+     "height": 515,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       728,
+       614,
+       398,
+       515
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hair/curly-buns-right.webp",
+     "width": 396,
+     "height": 513,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       1261,
+       616,
+       396,
+       513
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hair/curly-buns-back.webp",
+     "width": 594,
+     "height": 494,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       1732,
+       637,
+       594,
+       494
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "curly-bob": {
+   "category": "hair",
+   "views": {
+    "front": {
+     "file": "hair/curly-bob-front.webp",
+     "width": 590,
+     "height": 509,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       70,
+       1190,
+       590,
+       509
+      ],
+      "column": 0
+     },
+     "faceHole": {
+      "x": 170,
+      "y": 174,
+      "w": 272,
+      "h": 328,
+      "area": 64948,
+      "closedBelow": false,
+      "face": {
+       "x": 170,
+       "y": 174,
+       "w": 272,
+       "h": 266
+      }
+     }
+    },
+    "left": {
+     "file": "hair/curly-bob-left.webp",
+     "width": 456,
+     "height": 506,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       699,
+       1197,
+       456,
+       506
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hair/curly-bob-right.webp",
+     "width": 457,
+     "height": 507,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       1225,
+       1197,
+       457,
+       507
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hair/curly-bob-back.webp",
+     "width": 576,
+     "height": 509,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-a.webp",
+      "box": [
+       1739,
+       1194,
+       576,
+       509
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {
+  "ringlet-pigtails/front": {
+   "proof": "hair/ringlet-pigtails-front.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    103,
+    22,
+    525,
+    578
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/ringlet-pigtails-front.webp",
+   "sprite_box": [
+    105,
+    24,
+    521,
+    553
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 23.4,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.928,
+    "proof_item_uncovered": 0.011,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "ringlet-pigtails/left": {
+   "proof": "hair/ringlet-pigtails-left.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    724,
+    17,
+    378,
+    583
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/ringlet-pigtails-left.webp",
+   "sprite_box": [
+    726,
+    19,
+    374,
+    558
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 34.8,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      -1
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 1,
+    "iou": 0.92,
+    "proof_item_uncovered": 0.005,
+    "sprite_over_background": 0.002
+   },
+   "flags": []
+  },
+  "ringlet-pigtails/right": {
+   "proof": "hair/ringlet-pigtails-right.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    1284,
+    17,
+    379,
+    583
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/ringlet-pigtails-right.webp",
+   "sprite_box": [
+    1286,
+    19,
+    375,
+    558
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 34.8,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.915,
+    "proof_item_uncovered": 0.006,
+    "sprite_over_background": 0.002
+   },
+   "flags": []
+  },
+  "ringlet-pigtails/back": {
+   "proof": "hair/ringlet-pigtails-back.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    1755,
+    23,
+    532,
+    578
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/ringlet-pigtails-back.webp",
+   "sprite_box": [
+    1757,
+    25,
+    528,
+    546
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 17.2,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.976,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "curly-buns/front": {
+   "proof": "hair/curly-buns-front.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    63,
+    631,
+    594,
+    566
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/curly-buns-front.webp",
+   "sprite_box": [
+    65,
+    633,
+    590,
+    504
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 24.2,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.906,
+    "proof_item_uncovered": 0.012,
+    "sprite_over_background": 0.002
+   },
+   "flags": []
+  },
+  "curly-buns/left": {
+   "proof": "hair/curly-buns-left.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    726,
+    612,
+    402,
+    585
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/curly-buns-left.webp",
+   "sprite_box": [
+    728,
+    614,
+    398,
+    515
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 39.0,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      15,
+      -20
+     ]
+    },
+    "max_band_dev_px": 20,
+    "iou": 0.897,
+    "proof_item_uncovered": 0.005,
+    "sprite_over_background": 0.002
+   },
+   "flags": [
+    "parts drawn 20px apart"
+   ]
+  },
+  "curly-buns/right": {
+   "proof": "hair/curly-buns-right.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    1259,
+    614,
+    400,
+    583
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/curly-buns-right.webp",
+   "sprite_box": [
+    1261,
+    616,
+    396,
+    513
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 39.9,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      -14,
+      -20
+     ]
+    },
+    "max_band_dev_px": 20,
+    "iou": 0.894,
+    "proof_item_uncovered": 0.005,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "parts drawn 20px apart"
+   ]
+  },
+  "curly-buns/back": {
+   "proof": "hair/curly-buns-back.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    1730,
+    635,
+    598,
+    562
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/curly-buns-back.webp",
+   "sprite_box": [
+    1732,
+    637,
+    594,
+    494
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "rgb_rmse": 18.3,
+    "band_offsets": {
+     "top": [
+      0,
+      0
+     ],
+     "middle": [
+      0,
+      0
+     ],
+     "bottom": [
+      0,
+      0
+     ]
+    },
+    "max_band_dev_px": 0,
+    "iou": 0.98,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "curly-bob/front": {
+   "proof": "hair/curly-bob-front.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    63,
+    1192,
+    594,
+    602
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/curly-bob-front.webp",
+   "sprite_box": [
+    70,
+    1190,
+    590,
+    509
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     -5,
+     4
+    ],
+    "rgb_rmse": 75.8,
+    "band_offsets": {
+     "top": [
+      3,
+      20
+     ],
+     "middle": [
+      4,
+      9
+     ],
+     "bottom": [
+      4,
+      -11
+     ]
+    },
+    "max_band_dev_px": 20,
+    "iou": 0.719,
+    "proof_item_uncovered": 0.078,
+    "sprite_over_background": 0.163
+   },
+   "flags": [
+    "shape differs (IoU < 0.8)",
+    "parts drawn 20px apart"
+   ]
+  },
+  "curly-bob/left": {
+   "proof": "hair/curly-bob-left.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    694,
+    1210,
+    460,
+    584
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/curly-bob-left.webp",
+   "sprite_box": [
+    699,
+    1197,
+    456,
+    506
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     -3,
+     15
+    ],
+    "rgb_rmse": 65.9,
+    "band_offsets": {
+     "top": [
+      2,
+      20
+     ],
+     "middle": [
+      0,
+      3
+     ],
+     "bottom": [
+      1,
+      -10
+     ]
+    },
+    "max_band_dev_px": 20,
+    "iou": 0.826,
+    "proof_item_uncovered": 0.017,
+    "sprite_over_background": 0.086
+   },
+   "flags": [
+    "parts drawn 20px apart"
+   ]
+  },
+  "curly-bob/right": {
+   "proof": "hair/curly-bob-right.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    1229,
+    1210,
+    461,
+    584
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/curly-bob-right.webp",
+   "sprite_box": [
+    1225,
+    1197,
+    457,
+    507
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     6,
+     15
+    ],
+    "rgb_rmse": 67.8,
+    "band_offsets": {
+     "top": [
+      -2,
+      19
+     ],
+     "middle": [
+      0,
+      2
+     ],
+     "bottom": [
+      -2,
+      -12
+     ]
+    },
+    "max_band_dev_px": 19,
+    "iou": 0.826,
+    "proof_item_uncovered": 0.018,
+    "sprite_over_background": 0.085
+   },
+   "flags": [
+    "parts drawn 19px apart"
+   ]
+  },
+  "curly-bob/back": {
+   "proof": "hair/curly-bob-back.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
+   "proof_box": [
+    1737,
+    1201,
+    580,
+    593
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/curly-bob-back.webp",
+   "sprite_box": [
+    1739,
+    1194,
+    576,
+    509
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     9
+    ],
+    "rgb_rmse": 57.9,
+    "band_offsets": {
+     "top": [
+      0,
+      19
+     ],
+     "middle": [
+      0,
+      5
+     ],
+     "bottom": [
+      0,
+      -9
+     ]
+    },
+    "max_band_dev_px": 19,
+    "iou": 0.897,
+    "proof_item_uncovered": 0.006,
+    "sprite_over_background": 0.077
+   },
+   "flags": [
+    "parts drawn 19px apart"
+   ]
+  }
+ }
+}

@@ -193,7 +193,7 @@
    "overlays": {
     "water": "assets/scenes/fx/beach-water.webp",
     "foliage": "assets/scenes/fx/beach-foliage.webp",
-    "sky": "assets/scenes/fx/beach-sky.webp"
+    "sky": null
    },
    "registration": {
     "water_source": {
@@ -206,17 +206,39 @@
      ],
      "mean_abs_diff_best": 18.01
     },
-    "water_crop": {
-     "mean_abs_diff_at_0": 9.93,
-     "p99_max_channel_diff": 151,
-     "opaque_px": 77604,
+    "water_mismatch_cut_px": 59954,
+    "water_cleaned": {
+     "mean_abs_diff_at_0": 7.14,
+     "p99_max_channel_diff": 44,
+     "opaque_px": 311620,
      "best_shift": [
       0,
       0
      ],
-     "mean_abs_diff_best": 9.93
+     "mean_abs_diff_best": 7.14
+    },
+    "water_crop": {
+     "mean_abs_diff_at_0": 6.08,
+     "p99_max_channel_diff": 37,
+     "opaque_px": 67945,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 6.08
     },
     "foliage_source": {
+     "mean_abs_diff_at_0": 13.99,
+     "p99_max_channel_diff": 85,
+     "opaque_px": 669920,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 13.99
+    },
+    "foliage_mismatch_cut_px": 0,
+    "foliage_cleaned": {
      "mean_abs_diff_at_0": 13.99,
      "p99_max_channel_diff": 85,
      "opaque_px": 669920,
@@ -245,31 +267,20 @@
       -3
      ],
      "mean_abs_diff_best": 45.12
-    },
-    "sky_crop": {
-     "mean_abs_diff_at_0": 41.09,
-     "p99_max_channel_diff": 161,
-     "opaque_px": 108425,
-     "best_shift": [
-      0,
-      -2
-     ],
-     "mean_abs_diff_best": 40.87
     }
    },
    "overlayBytes": {
     "water": {
-     "full": 18902,
-     "half": 7184
+     "full": 22146,
+     "half": 8670
     },
     "foliage": {
      "full": 110830,
      "half": 38866
-    },
-    "sky": {
-     "full": 48404,
-     "half": 17966
     }
+   },
+   "overlayDropped": {
+    "sky": "clouds painted in different places than the background's clouds (53% of opaque pixels differ by >48); covers hills and palms. Use the scene-data 'sky' colour key instead."
    }
   },
   "park": {
@@ -325,6 +336,17 @@
      ],
      "mean_abs_diff_best": 12.99
     },
+    "water_mismatch_cut_px": 0,
+    "water_cleaned": {
+     "mean_abs_diff_at_0": 12.99,
+     "p99_max_channel_diff": 69,
+     "opaque_px": 29702,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 12.99
+    },
     "water_crop": {
      "mean_abs_diff_at_0": 11.36,
      "p99_max_channel_diff": 64,
@@ -345,15 +367,26 @@
      ],
      "mean_abs_diff_best": 15.07
     },
-    "foliage_crop": {
-     "mean_abs_diff_at_0": 15.39,
-     "p99_max_channel_diff": 136,
-     "opaque_px": 112459,
+    "foliage_mismatch_cut_px": 12679,
+    "foliage_cleaned": {
+     "mean_abs_diff_at_0": 14.12,
+     "p99_max_channel_diff": 91,
+     "opaque_px": 843551,
      "best_shift": [
       0,
       0
      ],
-     "mean_abs_diff_best": 15.39
+     "mean_abs_diff_best": 14.12
+    },
+    "foliage_crop": {
+     "mean_abs_diff_at_0": 13.81,
+     "p99_max_channel_diff": 84,
+     "opaque_px": 108684,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 13.81
     },
     "sky_source": {
      "mean_abs_diff_at_0": 16.57,
@@ -365,15 +398,26 @@
      ],
      "mean_abs_diff_best": 16.33
     },
-    "sky_crop": {
-     "mean_abs_diff_at_0": 16.34,
-     "p99_max_channel_diff": 143,
-     "opaque_px": 25937,
+    "sky_mismatch_cut_px": 44130,
+    "sky_cleaned": {
+     "mean_abs_diff_at_0": 3.2,
+     "p99_max_channel_diff": 14,
+     "opaque_px": 82393,
      "best_shift": [
-      1,
+      0,
       -1
      ],
-     "mean_abs_diff_best": 16.14
+     "mean_abs_diff_best": 3.18
+    },
+    "sky_crop": {
+     "mean_abs_diff_at_0": 3.1,
+     "p99_max_channel_diff": 14,
+     "opaque_px": 18148,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 3.1
     }
    },
    "overlayBytes": {
@@ -382,12 +426,12 @@
      "half": 10066
     },
     "foliage": {
-     "full": 146246,
-     "half": 52166
+     "full": 146162,
+     "half": 52048
     },
     "sky": {
-     "full": 42230,
-     "half": 15402
+     "full": 43224,
+     "half": 16182
     }
    }
   },

@@ -19,8 +19,13 @@ import io
 import json
 from pathlib import Path
 
+import sys
+
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from slice import label  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "art" / "source" / "pack2" / "06-island-places"
@@ -34,57 +39,161 @@ WIN_W = SRC_H * 16 / 10          # 2457.6 px: full-height 16:10 window
 JPEG_TARGET = 215_000            # existing scenes: 182-251 KB
 FX_SCALE = 0.5                   # overlays are alpha masks; half size suffices
 FX_WEBP = dict(quality=80, alpha_quality=100, method=6, exact=False)
+# Overlays are separate renders, not cut-outs: they register (best shift 0)
+# but repaint some areas differently (e.g. water painted over the beach's
+# right-hand palm, clouds over the park's palm fronds, foliage over kites).
+# Blocks where the opaque overlay differs strongly from the background are
+# cut from the mask (see clean_overlay). Layers listed here are dropped.
+MISMATCH_DIFF = 56      # max-channel |overlay - background| after a 2px blur
+BLOCK = 8               # px block for the mismatch test
+MIN_BLOCKS = 6          # only cut connected bad areas at least this big
+DROP = {("beach", "sky"): "clouds painted in different places than the background's clouds "
+                          "(53% of opaque pixels differ by >48); covers hills and palms. "
+                          "Use the scene-data 'sky' colour key instead."}
 
 # x0 = left edge of the 16:10 window in source px (full height).
 SCENES = {
     "beach": dict(
         x0=136,
         overlays=["water", "foliage", "sky"],
-        poi=dict(name="sandcastle kit by the towel", at=[0.70, 0.86],
-                 box=[0.555, 0.68, 0.925, 0.955]),
-        resident=[0.585, 0.73], approach=[0.52, 0.86],
+        poi=dict(name="sandcastle kit by the towel", at=[0.73, 0.84],
+                 box=[0.6, 0.68, 0.955, 0.955]),
+        resident=[0.575, 0.76], approach=[0.54, 0.88],
         floor=0.62,
-        floorNote="dry sand; the wet shoreline runs from y~0.55 (centre) to ~0.66 (right edge)",
+        floorNote="dry sand; the wet shoreline runs from y~0.55 (centre) to ~0.66 "
+                  "(right edge), so keep feet below 0.62 right of x=0.5",
         animate=[
-            dict(name="sea", type="water", poly=[0.42, 0.46, 1, 0.46, 1, 0.67, 0.87, 0.66, 0.6, 0.6, 0.43, 0.53]),
-            dict(name="surf line", type="foam", poly=[0.42, 0.5, 0.62, 0.55, 0.8, 0.6, 1, 0.6, 1, 0.68, 0.86, 0.68, 0.6, 0.62, 0.42, 0.55]),
-            dict(name="clouds", type="sway", poly=[0.18, 0.05, 1, 0.05, 1, 0.43, 0.6, 0.45, 0.18, 0.35]),
+            dict(name="sea", type="water", key="water", poly=[0.42, 0.46, 1, 0.46, 1, 0.67, 0.87, 0.66, 0.6, 0.6, 0.43, 0.53]),
+            dict(name="surf line", type="foam", key="foam", poly=[0.42, 0.5, 0.62, 0.55, 0.8, 0.6, 1, 0.6, 1, 0.68, 0.86, 0.68, 0.6, 0.62, 0.42, 0.55]),
+            dict(name="clouds", type="sway", key="sky", poly=[0.18, 0.05, 1, 0.05, 1, 0.43, 0.6, 0.45, 0.18, 0.35],
+                 note="beach-sky overlay is not usable (different clouds); use the sky key"),
             dict(name="sailboat", type="sway", ellipse=[0.735, 0.43, 0.035, 0.06]),
-            dict(name="palm left", type="sway", poly=[0, 0, 0.32, 0, 0.32, 0.3, 0.1, 0.35, 0, 0.3]),
-            dict(name="palm and hibiscus right", type="sway", poly=[0.53, 0, 1, 0, 1, 0.45, 0.85, 0.3, 0.7, 0.2, 0.53, 0.1]),
-            dict(name="beach umbrellas", type="sway", polys=[[0.03, 0.43, 0.12, 0.43, 0.12, 0.5, 0.03, 0.5], [0.18, 0.43, 0.31, 0.43, 0.31, 0.5, 0.18, 0.5]]),
-            dict(name="flower bushes", type="wind", polys=[[0, 0.45, 0.07, 0.45, 0.07, 0.75, 0, 0.75], [0.9, 0.55, 1, 0.55, 1, 0.8, 0.9, 0.8]]),
+            dict(name="palm left", type="sway", key="foliage", poly=[0, 0, 0.32, 0, 0.32, 0.3, 0.1, 0.35, 0, 0.3]),
+            dict(name="palm and hibiscus right", type="sway", key="foliage", poly=[0.53, 0, 1, 0, 1, 0.45, 0.85, 0.3, 0.7, 0.2, 0.53, 0.1]),
+            dict(name="beach umbrellas", type="sway", polys=[
+                [0.09, 0.31, 0.2, 0.31, 0.2, 0.39, 0.09, 0.39], [0.04, 0.46, 0.11, 0.46, 0.11, 0.5, 0.04, 0.5],
+                [0.205, 0.445, 0.27, 0.445, 0.27, 0.49, 0.205, 0.49], [0.255, 0.445, 0.35, 0.445, 0.35, 0.51, 0.255, 0.51]]),
+            dict(name="hill palms", type="wind", key="foliage", poly=[0, 0.2, 0.55, 0.28, 0.55, 0.42, 0, 0.42]),
+            dict(name="flower bushes", type="wind", key="foliage", polys=[[0, 0.45, 0.08, 0.45, 0.08, 0.75, 0, 0.75], [0.9, 0.55, 1, 0.55, 1, 0.8, 0.9, 0.8]]),
+        ],
+        lights=[],
+        notes=[
+            "Good fit: open sand across the whole lower 40%, POI on the right third, horizon and palms frame it like boardwalk.jpg.",
+            "Big soft palm-shadow shapes on the sand at bottom-left and bottom-right are painted in; characters walking through them will not be shaded (cosmetic).",
+            "Lifeguard chair and umbrellas sit on the upper sand (y 0.42-0.65 left): keep the walk floor at 0.62 there or characters will walk into the chair.",
+            "Perspective is gentle (horizon ~0.47); a constant-size character reads fine.",
+            "No text or people. Sailboat could be animated (it is masked out of the water overlay).",
         ]),
     "park": dict(
         x0=272,
         overlays=["water", "foliage", "sky"],
-        poi=dict(name="kite stand", at=[0.76, 0.6],
+        poi=dict(name="kite stand (kite rack + kite shop booth)", at=[0.76, 0.6],
                  box=[0.57, 0.15, 1.0, 0.8]),
-        resident=[0.585, 0.83], approach=[0.68, 0.9],
+        resident=[0.56, 0.86], approach=[0.68, 0.9],
         floor=0.74,
-        floorNote="stone paving; the lawn (y 0.55-0.74) is walkable visually but crossed by the fountain beds",
-        animate=[],
-    ),
+        floorNote="stone paving starts at y~0.73 left of the booth and ~0.8 in front of it; "
+                  "the lawn above is visually walkable but cut by the fountain beds",
+        animate=[
+            dict(name="fountain pool", type="water", key="water", poly=[0.09, 0.585, 0.2, 0.56, 0.33, 0.56, 0.41, 0.59, 0.38, 0.63, 0.2, 0.635, 0.1, 0.615]),
+            dict(name="fountain jets", type="flow", poly=[0.15, 0.23, 0.32, 0.23, 0.32, 0.61, 0.15, 0.61], keyNote="white/light-blue water streams"),
+            dict(name="sea glimpse", type="water", key="water", rect=[0.13, 0.425, 0.4, 0.47]),
+            dict(name="clouds", type="sway", key="sky", poly=[0.1, 0.05, 0.58, 0.05, 0.58, 0.3, 0.4, 0.33, 0.2, 0.33, 0.1, 0.25]),
+            dict(name="bougainvillea top left", type="sway", key="foliage", poly=[0, 0, 0.35, 0, 0.35, 0.12, 0.15, 0.2, 0.05, 0.3, 0, 0.3]),
+            dict(name="palm over the booth", type="sway", key="foliage", poly=[0.5, 0, 0.82, 0, 0.82, 0.15, 0.6, 0.18, 0.5, 0.1]),
+            dict(name="background palms", type="sway", polys=[[0.05, 0.19, 0.16, 0.19, 0.16, 0.3, 0.05, 0.3], [0.39, 0.2, 0.5, 0.2, 0.5, 0.3, 0.39, 0.3], [0.35, 0.32, 0.44, 0.32, 0.44, 0.4, 0.35, 0.4]]),
+            dict(name="flower beds", type="wind", key="foliage", polys=[[0, 0.53, 0.2, 0.55, 0.2, 0.72, 0, 0.72], [0.3, 0.53, 0.48, 0.53, 0.48, 0.71, 0.3, 0.71]]),
+            dict(name="foreground flowers", type="wind", key="foliage", poly=[0, 0.75, 0.18, 0.82, 0.18, 1, 0, 1]),
+            dict(name="hanging kites", type="sway", polys=[[0.58, 0.32, 0.66, 0.32, 0.66, 0.66, 0.58, 0.66], [0.68, 0.56, 0.9, 0.56, 0.9, 0.8, 0.68, 0.8], [0.7, 0.3, 1, 0.3, 1, 0.5, 0.7, 0.5]],
+                 motionNote="bend from the top of each kite; tails flutter"),
+            dict(name="swing", type="sway", rect=[0.4, 0.43, 0.46, 0.51]),
+        ],
+        lights=[],
+        notes=[
+            "Kite booth is huge (right 43% of the frame, up to y 0.8); the resident at x~0.56-0.6 stands in front of the freestanding kite rack. Fine, but the booth cannot move further right without cutting it.",
+            "Clutter on the walk floor: a flower clump in the bottom-left corner (x<0.18, y>0.75) and the potted plant at the bottom-right of the booth (x>0.93, y 0.62-0.82).",
+            "Paving recedes in visible perspective (stones shrink toward y~0.75); characters drawn at one size look fine in the band 0.8-1.",
+            "Style matches market.jpg closely (same pink paving, striped awning stall). No text or people.",
+        ]),
     "icecream": dict(
         x0=272,
         overlays=[],
         poi=dict(name="ice-cream cart", at=[0.83, 0.75],
                  box=[0.7, 0.38, 0.96, 0.9]),
-        resident=[0.585, 0.8], approach=[0.68, 0.9],
+        resident=[0.585, 0.8], approach=[0.66, 0.9],
         floor=0.72,
-        floorNote="cobbled plaza; the raised sidewalk in front of the shops is also walkable",
-        animate=[],
-    ),
+        floorNote="cobbled plaza from y~0.71; the raised sidewalk in front of the shops (x<0.45, y 0.68-0.85) is also walkable but has a kerb step",
+        animate=[
+            dict(name="sea", type="water", key="water", poly=[0.53, 0.53, 0.8, 0.53, 0.8, 0.61, 0.53, 0.61]),
+            dict(name="sea behind the cart", type="water", key="water", poly=[0.8, 0.53, 0.96, 0.53, 0.96, 0.62, 0.8, 0.62], note="mostly hidden by the cart"),
+            dict(name="sunset clouds", type="sway", key="sky", poly=[0.45, 0, 1, 0, 1, 0.4, 0.5, 0.35, 0.45, 0.2]),
+            dict(name="palm left of centre", type="sway", key="foliage", poly=[0.25, 0, 0.62, 0, 0.62, 0.22, 0.4, 0.25, 0.25, 0.15]),
+            dict(name="palm centre", type="sway", key="foliage", ellipse=[0.565, 0.29, 0.075, 0.1]),
+            dict(name="palm right", type="sway", key="foliage", poly=[0.76, 0, 1, 0, 1, 0.3, 0.9, 0.25, 0.76, 0.15]),
+            dict(name="bougainvillea", type="wind", key="magenta", polys=[[0, 0.1, 0.1, 0.1, 0.1, 0.32, 0, 0.32], [0.18, 0.18, 0.28, 0.18, 0.28, 0.33, 0.18, 0.33], [0.28, 0.36, 0.42, 0.36, 0.42, 0.56, 0.28, 0.56]]),
+            dict(name="flower pots", type="wind", key="foliage", polys=[[0.24, 0.58, 0.42, 0.58, 0.42, 0.7, 0.24, 0.7], [0.94, 0.58, 1, 0.58, 1, 0.75, 0.94, 0.75]]),
+            dict(name="shop windows", type="flicker", polys=[[0.0, 0.47, 0.25, 0.47, 0.25, 0.65, 0.0, 0.65], [0.4, 0.5, 0.52, 0.5, 0.52, 0.67, 0.4, 0.67]], keyNote="warm yellow glass"),
+        ],
+        lights=[
+            dict(at=[0.33, 0.236], r=16, color="#ffd58a", i=0.45, flicker=0.3),
+            dict(at=[0.352, 0.276], r=16, color="#ffd58a", i=0.45, flicker=0.3),
+            dict(at=[0.384, 0.3], r=18, color="#ffd58a", i=0.45, flicker=0.3),
+            dict(at=[0.417, 0.326], r=18, color="#ffd58a", i=0.45, flicker=0.3),
+            dict(at=[0.447, 0.34], r=18, color="#ffd58a", i=0.45, flicker=0.3),
+            dict(at=[0.48, 0.354], r=18, color="#ffd58a", i=0.45, flicker=0.3),
+            dict(at=[0.54, 0.378], r=18, color="#ffd58a", i=0.45, flicker=0.3),
+            dict(at=[0.587, 0.378], r=20, color="#ffd58a", i=0.5, flicker=0.3),
+            dict(at=[0.638, 0.375], r=18, color="#ffd58a", i=0.45, flicker=0.3),
+            dict(at=[0.694, 0.368], r=20, color="#ffd58a", i=0.5, flicker=0.3),
+            dict(at=[0.755, 0.347], r=18, color="#ffd58a", i=0.45, flicker=0.3),
+            dict(at=[0.818, 0.324], r=22, color="#ffd58a", i=0.5, flicker=0.3),
+            dict(at=[0.894, 0.278], r=20, color="#ffd58a", i=0.5, flicker=0.3),
+            dict(at=[0.039, 0.086], r=16, color="#ffc15e", i=0.4, flicker=0.2),
+            dict(at=[0.05, 0.514], r=16, color="#ffc15e", i=0.4, flicker=0.2),
+            dict(at=[0.165, 0.525], r=16, color="#ffc15e", i=0.4, flicker=0.2),
+            dict(at=[0.323, 0.521], r=16, color="#ffc15e", i=0.4, flicker=0.2),
+            dict(at=[0.714, 0.535], r=18, color="#ffc15e", i=0.45, flicker=0.25),
+            dict(at=[0.864, 0.535], r=18, color="#ffc15e", i=0.45, flicker=0.25),
+        ],
+        notes=[
+            "Closest in mood to pavilion.jpg (sunset, string lights). Cart sits on the right third; open cobbles across the middle and front.",
+            "Perspective is the strongest of the four: the cobbles converge toward a vanishing point near (0.62, 0.5) and the kerb runs diagonally, so a character walking up to y~0.72 should be scaled down ~15-20% or it will look too big next to the shop doors.",
+            "Clutter: the kerb step and planter box at x 0.25-0.42, y 0.65-0.72; nothing on the plaza itself.",
+            "No baked text (shop signs are shells, no letters) and no people.",
+        ]),
     "treehouse": dict(
         x0=0,
         overlays=[],
-        poi=dict(name="treasure chest", at=[0.24, 0.77],
+        poi=dict(name="treasure chest", at=[0.235, 0.77],
                  box=[0.15, 0.66, 0.32, 0.87]),
-        resident=[0.585, 0.86], approach=[0.36, 0.88],
-        floor=0.79,
-        floorNote="dirt path and grass in front of the pool",
-        animate=[],
-    ),
+        resident=[0.585, 0.88], approach=[0.36, 0.89],
+        floor=0.8,
+        floorNote="dirt path and grass in front of the pool; only ~20% of the height is walkable",
+        animate=[
+            dict(name="waterfall", type="flow", poly=[0.382, 0.48, 0.477, 0.48, 0.477, 0.65, 0.382, 0.65]),
+            dict(name="pool", type="water", key="water", poly=[0.33, 0.66, 0.55, 0.64, 0.78, 0.69, 0.78, 0.76, 0.6, 0.79, 0.4, 0.78, 0.33, 0.74]),
+            dict(name="waterfall mist", type="foam", ellipse=[0.43, 0.64, 0.07, 0.035]),
+            dict(name="clouds", type="sway", key="sky", poly=[0.22, 0.04, 0.56, 0.04, 0.56, 0.28, 0.22, 0.2]),
+            dict(name="palm top left", type="sway", key="foliage", poly=[0, 0, 0.27, 0, 0.27, 0.2, 0.1, 0.25, 0, 0.2]),
+            dict(name="palm top right", type="sway", key="foliage", poly=[0.89, 0, 1, 0, 1, 0.25, 0.89, 0.15]),
+            dict(name="tree canopy", type="wind", key="foliage", poly=[0.39, 0, 0.92, 0, 0.92, 0.18, 0.39, 0.18]),
+            dict(name="hanging vines", type="wind", key="foliage", poly=[0.57, 0.35, 0.75, 0.35, 0.75, 0.6, 0.57, 0.6]),
+            dict(name="banana leaves right", type="sway", key="foliage", poly=[0.9, 0.25, 1, 0.25, 1, 0.56, 0.9, 0.56]),
+            dict(name="bougainvillea left", type="wind", key="magenta", poly=[0, 0.25, 0.25, 0.28, 0.25, 0.47, 0, 0.47]),
+            dict(name="rope bridge", type="sway", poly=[0.28, 0.31, 0.6, 0.31, 0.6, 0.46, 0.28, 0.46], motionNote="tiny vertical bend, sagging middle"),
+            dict(name="foreground ferns", type="wind", key="foliage", polys=[[0, 0.78, 0.17, 0.78, 0.2, 1, 0, 1], [0.86, 0.6, 1, 0.6, 1, 1, 0.86, 1]]),
+            dict(name="leaf light on the path", type="dapple", rect=[0.25, 0.8, 0.85, 1]),
+        ],
+        lights=[
+            dict(at=[0.61, 0.257], r=16, color="#ffc15e", i=0.45, flicker=0.3),
+            dict(at=[0.673, 0.25], r=16, color="#ffc15e", i=0.45, flicker=0.3),
+            dict(at=[0.723, 0.261], r=20, color="#ffd58a", i=0.35, flicker=0.15),
+        ],
+        notes=[
+            "Least suitable of the four as a walk scene: the open ground is only the band y 0.8-1 (the brief asks for the lower 40%), the pool comes down to y~0.79 in the middle, and the chest itself sits at y 0.66-0.87 so the approach spot is right of it on the path.",
+            "Clutter on the walk floor: ferns in the bottom-left corner (x<0.18) and a large plant clump bottom-right (x>0.86, y>0.6); grass tufts and small flowers dot the path.",
+            "Style mismatch: much darker and greener, dense jungle detail, no pink paving or rail; it reads as a different painter next to boardwalk/market/pavilion. A light pink-gold grade (or the scene's ambient tint) would help.",
+            "Rainbow and waterfall are painted in (could be animated). No text or people.",
+        ]),
 }
 
 
@@ -140,6 +249,34 @@ def registration(bg: np.ndarray, ov: np.ndarray):
     res["best_shift"] = [best[1], best[2]]
     res["mean_abs_diff_best"] = round(best[0], 2)
     return res
+
+
+def clean_overlay(bg: Image.Image, ov: Image.Image):
+    """Zero the overlay's alpha over sizeable areas whose colour does not
+    match the background (repainted content). Returns (overlay, cut_px)."""
+    b = np.array(bg.filter(ImageFilter.BoxBlur(2))).astype(np.int16)
+    o = np.array(ov.convert("RGB").filter(ImageFilter.BoxBlur(2))).astype(np.int16)
+    a = np.array(ov)[..., 3]
+    bad = (a >= 200) & (np.abs(o - b).max(-1) > MISMATCH_DIFF)
+    H, W = a.shape
+    hb, wb = H // BLOCK, W // BLOCK
+    blk = bad[:hb * BLOCK, :wb * BLOCK].reshape(hb, BLOCK, wb, BLOCK).mean(axis=(1, 3)) > 0.5
+    lab, n = label(blk)
+    sizes = np.bincount(lab.ravel(), minlength=n + 1)
+    keep_bad = np.isin(lab, [k for k in range(1, n + 1) if sizes[k] >= MIN_BLOCKS])
+    # grow by one block, then feather
+    pb = np.pad(keep_bad, 1)
+    grown = np.zeros_like(keep_bad)
+    for dy in (0, 1, 2):
+        for dx in (0, 1, 2):
+            grown |= pb[dy:dy + hb, dx:dx + wb]
+    full = np.zeros((H, W), np.uint8)
+    full[:hb * BLOCK, :wb * BLOCK] = np.repeat(np.repeat(grown, BLOCK, 0), BLOCK, 1) * 255
+    cut = np.array(Image.fromarray(full).filter(ImageFilter.GaussianBlur(4))).astype(np.float32) / 255
+    new_a = np.rint(a * (1 - cut)).astype(np.uint8)
+    out = np.array(ov)
+    out[..., 3] = new_a
+    return Image.fromarray(out, "RGBA"), int(((a > 0) & (new_a == 0)).sum())
 
 
 def preview(sid: str, meta: dict, bg: Image.Image, overlays: dict, path: Path):
@@ -240,6 +377,14 @@ def run(only, preview_dir):
         for layer in m["overlays"]:
             ov = Image.open(SRC / f"scene-{sid}-{layer}.webp").convert("RGBA")
             entry["registration"][layer + "_source"] = registration(bg_full, np.array(ov))
+            if (sid, layer) in DROP:
+                entry["overlays"][layer] = None
+                entry.setdefault("overlayDropped", {})[layer] = DROP[(sid, layer)]
+                (FX / f"{sid}-{layer}.webp").unlink(missing_ok=True)
+                continue
+            ov, ncut = clean_overlay(src, ov)
+            entry["registration"][layer + "_mismatch_cut_px"] = ncut
+            entry["registration"][layer + "_cleaned"] = registration(bg_full, np.array(ov))
             full = crop(ov, x0, (W_OUT, H_OUT))
             entry["registration"][layer + "_crop"] = registration(np.array(bg), np.array(full))
             half = crop(ov, x0, (round(W_OUT * FX_SCALE), round(H_OUT * FX_SCALE)))

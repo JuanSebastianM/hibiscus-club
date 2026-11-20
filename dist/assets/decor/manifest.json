@@ -1247,7 +1247,7 @@
     0.9924
    ],
    "defaultScale": 1.114,
-   "mirror": false,
+   "mirror": true,
    "footprint": {
     "x0": 51,
     "x1": 184,
@@ -1277,15 +1277,15 @@
    },
    "placement": "floor",
    "anchor": [
-    0.3609,
-    0.9962
+    0.5623,
+    0.8942
    ],
    "defaultScale": 1.131,
-   "mirror": false,
+   "mirror": true,
    "footprint": {
-    "x0": 3,
-    "x1": 246,
-    "width": 243
+    "x0": 46,
+    "x1": 342,
+    "width": 296
    },
    "source": {
     "sheet": "art/source/pack2/07-house-decorator/furn-bathroom-a.webp",
@@ -1315,7 +1315,7 @@
     0.9934
    ],
    "defaultScale": 0.74,
-   "mirror": false,
+   "mirror": true,
    "footprint": {
     "x0": 145,
     "x1": 316,
@@ -2471,7 +2471,7 @@
     0.5
    ],
    "defaultScale": 0.726,
-   "mirror": false,
+   "mirror": true,
    "footprint": {
     "x0": 2,
     "x1": 345,
@@ -2731,7 +2731,7 @@
    "category": "decor",
    "file": "walls/pennant-banner.webp",
    "thumb": "thumbs/pennant-banner.webp",
-   "width": 430,
+   "width": 411,
    "height": 136,
    "name": {
     "en": "Party Pennants",
@@ -2739,22 +2739,22 @@
    },
    "placement": "wall",
    "anchor": [
-    0.5233,
+    0.5,
     0.0147
    ],
-   "defaultScale": 0.912,
+   "defaultScale": 0.954,
    "mirror": true,
    "footprint": {
-    "x0": 22,
-    "x1": 428,
-    "width": 406
+    "x0": 2,
+    "x1": 409,
+    "width": 407
    },
    "source": {
     "sheet": "art/source/pack2/07-house-decorator/decor-walls-a.webp",
     "box": [
-     0,
+     26,
      1406,
-     571,
+     545,
      181
     ]
    }
@@ -2799,7 +2799,7 @@
    "category": "decor",
    "file": "walls/wall-lamp.webp",
    "thumb": "thumbs/wall-lamp.webp",
-   "width": 216,
+   "width": 205,
    "height": 335,
    "name": {
     "en": "Lantern Sconce",
@@ -2807,22 +2807,22 @@
    },
    "placement": "wall",
    "anchor": [
-    0.5741,
+    0.5488,
     0.4985
    ],
    "defaultScale": 0.46,
-   "mirror": false,
+   "mirror": true,
    "footprint": {
-    "x0": 34,
-    "x1": 214,
-    "width": 180
+    "x0": 22,
+    "x1": 203,
+    "width": 181
    },
    "source": {
     "sheet": "art/source/pack2/07-house-decorator/decor-walls-a.webp",
     "box": [
-     1343,
+     1358,
      1265,
-     287,
+     272,
      444
     ]
    }
@@ -3116,7 +3116,7 @@
     0.4637,
     0.9946
    ],
-   "defaultScale": 0.338,
+   "defaultScale": 0.3,
    "mirror": true,
    "footprint": {
     "x0": 42,
@@ -3150,7 +3150,7 @@
     0.5,
     0.9921
    ],
-   "defaultScale": 0.332,
+   "defaultScale": 0.28,
    "mirror": true,
    "footprint": {
     "x0": 7,
