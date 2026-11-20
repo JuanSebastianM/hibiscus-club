@@ -10,6 +10,10 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="island-life.css">
   <link rel="stylesheet" href="makeover.css">
+  <!-- Cloudflare Web Analytics token: paste the 32-character token from your Web Analytics site
+       (Manage site, the "token" value in its JS snippet) between the quotes of content="".
+       While it is empty, the Web Analytics script is never loaded. See README.md. -->
+  <meta name="cf-web-analytics-token" content="">
 </head>
 <body>
   <a class="skip" href="#game" data-i18n="app.skip">Skip to game</a>
@@ -20,7 +24,7 @@
   </div></header>
   <main id="game" tabindex="-1"></main>
   <div id="announcer" role="status" aria-live="polite"></div>
-  <dialog id="help" aria-labelledby="guide-title"><form method="dialog"><div class="guide-head"><h2 id="guide-title" data-i18n="help.title">Island guide</h2><div class="lang-switch" role="group" aria-label="Language" data-i18n-attr="aria-label:lang.group"><button type="button" data-lang="en" lang="en" aria-label="English" title="English" aria-pressed="true">EN</button><button type="button" data-lang="es" lang="es" aria-label="Español" title="Español" aria-pressed="false">ES</button></div></div><p data-i18n="help.p1"></p><p data-i18n-html="help.p2"></p><p data-i18n-html="help.p3"></p><p data-i18n="help.p4"></p><button class="primary" autofocus data-i18n="help.back">Back to the island</button></form></dialog>
+  <dialog id="help" aria-labelledby="guide-title"><form method="dialog"><div class="guide-head"><h2 id="guide-title" data-i18n="help.title">Island guide</h2><div class="lang-switch" role="group" aria-label="Language" data-i18n-attr="aria-label:lang.group"><button type="button" data-lang="en" lang="en" aria-label="English" title="English" aria-pressed="true">EN</button><button type="button" data-lang="es" lang="es" aria-label="Español" title="Español" aria-pressed="false">ES</button></div></div><p data-i18n="help.p1"></p><p data-i18n-html="help.p2"></p><p data-i18n-html="help.p3"></p><p data-i18n="help.p4"></p><section class="privacy-note" aria-labelledby="privacy-title"><h3 id="privacy-title" data-i18n="privacy.title">Privacy</h3><p data-i18n="privacy.text"></p><p class="privacy-browser" data-i18n="privacy.browserOff" hidden></p><label class="privacy-switch"><input type="checkbox" id="analytics-switch" role="switch" checked><span data-i18n="privacy.switch">Share anonymous play counts</span></label></section><button class="primary" autofocus data-i18n="help.back">Back to the island</button></form></dialog>
   <dialog id="remove-photo" aria-labelledby="remove-title"><h2 id="remove-title" data-i18n="removePhoto.title">Remove this postcard?</h2><p data-i18n="removePhoto.text">This frees one space in your scrapbook.</p><form method="dialog" class="dialog-actions"><button class="primary" data-i18n="removePhoto.keep">Keep photo</button><button type="button" data-action="confirm-remove" data-i18n="removePhoto.confirm">Remove photo</button></form></dialog>
   <dialog id="buy-dialog" aria-labelledby="buy-title"><h2 id="buy-title" data-i18n="buy.title">Buy this?</h2><p id="buy-text"></p><form method="dialog" class="dialog-actions"><button type="button" class="primary" data-action="confirm-buy" data-i18n="buy.confirm">Buy it!</button><button data-i18n="buy.cancel">Not now</button></form></dialog>
   <dialog id="remove-favorite" aria-labelledby="unfav-title"><h2 id="unfav-title" data-i18n="unfav.title">Remove this favorite?</h2><p data-i18n="unfav.text">This frees one favorite slot. Everything in the look stays in your wardrobe.</p><form method="dialog" class="dialog-actions"><button class="primary" data-i18n="unfav.keep">Keep it</button><button type="button" data-action="confirm-unfav" data-i18n="unfav.confirm">Remove</button></form></dialog>
@@ -28,6 +32,7 @@
   <dialog id="name-dialog" aria-labelledby="name-title"><h2 id="name-title" data-i18n="name.title">Choose her name</h2><form id="name-form"><label for="character-name" data-i18n="name.label">Character name</label><input id="character-name" name="name" maxlength="48" autocomplete="off" required><div class="dialog-actions"><button class="primary" data-i18n="name.save">Save name</button><button type="button" onclick="this.closest('dialog').close()" data-i18n="name.cancel">Cancel</button></div></form></dialog>
   <script src="i18n.js"></script>
   <script src="i18n-es.js"></script>
+  <script src="analytics.js"></script>
   <script src="music.js"></script>
   <script src="icons.js"></script>
   <script src="catalog.js"></script>

@@ -132,6 +132,7 @@ function walkTo(x,y,target){
     }else{
       positionWalker();w.frame=0;w.ring.hidden=true;persist();setWorldStatus(t('life.exploring',{place:district().name}));
       if(target)openEncounter(target);
+      if(target==='person')track('chat',district().id);
     }
   }
   w.frame=requestAnimationFrame(move);
@@ -180,7 +181,7 @@ function finishStep(i,target){
   const p=lifePlayer(),available=currentSteps(target).find(entry=>entry.i===i);
   if(!available)return;
   p.stages[i]++;
-  if(isComplete(islandStories[i],i)){state.stars+=islandStories[i].reward;tone(true);say(t('life.taskDone',{count:islandStories[i].reward}));navBar();}
+  if(isComplete(islandStories[i],i)){state.stars+=islandStories[i].reward;track('errand','story-'+(i+1));tone(true);say(t('life.taskDone',{count:islandStories[i].reward}));navBar();}
   persist();refreshJournal();openEncounter(target,()=>available.step.line);
 }
 /* What the open conversation shows, kept so a language switch can redraw it: `line` is a function
@@ -225,7 +226,7 @@ function handleLifeAction(button){
   if(d.travel!==undefined){
     const destination=Number(d.travel);
     if(destination===p.scene)return;
-    detachWorld();p.scene=destination;p.x=.43;p.y=.86;persist();draw();return;
+    detachWorld();p.scene=destination;p.x=.43;p.y=.86;persist();draw();track('district',districts[destination].id);return;
   }
   if(d.taskStep!==undefined){if(dialog.open)finishStep(Number(d.taskStep),dialog.dataset.target);return;}
   switch(d.lifeAction){

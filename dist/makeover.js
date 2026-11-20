@@ -235,6 +235,14 @@ function maybeCompliment(){
 }
 
 /* ---------- actions ---------- */
+/* Analytics category of a look field or an ownership key (see analytics.js). */
+const FIELD_CATEGORY={outfit:'outfit',outfitTint:'outfit',shoes:'shoes',shoesTint:'shoes',earrings:'jewelry',earringsTint:'jewelry',necklace:'jewelry',
+  hair:'hair',hairColor:'hair-color',lips:'makeup',blush:'makeup',shadow:'makeup',gem:'makeup',nails:'nails',clip:'accessory'};
+function keyCategory(key){
+  const [kind,id]=key.split(':');
+  if(kind==='item'||kind==='tint')return FIELD_CATEGORY[catalogItem(id)?.category];
+  return kind==='hair-color'?'hair-color':FIELD_CATEGORY[kind];
+}
 function choose(field,value){
   const shown=displayLook();
   if(shown[field]===value)return;
@@ -245,8 +253,8 @@ function choose(field,value){
   persist();refreshRoom();
   const bill=trialBill();
   if(bill.keys.length&&bill.keys.join()!==before){
-    say(t('shop.trySay',{names:bill.names,count:bill.cost}));sparkleOnDoll(field);
-  }else if(committed){sparkleOnDoll(field);maybeCompliment();}
+    say(t('shop.trySay',{names:bill.names,count:bill.cost}));sparkleOnDoll(field);track('tryon',FIELD_CATEGORY[field]);
+  }else if(committed){sparkleOnDoll(field);maybeCompliment();track('makeover',FIELD_CATEGORY[field]);}
 }
 function openBuy(){
   const bill=trialBill();if(!bill.keys.length)return;
@@ -267,7 +275,8 @@ function confirmBuy(){
   if(!bill.keys.length)return;
   if(bill.cost>balance()){say(t('shop.fewMore'));refreshRoom();return}
   state.spent+=bill.cost;
-  bill.keys.forEach(k=>{if(!state.owned.includes(k))state.owned.push(k);freshKeys.add(k)});
+  bill.keys.forEach(k=>{if(!state.owned.includes(k))state.owned.push(k);freshKeys.add(k);
+    const p=Shop.price(k);track('purchase',keyCategory(k),p<10?'1-9':p<20?'10-19':'20-plus')});
   state.looks[state.doll]=displayLook();trial=null;
   persist();navBar();
   const wallet=document.querySelector('#wallet');wallet.classList.remove('spent');void wallet.offsetWidth;wallet.classList.add('spent');
@@ -285,7 +294,7 @@ function surpriseMe(){
   const stage=document.querySelector('#stage');
   if(stage){stage.classList.remove('twirl');void stage.offsetWidth;stage.classList.add('twirl');}
   [0,140,280].forEach((t,i)=>setTimeout(()=>sparkleOnDoll(['hair','outfit','shoes'][i],.8),t));
-  say(t('surprise.say',{theme:t('theme.'+res.theme)}));
+  say(t('surprise.say',{theme:t('theme.'+res.theme)}));track('surprise',route);
 }
 function saveFavorite(){
   const list=state.favorites[state.doll];
@@ -293,7 +302,7 @@ function saveFavorite(){
   const style=styleOf(look());
   if(list.some(f=>Shop.STYLE_FIELDS.every(k=>f[k]===style[k]))){say(t('fav.already'));return}
   list.push({...readLook(style,state.doll),id:Date.now().toString(36)+Math.random().toString(36).slice(2,6)});
-  persist();refreshRoom('save-fav');
+  persist();refreshRoom('save-fav');track('favorite','saved');
   const slot=main.querySelectorAll('.fav-wear');slot[slot.length-1]?.closest('.fav-slot')?.classList.add('just-saved');
   const bill=trialBill();
   say(bill.keys.length?t('fav.savedSkipped',{names:bill.names}):t('fav.saved'));
@@ -302,7 +311,7 @@ function wearFavorite(id){
   const f=state.favorites[state.doll].find(f=>f.id===id);if(!f)return;
   trial=null;
   settle(readLook({...look(),...styleOf(f)},state.doll));trial=null; // a favorite only ever holds owned options
-  persist();refreshRoom();sparkleOnDoll('outfit',1);
+  persist();refreshRoom();sparkleOnDoll('outfit',1);track('favorite','worn');
   say(t('fav.wearing',{n:state.favorites[state.doll].indexOf(f)+1}));
 }
 function confirmUnfavorite(){
@@ -313,7 +322,7 @@ function confirmUnfavorite(){
 }
 function switchDoll(doll){
   if(doll===state.doll)return;
-  dropTrial('shop.droppedSwitch');
+  dropTrial('shop.droppedSwitch');track('character',doll);
   state.doll=doll;stageView='front';persist();refreshRoom();
 }
 /* Click handling for the makeover rooms; returns true when the click was handled. */
