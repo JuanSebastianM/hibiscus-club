@@ -33,6 +33,8 @@ const q=new URLSearchParams(location.search);
   fit:{adult:{front:{x:0,y:0,w:1,h:1,clip:{x:170,y:30}}},little:{front:{x:0,y:0,w:1,h:1,clip:{x:160,y:60}}}}};
  for(const v of ['left','right','back']){it.art[v]=it.art.front;for(const d of ['adult','little'])it.fit[d][v]={x:0,y:0,w:1,h:1,clip:{x:60,y:30,hide:true}}}
  CATALOG.items[it.id]=it;CATALOG.itemList.push(it);}
+/* noscalp=1: hair styles without their scalp underlayer (to compare against the sprite alone). */
+if(q.get('noscalp'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])delete it.fit[d][v].scalp;
 const out=document.querySelector('#out');
 const sheetName=q.get('sheet')||'outfits';
 const only=q.get('ids')?q.get('ids').split(','):null;
@@ -154,6 +156,15 @@ Object.assign(sheets,{
       for(const [i,v] of order.entries()){const c=await composeDoll(look,v);g.drawImage(c,i*600*sc,0,600*sc,1060*sc)}
       g.strokeStyle='rgba(255,0,0,.6)';g.beginPath();g.moveTo(0,DOLL_CANVAS.baseline*sc+.5);g.lineTo(row.width,DOLL_CANVAS.baseline*sc+.5);g.stroke();
       const f=document.createElement('figure');const cap=document.createElement('figcaption');cap.textContent=look.doll+' '+look.outfit+' '+look.hair+' · '+order.join(' / ');f.append(row,cap);section.append(f)}},
+  /* heads: every hair style (and the bald base, hair=lab-none) zoomed on the skull in all four views,
+     to judge hairlines. hair=a,b picks styles; views= picks views; colors=a,b|all repeats each style
+     in those hair colours; scale= overrides the zoom. */
+  async heads(){const box={adult:{front:[120,-70,160,230],back:[120,-70,160,230],left:[0,-70,190,230],right:[-9,-70,190,230]},
+      little:{front:[95,-80,210,280],back:[95,-80,210,280],left:[-15,-80,240,280],right:[-18,-80,240,280]}};
+    const hv=q.get('views')?views:CATALOG.views,styles=(q.get('hair')||'lab-none,'+CATALOG.itemList.filter(i=>i.category==='hair'&&i.id!=='lab-none').map(i=>i.id).join(',')).split(',');
+    const colors=q.get('colors')?(q.get('colors')==='all'?CATALOG.hairColors.map(c=>c.id):q.get('colors').split(',')):[null];
+    for(const d of dolls){heading('Heads · '+d);for(const h of styles)for(const c of colors)for(const v of hv)
+      await tile(h+' '+(c?c+' ':'')+v,L(d,{hair:h,clip:'none',earrings:'none',necklace:'none',...(c?{hairColor:c}:{}),...extra}),{zoom:box[d][v],scale:q.get('scale')?scale:(d==='adult'?1.6:1.2),grid,view:v})}},
   async portraits(){heading('paintPortrait per view');for(const d of dolls)for(const v of CATALOG.views){const c=document.createElement('canvas');await paintPortrait(c,L(d,{backdrop:Number(q.get('bd')||0),...extra}),q.get('postcard')==='1',v);c.style.width=(c.width*scale)+'px';const f=document.createElement('figure');const cap=document.createElement('figcaption');cap.textContent=d+' '+v;f.append(c,cap);section.append(f)}}
 });
 const original0={id:'original'};

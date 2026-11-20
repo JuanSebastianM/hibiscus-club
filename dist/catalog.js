@@ -12,7 +12,8 @@
    - shoes:  {left:{x,y,w,rot}, right:{...}, collar} (sprite part top-left; collar = fraction of
               the shoe height above which the shoe is drawn behind the leg)
    - hair:   {x,y,w,h,rot} or {warp}, front:[shapes] (if set: whole style drawn behind the body and
-              only these doll-local regions again in front), cut:[sprite polys], clip:{x,y,rot,scale}
+              only these doll-local regions again in front; feather softens them), cut:[sprite polys],
+              clip:{x,y,rot,scale}, scalp:{to,part} (scalp underlayer flow, from SCALP_FLOW)
    - earrings (pairs): {left:{x,y,w,rot}, right:{...}} with item.anchor = hook point (0..1) per side
    - necklace / other sprites: {x,y,w,h,rot} or {warp}, keep/cut: sprite-space polygons
    - clip sprites: item.size[doll] = width in doll px, item.anchor = [0..1, 0..1]; placed at the
@@ -25,6 +26,10 @@ const original={id:'original',name:'Original'};
    ky stretches vertically relative to the horizontal scale. */
 const hairFaces={'long-waves':[112,72,130,349,536],'side-ponytail':[116,126,142,278,548],'half-up-curls':[114,112,130,356,534],
   'ringlet-pigtails':[66,134,306,424,417],'curly-buns':[110,154,232,445,362],'curly-bob':[118,128,202,437,359]};
+/* Front view of long styles: the hair is in front of the body above the shoulders and over the torso
+   only; where it hangs over the arms it falls behind them (fit.front, feathered). */
+const ARMS_CLEAR={adult:[{poly:[[-300,-300],[700,-300],[700,186],[300,192],[285,240],[274,280],[268,300],[263,320],[264,340],[274,360],[285,380],[293,400],[299,420],[304,440],[307,460],[306,480],[303,500],[299,520],[294,540],[290,900],[110,900],[105,540],[100,520],[96,500],[93,480],[92,460],[94,440],[100,420],[106,400],[114,380],[126,360],[136,340],[136,320],[131,300],[125,280],[114,240],[98,192],[-300,186]],feather:2.5}],
+  little:[{poly:[[-300,-300],[700,-300],[700,226],[306,232],[290,280],[281,330],[281,345],[284,400],[292,420],[298,440],[304,460],[309,480],[312,500],[311,520],[308,540],[303,560],[300,900],[105,900],[101,560],[96,540],[94,520],[93,500],[95,480],[100,460],[106,440],[113,420],[120,400],[123,345],[122,330],[112,280],[97,232],[-300,226]],feather:2.5}]};
 const hf=(id,[x0,x1,top],ky=1,extra={})=>{const [fx,fy,fw,W,H]=hairFaces[id],k=(x1-x0)/fw;
   return {x:x0-fx*k,y:top-fy*k*ky,w:W*k,h:H*k*ky,...extra}};
 /* A cut-out limb (sleeve, trouser leg) mapped from sprite points s0 (shoulder) -> s1 (cuff) onto doll
@@ -145,23 +150,23 @@ const items=[
     fit:{little:{front:{left:{x:101,y:728,w:72},right:{x:229,y:728,w:72},collar:.12}}}},
   /* ----- hair ----- */
   {id:'long-waves',category:'hair',dolls:['adult','little'],art:art('hair','long-waves'),
-    fit:{adult:{front:hf('long-waves',[150,250,36],1,{backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:160,y:36,rot:-25}})},
-         little:{front:hf('long-waves',[124,278,58],1,{backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:140,y:60,rot:-25}})}}},
+    fit:{adult:{front:hf('long-waves',[150,250,43],1,{front:ARMS_CLEAR.adult,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:160,y:43,rot:-25}})},
+         little:{front:hf('long-waves',[124,278,67],1,{front:ARMS_CLEAR.little,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:140,y:69,rot:-25}})}}},
   {id:'side-ponytail',category:'hair',dolls:['adult','little'],art:art('hair','side-ponytail'),
-    fit:{adult:{front:hf('side-ponytail',[150,266,36],.95,{backFill:{sx:.7,dy:4},clip:{x:244,y:28,rot:20}})},
-         little:{front:hf('side-ponytail',[124,292,58],.95,{backFill:{sx:.7,dy:4},clip:{x:266,y:48,rot:20}})}}},
+    fit:{adult:{front:hf('side-ponytail',[150,266,36],.9,{front:ARMS_CLEAR.adult,backFill:{sx:.7,dy:4},clip:{x:244,y:28,rot:20}})},
+         little:{front:hf('side-ponytail',[124,292,58],.9,{front:ARMS_CLEAR.little,backFill:{sx:.7,dy:4},clip:{x:266,y:48,rot:20}})}}},
   {id:'half-up-curls',category:'hair',dolls:['adult','little'],art:art('hair','half-up-curls'),
-    fit:{adult:{front:hf('half-up-curls',[150,250,36],1,{backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:166,y:28,rot:-20}})},
-         little:{front:hf('half-up-curls',[124,278,58],1,{backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:146,y:46,rot:-20}})}}},
+    fit:{adult:{front:hf('half-up-curls',[150,250,43],1,{front:ARMS_CLEAR.adult,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:166,y:35,rot:-20}})},
+         little:{front:hf('half-up-curls',[124,278,67],1,{front:ARMS_CLEAR.little,backFill:{sx:.62,dy:6},earsUnder:true,clip:{x:146,y:55,rot:-20}})}}},
   {id:'ringlet-pigtails',category:'hair',dolls:['adult','little'],art:art('hair','ringlet-pigtails'),
-    fit:{adult:{front:hf('ringlet-pigtails',[134,266,32],1.08,{clip:{x:142,y:8,rot:-20}})},
-         little:{front:hf('ringlet-pigtails',[112,290,52],1,{clip:{x:132,y:22,rot:-20}})}}},
+    fit:{adult:{front:hf('ringlet-pigtails',[134,266,41],1.08,{clip:{x:142,y:17,rot:-20}})},
+         little:{front:hf('ringlet-pigtails',[112,290,63],1,{clip:{x:132,y:33,rot:-20}})}}},
   {id:'curly-buns',category:'hair',dolls:['adult','little'],art:art('hair','curly-buns'),
-    fit:{adult:{front:hf('curly-buns',[140,260,36],1.04,{clip:{x:146,y:14,rot:-20}})},
-         little:{front:hf('curly-buns',[120,282,56],1,{clip:{x:130,y:32,rot:-20}})}}},
+    fit:{adult:{front:hf('curly-buns',[140,260,43],1.04,{clip:{x:146,y:21,rot:-20}})},
+         little:{front:hf('curly-buns',[120,282,66],1,{clip:{x:130,y:42,rot:-20}})}}},
   {id:'curly-bob',category:'hair',dolls:['adult','little'],art:art('hair','curly-bob'),
-    fit:{adult:{front:hf('curly-bob',[146,254,34],1,{backFill:{sx:.72,dy:4},clip:{x:176,y:24,rot:-15}})},
-         little:{front:hf('curly-bob',[120,282,56],1,{backFill:{sx:.72,dy:4},clip:{x:154,y:48,rot:-15}})}}},
+    fit:{adult:{front:hf('curly-bob',[146,254,41],1,{backFill:{sx:.72,dy:4},clip:{x:176,y:31,rot:-15}})},
+         little:{front:hf('curly-bob',[120,282,65],1,{backFill:{sx:.72,dy:4},clip:{x:154,y:57,rot:-15}})}}},
   /* ----- earrings ----- */
   {id:'gold-hoops',category:'earrings',dolls:['adult','little'],art:art('jewelry','gold-hoops',['left','right']),anchor:{left:[.5,.04],right:[.5,.04]},
     tints:[original,T('silver','Silver','#d8dde6',{range:[20,60],sat:.08,light:.12}),T('rose-gold','Rose gold','#e9a39a',{hue:-28,range:[20,60],sat:.8,light:.04})],
@@ -401,6 +406,33 @@ for(const it of items)if(it.category==='hair')for(const doll of it.dolls){
   const fr=it.fit[doll]?.front?.clip,l=VF[it.id]?.[doll]?.left;
   if(fr&&l?.clip&&l.clip.behind===undefined&&!VF[it.id][doll].right){l.clip.behind=fr.x<(doll==='adult'?200:201);it.fit[doll].right=mirrorFit(l,MIRROR[doll],()=>[VS[it.id].left[0],VS[it.id].right[0]])}
 }
+/* ----- scalp underlayer (portrait.js scalpLayer) -----
+   SCALP_REGION: per doll and view, the skull above a natural hairline (about a third of the way from
+   the brow to the top of the skull for the adult, a little higher for the toddler, temples covered down
+   to the top of the ears, ears left clear); right = mirrored left. The polygon is clipped to the doll's
+   silhouette, so it only has to close somewhere off the head. SCALP_FLOW: per style, the points the
+   underlayer's strands are combed toward (part = x of a parting that splits the head between the first
+   and the last point). */
+const SCALP_REGION={
+  adult:{front:[[136,64],[150,66],[153,80],[157,83],[159,72],[163,62],[170,55],[180,50.5],[192,48],[203,47],[214,48],[226,50.5],[236,55],[243,62],[247,72],[249,83],[253,80],[256,66],[270,64],[270,-40],[136,-40]],
+    left:[[0,46],[44,46],[56,49],[68,54],[80,61],[89,70],[94,80],[97,90],[101,86],[103,77],[110,72],[118,73],[124,80],[126,95],[128,112],[131,128],[160,132],[200,132],[200,-40],[0,-40]],
+    back:[[136,66],[150,72],[153,92],[158,108],[166,120],[182,127],[200,129],[218,127],[234,120],[242,108],[247,92],[250,72],[264,66],[264,-40],[136,-40]]},
+  little:{front:[[110,98],[126,100],[129,114],[134,120],[138,108],[142,96],[150,86],[163,78],[178,72],[192,70],[206,69],[220,70],[234,72],[249,78],[262,86],[270,96],[274,108],[278,120],[283,114],[286,100],[302,98],[302,-40],[110,-40]],
+    left:[[-20,64],[22,66],[38,70],[54,76],[70,84],[84,94],[96,106],[103,118],[108,114],[112,108],[124,105],[136,108],[143,118],[146,138],[148,160],[150,182],[230,182],[230,-40],[-20,-40]],
+    back:[[110,98],[128,106],[131,128],[138,146],[150,160],[170,168],[203,171],[236,168],[256,160],[268,146],[275,128],[278,106],[298,98],[298,-40],[110,-40]]}};
+const SCALP_FLOW={
+  'long-waves':{adult:{front:{part:203,to:[[128,130],[278,130]]},left:{to:[[150,150]]},back:{to:[[200,200]]}},
+    little:{front:{part:206,to:[[110,170],[300,170]]},left:{to:[[160,200]]},back:{to:[[203,240]]}}},
+  'side-ponytail':{adult:{front:{to:[[182,-28]]},left:{to:[[112,-28]]},back:{to:[[200,-30]]}},
+    little:{front:{to:[[172,-40]]},left:{to:[[125,-40]]},back:{to:[[203,-40]]}}},
+  'half-up-curls':{adult:{front:{to:[[203,-30]]},left:{to:[[110,-20]]},back:{to:[[200,10]]}},
+    little:{front:{to:[[206,-30]]},left:{to:[[115,-30]]},back:{to:[[203,10]]}}},
+  'ringlet-pigtails':{adult:{front:{part:203,to:[[146,7],[260,7]]},left:{to:[[115,-12]]},back:{part:200,to:[[150,0],[250,0]]}},
+    little:{front:{part:206,to:[[130,11],[282,11]]},left:{to:[[130,-20]]},back:{part:203,to:[[135,0],[270,0]]}}},
+  'curly-buns':{adult:{front:{part:203,to:[[146,-5],[260,-5]]},left:{to:[[120,-20]]},back:{part:200,to:[[150,-5],[250,-5]]}},
+    little:{front:{part:206,to:[[132,-5],[280,-5]]},left:{to:[[135,-30]]},back:{part:203,to:[[135,-10],[270,-10]]}}},
+  'curly-bob':{adult:{front:{part:236,to:[[130,60],[276,70]]},left:{to:[[130,80]]},back:{to:[[200,140]]}},
+    little:{front:{part:255,to:[[110,90],[300,100]]},left:{to:[[150,110]]},back:{to:[[203,180]]}}}};
 /* clips: side/back sprites; clips at the far side of the head are drawn behind it (hair fit .clip.behind) */
 for(const it of items)if(it.category==='clip'&&VS[it.id])for(const view of ['left','right','back'])it.art[view]=viewArt(it,view);
 for(const doll of ['adult','little']){
@@ -415,6 +447,15 @@ for(const doll of ['adult','little']){
     right:{...s.left,art:d.art.right,origin:rightOrigin,face:rf,arm:s.left.arm&&mp(s.left.arm),
       nails:s.left.nails&&{...s.left.nails,fingers:me(s.left.nails.fingers),toes:me(s.left.nails.toes)}},
     back:{...s.back,art:d.art.back}};
+  const sc=SCALP_REGION[doll];
+  d.views.front.scalp=sc.front;d.views.left.scalp=sc.left;d.views.right.scalp=mp(sc.left);d.views.back.scalp=sc.back;
+}
+/* every hair style gets its scalp underlayer flow (right = mirrored left unless given) */
+for(const it of items)if(it.category==='hair')for(const doll of it.dolls){
+  const f=SCALP_FLOW[it.id]?.[doll],M=MIRROR[doll];if(!f)continue;
+  for(const view of ['front','left','back'])if(f[view]&&it.fit[doll]?.[view])it.fit[doll][view].scalp=f[view];
+  const r=f.right||(f.left&&{...f.left,to:f.left.to.map(([x,y])=>[M-x,y]),part:f.left.part===undefined?undefined:M-f.left.part,region:f.left.region&&f.left.region.map(([x,y])=>[M-x,y])});
+  if(r&&it.fit[doll]?.right)it.fit[doll].right={...it.fit[doll].right,scalp:r};
 }
 
 const byId={};
