@@ -1,0 +1,299 @@
+{
+ "signature": {
+  "script": "2d7c03ab2eb3-v1",
+  "source": "ba5787eb101f"
+ },
+ "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 1907,
+   "haze_far_max": 5,
+   "haze_far_p99_9": 4.0,
+   "glow_ring_nonzero_frac": 0.0348,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0006,
+   "interior_frac_below_200": 0.0001,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 7370,
+     "dRGB": [
+      -11.8,
+      -7.5,
+      8.2
+     ],
+     "dLum": -7.0
+    },
+    "64-160": {
+     "n": 8869,
+     "dRGB": [
+      -17.7,
+      -18.3,
+      -2.9
+     ],
+     "dLum": -16.4
+    },
+    "160-255": {
+     "n": 21916,
+     "dRGB": [
+      -45.0,
+      -52.3,
+      -36.1
+     ],
+     "dLum": -48.2
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 4,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 25017,
+  "haze_px_removed": 28756,
+  "crosses_grid": [
+   [
+    "05-accessories/acc-hats-little.webp",
+    [
+     0,
+     0
+    ]
+   ],
+   [
+    "05-accessories/acc-hats-little.webp",
+    [
+     0,
+     1
+    ]
+   ],
+   [
+    "05-accessories/acc-hats-little.webp",
+    [
+     0,
+     2
+    ]
+   ],
+   [
+    "05-accessories/acc-hats-little.webp",
+    [
+     0,
+     3
+    ]
+   ]
+  ],
+  "wisp_px_kept": {
+   "sun-bonnet/0": 0,
+   "sun-bonnet/1": 0,
+   "sun-bonnet/2": 0,
+   "sun-bonnet/3": 0,
+   "bear-beanie/0": 0,
+   "bear-beanie/1": 0,
+   "bear-beanie/2": 0,
+   "bear-beanie/3": 0,
+   "party-crown/0": 0,
+   "party-crown/1": 0,
+   "party-crown/2": 0,
+   "party-crown/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "sun-bonnet": {
+   "category": "hats-little",
+   "views": {
+    "front": {
+     "file": "hats-little/sun-bonnet-front.webp",
+     "width": 467,
+     "height": 546,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       95,
+       57,
+       467,
+       546
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "hats-little/sun-bonnet-left.webp",
+     "width": 446,
+     "height": 549,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       681,
+       57,
+       446,
+       549
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hats-little/sun-bonnet-right.webp",
+     "width": 444,
+     "height": 549,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       1262,
+       57,
+       444,
+       549
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hats-little/sun-bonnet-back.webp",
+     "width": 468,
+     "height": 546,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       1825,
+       56,
+       468,
+       546
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "bear-beanie": {
+   "category": "hats-little",
+   "views": {
+    "front": {
+     "file": "hats-little/bear-beanie-front.webp",
+     "width": 441,
+     "height": 433,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       106,
+       680,
+       441,
+       433
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "hats-little/bear-beanie-left.webp",
+     "width": 435,
+     "height": 432,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       676,
+       681,
+       435,
+       432
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hats-little/bear-beanie-right.webp",
+     "width": 436,
+     "height": 432,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       1277,
+       681,
+       436,
+       432
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hats-little/bear-beanie-back.webp",
+     "width": 441,
+     "height": 435,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       1841,
+       680,
+       441,
+       435
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "party-crown": {
+   "category": "hats-little",
+   "views": {
+    "front": {
+     "file": "hats-little/party-crown-front.webp",
+     "width": 479,
+     "height": 506,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       88,
+       1232,
+       479,
+       506
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "hats-little/party-crown-left.webp",
+     "width": 461,
+     "height": 501,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       685,
+       1237,
+       461,
+       501
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hats-little/party-crown-right.webp",
+     "width": 462,
+     "height": 500,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       1241,
+       1238,
+       462,
+       500
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hats-little/party-crown-back.webp",
+     "width": 479,
+     "height": 506,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-hats-little.webp",
+      "box": [
+       1821,
+       1232,
+       479,
+       506
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}
