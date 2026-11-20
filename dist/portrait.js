@@ -799,53 +799,109 @@ function lookKey(shot,view='front'){
    (side views), sleeves over the arm, necklace, earrings under hair, hair front, earrings, clip. */
 function composeDoll(raw,view='front'){
   if(!CATALOG.views.includes(view))view='front';
-  const shot={...readLook(raw,raw.doll==='little'?'little':'adult'),doll:raw.doll==='little'?'little':'adult'};
+  const shot=normalShot(raw);
   return memo(dollCaches.doll,lookKey(shot,view),async()=>{
-    const doll=shot.doll,dv=dollView(doll,view),[ox,oy]=dv.origin;
-    const hairFit=catalogItem(shot.hair).fit[doll][view];
-    const earItem=catalogItem(shot.earrings),clipItem=catalogItem(shot.clip);
-    const [body,outfit,shoes,hair,necklace,earrings,clipLayer]=await Promise.all([
-      bodyLayer(shot,view),outfitLayer(doll,view,shot.outfit,shot.outfitTint),
-      shot.shoes==='none'?null:shoeLayers(doll,view,shot.shoes,shot.shoesTint),
-      hairLayers(doll,view,shot.hair,shot.hairColor),
-      shot.necklace==='none'?null:spriteItemLayer(doll,view,shot.necklace),
-      !earItem||earItem.stud?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint),
-      !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
-    ]);
-    const arm=sideView(view)?await armLayer(shot,view,body):null;
-    const bodyPic=shoes?fitFeet(body,shoes,catalogItem(shot.shoes).fit[doll][view],dv,doll):body;
+    const {ops}=await dollOps(shot,view);
     const c=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),g=c.getContext('2d');
     g.imageSmoothingQuality='high';
-    const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
-    const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
-    const drawProc=()=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
-    const stud=earItem?.stud&&dv.face?.lobes?earItem.stud:null;
-    const drawStuds=()=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,view==='back'?'clutch':stud,x,y+dv.face.unit*(view==='back'?.02:.06),dv.face.unit*(view==='back'?.09:.15));g.restore()};
-    // back view: earrings sit under the hair, so only show where the style leaves the ears free
-    const earsUnder=!!hairFit.earsUnder||view==='back';
-    if(clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
-    if(hair.back)g.drawImage(hair.back,0,0);
-    if(outfit.back)g.drawImage(outfit.back,0,0);
-    if(shoes)g.drawImage(shoes.back,0,0);
-    g.drawImage(bodyPic,ox,oy);
-    g.save();g.translate(ox,oy);drawGem(g,shot,view);g.restore();
-    const outfitFit=catalogItem(shot.outfit).fit[doll][view];
-    if(shoes&&!outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
-    g.drawImage(outfit.front,0,0);
-    if(shoes&&outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
-    if(arm&&outfitFit.arm!=='hidden'){
-      if(outfitFit.armClip?.some(s=>s.feather))g.drawImage(softClip(arm,ox,oy,outfitFit.armClip),0,0);
-      else if(outfitFit.armClip){g.save();g.translate(ox,oy);g.beginPath();outfitFit.armClip.forEach(s=>shapePathInto(g,s));g.setTransform(1,0,0,1,0,0);g.clip();g.drawImage(arm,0,0);g.restore()}
-      else g.drawImage(arm,0,0);
-    }
-    if(outfit.over)g.drawImage(outfit.over,0,0);
-    if(necklace)g.drawImage(necklace,0,0);
-    if(earsUnder){if(earrings)g.drawImage(earrings,0,0);if(stud)drawStuds()}
-    if(hair.shade){g.save();g.globalCompositeOperation='source-atop';g.drawImage(hair.shade,0,0);g.restore()}
-    g.drawImage(hair.front,0,0);
-    if(!earsUnder){if(earrings)g.drawImage(earrings,0,0);if(stud)drawStuds()}
-    if(!clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
+    for(const op of ops)op.draw(g);
     return c;
+  });
+}
+function normalShot(raw){const doll=raw.doll==='little'?'little':'adult';return {...readLook(raw,doll),doll}}
+/* The dressed doll as an ordered list of draw operations; composeDoll() runs them in order on one
+   canvas, composeDollLayers() runs each on its own canvas. op = {kind, draw(g), layer?} where `layer`
+   (when set) is a DOLL_CANVAS sized canvas the op draws unchanged at 0,0. Kinds: clipBehind, hairBack,
+   outfitBack, shoesBack, body, gem, shoesFront, outfit, arm, over, necklace, earrings, studs, shade
+   (hair contact shadow, drawn source-atop), hairFront, clip, charm. */
+async function dollOps(shot,view){
+  const doll=shot.doll,dv=dollView(doll,view),[ox,oy]=dv.origin;
+  const hairFit=catalogItem(shot.hair).fit[doll][view];
+  const earItem=catalogItem(shot.earrings),clipItem=catalogItem(shot.clip);
+  const [body,outfit,shoes,hair,necklace,earrings,clipLayer]=await Promise.all([
+    bodyLayer(shot,view),outfitLayer(doll,view,shot.outfit,shot.outfitTint),
+    shot.shoes==='none'?null:shoeLayers(doll,view,shot.shoes,shot.shoesTint),
+    hairLayers(doll,view,shot.hair,shot.hairColor),
+    shot.necklace==='none'?null:spriteItemLayer(doll,view,shot.necklace),
+    !earItem||earItem.stud?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint),
+    !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
+  ]);
+  const arm=sideView(view)?await armLayer(shot,view,body):null;
+  const bodyPic=shoes?fitFeet(body,shoes,catalogItem(shot.shoes).fit[doll][view],dv,doll):body;
+  const ops=[],put=(kind,layer)=>ops.push({kind,layer,draw:g=>g.drawImage(layer,0,0)});
+  const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
+  const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
+  const drawProc=g=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
+  const stud=earItem?.stud&&dv.face?.lobes?earItem.stud:null;
+  const drawStuds=g=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,view==='back'?'clutch':stud,x,y+dv.face.unit*(view==='back'?.02:.06),dv.face.unit*(view==='back'?.09:.15));g.restore()};
+  // back view: earrings sit under the hair, so only show where the style leaves the ears free
+  const earsUnder=!!hairFit.earsUnder||view==='back';
+  const clips=kind=>{if(clipLayer)put(kind,clipLayer);if(proc)ops.push({kind:'charm',behind:kind==='clipBehind',draw:drawProc})};
+  if(clipBehind)clips('clipBehind');
+  if(hair.back)put('hairBack',hair.back);
+  if(outfit.back)put('outfitBack',outfit.back);
+  if(shoes)put('shoesBack',shoes.back);
+  ops.push({kind:'body',draw:g=>g.drawImage(bodyPic,ox,oy)});
+  ops.push({kind:'gem',draw:g=>{g.save();g.translate(ox,oy);drawGem(g,shot,view);g.restore()}});
+  const outfitFit=catalogItem(shot.outfit).fit[doll][view];
+  if(shoes&&!outfitFit.shoesOver)put('shoesFront',shoes.front);
+  put('outfit',outfit.front);
+  if(shoes&&outfitFit.shoesOver)put('shoesFront',shoes.front);
+  if(arm&&outfitFit.arm!=='hidden'){
+    if(outfitFit.armClip?.some(s=>s.feather))put('arm',softClip(arm,ox,oy,outfitFit.armClip));
+    else if(outfitFit.armClip)ops.push({kind:'arm',draw:g=>{g.save();g.translate(ox,oy);g.beginPath();outfitFit.armClip.forEach(s=>shapePathInto(g,s));g.setTransform(1,0,0,1,0,0);g.clip();g.drawImage(arm,0,0);g.restore()}});
+    else put('arm',arm);
+  }
+  if(outfit.over)put('over',outfit.over);
+  if(necklace)put('necklace',necklace);
+  const ears=()=>{if(earrings)put('earrings',earrings);if(stud)ops.push({kind:'studs',draw:drawStuds})};
+  if(earsUnder)ears();
+  if(hair.shade)ops.push({kind:'shade',draw:g=>{g.save();g.globalCompositeOperation='source-atop';g.drawImage(hair.shade,0,0);g.restore()}});
+  put('hairFront',hair.front);
+  if(!earsUnder)ears();
+  if(!clipBehind)clips('clip');
+  return {ops,doll,view,origin:[ox,oy],shoes};
+}
+/* The same dressed doll as separate aligned layers (puppet.js): resolves to {doll, view, origin, layers}
+   with layers = [{kind, canvas}] in drawing order, every canvas DOLL_CANVAS sized and in the same
+   coordinates, so drawing them in order with source-over gives composeDoll's picture (the hair
+   contact shadow is returned already clipped to what is under it). Side views also give the far shoe
+   alone (farShoe) and the near shoe alone (nearShoe), so the two feet can move apart. Nothing here is
+   cached: the caller keeps what it needs. Canvases that are shared renderer cache entries are
+   read-only. */
+async function composeDollLayers(raw,view='front'){
+  if(!CATALOG.views.includes(view))view='front';
+  const shot=normalShot(raw);
+  const {ops,doll,origin,shoes}=await dollOps(shot,view);
+  const acc=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),ag=acc.getContext('2d');ag.imageSmoothingQuality='high';
+  const layers=[];
+  for(const op of ops){
+    let canvas=op.layer;
+    if(op.kind==='shade'){ // source-atop: keep only what lies over the layers drawn so far
+      canvas=makeCanvas(acc.width,acc.height);const g=canvas.getContext('2d');
+      op.draw(g);g.globalCompositeOperation='destination-in';g.drawImage(acc,0,0);
+    }else if(!canvas){canvas=makeCanvas(acc.width,acc.height);const g=canvas.getContext('2d');g.imageSmoothingQuality='high';op.draw(g)}
+    layers.push({kind:op.kind,canvas,behind:!!op.behind});
+    op.draw(ag);
+  }
+  const out={doll,view,origin,layers,shot};
+  if(shoes&&sideView(view)){const parts=await shoeSideParts(doll,view,shot.shoes,shot.shoesTint);if(parts){out.farShoe=parts.far;out.nearShoe=parts.near}}
+  return out;
+}
+/* Side views: the near shoe's back layer without the far shoe, and the far shoe alone (see shoeLayers). */
+const shoeSideCache=lruCache(4);
+function shoeSideParts(doll,view,id,tintId){
+  const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
+  if(!fit?.near||!fit.far)return Promise.resolve(null);
+  return memo(shoeSideCache,[doll,view,id,tintId].join('|'),async()=>{
+    const src=await itemSprite(item,view,'main',tintId),o=dollView(doll,view).origin;
+    const draw=(f,shade)=>{
+      const t=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),tg=t.getContext('2d');tg.imageSmoothingQuality='high';tg.translate(...o);
+      const w=f.w,h=f.h??src.height*w/src.width;tg.translate(f.x,f.y);if(f.rot)tg.rotate(f.rot*Math.PI/180);tg.drawImage(src,0,0,w,h);
+      if(shade!==undefined){tg.setTransform(1,0,0,1,0,0);tg.globalCompositeOperation='source-atop';tg.fillStyle=`rgba(30,12,30,${shade})`;tg.fillRect(0,0,t.width,t.height)}
+      return t;
+    };
+    return {near:draw(fit.near),far:draw({...fit.near,x:fit.near.x+(fit.far.dx||0),y:fit.near.y+(fit.far.dy||0)},fit.far.shade??.3),farOffset:[fit.far.dx||0,fit.far.dy||0]};
   });
 }
 /* Keep only the parts of a layer inside doll-local shapes; a shape's `feather` (px) softens its edge
@@ -979,12 +1035,40 @@ function drawPedestal(c,cx,top,rx){
 }
 /* Display scale (portrait px per doll px at a 480 x 720 frame) and frame position. */
 const portraitLayout={adult:{scale:.71,foot:.925},little:{scale:.6,foot:.915}};
+/* Where paintPortrait puts things: canvas size, picture rect and the doll's DOLL_CANVAS rect. */
+function portraitGeometry(shot,postcard=false){
+  const w=postcard?640:480,h=postcard?860:720;
+  const x=postcard?70:0,y=postcard?21:0,width=postcard?500:w,height=postcard?750:h;
+  const lay=portraitLayout[shot.doll]||portraitLayout.adult;
+  const k=lay.scale*width/480,footY=y+height*lay.foot;
+  return {w,h,x,y,width,height,k,footY,doll:[x+width/2-DOLL_CANVAS.width/2*k,footY-DOLL_CANVAS.baseline*k,DOLL_CANVAS.width*k,DOLL_CANVAS.height*k]};
+}
 async function paintPortrait(canvas, shot, postcard=false, view='front') {
   const scenic=shot.backdrop>0,scene=scenic?districts[shot.backdrop-1]:null;
   const [doll,background]=await Promise.all([composeDoll(shot,view),scenic?asset('assets/scenes/'+scene.id+'.jpg'):null]);
-  const w=canvas.width=postcard?640:480,h=canvas.height=postcard?860:720;
+  const geo=portraitGeometry(shot,postcard);
+  canvas.width=geo.w;canvas.height=geo.h;
   const c=canvas.getContext('2d');
-  const x=postcard?70:0,y=postcard?21:0,width=postcard?500:w,height=postcard?750:h;
+  portraitBackground(c,shot,postcard,geo,background);
+  const {x,y,width,height}=geo;
+  c.save();c.beginPath();c.rect(x,y,width,height);c.clip();
+  c.imageSmoothingQuality='high';
+  c.drawImage(doll,...geo.doll);
+  c.restore();
+  portraitExtras(c,shot,postcard,geo);
+}
+/* The portrait without the doll (puppet.js draws a moving doll over it). Resolves to the geometry. */
+async function paintPortraitBackdrop(canvas,shot){
+  const scenic=shot.backdrop>0,scene=scenic?districts[shot.backdrop-1]:null;
+  const background=scenic?await asset('assets/scenes/'+scene.id+'.jpg'):null;
+  const geo=portraitGeometry(shot,false);
+  canvas.width=geo.w;canvas.height=geo.h;
+  portraitBackground(canvas.getContext('2d'),shot,false,geo,background);
+  return geo;
+}
+function portraitBackground(c,shot,postcard,geo,background){
+  const scenic=shot.backdrop>0;
+  const {w,h,x,y,width,height,k,footY}=geo;
   if(postcard){
     const colors=frameColors[shot.frame]||frameColors[0];
     c.fillStyle=colors[0];c.fillRect(0,0,w,h);c.fillStyle=colors[1];
@@ -994,8 +1078,6 @@ async function paintPortrait(canvas, shot, postcard=false, view='front') {
     }
     c.fillStyle='#fffefa';c.fillRect(x-9,y-9,width+18,h-y-19);
   }
-  const lay=portraitLayout[shot.doll]||portraitLayout.adult;
-  const k=lay.scale*width/480,footY=y+height*lay.foot;
   if(scenic){
     const cropWidth=background.height*width/height;
     const cropX=(background.width-cropWidth)*(shot.backdrop===3?.74:.52);
@@ -1007,10 +1089,9 @@ async function paintPortrait(canvas, shot, postcard=false, view='front') {
     drawPedestal(c,x+width/2,footY+k*10,k*190);
     c.fillStyle='rgba(110,50,105,.28)';c.beginPath();c.ellipse(x+width/2,footY+k*8,k*110,k*16,0,0,Math.PI*2);c.fill();
   }
-  c.save();c.beginPath();c.rect(x,y,width,height);c.clip();
-  c.imageSmoothingQuality='high';
-  c.drawImage(doll,x+width/2-DOLL_CANVAS.width/2*k,footY-DOLL_CANVAS.baseline*k,DOLL_CANVAS.width*k,DOLL_CANVAS.height*k);
-  c.restore();
+}
+function portraitExtras(c,shot,postcard,geo){
+  const {w,x,y,width,height}=geo;
   if(postcard){
     drawCharm(c,shot.sticker,x+width-16,y+height-30,60);
     // The caption is drawn in the current language; longer names shrink to fit the card.
