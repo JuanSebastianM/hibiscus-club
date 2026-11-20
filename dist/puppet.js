@@ -113,14 +113,16 @@ const HibiscusPuppet=(()=>{
       // rows between the armpit and the first gap found: the armpit x
       for(let y=Math.floor(pit[1]);y<H&&isNaN(gap[i][y]);y++)gap[i][y]=pit[0];
     }
+    const capR=rg.legLength*.1;
     for(let y=0;y<H;y++)for(let x=0;x<W;x++){
       const i=y*W+x;let l=L_TORSO;
       for(const a of [0,1]){
-        const [top,pit]=rg.armCut[a],sgn=a?1:-1;
-        if(y<top[1]-30)continue;
+        // an arm is a ball joint: round the shoulder only a disc (capR) about the joint belongs to it;
+        // below the armpit, everything beyond the gap, down to the fingertips
+        const [top,pit]=rg.armCut[a],sgn=a?1:-1,J=px['sh'+a];
+        if(y>px['hand'+a][1]+14)continue;
         let edge;
-        if(y<top[1])edge=top[0];
-        else if(y<pit[1])edge=top[0]+(pit[0]-top[0])*(y-top[1])/(pit[1]-top[1]);
+        if(y<pit[1]){if(Math.hypot(x-J[0],y-J[1])>capR)continue;edge=y<top[1]?top[0]:top[0]+(pit[0]-top[0])*(y-top[1])/(pit[1]-top[1])}
         else edge=gap[a][y];
         if(sgn<0?x<edge:x>edge){l=a?L_ARM1:L_ARM0;break}
       }
@@ -239,8 +241,7 @@ const HibiscusPuppet=(()=>{
     }else if(kind==='arm'){
       const i=limb,sh=p['sh'+i],el=p['el'+i],wr=p['wr'+i],u1=unit(sh,el),u2=unit(el,wr);
       let f;
-      if(rg.side)f=smooth(-40,4,dot(P,sh,u1)); // the shoulder cap above the joint blends into the chest
-      else{const [top,pit]=rg.armCut[i],n=unit(top,pit);f=smooth(3,24,Math.abs((x-top[0])*n[1]-(y-top[1])*n[0]))} // away from the cut line
+      f=1; // rigid about the shoulder (a ball joint): the torso keeps its own shoulder underneath
       for(const b of [B.spine,B.chest])fr[b]=lerp(fr[b],1,f);
       fr[B.neck]*=1-f;fr[B.head]*=1-f;
       fr[B['arm'+i]]=f;fr[B['fore'+i]]=smooth(-10,10,dot(P,el,u1));fr[B['hand'+i]]=smooth(-6,6,dot(P,wr,u2));
@@ -398,10 +399,14 @@ const HibiscusPuppet=(()=>{
     const kindOutfit=R.outfitKind(layers.shot.outfit),outfitFit=catalogItem(layers.shot.outfit)?.fit?.[layers.doll]?.[view]||{};
     const armIdx=layers.layers.findIndex(l=>l.kind==='arm');
     const groups={hairB:[],far:[],torso:[],legs:[],skirt:[],arms:[],hairF:[]};
-    let overlaySrc=null;
-    const armR=layers.doll==='little'?20:17,px=rg.px;
+    let overlaySrc=null,headPiece=null;
+    const armR=layers.doll==='little'?27:26,sleeveR=layers.doll==='little'?24:22,px=rg.px;
+    // x of arm a's axis (shoulder, elbow, wrist, hand) at canvas row y
+    const armAxisX=(a,y)=>{const ch=[px['sh'+a],px['el'+a],px['wr'+a],px['hand'+a]];if(y<=ch[0][1])return ch[0][0];
+      for(let k=1;k<ch.length;k++)if(y<=ch[k][1]){const [p,q]=[ch[k-1],ch[k]];return p[0]+(q[0]-p[0])*(y-p[1])/(q[1]-p[1])}return ch[3][0]};
     const armNear=armMask&&dilate(armMask,W,H,1),overArm=armMask&&dilate(armMask,W,H,4);
     // side views: how far the torso reaches under the top of the leg (deeper at the back: the seat)
+    const shoulderBelow=Math.max(rg.armCut?rg.armCut[0][1][1]:0,rg.armCut?rg.armCut[1][1][1]:0);
     const hipBand=new Float32Array(W);
     if(rg.side){const [a,b]=rg.hipLine,k=layers.doll==='little'?.75:1;for(let x=0;x<W;x++){const t=clamp((x-a[0])/(b[0]-a[0]),0,1);hipBand[x]=hipLineY(rg,x)+k*lerp(45,120,t)}}
     for(let li=0;li<layers.layers.length;li++){
@@ -431,15 +436,26 @@ const HibiscusPuppet=(()=>{
         for(let i=0;i<lb.length;i++)if(lb[i]===L_ARM0)lb[i]=L_TORSO;
         if(['body','outfit','outfitBack'].includes(L.kind)){const orig=d;d=new Uint8ClampedArray(d);inpaintUnder(d,armNear);if(sleeve){const s=sleeve,o=orig;sleeve={test:s,data:o}}}
       }
+      // front/back: a garment wider than the bare arm crosses the arm/body line measured on the bald
+      // doll; below the armpit only what lies within a sleeve's reach of the arm bones goes with the arm
+      if(!rg.side&&L.kind!=='body'){
+        for(let y=Math.floor(Math.min(rg.armCut[0][1][1],rg.armCut[1][1][1]));y<H;y++)for(let x=ex[0];x<=ex[2];x++){
+          const i=y*W+x,l=lb[i];if(l!==L_ARM0&&l!==L_ARM1)continue;
+          const a=l===L_ARM0?0:1;if(y<rg.armCut[a][1][1])continue;
+          // outward of the arm's axis everything is sleeve; toward the body only a sleeve's half-width
+          if((x-armAxisX(a,y))*(a?-1:1)>sleeveR)lb[i]=y>hipLineY(rg,x)?(x<px.root[0]?L_LEG0:L_LEG1):L_TORSO;
+        }
+      }
       if(rg.side&&li>armIdx&&L.kind==='over')for(let i=0;i<lb.length;i++)if(overArm[i])lb[i]=L_ARM0;
       if(kindOutfit==='skirt'&&['outfit','outfitBack','over'].includes(L.kind)){
         // below skirtTop the garment is skirt, except a long sleeve's cuff round the forearm
+        const cuffEnd=[0,1].map(a=>[lerp(px['wr'+a][0],px['hand'+a][0],.3),lerp(px['wr'+a][1],px['hand'+a][1],.3)]);
         const sleeveTo=[0,1].map(a=>{if(rg.side)return false;const m=[(px['el'+a][0]+px['wr'+a][0])/2,(px['el'+a][1]+px['wr'+a][1])/2];
           return d[(Math.round(m[1])*W+Math.round(m[0]))*4+3]>200});
         for(let y=Math.ceil(rg.skirtTop);y<H;y++)for(let x=0;x<W;x++){
           const i=y*W+x,l=lb[i];
           if(l===L_TORSO||l===L_LEG0||l===L_LEG1)lb[i]=L_SKIRT;
-          else if(!rg.side&&(l===L_ARM0||l===L_ARM1)){const a=l===L_ARM0?0:1;if(!sleeveTo[a]||segDist([x,y],px['el'+a],px['wr'+a])>armR)lb[i]=L_SKIRT}
+          else if(!rg.side&&(l===L_ARM0||l===L_ARM1)){const a=l===L_ARM0?0:1;if(!sleeveTo[a]||y>cuffEnd[a][1]+6||(x-armAxisX(a,y))*(a?-1:1)>armR*.8)lb[i]=L_SKIRT}
         }
       }
       if(L.kind==='body')for(let y=0;y<Math.ceil(rg.neckCut);y++)for(let x=0;x<W;x++){const i=y*W+x;if(lb[i]===L_TORSO)lb[i]=L_HEAD}
@@ -447,12 +463,14 @@ const HibiscusPuppet=(()=>{
       for(const P of ORDER){
         // side views: the torso keeps the top of the thigh under the leg, so a swinging leg never
         // opens a hole at the hip (at rest the leg piece covers it exactly)
-        const member=rg.side&&P===L_TORSO?i=>lb[i]===P||(lb[i]===L_LEG0&&Math.floor(i/W)<hipBand[i%W]):i=>lb[i]===P;
+        // front/back: the torso keeps the shoulder disc under each arm, so a raised arm never opens a gap
+        const member=P!==L_TORSO?i=>lb[i]===P:rg.side?i=>lb[i]===P||(lb[i]===L_LEG0&&Math.floor(i/W)<hipBand[i%W])
+          :i=>lb[i]===P||((lb[i]===L_ARM0||lb[i]===L_ARM1)&&Math.floor(i/W)<shoulderBelow);
         const kind=P===L_ARM0||P===L_ARM1?'arm':P===L_LEG0||P===L_LEG1?'leg':P===L_SKIRT?'skirt':'torso';
         const pc=makePiece(d,ex,member,{kind,limb:P===L_ARM1||P===L_LEG1?1:0,layer:L.kind,grid:P===L_HEAD?config.headGrid:config.grid,face:P===L_HEAD&&!!rg.face});
         if(!pc)continue;
         groups[GROUP_OF[P]].push(pc);
-        if(P===L_HEAD&&rg.face){overlaySrc=canvas;groups.torso.push({overlay:true})}
+        if(P===L_HEAD&&rg.face){overlaySrc=canvas;headPiece=pc;groups.torso.push({overlay:true})}
       }
       if(sleeve){const pc=makePiece(sleeve.data,ex,i=>sleeve.test(i),{kind:'arm',limb:0,layer:'sleeve',grid:config.grid});if(pc)groups.arms.unshift(pc)}
       await later();
@@ -469,7 +487,28 @@ const HibiscusPuppet=(()=>{
     }
     // front and back: a flared skirt lies over the hands (as in the still picture); side views: the near arm is in front
     const order=[...groups.hairB,...groups.far,...groups.torso,...groups.legs,...(rg.side?[...groups.skirt,...groups.arms]:[...groups.arms,...groups.skirt]),...groups.hairF];
-    return finishModel(rg,order,overlaySrc,{farOffset,look:layers.shot,doll:layers.doll});
+    // drawn expression heads (puppet-rig.js EXPRESSION_ART), when a sheet exists for this doll and view
+    const expr=headPiece&&await expressionHeads(layers.doll,view,headPiece).catch(()=>null);
+    if(expr){headPiece.expr=expr;overlaySrc=null}
+    return finishModel(rg,order,overlaySrc,{farOffset,look:layers.shot,doll:layers.doll,expr:!!expr});
+  }
+  /* Drawn heads: each cell of the sheet replaces the head pixel for pixel (placed at the spec's doll-local
+     `at`, cells of `cell` doll px drawn at `scale`); the side sheet serves the left view and, mirrored,
+     the right. Returns {name: canvas} in the head piece's own crop, or null when no sheet is set. */
+  async function expressionHeads(doll,view,piece){
+    if(view==='back')return null;
+    const spec=R.EXPRESSION_ART[doll]?.[view==='front'?'front':'side'];
+    if(!spec?.file)return null;
+    const sheet=await asset(spec.file),[cw,ch]=spec.cell,k=spec.scale||1,o=R.ORIGINS[doll][view==='right'?'left':view];
+    const [bx,by,bw,bh]=piece.box,out={};
+    R.EXPRESSIONS.forEach((name,n)=>{
+      const c=mk(bw,bh),g=c.getContext('2d');g.drawImage(piece.canvas,0,0);g.imageSmoothingQuality='high';
+      let x=spec.at[0]+o[0],y=spec.at[1]+o[1];
+      if(view==='right'){x=R.MIRROR[doll]+R.ORIGINS[doll].right[0]-(spec.at[0]+cw)+0;g.translate(x-bx+cw,y-by);g.scale(-1,1)}else g.translate(x-bx,y-by);
+      g.clearRect(0,0,cw,ch);g.drawImage(sheet,(n%4)*cw*k,Math.floor(n/4)*ch*k,cw*k,ch*k,0,0,cw,ch);
+      out[name]=c;
+    });
+    return out;
   }
   async function buildResidentModel(id){
     const rg=R.residentRig(id),img=await asset('assets/scenes/'+id+'.png');
@@ -593,7 +632,9 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       const mesh=new T.Mesh(geo,mat);mesh.frustumCulled=false;mesh.renderOrder=i;mesh.userData.piece=pc;
       scene.add(mesh);meshes.push(mesh);mats.push(mat);geos.set(geo,1);
     });
-    return m.gpu={scene,shared,textures,meshes,mats,geos:[...geos.keys()],overlayTex:m.overlay?textures.get(m.overlay.canvas):null};
+    const exprTex={};
+    for(const pc of m.pieces)if(pc.expr)for(const [name,c] of Object.entries(pc.expr)){const t=new T.CanvasTexture(c);t.flipY=false;t.premultiplyAlpha=true;t.colorSpace=T.NoColorSpace;t.minFilter=T.LinearMipmapLinearFilter;textures.set(c,t);exprTex[name]=t}
+    return m.gpu={scene,shared,textures,meshes,mats,geos:[...geos.keys()],exprTex,overlayTex:m.overlay?textures.get(m.overlay.canvas):null};
   }
   let white=null;
   function whiteTex(){if(!white){white=new T.DataTexture(new Uint8Array([255,255,255,255]),1,1,T.RGBAFormat);white.needsUpdate=true}return white}
@@ -744,6 +785,11 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       const S=gpu.shared;
       for(let b=0;b<NB;b++){const p=pose.bones[b];S.uP.value[b].set(p.r,p.x,p.y,0);S.uS.value[b].set(p.sx,p.sy)}
       const f=pose.face;S.uFace.value.set(f.jaw,f.smile,f.wide,f.squint);
+      if(m.expr){ // drawn heads take over from the procedural face
+        S.uFace.value.set(0,0,0,0);
+        const name=R.expressionFor({...f,jawMax:m.rig.face?.jawMax}),tex=gpu.exprTex[name]||gpu.exprTex.neutral;
+        for(const mesh of gpu.meshes)if(mesh.userData.piece.expr)mesh.material.uniforms.map.value=tex;
+      }
       // turning: squash about the body's middle
       let sq=1;if(this.turn){const u=this.turn.t/this.turn.dur;sq=Math.max(.06,Math.abs(Math.cos(Math.PI*u)))}
       const cx=crop[0]+crop[2]/2,cw2=crop[2]/sq;

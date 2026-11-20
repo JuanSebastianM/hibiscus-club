@@ -361,7 +361,7 @@ function emotePose(name,t,ctx){
     }
     case 'pose':{ // runway: weight on one hip, head tilt, smile
       bone(p,'hips').x=7*e;bone(p,'hips').r=-1.8*DEG*e;bone(p,'chest').r=1.6*DEG*e;bone(p,'head').r=-3.5*DEG*e;
-      if(!side){bone(p,'arm1').r=-14*DEG*e;bone(p,'fore1').r=-38*DEG*e}
+      if(!side){bone(p,'arm1').r=-24*DEG*e;bone(p,'fore1').r=72*DEG*e;bone(p,'hand1').r=10*DEG*e} // hand on the hip
       f.smile=e;f.squint=.5*e;
       break;
     }
