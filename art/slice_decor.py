@@ -317,7 +317,7 @@ def slice_sheet(fname: str, room: str, ids: list[str], report: dict):
     seed = np.zeros_like(lab)
     for c, k in mains.items():
         seed[lab == k] = c + 1
-    vor = grow_labels(seed)
+    vor = grow_labels(seed, limit=80)
     members = {c: [k] for c, k in mains.items()}
     main_set = set(mains.values())
     rep["moved_components"] = []
@@ -326,7 +326,7 @@ def slice_sheet(fname: str, room: str, ids: list[str], report: dict):
         if k in main_set:
             continue
         votes = np.bincount(vor[lab == k], minlength=13)[1:]
-        c = int(np.argmax(votes))
+        c = int(np.argmax(votes)) if votes.any() else cell_of(*cents[k])
         members[c].append(k)
         if sizes[k] < 3:
             rep["tiny_components"] += 1
@@ -339,7 +339,7 @@ def slice_sheet(fname: str, room: str, ids: list[str], report: dict):
     seed2 = np.zeros_like(lab)
     for c, ks in members.items():
         seed2[np.isin(lab, ks)] = c + 1
-    vor2 = grow_labels(seed2)
+    vor2 = grow_labels(seed2, limit=REACH // POOL + 2)
     owner = pool_up(vor2, H, W)
 
     items = []
@@ -526,9 +526,10 @@ def mock_room(items, path: Path):
             ("armchair", 620, 980), ("beanbag", 1150, 980),
             ("kitten-bed", 860, 940), ("lava-lamp", 525, 600 + 10),
             ("potted-hibiscus", 85, 990)]
-    order = sorted(plan, key=lambda p: (by[p[0]]["meta"]["placement"] != "wall",
-                                        by[p[0]]["meta"]["placement"] != "rug", p[2]))
     surfaces = {"lava-lamp": "bedside-table"}
+    order = sorted(plan, key=lambda p: (by[p[0]]["meta"]["placement"] != "wall",
+                                        by[p[0]]["meta"]["placement"] != "rug",
+                                        p[0] in surfaces, p[2]))
     placed = {}
     for iid, x, y in order:
         it = by[iid]
