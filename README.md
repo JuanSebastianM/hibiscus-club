@@ -12,7 +12,7 @@ node serve.cjs
 
 Open [Hibiscus Club on this computer](http://127.0.0.1:4173). The server binds to your computer’s loopback address. Stop it with Ctrl+C. If that port is busy, run `node serve.cjs 4180` and open the address printed in the terminal. The game uses bundled artwork and runs offline while the local server is running. There are no packages to install.
 
-You can also put the contents of `dist/` on a static web host. Serve the files together from the same origin so the browser can export postcard images. The existing Sites project uses the static directory specified in `.openai/hosting.json`.
+You can also put the contents of `dist/` on a static web host. Serve the files together from the same origin so the browser can export postcard images.
 
 ## Deploy to Cloudflare Workers
 
@@ -82,7 +82,7 @@ Locked options show a lock and their price. Choosing one puts it on her as a try
 
 ## How the game was built
 
-The original project supplied a page shell, a flower emblem, an icon library, and a static hosting manifest. The finished game uses HTML, CSS, and browser JavaScript with no build step or dependencies. Every script shares the page’s global scope, in the order `index.html` loads them. A URL hash identifies each room, so links, refresh, and the browser’s Back button work with static hosting.
+The original project supplied a page shell, a flower emblem, and an icon library. The finished game uses HTML, CSS, and browser JavaScript with no build step or dependencies. Every script shares the page’s global scope, in the order `index.html` loads them. A URL hash identifies each room, so links, refresh, and the browser’s Back button work with static hosting.
 
 Each character is a layered paper doll with four views: front, left, right and back. A bald base doll picture per age and view sits under transparent sprites for the outfit, shoes, hairstyle, jewelry and hair accessories. The catalog stores a fit for every item on every doll and view. Outfits are warped row by row to the body, long sleeves are placed along the arms, and in side views the near arm is cut from the base and drawn over the outfit. The base dolls wear a lilac bodysuit, which is repainted in skin tone wherever an outfit would let it show, and an outfit is always drawn. Because the base dolls are bald, each hairstyle is drawn over a scalp layer: hair in the same color, combed in the style's direction, painted on the skull above a natural hairline so no bare scalp shows around the sprite. Side and back view art loads only when a view is first used. Makeup, nail polish, hair color and colorways are pixel recolors done once and cached. `composeDoll()` builds a dressed doll on one transparent canvas. The player card, studio, salon, booth, runway, Island Life walker, favorites and postcards all draw from it. A saved postcard records the character and every look choice, so the renderer recreates it for display and PNG export. The artwork is AI-generated. The dolls and wearables arrived as sheets: a four-view turnaround of each base doll, front-view sheets of the outfits, hair, shoes and jewelry, and four-view sheets of the same items. `art/slice.py` and `art/slice_views.py` cut the sheets into trimmed sprites by following the alpha channel, clean the edges, and write a manifest of sizes and parts. `art/crop_dolls.py` crops the base figures onto a shared foot baseline. `art/fit_views.py` generates the side and back outfit warps, and `art/lab.html` renders contact sheets of every item on every doll, which is how the fits were tuned by eye. The source sheets are kept in `art/source/` and are not deployed.
 
@@ -144,6 +144,10 @@ Each browser profile and site address has its own save. Using a different port g
 ## Verification
 
 The game was exercised in Chromium at 1440 × 960 and with a 375 × 812 phone viewport, in English and Spanish. It has not been tested in Safari or Firefox, or on phone hardware. The checks covered every tab and option type on both characters, with keyboard focus kept on the chosen option. They also covered trying on and leaving (reverted), trying on and buying (the balance drops and persists after a reload), refusing a purchase without enough stars, and Golden hour staying unlocked after spending. Surprise me was run hundreds of times, using owned options only. Favorites were saved, worn and removed. Three style challenges were completed, and a postcard PNG was downloaded. An old integer-format save was migrated with stars and photos. The runway and Island Life were checked for the current look. All rooms and tabs were checked for horizontal overflow at phone width, with no console errors. Every item was reviewed on contact sheets in all four views on both dolls. The music was checked to keep scheduling across room changes and to stop and restart cleanly from the speaker button. In each language, a scripted walk through every room, tab, dialog and mini-game looked for text left in the other language, and the two dictionaries were checked for matching keys and variables.
+
+## License
+
+Hibiscus Club is released under the [MIT License](LICENSE).
 
 Hibiscus Club is an independent game inspired by the era’s dress-up games.
 
