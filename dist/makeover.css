@@ -132,8 +132,8 @@ main:focus-visible{outline:none}
   .turn-control{padding-top:6px;gap:4px}.turn-control button{min-height:40px;padding:4px 10px;font-size:var(--fs-xs)}
   .tryon{padding:7px 9px 8px;gap:5px}.tryon-actions .primary,.ghost{min-height:42px}.tryon-actions .primary{padding:5px 10px;font-size:var(--fs-sm)}.ghost{padding:5px 10px}.tryon p{font-size:var(--fs-xs)}.tryon .tryon-note{font-size:var(--fs-badge)}
   .makeover-panel{padding:0 14px 18px}.makeover-panel>.panel-top{margin:0 -14px;padding:12px 14px}.favorites{padding:0 14px 16px}.fav-head{margin:0 -14px;padding:10px 14px}
-  .room-tabs{gap:3px;padding:3px}
-  .room-tabs button{font-size:var(--fs-badge);min-height:56px;padding:6px 2px 8px}
+  .room-tabs{gap:3px;padding:3px;grid-auto-columns:minmax(min-content,1fr)}
+  .room-tabs button{overflow-wrap:normal;font-size:var(--fs-badge);min-height:56px;padding:6px 2px 8px}
   .item-grid,.item-grid.compact{grid-template-columns:repeat(3,minmax(0,1fr))}
   .chip-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
   .chip{min-height:84px;padding-top:16px}

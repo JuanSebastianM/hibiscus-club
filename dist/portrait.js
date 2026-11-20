@@ -507,7 +507,8 @@ function softenHairline(full,base,[ox,oy],opts={}){
   if(opts===false)return;
   const W=full.width,H=full.height,radius=opts.radius??1.8,floor=opts.floor??.35,root=opts.root??.24,reach=opts.reach??6;
   const blurred=r=>{const m=makeCanvas(W,H),mg=ctx2d(m);mg.shadowColor='#000';mg.shadowBlur=r*2;mg.shadowOffsetX=W;mg.drawImage(full,-W,0);return mg.getImageData(0,0,W,H).data};
-  const bd=blurred(radius),wd=blurred(reach),g=ctx2d(full),im=g.getImageData(0,0,W,H),d=im.data;
+  const bd=blurred(radius),wd=blurred(reach),rc=makeCanvas(W,H),rg=ctx2d(rc);rg.drawImage(full,0,0);
+  const im=rg.getImageData(0,0,W,H),d=im.data,g=full.getContext('2d');
   const BW=base.width,BH=base.height,sk=ctx2d(base).getImageData(0,0,BW,BH).data;
   const X0=Math.round(ox),Y0=Math.round(oy);
   for(let y=0;y<H;y++){const by=y-Y0;if(by<0||by>=BH)continue;
@@ -520,7 +521,7 @@ function softenHairline(full,base,[ox,oy],opts={}){
       const e=Math.min(1,Math.max(0,(1-wd[o+3]/255)/.5))*root*skin; // warm shadow: blue darkens most
       d[o]*=1-e*.7;d[o+1]*=1-e;d[o+2]*=1-e*1.2;
     }}
-  g.putImageData(im,0,0);
+  g.save();g.setTransform(1,0,0,1,0,0);g.putImageData(im,0,0);g.restore();
 }
 /* Contact shadow of the hair: a soft, slightly lowered blur of the front hair layer, outside the hair
    itself, drawn source-atop over the body and outfit (portrait composeDoll), so the hair sits on the
@@ -899,7 +900,8 @@ function fitFeet(body,shoes,fit,dv,doll){
     }
   }
   if(trimY!==undefined){
-    const mk=shoes.mask||shoes.back,SW=mk.width,sd=ctx2d(mk).getImageData(0,0,SW,mk.height).data,lim=fit?.trimAlpha??60;
+    const mk=makeCanvas((shoes.mask||shoes.back).width,(shoes.mask||shoes.back).height),mkg=ctx2d(mk);mkg.drawImage(shoes.mask||shoes.back,0,0);
+    const SW=mk.width,sd=mkg.getImageData(0,0,SW,mk.height).data,lim=fit?.trimAlpha??60;
     for(let y=Math.max(0,Math.floor(trimY));y<H;y++)for(let x=0;x<W;x++){
       const X=Math.round(x+ox),Y=Math.round(y+oy),o=(y*W+x)*4;if(!d[o+3])continue;
       const sa=X<0||Y<0||X>=SW||Y>=mk.height?0:sd[(Y*SW+X)*4+3];

@@ -311,14 +311,15 @@ void main(){
     float lum=dot(col,vec3(.299,.587,.114));
     col*=1.+wm*shim*.07*uAmp;
     float g1=texture2D(uNoise,q*.21+uTime*vec2(.017,.031)).b,g2=texture2D(uNoise,q*.17+vec2(.5,.2)-uTime*vec2(.023,.012)).b;
-    float gl=smoothstep(uWater2.w,uWater2.w+.12,g1*g2)*smoothstep(uWater.w-.25,uWater.w+.1,lum);
-    col+=gl*wm*uWater.z*uAmp*vec3(1.,.97,.9);
+    float pch=smoothstep(.38,.72,texture2D(uNoise,q*.012+uTime*vec2(.004,-.003)).r);
+    float gl=smoothstep(uWater2.w,uWater2.w+.16,g1*g2+pch*.08)*pch*smoothstep(uWater.w-.25,uWater.w+.1,lum);
+    col+=gl*wm*uWater.z*uAmp*(vec3(.55,.53,.5)+col*.5);
   }
   if(aux.g>.002){
     float br=sin(uTime*.9+ph+p.x*.012+p.y*.02)*.5+.5;
     col=mix(col,col+(1.-col)*.4,aux.g*br*uFoam*uAmp);
   }
-  float hov=uHover.z*smoothstep(110.,0.,distance(p,uHover.xy));
+  float hov=uHover.z*(1.-smoothstep(0.,110.,distance(p,uHover.xy)));
   if(fx.b>.002){
     float h=hash(floor(p/5.));
     float fl=sin(uTime*1.3+ph)*.45+sin(uTime*3.7+ph*2.+h*6.3)*.35+sin(uTime*(7.+5.*h)+h*40.)*.2;
@@ -346,8 +347,9 @@ void main(){
   gl_Position=vec4(css.x/uView.x*2.-1.,1.-css.y/uView.y*2.,0.,1.);
   vC=position.xy;vKind=aExtra.x;
   float a=aColor.a;
-  if(aExtra.z>0.){float h=aExtra.y;a*=1.+aExtra.z*(sin(uTime*(1.1+h*1.7)+h*40.)*.55+sin(uTime*(3.3+h*3.1)+h*13.)*.3+sin(uTime*(9.+h*6.)+h*7.)*.15);}
-  if(aExtra.w>0.)a*=1.+aExtra.w*uHover.z*smoothstep(max(aSize.x,aSize.y)*1.4+60.,0.,distance(aCenter,uHover.xy));
+  if(aExtra.z>0.&&aExtra.x>.5&&aExtra.x<1.5){float h=aExtra.y,w=.5+.5*sin(uTime*(.55+h*.9)+h*40.);a*=mix(1.,pow(w,7.)*2.6,aExtra.z);}
+  else if(aExtra.z>0.){float h=aExtra.y;a*=1.+aExtra.z*(sin(uTime*(1.1+h*1.7)+h*40.)*.55+sin(uTime*(3.3+h*3.1)+h*13.)*.3+sin(uTime*(9.+h*6.)+h*7.)*.15);}
+  if(aExtra.w>0.)a*=1.+aExtra.w*uHover.z*(1.-smoothstep(0.,max(aSize.x,aSize.y)*1.4+60.,distance(aCenter,uHover.xy)));
   vColor=vec4(aColor.rgb,a*uAmp);
 }`;
   const FRAG_SPR=`
@@ -380,7 +382,7 @@ void main(){
     area(s){const a=s.area||[0,0,1,1];return [a[0]*this.ref[0]*this.sx,a[1]*this.ref[1]*this.sy,a[2]*this.ref[0]*this.sx,a[3]*this.ref[1]*this.sy]}
     spawn(p,first){
       const s=p.spec,a=this.area(s),colors=s.color?[].concat(s.color):['#ffffff'],size=s.size||[6,9],k=(this.sx+this.sy)/2;
-      Object.assign(p,{x:rand(a[0],a[2]),y:rand(a[1],a[3]),vx:0,vy:0,age:first?-rand(0,s.kind==='petal'?(s.life||8):1):-rand(.3,s.kind==='petal'?4:2),
+      Object.assign(p,{x:rand(a[0],a[2]),y:rand(a[1],a[3]),vx:0,vy:0,age:first?-rand(0,s.kind==='petal'?(s.life||8)*.35:1):-rand(.3,s.kind==='petal'?4:2),
         life:(s.life||8)*rand(.75,1.25),size:rand(size[0],size[1])*k,rot:rand(0,TAU),vr:rand(-1.5,1.5),color:hex(colors[Math.random()*colors.length|0]),
         tx:0,ty:0,flap:rand(0,TAU),alpha:0,scare:0});
       if(s.kind==='gull'){p.dir=Math.random()<.5?-1:1;p.x=first?rand(a[0],a[2]):p.dir>0?a[0]:a[2];p.life=1e9;p.age=first?1:-rand(2,10)}
@@ -415,8 +417,8 @@ void main(){
         }else if(k==='gull'){
           p.x+=p.dir*(s.speed||9)*this.sx*dt;p.flap+=dt*(Math.sin(t*.4+p.seed*10)>.3?6:0);
           p.y=(a[1]+a[3])/2+(a[3]-a[1])/2*Math.sin(t*.13+p.seed*20)+Math.sin(p.flap)*.6;
-          p.alpha=Math.min(1,p.age*.5)*(s.alpha||.85);p.w=p.size;p.h=p.size*(.55+.25*Math.sin(p.flap));p.rot=p.dir*.06*Math.sin(t*.5+p.seed);
-          if(p.x<a[0]-20||p.x>a[2]+20)this.spawn(p);
+          const edge=Math.min(p.x-a[0],a[2]-p.x)/Math.max(1,(a[2]-a[0])*.15);p.alpha=Math.min(1,p.age*.5)*clamp(edge,0,1)*(s.alpha||.85);p.w=p.size;p.h=p.size*(.55+.25*Math.sin(p.flap));p.rot=p.dir*.06*Math.sin(t*.5+p.seed);
+          if(p.x<a[0]||p.x>a[2])this.spawn(p);
         }else if(k==='sparkle'){
           const t01=p.age/p.life;p.alpha=Math.sin(Math.PI*Math.min(1,t01));p.w=p.h=p.size*(.5+.5*p.alpha);p.rot=.3;
           if(p.age>p.life)this.spawn(p);
@@ -494,6 +496,7 @@ void main(){
       this.T=T;const d=this.data,ref=d.size||[img.naturalWidth,img.naturalHeight];
       this.img=[img.naturalWidth,img.naturalHeight];this.ref=ref;this.k=img.naturalWidth/ref[0];this.masks=masks;
       const r=this.renderer=takeRenderer(T),canvas=r.domElement;
+      this.shaderFailed=false;r.debug.onShaderError=()=>{this.shaderFailed=true};
       canvas.setAttribute('aria-hidden','true');canvas.className='scene-fx-canvas';
       canvas.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none;visibility:hidden';
       this.el.insertBefore(canvas,this.el.firstChild);
@@ -523,7 +526,7 @@ void main(){
       const bg=new T.Mesh(quad,this.bgMat);bg.frustumCulled=false;scene.add(bg);
       this.sprUniforms={uRect:this.bgUniforms.uRect,uView:this.bgUniforms.uView,uImgSize:this.bgUniforms.uImgSize,uTime:this.bgUniforms.uTime,
         uAmp:this.bgUniforms.uAmp,uHover:this.bgUniforms.uHover,uMinPx:{value:3}};
-      this.sprMat=new T.ShaderMaterial({uniforms:this.sprUniforms,vertexShader:VERT_SPR,fragmentShader:FRAG_SPR,transparent:true,depthTest:false,depthWrite:false,
+      this.sprMat=new T.ShaderMaterial({uniforms:this.sprUniforms,vertexShader:VERT_SPR,fragmentShader:FRAG_SPR,side:T.DoubleSide,transparent:true,depthTest:false,depthWrite:false,
         blending:T.CustomBlending,blendEquation:T.AddEquation,blendSrc:T.OneFactor,blendDst:T.OneMinusSrcAlphaFactor,blendSrcAlpha:T.OneFactor,blendDstAlpha:T.OneMinusSrcAlphaFactor});
       const lights=d.lights||[];
       if(lights.length){
@@ -601,6 +604,7 @@ void main(){
         this.parts.flush();
       }
       this.renderer.render(this.scene,this.camera);
+      if(this.shaderFailed){this.fail();return}
       if(this.renderer.domElement.style.visibility==='hidden')this.renderer.domElement.style.visibility='visible';
       if(!once){this.watchPerformance(dt);this.raf=requestAnimationFrame(n=>this.renderFrame(n))}
     }
@@ -662,6 +666,7 @@ void main(){
       resize:()=>m.resize(),
       setActor:(x,y)=>{m.actorXY=x==null?null:[x,y]},
       get state(){return m.state==='live'&&m.still?'still':m.state},
+      get _scene(){return m},
       info:()=>({state:m.state,still:!!m.still,level:m.level,frame:m.frame,ema:m.ema,frames:m.stats.frames,
         memory:m.renderer?{...m.renderer.info.memory}:null,render:m.renderer?{...m.renderer.info.render}:null,particles:m.swarm?.list.length||0})
     };

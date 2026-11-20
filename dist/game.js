@@ -92,7 +92,7 @@ const briefs=[
   {key:'picnic',need:{outfit:{adult:'green-hibiscus-sundress',little:'pink-gingham-bow-dress'},clip:'peach-blossom'}},
   {key:'disco',need:{outfit:{adult:'pink-velour-cargo',little:'denim-overalls'},hairColor:'honey'}},
   {key:'seashell',need:{necklace:'pearl-starfish-necklace',earrings:'pearl-studs'}},
-  {key:'mall',need:{shoes:{adult:'pink-chunky-sneakers',little:'white-velcro-sneakers'},hair:'side-ponytail'}},
+  {key:'mall',need:{shoes:{adult:'pink-chunky-sneakers',little:'white-velcro-sneakers'},hair:{adult:'side-ponytail',little:'curly-buns'}}},
   {key:'rosy',need:{blush:'rose',gem:'heart'}},
   {key:'midnight',need:{hairColor:'jet',clip:'gold-star'}},
   {key:'homecoming',need:{outfit:{adult:'hibiscus-flares',little:'yellow-dot-dress'},clip:'satin-bow'}},
