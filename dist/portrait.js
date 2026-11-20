@@ -5,9 +5,16 @@
    colour, makeup, bodysuit cover-up) is done once per item/look/view and cached, so it needs the page
    to be served over http. Views are CATALOG.views (front, left = faces viewer-left, right, back); a
    view's sprites are only fetched the first time that view is composed. */
-const frames = ['Candy stripes', 'Lagoon blue', 'Lilac gingham', 'Golden hour'];
+const frameNames = () => [0,1,2,3].map(i => t('frame.'+i)); // labels follow the current language
 const frameColors = [['#fff1f6','#ffc1d9'],['#ecfff9','#aae8df'],['#f8f1ff','#d9c7f4'],['#fff6d9','#fbd56f']];
-const stickers = ['None', 'Flower', 'Bow', 'Star'];
+const stickerNames = () => [0,1,2,3].map(i => t('sticker.'+i));
+/* Draws one line of text centered on x, shrinking the font (never squashing letters) until it fits. */
+function fitText(c,text,x,y,maxWidth,size,font){
+  let px=size;
+  c.font=font.replace('{size}',px);
+  while(px>size*.6&&c.measureText(text).width>maxWidth){px-=1;c.font=font.replace('{size}',px);}
+  c.fillText(text,x,y,maxWidth);
+}
 /* Every composed doll uses this transparent canvas. Feet (bare soles) rest on `baseline`. */
 const DOLL_CANVAS = {width:600, height:1060, baseline:1010};
 const images = new Map();
@@ -910,9 +917,10 @@ async function paintPortrait(canvas, shot, postcard=false, view='front') {
   c.restore();
   if(postcard){
     drawCharm(c,shot.sticker,x+width-16,y+height-30,60);
-    c.fillStyle='#7a305e';c.font='italic bold 32px Georgia';c.textAlign='center';
-    c.fillText(itemName(shot.outfit),w/2,809,600);
-    c.fillStyle='#965677';c.font='15px Trebuchet MS, sans-serif';
-    c.fillText('HIBISCUS ISLAND   ✦   '+(shot.doll==='adult'?'GROWN-UP':'LITTLE ME'),w/2,836);
+    // The caption is drawn in the current language; longer names shrink to fit the card.
+    c.fillStyle='#7a305e';c.textAlign='center';
+    fitText(c,itemName(shot.outfit),w/2,809,560,32,'italic bold {size}px Georgia');
+    c.fillStyle='#965677';
+    fitText(c,t('postcard.line',{doll:t('doll.caption.'+(shot.doll==='adult'?'adult':'little'))}),w/2,836,580,15,'{size}px Trebuchet MS, sans-serif');
   }
 }

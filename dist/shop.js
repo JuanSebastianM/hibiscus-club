@@ -58,13 +58,14 @@ const Shop=(()=>{
   }
   function missing(look){return [...new Set(lookKeys(look).filter(k=>!owned(k)))]}
   function groupOwned(look,group){return group.every(f=>owned(keyFor(f,look[f],look)))}
+  /* Display name of an ownership key, in the current language (see shop.* in i18n.js). */
   function keyName(key){
     const [kind,a,b]=key.split(':');
     if(kind==='item')return itemName(a);
-    if(kind==='tint'){const t=tintOptions(a).find(t=>t.id===b);return (t?t.name:b)+' '+itemName(a);}
-    if(kind==='hair-color')return (CATALOG.hairColors.find(h=>h.id===a)?.name||a)+' hair color';
+    if(kind==='tint'){const tn=tintOptions(a).find(o=>o.id===b);return t('shop.tint',{tint:tn?tn.name:b,item:itemName(a)});}
+    if(kind==='hair-color')return t('shop.hairColor',{name:CATALOG.hairColors.find(h=>h.id===a)?.name||a});
     const o=CATALOG.makeup[kind]?.find(o=>o.id===a);
-    return o?o.name+(kind==='nails'?' nail polish':kind==='shadow'?' eyeshadow':kind==='blush'?' blush':''):a;
+    return o?(['nails','shadow','blush'].includes(kind)?t('shop.'+kind,{name:o.name}):o.name):a;
   }
   /* Saved ownership: only real, priced keys. */
   function readOwned(raw){return Array.isArray(raw)?[...new Set(raw.filter(k=>typeof k==='string'&&Object.hasOwn(prices,k)))]:[]}
@@ -76,7 +77,7 @@ const Shop=(()=>{
     'gold-hoops':'gold','pearl-studs':'neutral','heart-studs':'pink','star-studs':'gold','pearl-starfish-necklace':'neutral','butterfly-necklace':'lilac',
     'hibiscus-clip':'pink','butterfly-clip':'lilac','red-bow':'warm','peach-blossom':'warm','satin-bow':'pink','gold-star':'gold'};
   const gemFamily={heart:'pink','star-freckles':'gold',glitter:'neutral',crystals:'blue',butterfly:'lilac'};
-  const themes={pink:'Bubblegum dream',warm:'Sunset sorbet',gold:'Golden hour glow',mint:'Mint chip chill',blue:'Lagoon cool',lilac:'Lilac daydream'};
+  const themes=['pink','warm','gold','mint','blue','lilac']; // named by i18n keys theme.<family>
   function familyOfHex(hex){
     const [h,s,l]=rgbToHsl(...hexRgb(hex));
     if(s<.2||l>.9||l<.14)return 'neutral';
@@ -111,7 +112,7 @@ const Shop=(()=>{
       const o=outfits[Math.floor(rnd()*outfits.length)];
       look.outfit=o.item;look.outfitTint=o.tint;
       let theme=family('outfitTint',o.tint,look);
-      if(theme==='neutral'){const t=Object.keys(themes);theme=t[Math.floor(rnd()*t.length)]}
+      if(theme==='neutral')theme=themes[Math.floor(rnd()*themes.length)];
       const chaotic=rnd()<.15;
       const w=(fam,match=5,neutral=2.5)=>chaotic?1:fam===theme?match:fam==='neutral'||fam==='gold'&&theme==='warm'?neutral:.6;
       for(const field of ['shoes','earrings']){
@@ -137,7 +138,7 @@ const Shop=(()=>{
       }
       const clean=readLook(look,doll);
       if(missing(clean).length)continue; // never happens with owned pools; belt and braces
-      best={look:clean,theme:chaotic?'Mix & match madness':themes[theme]};
+      best={look:clean,theme:chaotic?'chaos':theme}; // an i18n key suffix: theme.<id>
       if(lookKey({...clean,doll})!==lookKey({...current,doll})&&(theme!==lastTheme||attempt>2)){lastTheme=theme;break}
     }
     return best;

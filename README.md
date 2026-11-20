@@ -38,6 +38,10 @@ The repository can also be connected to Cloudflare with Workers Builds (Workers 
 
 Use a mouse or touch, or Tab and Shift+Tab to move between controls. Enter activates links and buttons. Space also activates buttons. In the studio and salon, the arrow keys move between tabs. Escape closes dialogs. Sound starts on: an endless, cheerful background tune begins with your first click or key press and keeps playing as you move between rooms, with sparkles for clicks and a fanfare for wins. The speaker in the top bar turns the music and sound effects off or on together, and the game remembers your choice.
 
+## English and Spanish
+
+The whole game is bilingual. **EN | ES** in the top bar (and in the island guide) switches every screen, dialog, announcement, item name and new postcard caption at once, without reloading or losing the current room, try-on or game round. The choice is saved with the game. With no saved choice, the game starts in Spanish when the browser's preferred language begins with `es`, and in English otherwise. Player-chosen names are never translated. In Spanish, Grown-up is **Yo Grande** and Little Me is **Yo Chiquita**.
+
 ## Island Life
 
 Choose **Explore Island Life** on the player card, pick either age, and use **Choose a name**. Click or tap the ground to walk. A second click redirects her. You can also focus the scene and use the arrow keys. Select a resident or object to walk within reach and interact. Use the three travel cards to change districts.
@@ -85,6 +89,8 @@ Each character is a layered paper doll. A base doll picture per age sits under t
 | File | Responsibility |
 | --- | --- |
 | `dist/index.html` | Page shell, navigation, accessible dialogs, script loading |
+| `dist/i18n.js` | Translation layer (`t()`, plurals, language choice) and the English dictionary |
+| `dist/i18n-es.js` | Spanish dictionary |
 | `dist/style.css` | Responsive island layout, booth, game tables, and scrapbook |
 | `dist/makeover.css` | Studio and salon: sticky doll stage, tabs, item cards, swatches, shop tags, try-on bar, favorites |
 | `dist/game.js` | Room navigation, character choices, memory game, bouquet orders, style challenges, rewards, and saves |
@@ -106,9 +112,22 @@ To add a wearable, put its sprite in `dist/assets/items/`, add an entry with its
 
 Island Life uses three illustrated JPEG backgrounds. Each scene composes the active doll once in her current look. Movement updates her transform with requestAnimationFrame, scales her with depth, and stops scheduling frames on arrival. The reduced-motion setting moves her directly to the destination. Scene coordinates are normalized so saved positions work on different screen sizes.
 
+## Translations (i18n)
+
+`dist/i18n.js` loads before every other script and defines the global `I18N` and its shortcut `t(key, vars)`. Strings live in two dictionaries with identical keys, grouped by screen: `nav.*`, `map.*`, `challenge.*`, `booth.*`, `arcade.*`, `garden.*`, `scrapbook.*`, `tab.*`, `group.*`, `room.*`, `fav.*`, `shop.*`, `runway.*`, `life.*`, `district.<id>.*`, `story.<n>.*` and `catalog.*`. English is in `i18n.js`, except the catalog display names, which stay next to their art in `catalog.js` and are registered at load as `catalog.item.<id>`, `catalog.tint.<slug of the English name>`, `catalog.hairColor.<id>` and `catalog.<lips|blush|shadow|gem|nails>.<id>`. Spanish is in `i18n-es.js`.
+
+- `{name}` interpolates a variable. Numbers are formatted for the language. `{name|lc}` lower-cases the first letter, for a catalog name used mid-sentence.
+- A plural entry is `{one:'…', other:'…'}` and is chosen by `vars.count`, for example `t('arcade.bestTurns', {count: 3})`.
+- Write whole sentences with variables instead of joining fragments, so each language keeps its own word order.
+- A key missing from Spanish falls back to English and logs one warning in the console on a local server. An unknown key renders as an empty string, never as the key.
+- Static markup in `index.html` carries `data-i18n` (text), `data-i18n-html` (trusted dictionary markup) or `data-i18n-attr="aria-label:key;title:key"`.
+- Data tables (places, districts, stories, catalog items) expose `name` and similar fields as getters, so cached lists read the current language. Changing language fires a `langchange` event. `game.js` then redraws the room in place, and open dialogs redraw their text.
+
+To add a string, add the same key to both dictionaries and call `t('group.key', {vars})` where it is shown. To add a language, create `dist/i18n-<code>.js` with `I18N.add('<code>', {…})` holding every key, load it in `index.html` after `i18n.js`, add the code to `SUPPORTED` in `i18n.js`, and add a button with `data-lang="<code>"`, `lang` and the language's own name as its `aria-label` to both `.lang-switch` groups in `index.html`.
+
 ## Saves and compatibility
 
-The game stores character looks, stars, stamps, challenge progress, delivered bouquets, best memory score, audio preference, and scrapbook in the browser’s `localStorage` under `hibiscus-club-v1`. The shop adds `spent` (stars spent, while `stars` stays the lifetime total), `owned` (bought option keys such as `item:butterfly-clip`, `tint:gold-hoops:rose-gold`, `hair-color:lilac` or `lips:cherry`) and `favorites` (up to six looks per character). Everything read back is validated. Older saves keep working: integer-style looks are mapped to the catalog, and anything a saved look or favorite already wears stays owned. An unfinished memory round, bouquet, or rehearsal lasts for the current page session. Leaving the runway ends that rehearsal.
+The game stores character looks, stars, stamps, challenge progress, delivered bouquets, best memory score, audio preference, and scrapbook in the browser’s `localStorage` under `hibiscus-club-v1`. `lang` holds the language the player picked (`en` or `es`), or `null` until the player chooses one. The shop adds `spent` (stars spent, while `stars` stays the lifetime total), `owned` (bought option keys such as `item:butterfly-clip`, `tint:gold-hoops:rose-gold`, `hair-color:lilac` or `lips:cherry`) and `favorites` (up to six looks per character). Everything read back is validated. Older saves keep working: integer-style looks are mapped to the catalog, and anything a saved look or favorite already wears stays owned. An unfinished memory round, bouquet, or rehearsal lasts for the current page session. Leaving the runway ends that rehearsal.
 
 Each browser profile and site address has its own save. Using a different port gives you a separate game. Private browsing or clearing site data can erase progress. If the browser blocks storage, the current session remains playable. Exported PNGs remain wherever you downloaded them.
 

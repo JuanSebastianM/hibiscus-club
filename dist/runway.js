@@ -1,23 +1,25 @@
-const marks=['Left','Center','Right'];
+/* Mark labels are i18n keys runway.mark.<i>; the note is stored as a key (+ vars) so it follows the language. */
+const marks=[0,1,2];
+const markName=i=>t('runway.mark.'+i);
 let rehearsal, cueTimer;
 function resetRunway(){
   clearTimeout(cueTimer);
-  rehearsal={sequence:[],step:0,phase:'ready',mark:null,note:'Watch the three runway marks light up, then repeat the sequence.'};
+  rehearsal={sequence:[],step:0,phase:'ready',mark:null,note:['runway.note.ready']};
 }
 function runway(){
   const r=rehearsal;
-  const labels=marks.map((m,i)=>`<button data-pose="${i}" aria-label="Step to the ${m.toLowerCase()} mark" ${r.phase==='repeat'?'':'disabled'}>${m}</button>`).join('');
-  return sectionTitle('Island Runway','Follow the spotlight in your studio look.',true)+`<div class="workbench"><section class="display"><div class="map-bar"><span>${icon('star',16)} Runway rehearsal</span><span>✦</span></div><div class="doll-stage runway-stage" data-mark="${r.mark??1}"><canvas id="preview" aria-label="Your current runway look"></canvas></div><div class="runway-marks">${marks.map((m,i)=>`<span class="${r.mark===i?'lit':''}">${m}</span>`).join('')}</div></section><section class="panel game-details"><div class="eyeline">${icon('music')} RUNWAY REHEARSAL</div><h2>Spotlight steps</h2><p role="status" aria-live="polite">${r.note}</p><div class="pose-buttons">${labels}</div><button class="primary wide" data-action="rehearse">${r.phase==='ready'?'Start rehearsal':r.phase==='won'?'New rehearsal':'Replay cues'}</button><a class="sub-link" href="#booth">Take a runway postcard</a></section></div>`;
+  const labels=marks.map(i=>`<button data-pose="${i}" aria-label="${t('runway.step.'+i)}" ${r.phase==='repeat'?'':'disabled'}>${markName(i)}</button>`).join('');
+  return sectionTitle(t('page.runway'),t('runway.sub'),true)+`<div class="workbench"><section class="display"><div class="map-bar"><span>${icon('star',16)} ${t('runway.bar')}</span><span>✦</span></div><div class="doll-stage runway-stage" data-mark="${r.mark??1}"><canvas id="preview" role="img" aria-label="${t('runway.look')}"></canvas></div><div class="runway-marks">${marks.map(i=>`<span class="${r.mark===i?'lit':''}">${markName(i)}</span>`).join('')}</div></section><section class="panel game-details"><div class="eyeline">${icon('music')} ${t('runway.eyeline')}</div><h2>${t('runway.title')}</h2><p role="status" aria-live="polite">${t(...r.note)}</p><div class="pose-buttons">${labels}</div><button class="primary wide" data-action="rehearse">${t(r.phase==='ready'?'runway.start':r.phase==='won'?'runway.again':'runway.replay')}</button><a class="sub-link" href="#booth">${t('runway.postcard')}</a></section></div>`;
 }
 function showCue(i){
   if(route!=='runway')return;
   const r=rehearsal;
   if(i>=r.sequence.length){
-    r.phase='repeat';r.mark=null;r.note='Your turn. Choose the first runway mark.';draw();return;
+    r.phase='repeat';r.mark=null;r.note=['runway.note.turn'];draw();return;
   }
-  r.mark=r.sequence[i];r.note='Cue '+(i+1)+' of 3 · '+marks[r.mark];tone();draw();
+  r.mark=r.sequence[i];r.note=['runway.note.cue',{n:i+1,get mark(){return markName(r.sequence[i])}}];tone();draw();
   cueTimer=setTimeout(()=>{
-    r.mark=null;r.note='…';draw();
+    r.mark=null;r.note=['runway.note.wait'];draw();
     cueTimer=setTimeout(()=>showCue(i+1),300);
   },1050);
 }
@@ -32,10 +34,10 @@ function performPose(i){
   if(r.phase!=='repeat')return;
   r.mark=i;
   if(i!==r.sequence[r.step]){
-    r.phase='retry';r.note='That was a different mark. Replay the cues and try this routine again.';
+    r.phase='retry';r.note=['runway.note.retry'];
   }else if(++r.step===r.sequence.length){
-    r.phase='won';r.note='Rehearsal complete! You hit all three marks and earned 6 stars.';
-    state.stars+=6;persist();tone(true);say('Runway complete! You earned 6 stars.');
-  }else r.note='Correct! Choose mark '+(r.step+1)+' of 3.';
+    r.phase='won';r.note=['runway.note.won'];
+    state.stars+=6;persist();tone(true);say(t('runway.won'));
+  }else r.note=['runway.note.correct',{n:r.step+1}];
   draw();
 }

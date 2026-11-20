@@ -517,9 +517,32 @@ return {version:2,views:['front','left','right','back'],dolls,items:byId,itemLis
   optional:['shoes','earrings','necklace','clip']};
 })();
 
+/* ---------- display names in the current language ----------
+   The English names written above are registered as i18n keys and every `name` becomes a getter, so
+   all screens (and cached option lists) read the current language: catalog.item.<id>,
+   catalog.tint.<slug of the English name> (one id can carry different names, e.g. "Lilac" and
+   "Lilac denim"), catalog.hairColor.<id>, catalog.<lips|blush|shadow|gem|nails>.<id>. */
+(function localizeCatalog(){
+  const done=new WeakSet(),en={};
+  const slug=s=>s.toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const named=(obj,key)=>{
+    if(done.has(obj))return;done.add(obj);
+    en[key]=obj.name;
+    Object.defineProperty(obj,'name',{get:()=>t(key),enumerable:true,configurable:true});
+  };
+  for(const it of CATALOG.itemList){
+    named(it,'catalog.item.'+it.id);
+    for(const tn of it.tints)if(!done.has(tn))named(tn,'catalog.tint.'+slug(tn.name));
+  }
+  for(const h of CATALOG.hairColors)named(h,'catalog.hairColor.'+h.id);
+  for(const [field,list] of Object.entries(CATALOG.makeup))for(const o of list)named(o,`catalog.${field}.${o.id}`);
+  for(const [id,d] of Object.entries(CATALOG.dolls))Object.defineProperty(d,'name',{get:()=>t('doll.'+id),enumerable:true,configurable:true});
+  I18N.add('en',en);
+})();
+
 /* ---------- catalog helpers ---------- */
 function catalogItem(id){return Object.hasOwn(CATALOG.items,id)?CATALOG.items[id]:null}
-function itemName(id){return catalogItem(id)?.name||(id==='none'?'None':'')}
+function itemName(id){return catalogItem(id)?.name||(id==='none'?t('none.item'):'')}
 /* Items of a category the doll can wear (and that have art + fit for the view). */
 function catalogOptions(category,doll,view='front'){
   return CATALOG.itemList.filter(it=>it.category===category&&it.dolls.includes(doll)&&(it.proc||it.stud||it.category==='clip'||it.fit?.[doll]?.[view]));
