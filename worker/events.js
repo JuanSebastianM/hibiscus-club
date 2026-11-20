@@ -18,7 +18,7 @@ export const SCHEMA = {
   events: {
     'visit': ROOMS,             // page load, detail = the room it opened on
     'room': ROOMS,              // a room was opened (including the first one)
-    'district': DISTRICTS,      // Island Life travel
+    'district': DISTRICTS,      // a walk-in place was entered (from the map or another place)
     'lang': ['en', 'es'],       // language switched to
     'character': ['adult', 'little'], // character switched to
     'makeover': CATEGORIES,     // owned option put on (aggregated: n per category per flush)
@@ -29,8 +29,12 @@ export const SCHEMA = {
     'game-start': GAMES,
     'game-done': GAMES,
     'chat': DISTRICTS,          // walked up to a resident and started a conversation
-    'errand': ['story-1', 'story-2', 'story-3'],
+    'errand': ['story-1', 'story-2', 'story-3', 'story-4'], // a story finished (each character has her own four)
     'photo': ['studio', ...DISTRICTS], // postcard taken in the booth, detail = scenery
+    'daily': ['deliver', 'find', 'greet', 'compliment', 'tidy'], // a daily errand finished, detail = its template
+    'findable': DISTRICTS,      // a hidden treasure picked up, detail = where
+    'tutorial': ['done', 'skipped'], // the first-visit tour of a walk-in place
+    'name': ['yes', 'no'],      // a name was set (never the name itself) / the first name prompt was skipped
     'challenge': ['picnic', 'disco', 'seashell', 'mall', 'rosy', 'midnight', 'homecoming', 'bob'],
     'postcard': ['png'],        // postcard downloaded
     'sound': ['on', 'off'],

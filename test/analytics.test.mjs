@@ -108,6 +108,19 @@ test('Worker validation rejects anything outside the allowlists', () => {
   assert.equal(parseBatch('not json'), null);
 });
 
+test('island adventure events carry fixed values only (never a player name)', () => {
+  const ev = (e, d) => ({ e, d, c: 'little', l: 'es' });
+  for (const [e, d] of [['daily', 'deliver'], ['daily', 'tidy'], ['findable', 'market'], ['tutorial', 'done'], ['tutorial', 'skipped'], ['name', 'yes'], ['name', 'no'], ['errand', 'story-4'], ['district', 'pavilion']])
+    assert.ok(checkEvent(ev(e, d)), `${e} ${d}`);
+  for (const bad of [ev('name', 'Coral'), ev('name', 'yes '), { ...ev('name', 'yes'), name: 'Coral' }, ev('daily', 'story-1'), ev('findable', 'studio'), ev('tutorial', 'later'), ev('errand', 'story-5')])
+    assert.equal(checkEvent(bad), null, JSON.stringify(bad));
+  const ctx = loadClient(), A = ctx.HibiscusAnalytics;
+  A.init(true, () => ({ c: 'adult', l: 'en' }));
+  A.track('name', 'Coral'); A.track('name', 'yes'); A.track('findable', 'boardwalk'); A.track('daily', 'greet');
+  ctx.listeners.pagehide();
+  assert.deepEqual(ctx.sent[0].body.ev.map(x => x.e + ':' + x.d), ['name:yes', 'findable:boardwalk', 'daily:greet']);
+});
+
 test('Worker data point holds only coarse fields', () => {
   const [ev] = parseBatch(JSON.stringify({ v: 1, ev: [{ e: 'purchase', d: 'hair', c: 'little', l: 'es', b: '10-19' }] }));
   assert.deepEqual(toDataPoint(ev, { country: 'MX', device: 'phone' }),
