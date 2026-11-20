@@ -1,8 +1,10 @@
 /* Paper-doll renderer. composeDoll() layers the base doll, outfit, shoes, hair, jewelry and makeup
    onto one cached offscreen canvas; paintPortrait() frames it for every screen and the postcard PNG.
    Fit numbers live in catalog.js and are in "doll-local" pixels: the coordinates of the cropped base
-   picture assets/dolls/<doll>-front.webp. Pixel work (warps, tints, hair colour, makeup, bodysuit
-   cover-up) is done once per item/look and cached, so it needs the page to be served over http. */
+   picture assets/dolls/<doll>-<view>.webp of the view being drawn. Pixel work (warps, tints, hair
+   colour, makeup, bodysuit cover-up) is done once per item/look/view and cached, so it needs the page
+   to be served over http. Views are CATALOG.views (front, left = faces viewer-left, right, back); a
+   view's sprites are only fetched the first time that view is composed. */
 const frames = ['Candy stripes', 'Lagoon blue', 'Lilac gingham', 'Golden hour'];
 const frameColors = [['#fff1f6','#ffc1d9'],['#ecfff9','#aae8df'],['#f8f1ff','#d9c7f4'],['#fff6d9','#fbd56f']];
 const stickers = ['None', 'Flower', 'Bow', 'Star'];
@@ -27,7 +29,7 @@ function lruCache(limit){
     clear(){map.clear()}, get size(){return map.size}
   };
 }
-const dollCaches={sprite:lruCache(48),layer:lruCache(20),body:lruCache(6),doll:lruCache(10)};
+const dollCaches={sprite:lruCache(64),layer:lruCache(28),body:lruCache(8),doll:lruCache(12)};
 function makeCanvas(w,h){const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));return c}
 const ctx2d=c=>c.getContext('2d',{willReadFrequently:true});
 function memo(cache,key,make){let p=cache.get(key);if(!p){p=Promise.resolve().then(make);cache.set(key,p);p.catch(()=>{if(cache.get(key)===p)cache.set(key,undefined)})}return p}
@@ -116,15 +118,49 @@ function hairColorCanvas(src,color){
 /* Sprite for an item part (main sprite or manifest part), tinted and hair-coloured as asked. */
 function itemSprite(item,view,part,tintId,hairColorId){
   const art=item.art[view];if(!art)return Promise.reject(new Error('No '+view+' art for '+item.id));
-  const src=part&&part!=='main'?art.parts[part]:art.main;
+  const src=part&&part!=='main'?art.parts?.[part]:art.main;
+  if(!src)return Promise.reject(new Error('No '+view+' '+part+' art for '+item.id));
   const tint=(item.tints||[]).find(t=>t.id===tintId);
   const hair=hairColorId?CATALOG.hairColors.find(h=>h.id===hairColorId):null;
-  const key=['spr',src,tint&&tint.id!=='original'?tint.id:'',hair?.stops?hair.id:''].join('|');
+  // side/back hair art is a lighter, warmer drawing: match it to the front sprite first
+  const match=item.category==='hair'&&view!=='front'&&item.art.front?.main;
+  const key=['spr',src,tint&&tint.id!=='original'?tint.id:'',hair?.stops?hair.id:'',match?'m':''].join('|');
   return memo(dollCaches.sprite,key,async()=>{
     let c=await spriteCanvas(src);
+    if(match)c=await hairMatched(src,c,match);
     if(tint)c=tintCanvas(c,tint);
     if(hair)c=hairColorCanvas(c,hair);
     return c;
+  });
+}
+/* Luminance histogram match + colour-by-luminance transfer from the front hair sprite, so a side or
+   back drawing has the front's tones (default espresso) and every gradient-map colour lands the same. */
+function hairProfile(c){
+  const d=ctx2d(c).getImageData(0,0,c.width,c.height).data;
+  const hist=new Float64Array(256),sum=new Float64Array(256*3);let n=0;
+  for(let i=0;i<d.length;i+=4){if(d[i+3]<200)continue;const v=Math.round(luma(d[i],d[i+1],d[i+2]));hist[v]++;sum[v*3]+=d[i];sum[v*3+1]+=d[i+1];sum[v*3+2]+=d[i+2];n++}
+  const cdf=new Float64Array(256);let acc=0;for(let v=0;v<256;v++){acc+=hist[v];cdf[v]=acc/(n||1)}
+  // mean colour per luminance bin, interpolated across sparse bins
+  const col=new Float32Array(256*3),known=[];for(let v=0;v<256;v++)if(hist[v]>=3)known.push(v);
+  let k=0;
+  for(let v=0;v<256;v++){
+    while(k<known.length-1&&known[k+1]<=v)k++;
+    if(!known.length){col[v*3]=col[v*3+1]=col[v*3+2]=v;continue}
+    const a=known[k]>v?known[k]:known[k],b=known[k]>=v||k===known.length-1?known[k]:known[k+1];
+    const t=b===a?0:(v-a)/(b-a);
+    for(let j=0;j<3;j++){const ca=sum[a*3+j]/hist[a],cb=sum[b*3+j]/hist[b];col[v*3+j]=ca+(cb-ca)*t}
+  }
+  return {cdf,col};
+}
+function hairMatched(src,c,frontSrc){
+  return memo(dollCaches.sprite,'match|'+src,async()=>{
+    const ref=hairProfile(await spriteCanvas(frontSrc)),own=hairProfile(c);
+    const lut=new Uint8Array(256);
+    for(let v=0,r=0;v<256;v++){while(r<255&&ref.cdf[r]<own.cdf[v])r++;lut[v]=r}
+    const out=makeCanvas(c.width,c.height),g=ctx2d(out);g.drawImage(c,0,0);
+    const im=g.getImageData(0,0,out.width,out.height),d=im.data;
+    for(let i=0;i<d.length;i+=4){if(!d[i+3])continue;const v=lut[Math.round(luma(d[i],d[i+1],d[i+2]))];d[i]=ref.col[v*3];d[i+1]=ref.col[v*3+1];d[i+2]=ref.col[v*3+2]}
+    g.putImageData(im,0,0);return out;
   });
 }
 
@@ -212,63 +248,107 @@ function drawPiece(g,src,p){
   g.translate(p.to[0],p.to[1]);g.rotate((p.rot||0)*Math.PI/180);g.scale(p.scale[0],p.scale[1]);g.translate(-p.pivot[0],-p.pivot[1]);
   pathPoly(g,p.poly);g.clip();g.drawImage(src,0,0);g.restore();
 }
-/* A full doll-canvas sized layer, drawn in doll-local coordinates. */
-function dollLayer(doll){
+/* Per-view base doll info: {art, origin, face, nails, arm, lobes...} (front = the doll's own fields). */
+function dollView(doll,view='front'){
+  const d=CATALOG.dolls[doll];
+  return d.views?.[view]||{art:d.art[view],origin:d.origin,face:d.face,nails:d.nails};
+}
+const sideView=view=>view==='left'||view==='right';
+/* A full doll-canvas sized layer, drawn in doll-local coordinates of the view's base picture. */
+function dollLayer(doll,view='front'){
   const c=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),g=c.getContext('2d');
-  const [ox,oy]=CATALOG.dolls[doll].origin;g.translate(ox,oy);g.imageSmoothingQuality='high';
+  const [ox,oy]=dollView(doll,view).origin;g.translate(ox,oy);g.imageSmoothingQuality='high';
   return [c,g];
+}
+/* Copy the parts of a layer inside doll-local shapes into a new layer (and clear them in the source). */
+function splitLayer(doll,view,c,shapes){
+  const [out,og]=dollLayer(doll,view),g=c.getContext('2d');
+  og.save();og.beginPath();shapes.forEach(s=>shapePathInto(og,s));og.clip();og.setTransform(1,0,0,1,0,0);og.drawImage(c,0,0);og.restore();
+  const [ox,oy]=dollView(doll,view).origin;
+  g.save();g.setTransform(1,0,0,1,ox,oy);g.beginPath();shapes.forEach(s=>shapePathInto(g,s));g.clip();g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,c.width,c.height);g.restore();
+  return out;
+}
+/* Erase doll-local shapes from a layer. */
+function eraseShapes(doll,view,c,shapes){
+  const g=c.getContext('2d'),[ox,oy]=dollView(doll,view).origin;
+  g.save();g.setTransform(1,0,0,1,ox,oy);g.beginPath();shapes.forEach(s=>shapePathInto(g,s));g.fillStyle='#000';g.globalCompositeOperation='destination-out';g.fill();g.restore();
 }
 
 /* ---------- item layers ---------- */
+/* Outfit: {front, back, over}. `back` = pixels inside fit.behind (hoods, back collars) drawn behind the
+   body; `over` = cut-out parts flagged over:true (side-view sleeves) drawn after the near arm. */
 function outfitLayer(doll,view,id,tintId){
   const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
-  if(!fit)return Promise.reject(new Error('Outfit '+id+' does not fit '+doll));
+  if(!fit)return Promise.reject(new Error('Outfit '+id+' does not fit '+doll+' '+view));
   return memo(dollCaches.layer,['outfit',doll,view,id,tintId].join('|'),async()=>{
-    const [c,g]=dollLayer(doll);
+    const [c,g]=dollLayer(doll,view);let over=null,og=null;
     for(const piece of fit.pieces){
       let src=await itemSprite(item,view,piece.part,tintId);
       const parts=piece.parts||[];
-      const body=maskSprite(src,{cut:parts.map(p=>p.cut||p.poly).concat(piece.cut||[])});
+      const body=maskSprite(src,{cut:parts.map(p=>p.cut||p.poly).concat(piece.cut||[]),keep:piece.keep});
       for(const p of parts.filter(p=>p.under))drawPiece(g,src,p);
       drawFitted(g,body,piece);
-      for(const p of parts.filter(p=>!p.under))drawPiece(g,src,p);
+      for(const p of parts.filter(p=>!p.under&&!p.over))drawPiece(g,src,p);
+      for(const p of parts.filter(p=>p.over)){if(!over)[over,og]=dollLayer(doll,view);drawPiece(og,src,p)}
     }
-    if(!fit.behind)return {front:c,back:null};
-    // pixels inside `behind` regions (hoods, back collars) go behind the body
-    const [back,bg]=dollLayer(doll);
-    bg.save();bg.beginPath();fit.behind.forEach(s=>shapePathInto(bg,s));bg.clip();bg.setTransform(1,0,0,1,0,0);bg.drawImage(c,0,0);bg.restore();
-    g.save();g.beginPath();fit.behind.forEach(s=>shapePathInto(g,s));g.clip();g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,c.width,c.height);g.restore();
-    return {front:c,back};
+    if(fit.erase)eraseShapes(doll,view,c,fit.erase);
+    const res={front:c,back:null,over};
+    if(fit.behind)res.back=splitLayer(doll,view,c,fit.behind);
+    if(fit.overRegion){const o=splitLayer(doll,view,c,fit.overRegion);if(over)o.getContext('2d').drawImage(over,0,0);res.over=o}
+    return res;
   });
 }
+/* Shoes. Pairs: fit.left/right = {x,y,w,rot} for the sprite parts; the part below `collar` (fraction
+   of the shoe height) is in front of the leg. Side views: fit.near = {x,y,w,rot} for the single main
+   sprite, optional fit.far = {dx,dy,shade} draws it again behind the body for the far foot. */
 function shoeLayers(doll,view,id,tintId){
   const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
   if(!fit)return Promise.resolve(null);
   return memo(dollCaches.layer,['shoes',doll,view,id,tintId].join('|'),async()=>{
-    const [back,bg]=dollLayer(doll),[front,fg]=dollLayer(doll);
+    const [back,bg]=dollLayer(doll,view),[front,fg]=dollLayer(doll,view);
+    const place=(g,src,f)=>{const w=f.w,h=f.h??src.height*w/src.width;g.translate(f.x,f.y);if(f.rot)g.rotate(f.rot*Math.PI/180);return [w,h]};
+    if(fit.near){
+      const src=await itemSprite(item,view,'main',tintId);
+      if(fit.far){
+        const f={...fit.near,x:fit.near.x+(fit.far.dx||0),y:fit.near.y+(fit.far.dy||0)};
+        const t=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),tg=t.getContext('2d');tg.translate(...dollView(doll,view).origin);
+        const [w,h]=place(tg,src,f);tg.drawImage(src,0,0,w,h);
+        tg.setTransform(1,0,0,1,0,0);tg.globalCompositeOperation='source-atop';tg.fillStyle=`rgba(30,12,30,${fit.far.shade??.3})`;tg.fillRect(0,0,t.width,t.height);
+        bg.save();bg.setTransform(1,0,0,1,0,0);bg.drawImage(t,0,0);bg.restore();
+      }
+      fg.save();const [w,h]=place(fg,src,fit.near);
+      if(fit.collar){bg.save();place(bg,src,fit.near);bg.drawImage(src,0,0,w,h);bg.restore();fg.beginPath();fg.rect(-5,h*fit.collar,w+10,h);fg.clip()}
+      fg.drawImage(src,0,0,w,h);fg.restore();
+      return {back,front};
+    }
     for(const side of ['left','right']){
-      const f=fit[side],src=await itemSprite(item,view,side,tintId);
+      const f=fit[side];if(!f)continue;
+      const src=await itemSprite(item,view,side,tintId);
       const w=f.w,h=f.h??src.height*w/src.width;
       bg.save();bg.translate(f.x,f.y);if(f.rot)bg.rotate(f.rot*Math.PI/180);bg.drawImage(src,0,0,w,h);bg.restore();
       // the part below the collar line is in front of the leg
       fg.save();fg.translate(f.x,f.y);if(f.rot)fg.rotate(f.rot*Math.PI/180);
       fg.beginPath();
-      if(f.front)pathPoly(fg,f.front.map(([u,v])=>[u*w,v*h]));else fg.rect(-5,h*fit.collar,w+10,h);
+      if(f.front)pathPoly(fg,f.front.map(([u,v])=>[u*w,v*h]));else fg.rect(-5,h*(fit.collar||0),w+10,h);
       fg.clip();fg.drawImage(src,0,0,w,h);fg.restore();
     }
     return {back,front};
   });
 }
+/* Hair: {back, front}. fit.front shapes = doll-local regions drawn again in front of the body (the
+   rest is behind); fit.backFill = a squeezed shaded copy behind the neck; fit.cut = sprite polys
+   removed; fit.cutDoll = doll-local shapes removed (keeps the profile face clear). */
 function hairLayers(doll,view,id,colorId){
   const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
-  if(!fit)return Promise.reject(new Error('Hair '+id+' does not fit '+doll));
+  if(!fit)return Promise.reject(new Error('Hair '+id+' does not fit '+doll+' '+view));
   return memo(dollCaches.layer,['hair',doll,view,id,colorId].join('|'),async()=>{
     let src=await itemSprite(item,view,'main',null,colorId);
     if(fit.cut)src=maskSprite(src,{cut:fit.cut});
-    const [full,g]=dollLayer(doll);drawFitted(g,src,fit);
+    const [full,g]=dollLayer(doll,view);drawFitted(g,src,fit);
+    if(fit.cutDoll)eraseShapes(doll,view,full,fit.cutDoll);
     let back=null;
     if(fit.backFill||fit.front){
-      const [b,bg]=dollLayer(doll);back=b;
+      const [b,bg]=dollLayer(doll,view);back=b;
       if(fit.backFill){ // a squeezed, shaded copy behind the neck and shoulders: the hair at the back
         const f=fit.backFill,cx=fit.x+fit.w/2;
         bg.save();bg.translate(cx,fit.y+(f.dy||0));bg.scale(f.sx||.6,f.sy||1);bg.translate(-cx,-fit.y);drawFitted(bg,src,fit);bg.restore();
@@ -278,7 +358,7 @@ function hairLayers(doll,view,id,colorId){
     }
     if(!fit.front)return {back,front:full};
     // Only the given doll-local regions of the style are drawn again in front of the body.
-    const [front,fg]=dollLayer(doll);
+    const [front,fg]=dollLayer(doll,view);
     fg.save();fg.beginPath();fit.front.forEach(s=>shapePathInto(fg,s));fg.clip();
     fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);fg.restore();
     return {back,front};
@@ -289,15 +369,18 @@ function shapePathInto(g,s){
   else if(s.rect)g.rect(...s.rect);
   else if(s.ellipse){const [x,y,rx,ry,rot]=s.ellipse;g.moveTo(x+rx,y);g.ellipse(x,y,rx,ry,(rot||0)*Math.PI/180,0,Math.PI*2)}
 }
+/* Earrings (fit.left / fit.right, either may be absent in side views; f.part picks the sprite part)
+   and plain sprite items such as necklaces. */
 function spriteItemLayer(doll,view,id,tintId){
   const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
   if(!fit)return Promise.resolve(null);
   return memo(dollCaches.layer,['item',doll,view,id,tintId].join('|'),async()=>{
-    const [c,g]=dollLayer(doll);
-    if(fit.left){ // earrings: one sprite per ear, hook anchored to the earlobe
+    const [c,g]=dollLayer(doll,view);
+    if(fit.left||fit.right){ // earrings: one sprite per ear, hook anchored to the earlobe
       for(const side of ['left','right']){
-        const f=fit[side],src=await itemSprite(item,view,side,tintId);
-        const w=f.w,h=src.height*w/src.width,[ax,ay]=item.anchor?.[side]||[.5,0];
+        const f=fit[side];if(!f)continue;
+        const part=f.part||side,src=await itemSprite(item,view,part,tintId);
+        const w=f.w,h=src.height*w/src.width,[ax,ay]=item.anchor?.[part]||[.5,0];
         g.save();g.translate(f.x,f.y);if(f.rot)g.rotate(f.rot*Math.PI/180);g.drawImage(src,-ax*w,-ay*h,w,h);g.restore();
       }
     }else{
@@ -305,6 +388,25 @@ function spriteItemLayer(doll,view,id,tintId){
       if(fit.keep||fit.cut)src=maskSprite(src,fit);
       drawFitted(g,src,fit);
     }
+    if(fit.erase)eraseShapes(doll,view,c,fit.erase);
+    return c;
+  });
+}
+/* Side views: the near arm of the base doll as its own layer (bodysuit pixels inside the arm polygon
+   dropped), so it can be drawn over the outfit. Uses the finished body canvas (nails, cover-up). */
+function armLayer(shot,view,body){
+  const dv=dollView(shot.doll,view);
+  if(!dv.arm)return null;
+  return memo(dollCaches.layer,'arm|'+bodyKey(shot,view),async()=>{
+    const [c,g]=dollLayer(shot.doll,view);
+    g.save();g.beginPath();shapePathInto(g,{poly:dv.arm});g.clip();g.drawImage(body,0,0);g.restore();
+    const im=g.getImageData(0,0,c.width,c.height),d=im.data;
+    for(let i=0;i<d.length;i+=4){
+      if(!d[i+3])continue;
+      const r=d[i],gg=d[i+1],b=d[i+2],w=Math.min(1,Math.max(0,(b/(r||1)-.62)/.2))*(gg<b+6?1:0);
+      if(w>0)d[i+3]*=1-w;
+    }
+    g.putImageData(im,0,0);
     return c;
   });
 }
@@ -437,12 +539,12 @@ function bodyKey(shot,view){return [shot.doll,view,shot.outfit,shot.lips,shot.bl
 function bodyLayer(shot,view){
   const doll=shot.doll,info=CATALOG.dolls[doll];
   return memo(dollCaches.body,bodyKey(shot,view),async()=>{
-    const base=await spriteCanvas(info.art[view]);
+    const dv=dollView(doll,view),base=await spriteCanvas(dv.art);
     const w=base.width,h=base.height,c=makeCanvas(w,h),g=ctx2d(c);g.drawImage(base,0,0);
     const im=g.getImageData(0,0,w,h),d=im.data;
     const outfitFit=catalogItem(shot.outfit)?.fit?.[doll]?.[view];
     if(outfitFit?.skin?.length)coverBodysuit(d,w,h,outfitFit.skin,info);
-    const face=info.face;
+    const face=dv.face||{};
     const opt=(list,id)=>CATALOG.makeup[list].find(o=>o.id===id);
     const shadow=opt('shadow',shot.shadow);
     if(shadow?.color&&face.lids){
@@ -452,27 +554,27 @@ function bodyLayer(shot,view){
       if(shadow.shimmer)applyColor(d,m,hexRgb(shadow.shimmer),.22,'screen');
     }
     const blush=opt('blush',shot.blush);
-    if(blush?.color)applyColor(d,shapeMask(w,h,face.cheeks.map(([x,y,rx,ry])=>({gradient:[x,y,rx,ry,1]}))),hexRgb(blush.color),blush.strength||.4,'multiply');
+    if(blush?.color&&face.cheeks)applyColor(d,shapeMask(w,h,face.cheeks.map(([x,y,rx,ry])=>({gradient:[x,y,rx,ry,1]}))),hexRgb(blush.color),blush.strength||.4,'multiply');
     const lips=opt('lips',shot.lips);
-    if(lips?.color){
+    if(lips?.color&&face.lips){
       const m=shapeMask(w,h,[{poly:face.lips}],face.lipBlur||1.2);
       if(face.mouth){const inner=shapeMask(w,h,[{poly:face.mouth}],.8);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-inner[i])}
       applyColor(d,m,hexRgb(lips.color),lips.strength||.8,'color',{ref:face.lipRef||130,contrast:lips.contrast||1.1,gloss:lips.gloss,skipBright:.3,lift:lips.lift||1});
     }
     const nails=opt('nails',shot.nails);
-    if(nails?.color&&info.nails){
+    if(nails?.color&&dv.nails){
       const shoe=catalogItem(shot.shoes),toes=!shoe||shoe.openToe;
-      const shapes=info.nails.fingers.concat(toes?info.nails.toes:[]).map(e=>({ellipse:e}));
-      applyColor(d,shapeMask(w,h,shapes,.7),hexRgb(nails.color),.9,'color',{ref:info.nails.ref||200,contrast:.8,gloss:225,lift:1});
+      const shapes=dv.nails.fingers.concat(toes?dv.nails.toes:[]).map(e=>({ellipse:e}));
+      if(shapes.length)applyColor(d,shapeMask(w,h,shapes,.7),hexRgb(nails.color),.9,'color',{ref:dv.nails.ref||200,contrast:.8,gloss:225,lift:1});
     }
     g.putImageData(im,0,0);
     return c;
   });
 }
 /* Face gems and glitter, drawn as small vector shapes on the face. */
-function drawGem(g,shot){
-  const gem=CATALOG.makeup.gem.find(o=>o.id===shot.gem),face=CATALOG.dolls[shot.doll].face;
-  if(!gem||gem.id==='none')return;
+function drawGem(g,shot,view='front'){
+  const gem=CATALOG.makeup.gem.find(o=>o.id===shot.gem),face=dollView(shot.doll,view).face;
+  if(!gem||gem.id==='none'||!face?.gemAt)return;
   const u=face.unit; // size unit, about an eye width
   g.save();
   if(gem.id==='heart'){
@@ -513,51 +615,85 @@ function drawGem(g,shot){
 function lookKey(shot,view='front'){
   return [shot.doll,view,shot.outfit,shot.outfitTint,shot.shoes,shot.shoesTint,shot.hair,shot.hairColor,shot.earrings,shot.earringsTint,shot.necklace,shot.clip,shot.lips,shot.blush,shot.shadow,shot.gem,shot.nails].join('|');
 }
-/* composeDoll(shot, view) resolves to a DOLL_CANVAS sized transparent canvas of the dressed doll.
-   `shot` is a look (see readLook in catalog.js) plus `doll`. The result is cached by look; treat it
-   as read-only. An outfit is always drawn: a look without a valid outfit falls back to the default. */
+/* composeDoll(shot, view) resolves to a DOLL_CANVAS sized transparent canvas of the dressed doll seen
+   from `view` (one of CATALOG.views; anything else means 'front'). `shot` is a look (see readLook in
+   catalog.js) plus `doll`. The result is cached by look and view; treat it as read-only. An outfit is
+   always drawn: a look without a valid outfit falls back to the default. Every view keeps the feet on
+   DOLL_CANVAS.baseline and the body centred on the same x, so turning does not move the doll.
+   Layer order: far clip, hair back, outfit back, shoes back, body (+gem), shoes, outfit, near arm
+   (side views), sleeves over the arm, necklace, earrings under hair, hair front, earrings, clip. */
 function composeDoll(raw,view='front'){
+  if(!CATALOG.views.includes(view))view='front';
   const shot={...readLook(raw,raw.doll==='little'?'little':'adult'),doll:raw.doll==='little'?'little':'adult'};
   return memo(dollCaches.doll,lookKey(shot,view),async()=>{
-    const doll=shot.doll,info=CATALOG.dolls[doll],[ox,oy]=info.origin;
+    const doll=shot.doll,dv=dollView(doll,view),[ox,oy]=dv.origin;
+    const hairFit=catalogItem(shot.hair).fit[doll][view];
+    const earItem=catalogItem(shot.earrings),clipItem=catalogItem(shot.clip);
     const [body,outfit,shoes,hair,necklace,earrings,clipLayer]=await Promise.all([
       bodyLayer(shot,view),outfitLayer(doll,view,shot.outfit,shot.outfitTint),
       shot.shoes==='none'?null:shoeLayers(doll,view,shot.shoes,shot.shoesTint),
       hairLayers(doll,view,shot.hair,shot.hairColor),
       shot.necklace==='none'?null:spriteItemLayer(doll,view,shot.necklace),
-      shot.earrings==='none'||catalogItem(shot.earrings)?.stud?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint),
-      shot.clip==='none'||catalogItem(shot.clip)?.proc?null:clipSprite(shot,view)
+      !earItem||earItem.stud?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint),
+      !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
     ]);
+    const arm=sideView(view)?await armLayer(shot,view,body):null;
     const c=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),g=c.getContext('2d');
     g.imageSmoothingQuality='high';
+    const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
+    const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
+    const drawProc=()=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
+    const stud=earItem?.stud&&dv.face?.lobes?earItem.stud:null;
+    const drawStuds=()=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,stud,x,y+dv.face.unit*.06,dv.face.unit*.15);g.restore()};
+    const earsUnder=!!hairFit.earsUnder;
+    if(clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
     if(hair.back)g.drawImage(hair.back,0,0);
     if(outfit.back)g.drawImage(outfit.back,0,0);
     if(shoes)g.drawImage(shoes.back,0,0);
     g.drawImage(body,ox,oy);
-    g.save();g.translate(ox,oy);drawGem(g,shot);g.restore();
+    g.save();g.translate(ox,oy);drawGem(g,shot,view);g.restore();
     const outfitFit=catalogItem(shot.outfit).fit[doll][view];
     if(shoes&&!outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
     g.drawImage(outfit.front,0,0);
     if(shoes&&outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
+    if(arm&&outfitFit.arm!=='hidden'){
+      if(outfitFit.armClip){g.save();g.translate(ox,oy);g.beginPath();outfitFit.armClip.forEach(s=>shapePathInto(g,s));g.setTransform(1,0,0,1,0,0);g.clip();g.drawImage(arm,0,0);g.restore()}
+      else g.drawImage(arm,0,0);
+    }
+    if(outfit.over)g.drawImage(outfit.over,0,0);
     if(necklace)g.drawImage(necklace,0,0);
+    if(earsUnder){if(earrings)g.drawImage(earrings,0,0);if(stud)drawStuds()}
     g.drawImage(hair.front,0,0);
-    if(earrings)g.drawImage(earrings,0,0);
-    const stud=catalogItem(shot.earrings)?.stud;
-    if(stud){g.save();g.translate(ox,oy);for(const [x,y] of info.face.lobes)drawStud(g,stud,x,y+info.face.unit*.06,info.face.unit*.15);g.restore()}
-    if(clipLayer)g.drawImage(clipLayer,0,0);
-    const proc=catalogItem(shot.clip)?.proc;
-    if(proc){const at=catalogItem(shot.hair).fit[doll][view].clip;g.save();g.translate(ox,oy);drawCharm(g,proc,at.x,at.y,info.face.unit*.92*(at.scale||1),((at.rot||0)-11)*Math.PI/180);g.restore()}
+    if(!earsUnder){if(earrings)g.drawImage(earrings,0,0);if(stud)drawStuds()}
+    if(!clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
     return c;
   });
 }
-/* Hair clips sit where the hair style says (hair fit .clip = {x, y, rot, scale}). */
+/* Procedural clips: flat charms. Side views squash them (seen edge-on, at.squash), the back view
+   shows the clip's underside: the charm shaded with a small gold clasp across it. */
+function drawCharmView(g,proc,at,dv,view){
+  const size=dv.face.unit*.92*(at.scale||1),rot=((at.rot||0)-11)*Math.PI/180;
+  if(view==='front'){drawCharm(g,proc,at.x,at.y,size,rot);return}
+  g.save();g.translate(at.x,at.y);g.rotate((at.rot||0)*Math.PI/180);g.scale(at.squash??(sideView(view)?.42:1),1);
+  drawCharm(g,proc,0,0,size,-11*Math.PI/180);
+  if(view==='back'){
+    g.globalCompositeOperation='source-atop';g.fillStyle='rgba(60,25,50,.28)';g.fillRect(-size,-size,size*2,size*2);g.globalCompositeOperation='source-over';
+    const gr=g.createLinearGradient(0,-size*.12,0,size*.12);gr.addColorStop(0,'#fff0b0');gr.addColorStop(.5,'#d9a640');gr.addColorStop(1,'#9b6a1c');
+    g.fillStyle=gr;g.beginPath();g.roundRect?g.roundRect(-size*.55,-size*.1,size*1.1,size*.2,size*.1):g.rect(-size*.55,-size*.1,size*1.1,size*.2);g.fill();
+  }
+  g.restore();
+}
+/* Hair clips sit where the hair style says (hair fit .clip = {x, y, rot, scale, flip, behind, hide}). */
 function clipSprite(shot,view){
   const doll=shot.doll,item=catalogItem(shot.clip),at=catalogItem(shot.hair).fit[doll][view].clip;
   return memo(dollCaches.layer,['clip',doll,view,shot.clip,shot.hair].join('|'),async()=>{
     const src=await itemSprite(item,view,'main');
-    const [c,g]=dollLayer(doll);
-    const w=item.size[doll]*(at.scale||1),h=src.height*w/src.width,[ax,ay]=item.anchor||[.5,.5];
-    g.save();g.translate(at.x,at.y);g.rotate((at.rot||0)*Math.PI/180);if(at.flip)g.scale(-1,1);g.drawImage(src,-ax*w,-ay*h,w,h);g.restore();
+    const [c,g]=dollLayer(doll,view);
+    const size=item.size[doll]*(item.viewSize?.[view]??1);
+    const w=size*(at.scale||1),h=src.height*w/src.width,[ax,ay]=item.anchors?.[view]||item.anchor||[.5,.5];
+    g.save();g.translate(at.x,at.y);g.rotate((at.rot||0)*Math.PI/180);if(at.flip)g.scale(-1,1);g.drawImage(src,-ax*w,-ay*h,w,h);
+    if(at.behind){g.globalCompositeOperation='source-atop';g.fillStyle='rgba(40,15,35,.25)';g.fillRect(-ax*w,-ay*h,w,h)}
+    g.restore();
     return c;
   });
 }
@@ -602,9 +738,9 @@ function drawPedestal(c,cx,top,rx){
 }
 /* Display scale (portrait px per doll px at a 480 x 720 frame) and frame position. */
 const portraitLayout={adult:{scale:.71,foot:.925},little:{scale:.6,foot:.915}};
-async function paintPortrait(canvas, shot, postcard=false) {
+async function paintPortrait(canvas, shot, postcard=false, view='front') {
   const scenic=shot.backdrop>0,scene=scenic?districts[shot.backdrop-1]:null;
-  const [doll,background]=await Promise.all([composeDoll(shot),scenic?asset('assets/scenes/'+scene.id+'.jpg'):null]);
+  const [doll,background]=await Promise.all([composeDoll(shot,view),scenic?asset('assets/scenes/'+scene.id+'.jpg'):null]);
   const w=canvas.width=postcard?640:480,h=canvas.height=postcard?860:720;
   const c=canvas.getContext('2d');
   const x=postcard?70:0,y=postcard?21:0,width=postcard?500:w,height=postcard?750:h;

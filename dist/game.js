@@ -9,10 +9,15 @@ const dollNames={adult:'Grown-up',little:'Little Me'};
 const saveKey='hibiscus-club-v1';
 
 const smallInt=(n,max)=>Number.isInteger(n)&&n>=0&&n<=max?n:0;
+const FAVORITE_ID=/^[\w-]{1,40}$/;
+function readFavorites(raw,doll){
+  return (Array.isArray(raw)?raw:[]).filter(f=>f&&typeof f==='object'&&typeof f.id==='string'&&FAVORITE_ID.test(f.id)).slice(0,6).map(f=>({...readLook(f,doll),id:f.id}));
+}
 function loadGame(){
   let raw={};
   try{raw=JSON.parse(localStorage.getItem(saveKey))||{}}catch{}
-  return {
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))raw={};
+  const game={
     doll:raw.doll==='little'?'little':'adult',
     life:loadIslandLife(raw.life),
     looks:{adult:readLook(raw.looks?.adult,'adult'),little:readLook(raw.looks?.little,'little')},
@@ -21,8 +26,18 @@ function loadGame(){
     missions:smallInt(raw.missions,Number.MAX_SAFE_INTEGER),
     bouquets:smallInt(raw.bouquets,Number.MAX_SAFE_INTEGER),
     best:smallInt(raw.best,Number.MAX_SAFE_INTEGER),
-    photos:(Array.isArray(raw.photos)?raw.photos:[]).filter(p=>p&&Object.hasOwn(dollNames,p.doll)&&typeof p.id==='string'&&/^[\w-]+$/.test(p.id)).slice(0,24).map(p=>({...readLook(p,p.doll),doll:p.doll,id:p.id}))
+    photos:(Array.isArray(raw.photos)?raw.photos:[]).filter(p=>p&&Object.hasOwn(dollNames,p.doll)&&typeof p.id==='string'&&/^[\w-]+$/.test(p.id)).slice(0,24).map(p=>({...readLook(p,p.doll),doll:p.doll,id:p.id})),
+    /* Star shop (save format additions): `stars` stays the lifetime total earned, `spent` is what the
+       shop has taken, `owned` lists bought option keys, `favorites` holds up to six looks per doll. */
+    spent:0,
+    owned:Shop.readOwned(raw.owned),
+    favorites:{adult:readFavorites(raw.favorites?.adult,'adult'),little:readFavorites(raw.favorites?.little,'little')}
   };
+  game.spent=Math.min(smallInt(raw.spent,Number.MAX_SAFE_INTEGER),game.stars);
+  // Anything already in her saved wardrobe stays hers (saves from before the shop wore everything free).
+  for(const doll of ['adult','little'])for(const l of [game.looks[doll],...game.favorites[doll]])
+    for(const k of Shop.lookKeys(l))if(Shop.price(k)&&!game.owned.includes(k))game.owned.push(k);
+  return game;
 }
 const state=loadGame();
 const main=document.querySelector('#game');
@@ -49,7 +64,8 @@ function currentShot(){return {...look(),doll:state.doll}}
 function navBar(){
   const links=[['map','map','Island Map'],['life','compass','Island Life'],['wardrobe','hanger','Dress-Up'],['scrapbook','book','Scrapbook']];
   document.querySelector('#navigation').innerHTML=links.map(([id,s,label])=>`<a href="#${id}" ${route===id?'aria-current="page"':''}>${icon(s)}<span>${label}</span></a>`).join('');
-  document.querySelector('#wallet').innerHTML=`${icon('star',19)} <b>${state.stars}</b> <span>stars</span>`;
+  const wallet=document.querySelector('#wallet');wallet.innerHTML=`${icon('star',19)} <b>${balance()}</b> <span>stars</span>`;
+  wallet.title=`${balance()} stars to spend · ${state.stars} earned in all`;
   const b=document.querySelector('.sound');b.innerHTML=icon(state.sound?'volume':'mute',18);
   b.title=b.ariaLabel=state.sound?'Turn sound off':'Turn sound on';b.setAttribute('aria-pressed',String(state.sound));
   const fx=document.querySelector('.sparkle-toggle');fx.innerHTML=icon(state.sparkle?'sparkle':'sparkle-off',18);
@@ -64,16 +80,33 @@ function sectionTitle(title,sub,room=false){
 function passport(){
   return `<section class="passport"><div class="pass-title"><span class="pass-icon">${icon('book',23)}</span><div><h2>Island Passport</h2><p>Visit each spot to collect its stamp.</p></div><b>${state.visits.length} / 5</b></div><div class="stamps">${places.map(p=>`<a href="#${p.id}" style="--ink:${p.color}" class="stamp ${state.visits.includes(p.id)?'earned':''}" aria-label="${p.name}, ${state.visits.includes(p.id)?'stamp collected':'visit to collect stamp'}"><span>${icon(p.icon,21)}</span>${p.name}</a>`).join('')}</div></section>`;
 }
-/* Style challenges name an outfit per doll and a hair accessory (catalog ids). */
+/* Style challenges: each brief names two things to wear (catalog ids, per doll where they differ).
+   Every brief can be met by both dolls with free starter options. */
 const briefs=[
-  {title:'Picnic in paradise',outfit:{adult:'green-hibiscus-sundress',little:'pink-gingham-bow-dress'},clip:'peach-blossom'},
-  {title:'Disco by the sea',outfit:{adult:'pink-velour-cargo',little:'denim-overalls'},clip:'gold-star'},
-  {title:'Island homecoming',outfit:{adult:'hibiscus-flares',little:'yellow-dot-dress'},clip:'satin-bow'}
+  {title:'Picnic in paradise',need:{outfit:{adult:'green-hibiscus-sundress',little:'pink-gingham-bow-dress'},clip:'peach-blossom'}},
+  {title:'Disco by the sea',need:{outfit:{adult:'pink-velour-cargo',little:'denim-overalls'},hairColor:'honey'}},
+  {title:'Seashell sweetheart',need:{necklace:'pearl-starfish-necklace',earrings:'pearl-studs'}},
+  {title:'Mall crawl Saturday',need:{shoes:{adult:'pink-chunky-sneakers',little:'white-velcro-sneakers'},hair:'side-ponytail'}},
+  {title:'Rosy glow-up',need:{blush:'rose',gem:'heart'}},
+  {title:'Midnight boardwalk',need:{hairColor:'jet',clip:'gold-star'}},
+  {title:'Island homecoming',need:{outfit:{adult:'hibiscus-flares',little:'yellow-dot-dress'},clip:'satin-bow'}},
+  {title:'Bouncy bob bash',need:{hair:'curly-bob',earrings:'heart-studs'}}
 ];
 const brief=()=>briefs[state.missions%briefs.length];
+const briefPlan={outfit:['wardrobe','outfits'],shoes:['wardrobe','shoes'],earrings:['wardrobe','jewelry'],necklace:['wardrobe','jewelry'],
+  hair:['salon','hair'],hairColor:['salon','hair'],clip:['salon','accessories'],lips:['salon','makeup'],blush:['salon','makeup'],shadow:['salon','makeup'],gem:['salon','makeup'],nails:['salon','nails']};
+function briefNeeds(b,doll){return Object.entries(b.need).map(([field,v])=>[field,typeof v==='string'?v:v[doll]])}
+function needName(field,id){
+  if(field==='hairColor')return (hairColorOptions().find(h=>h.id===id)?.name||id)+' hair';
+  if(Shop.MAKEUP_FIELDS.includes(field)){const o=CATALOG.makeup[field].find(o=>o.id===id);return (o?.name||id)+(field==='blush'?' blush':field==='gem'?' face gem':field==='nails'?' nails':field==='shadow'?' eyeshadow':'');}
+  return itemName(id);
+}
+const briefMet=(b,shot)=>briefNeeds(b,shot.doll).every(([f,v])=>shot[f]===v);
 function challenge(){
-  const b=brief();
-  return `<aside class="challenge"><div class="eyeline">${icon('ticket',18)} STYLE CHALLENGE</div><h2>${b.title}</h2><p>Photograph the ${escapeText(itemName(b.outfit[state.doll]))} look with the ${escapeText(itemName(b.clip).toLowerCase())}.</p><a class="challenge-link" href="#wardrobe">Plan my look <span>✧</span></a><span class="ticket-star" aria-hidden="true">☆</span></aside>`;
+  const b=brief(),shot=currentShot(),needs=briefNeeds(b,state.doll);
+  const todo=needs.find(([f,v])=>shot[f]!==v),plan=todo&&briefPlan[todo[0]];
+  const link=todo?`<a class="challenge-link" href="#${plan[0]}" data-plan-room="${plan[0]}" data-plan-tab="${plan[1]}">Plan my look <span>✧</span></a>`:route==='booth'?`<p class="challenge-ready">${icon('check',16)} All set! Take the photo to win 10 stars.</p>`:`<a class="challenge-link" href="#booth">Take the photo <span>✧</span></a>`;
+  return `<aside class="challenge"><div class="eyeline">${icon('ticket',18)} STYLE CHALLENGE · 10 STARS</div><h2>${b.title}</h2><p>Wear these, then take a photo in the Photo Booth:</p><ul class="brief-list">${needs.map(([f,v])=>`<li class="${shot[f]===v?'met':''}"><span aria-hidden="true">${shot[f]===v?icon('check',14):'♡'}</span>${escapeText(needName(f,v))}<span class="sr-only">${shot[f]===v?', wearing it':', not yet'}</span></li>`).join('')}</ul>${link}<span class="ticket-star" aria-hidden="true">☆</span></aside>`;
 }
 function mapScreen(){
   return sectionTitle('Hibiscus Island','Pick a place on the map and let’s play!')+`<div class="map-layout"><div class="map-column"><section class="map-case" aria-label="Interactive island map"><div class="map-bar"><span>${icon('compass',16)} Island Explorer</span><span aria-hidden="true">✧ &nbsp; ✦ &nbsp; ✧</span></div><div class="map-art">${places.map(p=>`<a class="pin pin-${p.id}" style="--x:${p.x}%;--y:${p.y}%;--ink:${p.color}" href="#${p.id}"><i>${icon(p.icon,20)}</i><strong>${p.name}</strong></a>`).join('')}<span class="compass" aria-label="North">N<span>✥</span></span></div></section>${passport()}</div><div class="rail"><section class="player"><header>${icon('id',20)} <h2>My Player Card</h2><span aria-hidden="true">✦</span></header><div class="player-body"><div class="portrait-print"><div class="card-portrait"><canvas id="card-preview" aria-label="${dollNames[state.doll]} in ${escapeText(itemName(look().outfit))}"></canvas></div><span class="tape" aria-hidden="true"></span><img class="flower-sticker" src="assets/flower.svg" alt=""><span class="caption">${escapeText(playerLabel())} <i>♡</i></span></div>${dollSwitch()}<a class="primary wide" href="#life">${icon('compass',17)} Explore Island Life</a><a class="sub-link" href="#wardrobe">Dress me up</a></div></section>${challenge()}</div></div>`;
@@ -82,23 +115,12 @@ function group(label,body){return `<section class="option-group"><h3>${label}</h
 function options(field,names){
   return `<div class="choices">${names.map((name,i)=>`<button data-field="${field}" data-value="${i}" aria-pressed="${look()[field]===i}" ${field==='frame'&&i===3&&state.stars<10?'disabled':''}>${field==='frame'?`<span class="swatch" style="background:${frameColors[i][1]}"></span>`:''}${name}${field==='frame'&&i===3&&state.stars<10?' · 10 stars':''}</button>`).join('')}</div>`;
 }
-/* Choices for a string-id look field from a catalog list [{id,name}]. */
-function idOptions(field,list){
-  return `<div class="choices">${list.map(o=>`<button data-field="${field}" data-value="${o.id}" aria-pressed="${look()[field]===o.id}">${escapeText(o.name)}</button>`).join('')}</div>`;
-}
+/* Photo Booth. The Dress-Up Studio and Beauty Salon are built by makeover.js. */
 function studio(){
-  const p=places.find(p=>p.id===route);
-  const booth=route==='booth',salon=route==='salon';
-  const hint=booth?'Frame your portrait and save it to your scrapbook.':salon?'Pick a finishing touch for her hair.':'Try on a look for your next island adventure.';
-  const stand=`<canvas id="preview" aria-label="${dollNames[state.doll]} in ${escapeText(itemName(look().outfit))}"></canvas>`;
-  const outfits=`<div class="outfits">${catalogOptions('outfit',state.doll).map(it=>`<button data-field="outfit" data-value="${it.id}" aria-pressed="${look().outfit===it.id}"><img src="${it.art.front.main}" alt="" loading="lazy"><span>${escapeText(it.name)}</span></button>`).join('')}</div>`;
-  let controls=group('Character',dollSwitch());
-  if(booth) controls+=group('Postcard frame',options('frame',frames))+group('Corner sticker',options('sticker',stickers));
-  else if(salon) controls+=group('Hair accessory',idOptions('clip',[{id:'none',name:'No clip'},...catalogOptions('clip',state.doll)]))+group('Face gems',idOptions('gem',makeupOptions('gem',state.doll)));
-  else controls+=group('Outfit rack',outfits);
-  if(!salon)controls+=group('Scenery',options('backdrop',sceneryNames));
-  let next=booth?`<button class="primary wide" data-action="snap">${icon('camera')} Take photo</button>`:`<a class="primary wide" href="#${salon?'booth':'salon'}">${icon(salon?'camera':'wand')}${salon?'Visit photo booth':'Visit beauty salon'}</a>`;
-  return sectionTitle(p.name,hint,true)+`<div class="workbench"><section class="display"><div class="map-bar"><span>${icon(p.icon,16)} ${dollNames[state.doll]}</span><span>✧</span></div><div class="doll-stage ${booth?'photo-stage':salon?'salon-stage':''}">${stand}</div></section><div class="controls"><div class="panel">${controls}${next}${booth?'<a class="sub-link" href="#scrapbook">Open scrapbook</a>':'<a class="sub-link" href="#runway">Walk the island runway</a>'}</div>${challenge()}</div></div>`;
+  const p=places.find(p=>p.id==='booth');
+  const stand=`<canvas id="preview" role="img" aria-label="${dollNames[state.doll]} in ${escapeText(itemName(look().outfit))}"></canvas>`;
+  const controls=group('Character',dollSwitch())+group('Postcard frame',options('frame',frames))+group('Corner sticker',options('sticker',stickers))+group('Scenery',options('backdrop',sceneryNames));
+  return sectionTitle(p.name,'Frame your portrait and save it to your scrapbook.',true)+`<div class="workbench"><section class="display"><div class="map-bar"><span>${icon(p.icon,16)} ${dollNames[state.doll]}</span><span>✧</span></div><div class="doll-stage photo-stage">${stand}</div></section><div class="controls"><div class="panel">${controls}<button class="primary wide" data-action="snap">${icon('camera')} Take photo</button><a class="sub-link" href="#scrapbook">Open scrapbook</a><p class="booth-more">Want a new look first? Visit the <a href="#wardrobe">Dress-Up Studio</a> or <a href="#salon">Beauty Salon</a>.</p></div>${challenge()}</div></div>`;
 }
 
 const deckIcons=['flower','star','heart','camera','music','hanger'];
@@ -131,10 +153,11 @@ function draw(){
   const val=key?focused.dataset[key]:null;
   detachWorld();
   navBar();
-  main.innerHTML=route==='life'?lifeScene():route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():studio();
+  main.innerHTML=route==='life'?lifeScene():route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():isMakeoverRoute()?makeoverRoom():studio();
   if(route==='life')attachWorld();
-  const c=document.querySelector('#preview, #card-preview');
-  if(c)paintPortrait(c,currentShot(),route==='booth').catch(()=>say('The portrait could not load.'));
+  if(isMakeoverRoute())paintStage();
+  else{const c=document.querySelector('#preview, #card-preview');
+    if(c)paintCanvas(c,currentShot(),route==='booth').catch(()=>say('The portrait could not load.'));}
   main.querySelectorAll('[data-photo]').forEach(el=>paintPortrait(el,state.photos.find(s=>s.id===el.dataset.photo),true).catch(()=>say('The postcard could not load.')));
   if(key&&val!==null){
     const buttons=Array.from(main.querySelectorAll('button'));
@@ -144,19 +167,22 @@ function draw(){
 function navigate(){
   detachWorld();
   document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
-  const id=location.hash.slice(1);
+  const id=location.hash.slice(1),leaving=route;
+  const dropped=leaving&&leaving!==id&&dropTrial();
   route=[...places.map(p=>p.id),'scrapbook','runway','life'].includes(id)?id:'map';
   clearTimeout(timer);if(round)round.up=[];resetRunway();
   if(places.some(p=>p.id===route)&&!state.visits.includes(route)){state.visits.push(route);persist();}
   document.title=(places.find(p=>p.id===route)?.name|| (route==='map'?'Island Map':route==='life'?'Island Life':route==='runway'?'Island Runway':'My Scrapbook'))+' · Hibiscus Club';
   draw();window.scrollTo(0,0);
+  if(dropped)say('Try-ons stay in the shop until you buy them, so her look went back to what she owns.');
 }
 function takePhoto(){
   if(state.photos.length>=24){say('Your scrapbook is full. Remove a postcard to make space.');return;}
+  dropTrial('Taking a photo'); // try-ons never reach a postcard
   const shot=currentShot();
   shot.id=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
   state.photos.unshift(shot);
-  const b=brief(),won=b.outfit[shot.doll]===shot.outfit&&b.clip===shot.clip;
+  const b=brief(),won=briefMet(b,shot);
   if(won){state.missions++;state.stars+=10;}
   persist();draw();tone(true);say(won?'Challenge complete! Postcard saved and 10 stars earned.':'Postcard saved to your scrapbook!');
 }
@@ -190,6 +216,7 @@ document.addEventListener('click',async e=>{
   if(b.classList.contains('sound')){state.sound=!state.sound;persist();HibiscusMusic.setEnabled(state.sound);navBar();tone();return;}
   if(b.classList.contains('sparkle-toggle')){state.sparkle=!state.sparkle;persist();try{HibiscusFx.setEnabled(state.sparkle);if(state.sparkle){const r=b.getBoundingClientRect();HibiscusFx.burst(r.left+r.width/2,r.top+r.height/2)}}catch{}navBar();return;}
   const d=b.dataset;
+  if(makeoverClick(b,d))return;
   if(d.pose!==undefined){performPose(Number(d.pose));return;}
   if(route==='life'&&(d.travel!==undefined||d.lifeAction||d.taskStep!==undefined)){handleLifeAction(b);return;}
   if(d.doll){detachWorld();state.doll=d.doll;persist();draw();return;}
