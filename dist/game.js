@@ -7,7 +7,7 @@ const places = [
   {id:'garden',icon:'flower',color:'#6aaf81',x:13,y:45},
   {id:'booth',icon:'camera',color:'#e3924f',x:43,y:70}
 ].map(p=>Object.defineProperty(p,'name',{get(){return t('place.'+p.id)},enumerable:true}));
-const walkPins={boardwalk:{x:63,y:80},market:{x:25,y:65},pavilion:{x:49,y:41}};
+const walkPins={boardwalk:{x:62,y:74},market:{x:25,y:65},pavilion:{x:49,y:41}};
 const stampIds=[...districts.map(d=>d.id),...places.map(p=>p.id)];
 const dollNames={get adult(){return t('doll.adult')},get little(){return t('doll.little')}};
 const saveKey='hibiscus-club-v1';

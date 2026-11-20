@@ -146,8 +146,13 @@ const playerLabel=()=>lifePlayer().name||dollNames[state.doll];
 const district=()=>districts[lifePlayer().scene];
 const storiesOf=(doll=state.doll)=>STORIES[doll];
 const storyDone=(p,doll,i)=>p.quests[i]===STORIES[doll][i].steps.length+1;
-/* Stars a story pays on completion (its reward less any credit from old saves). */
-function storyPayout(i,p=lifePlayer(),doll=state.doll){return Math.max(0,STORIES[doll][i].reward-Math.min(p.credit,STORIES[doll][i].reward))}
+/* Stars a story pays on completion: its reward less what is left of the credit from old saves, which the
+   stories before it (played in order) use up first. */
+function storyPayout(i,p=lifePlayer(),doll=state.doll){
+  let credit=p.credit;
+  STORIES[doll].forEach((s,j)=>{if(j<i&&!storyDone(p,doll,j))credit-=Math.min(credit,s.reward)});
+  return STORIES[doll][i].reward-Math.min(credit,STORIES[doll][i].reward);
+}
 function activeStories(p=lifePlayer(),doll=state.doll){return STORIES[doll].map((s,i)=>i).filter(i=>p.quests[i]>0&&!storyDone(p,doll,i))}
 /* The story a resident can offer now: the first not started, when none is in progress. */
 function offerable(p=lifePlayer(),doll=state.doll){

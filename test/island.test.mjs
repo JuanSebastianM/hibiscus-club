@@ -54,9 +54,9 @@ test('saves from before per-character stories keep progress without paying twice
   assert.deepEqual([...done.state.life.adult.quests], [3, 3, 4, 0], 'only the new fourth story is left');
   assert.equal(done.state.life.little.credit, 24, 'Little Me already earned 6 + 8 + 10');
   done.state.doll = 'little';
-  assert.deepEqual([0, 1, 2, 3].map(i => done.storyPayout(i)), [0, 0, 0, 0], 'credit covers the first stories');
+  assert.deepEqual([0, 1, 2, 3].map(i => done.storyPayout(i)), [0, 0, 0, 6], 'the credit covers the first stories, in order');
   // credit is used up as stories finish (island-life.js subtracts it): 6 + 6 + 8 = 20, 4 left for the fourth
-  done.state.life.little.credit = 4;
+  done.state.life.little.credit = 4; done.state.life.little.quests = [3, 4, 4, 0];
   assert.equal(done.storyPayout(3), 6);
   const junk = loadIsland({ adult: { stages: ['x', 99, -1], quests: 'no', name: '<b>' + 'x'.repeat(50) }, little: 5 }).state.life;
   assert.deepEqual([...junk.adult.quests], [0, 0, 0, 0]);

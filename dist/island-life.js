@@ -57,7 +57,7 @@ function storyList(){
   return `<ol class="story-list">${stories.map((story,i)=>{
     const stage=p.quests[i],done=storyDone(p,state.doll,i),step=story.steps[stage-1],giver=districtOf(story.giver);
     const detail=done?t('life.completed',{count:story.reward}):step?t('life.stepAt',{action:step.action,place:districtOf(step.at).name}):i===offer?t('life.speakTo',{resident:giver.resident,place:giver.name}):t('life.storyWaiting');
-    return `<li class="${done?'finished':stage?'active':i===offer?'ready':'waiting'}"><span class="story-seal">${icon(done?'check':giver.icon,16)}</span><div><strong>${story.title}</strong><p>${escapeText(detail)}</p></div><span class="story-reward">${done?'':`★ ${I18N.num(storyPayout(i))}`}</span></li>`;
+    return `<li class="${done?'finished':stage?'active':i===offer?'ready':'waiting'}"><span class="story-seal">${icon(done?'check':giver.icon,16)}</span><div><strong>${story.title}</strong><p>${escapeText(detail)}</p></div><span class="story-reward">${done||!storyPayout(i)?'':`★ ${I18N.num(storyPayout(i))}`}</span></li>`;
   }).join('')}</ol>`;
 }
 function dailyList(){
