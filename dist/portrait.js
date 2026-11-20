@@ -271,7 +271,11 @@ function splitLayer(doll,view,c,shapes){
 /* Erase doll-local shapes from a layer. */
 function eraseShapes(doll,view,c,shapes){
   const g=c.getContext('2d'),[ox,oy]=dollView(doll,view).origin;
-  g.save();g.setTransform(1,0,0,1,ox,oy);g.beginPath();shapes.forEach(s=>shapePathInto(g,s));g.fillStyle='#000';g.globalCompositeOperation='destination-out';g.fill();g.restore();
+  for(const s of shapes){ // s.feather: soft edge (px), drawn as an offset shadow so no ctx.filter is needed
+    g.save();g.globalCompositeOperation='destination-out';g.fillStyle='#000';
+    if(s.feather){g.shadowColor='#000';g.shadowBlur=s.feather*2;g.shadowOffsetX=4000;g.setTransform(1,0,0,1,ox-4000,oy)}else g.setTransform(1,0,0,1,ox,oy);
+    g.beginPath();shapePathInto(g,s);g.fill();g.restore();
+  }
 }
 
 /* ---------- item layers ---------- */
@@ -386,7 +390,8 @@ function spriteItemLayer(doll,view,id,tintId){
     }else{
       let src=await itemSprite(item,view,'main',tintId);
       if(fit.keep||fit.cut)src=maskSprite(src,fit);
-      drawFitted(g,src,fit);
+      if(fit.piece)drawPiece(g,src,fit.piece); // side views: a strand mapped sprite point -> doll point
+      else drawFitted(g,src,fit);
     }
     if(fit.erase)eraseShapes(doll,view,c,fit.erase);
     return c;
@@ -456,6 +461,9 @@ function drawStud(g,kind,x,y,r){
   }else if(kind==='heart'){
     g.scale(r*1.25,r*1.25);g.fillStyle='#f04f95';g.beginPath();g.moveTo(0,.55);g.bezierCurveTo(-1.1,-.15,-.45,-.95,0,-.35);g.bezierCurveTo(.45,-.95,1.1,-.15,0,.55);g.fill();
     g.shadowColor='transparent';g.fillStyle='rgba(255,255,255,.75)';g.beginPath();g.ellipse(-.32,-.25,.14,.09,-.6,0,Math.PI*2);g.fill();
+  }else if(kind==='clutch'){ // the earring back, seen from behind
+    const gr=g.createRadialGradient(-r*.3,-r*.3,r*.1,0,0,r);gr.addColorStop(0,'#fff4c0');gr.addColorStop(.6,'#dcae4a');gr.addColorStop(1,'#9b6a1c');
+    g.fillStyle=gr;g.beginPath();g.arc(0,0,r,0,Math.PI*2);g.fill();
   }else{ // crystal star
     g.scale(r*1.3,r*1.3);g.beginPath();
     for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?.42:1;g.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}
@@ -638,19 +646,21 @@ function composeDoll(raw,view='front'){
       !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
     ]);
     const arm=sideView(view)?await armLayer(shot,view,body):null;
+    const bodyPic=shoes&&dv.footTop!==undefined?trimFeet(body,shoes,ox,oy,dv.footTop):body;
     const c=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),g=c.getContext('2d');
     g.imageSmoothingQuality='high';
     const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
     const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
     const drawProc=()=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
     const stud=earItem?.stud&&dv.face?.lobes?earItem.stud:null;
-    const drawStuds=()=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,stud,x,y+dv.face.unit*.06,dv.face.unit*.15);g.restore()};
-    const earsUnder=!!hairFit.earsUnder;
+    const drawStuds=()=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,view==='back'?'clutch':stud,x,y+dv.face.unit*(view==='back'?.02:.06),dv.face.unit*(view==='back'?.09:.15));g.restore()};
+    // back view: earrings sit under the hair, so only show where the style leaves the ears free
+    const earsUnder=!!hairFit.earsUnder||view==='back';
     if(clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
     if(hair.back)g.drawImage(hair.back,0,0);
     if(outfit.back)g.drawImage(outfit.back,0,0);
     if(shoes)g.drawImage(shoes.back,0,0);
-    g.drawImage(body,ox,oy);
+    g.drawImage(bodyPic,ox,oy);
     g.save();g.translate(ox,oy);drawGem(g,shot,view);g.restore();
     const outfitFit=catalogItem(shot.outfit).fit[doll][view];
     if(shoes&&!outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
@@ -668,6 +678,19 @@ function composeDoll(raw,view='front'){
     if(!clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
     return c;
   });
+}
+/* Side views: the base foot is flat, a heeled shoe is shorter, so below the ankle (doll y footTop) the
+   bare foot is kept only within each row's span of the shoe (bare heel/toes would poke out). */
+function trimFeet(body,shoes,ox,oy,footTop){
+  const c=makeCanvas(body.width,body.height),g=ctx2d(c);g.drawImage(body,0,0);
+  const im=g.getImageData(0,0,c.width,c.height),d=im.data,W=c.width;
+  const sd=ctx2d(shoes.front).getImageData(0,0,shoes.front.width,shoes.front.height).data,SW=shoes.front.width;
+  for(let y=Math.max(0,Math.floor(footTop));y<c.height;y++){
+    const Y=y+oy;let a=-1,b=-1;
+    if(Y>=0&&Y<shoes.front.height)for(let X=0;X<SW;X++)if(sd[(Y*SW+X)*4+3]>40){if(a<0)a=X;b=X}
+    for(let x=0;x<W;x++){const X=x+ox;if(a>=0&&X>=a+1&&X<=b-1)continue;d[(y*W+x)*4+3]=0}
+  }
+  g.putImageData(im,0,0);return c;
 }
 /* Procedural clips: flat charms. Side views squash them (seen edge-on, at.squash), the back view
    shows the clip's underside: the charm shaded with a small gold clasp across it. */

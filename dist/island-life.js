@@ -89,17 +89,30 @@ function lifeScene(){
     <button class="guide scene-photo" data-life-action="photo">${icon('camera',17)} Take a scenic postcard</button></aside></div>`;
 }
 let worldView=null;
-/* The walker is the composed front-view doll (DOLL_CANVAS region below), mirrored to face the
-   walking direction; the .walking class bobs her. */
+/* The walker shows the composed doll (DOLL_CANVAS region below): the 'front' view standing and the
+   real 'left' / 'right' view while walking (no mirroring, so her hair parting stays right). All three
+   views are composed when the scene opens, so turning never waits on a load; a view that fails falls
+   back to the front picture mirrored to face the walk. The .walking class adds a bob, sway and lean. */
 const WALKER_CROP=[0,60,600,970];
+function showWalkerView(view){
+  const w=worldView;if(!w)return;
+  const want=w.views[view]?view:w.views.front?'front':null;
+  if(!want||w.shown===view)return;
+  const g=w.canvas.getContext('2d');g.clearRect(0,0,w.canvas.width,w.canvas.height);
+  g.drawImage(w.views[want],...WALKER_CROP,0,0,w.canvas.width,w.canvas.height);
+  // fallback: the front picture mirrored toward the walk
+  w.actor.style.setProperty('--facing',want===view||view==='front'?1:view==='left'?-1:1);
+  w.shown=view;
+}
 function positionWalker(moving=false,side){
   if(!worldView)return;
   const w=worldView,p=lifePlayer();
   const depth=.83+(p.y-.60)*.94;
   w.actor.style.transform=`translate3d(${p.x*w.width}px,${p.y*w.height}px,0) scale(${depth})`;
   w.actor.style.zIndex=String(Math.round(p.y*100));
-  if(side)w.actor.style.setProperty('--facing',side);
+  if(side)w.actor.style.setProperty('--lean',side);
   w.actor.classList.toggle('walking',moving);
+  showWalkerView(moving&&side?(side<0?'left':'right'):'front');
 }
 function stopWalk(save=false){
   if(!worldView)return;
@@ -142,14 +155,19 @@ function walkTo(x,y,target){
 }
 function attachWorld(){
   const el=document.querySelector('#world'),actor=el.querySelector('.walker');
-  const w=worldView={el,actor,ring:el.querySelector('.destination-ring'),width:el.clientWidth,height:el.clientHeight,frame:0,reduced:matchMedia('(prefers-reduced-motion: reduce)')};
-  el.querySelector('.world-person').style.zIndex=String(Math.round(district().person[1]*100));
   const canvas=actor.querySelector('canvas');
-  composeDoll(currentShot()).then(doll=>{
+  const w=worldView={el,actor,canvas,views:{},shown:null,ring:el.querySelector('.destination-ring'),width:el.clientWidth,height:el.clientHeight,frame:0,reduced:matchMedia('(prefers-reduced-motion: reduce)')};
+  el.querySelector('.world-person').style.zIndex=String(Math.round(district().person[1]*100));
+  const shot=currentShot();
+  composeDoll(shot,'front').then(doll=>{
     if(w!==worldView)return;
-    const g=canvas.getContext('2d');g.clearRect(0,0,canvas.width,canvas.height);
-    g.drawImage(doll,...WALKER_CROP,0,0,canvas.width,canvas.height);
+    w.views.front=doll;const now=w.shown||'front';w.shown=null;showWalkerView(now);
   }).catch(()=>say('Her outfit could not load.'));
+  // the walking views load in the background right away; until one is ready the front stands in
+  if((CATALOG.views||[]).includes('left'))for(const view of ['left','right'])composeDoll(shot,view).then(doll=>{
+    if(w!==worldView)return;
+    w.views[view]=doll;if(w.shown===view){w.shown=null;showWalkerView(view)}
+  }).catch(()=>{});
   const size=()=>actor.style.setProperty('--size',((state.doll==='adult'?.325:.225)*w.height)+'px');
   size();
   positionWalker();
