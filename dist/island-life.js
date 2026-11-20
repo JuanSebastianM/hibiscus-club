@@ -53,7 +53,6 @@ const lifePlayer=()=>state.life[state.doll];
 const playerLabel=()=>lifePlayer().name||dollNames[state.doll];
 const district=()=>districts[lifePlayer().scene];
 const isComplete=(story,i)=>lifePlayer().stages[i]===story.steps.length+1;
-const spritePath=(doll,outfit,view)=>'assets/looks/'+doll+'-'+outfit+'-'+view+'.png';
 function currentSteps(target){
   const p=lifePlayer();
   return islandStories.flatMap((s,i)=>{
@@ -82,7 +81,7 @@ function lifeScene(){
       <div class="destination-ring" hidden></div>
       <button class="world-person" data-world-target="person" style="left:${d.person[0]*100}%;top:${d.person[1]*100}%;" aria-label="Walk to ${d.resident} and talk"><img src="assets/scenes/${slug}.png" alt="" draggable="false"><span>${icon('heart',13)} ${d.resident}</span></button>
       <button class="world-object" data-world-target="object" style="left:${d.object[0]*100}%;top:${d.object[1]*100}%">${icon(d.icon,15)} ${d.spot}</button>
-      <div class="walker" aria-hidden="true"><div class="walker-shadow"></div><div class="walker-body"><img class="walker-fallback" src="${spritePath(state.doll,look().outfit,'front')}" alt="" draggable="false">${['front','side','step'].map(view=>`<canvas data-walk-frame="${view}" hidden></canvas>`).join('')}</div><span class="walker-name">${escapeText(playerLabel())}</span></div>
+      <div class="walker" aria-hidden="true"><div class="walker-shadow"></div><div class="walker-body"><canvas class="walker-doll" width="${WALKER_CROP[2]}" height="${WALKER_CROP[3]}"></canvas></div><span class="walker-name">${escapeText(playerLabel())}</span></div>
     </div><div class="world-status" role="status" aria-live="polite">${icon('pin',16)} <span>Exploring ${d.name}</span></div></section>
     <section class="destinations"><h2>Travel to</h2><div class="travel-cards">${districts.map((place,i)=>`<button data-travel="${i}" aria-pressed="${i===p.scene}"><img src="assets/scenes/${place.id}.jpg" alt=""><span>${place.name}</span></button>`).join('')}</div></section></div>
     <aside class="life-right"><section class="life-profile"><div class="profile-title">${icon('id',20)}<h2>${escapeText(playerLabel())}</h2></div>${dollSwitch()}<div class="profile-actions"><button class="sub-link" data-life-action="name">${p.name?'Edit name':'Choose a name'}</button><a href="#wardrobe" class="sub-link">Change outfit</a></div></section>
@@ -90,21 +89,17 @@ function lifeScene(){
     <button class="guide scene-photo" data-life-action="photo">${icon('camera',17)} Take a scenic postcard</button></aside></div>`;
 }
 let worldView=null;
-function positionWalker(moving=false,side=1,phase=0){
+/* The walker is the composed front-view doll (DOLL_CANVAS region below), mirrored to face the
+   walking direction; the .walking class bobs her. */
+const WALKER_CROP=[0,60,600,970];
+function positionWalker(moving=false,side){
   if(!worldView)return;
   const w=worldView,p=lifePlayer();
   const depth=.83+(p.y-.60)*.94;
   w.actor.style.transform=`translate3d(${p.x*w.width}px,${p.y*w.height}px,0) scale(${depth})`;
   w.actor.style.zIndex=String(Math.round(p.y*100));
-  w.actor.style.setProperty('--facing',side);
+  if(side)w.actor.style.setProperty('--facing',side);
   w.actor.classList.toggle('walking',moving);
-  const pose=moving?(phase%2?'step':'side'):'front';
-  if(pose!==w.pose || (!w.visible&&w.ready.has(pose))){
-    w.pose=pose;
-    w.visible=w.ready.has(pose);
-    w.fallback.hidden=w.visible;
-    for(const [view,canvas] of Object.entries(w.frames))canvas.hidden=view!==pose||!w.visible;
-  }
 }
 function stopWalk(save=false){
   if(!worldView)return;
@@ -136,7 +131,7 @@ function walkTo(x,y,target){
     const progress=duration<16||w.reduced.matches?1:Math.min(1,(time-start)/duration);
     p.x=fromX+dx*progress;p.y=fromY+dy*progress;
     if(progress<1){
-      positionWalker(true,side,Math.floor((time-start)/170));
+      positionWalker(true,side);
       w.frame=requestAnimationFrame(move);
     }else{
       positionWalker();w.frame=0;w.ring.hidden=true;persist();setWorldStatus('Exploring '+district().name);
@@ -147,18 +142,14 @@ function walkTo(x,y,target){
 }
 function attachWorld(){
   const el=document.querySelector('#world'),actor=el.querySelector('.walker');
-  const w=worldView={el,actor,pose:null,visible:false,ready:new Set(),frames:Object.fromEntries(Array.from(actor.querySelectorAll('canvas'),c=>[c.dataset.walkFrame,c])),fallback:actor.querySelector('img'),ring:el.querySelector('.destination-ring'),width:el.clientWidth,height:el.clientHeight,frame:0,reduced:matchMedia('(prefers-reduced-motion: reduce)')};
+  const w=worldView={el,actor,ring:el.querySelector('.destination-ring'),width:el.clientWidth,height:el.clientHeight,frame:0,reduced:matchMedia('(prefers-reduced-motion: reduce)')};
   el.querySelector('.world-person').style.zIndex=String(Math.round(district().person[1]*100));
-  const shot=currentShot();
-  for(const [view,canvas] of Object.entries(w.frames)){
-    asset(spritePath(shot.doll,shot.outfit,view)).then(img=>{
-      if(w!==worldView)return;
-      canvas.width=img.width;canvas.height=img.height;
-      drawSprite(canvas.getContext('2d'),img,shot,view,0,0,img.width,img.height);
-      w.ready.add(view);
-      if(!w.frame)positionWalker();
-    }).catch(()=>{ /* The front portrait remains available while a walk frame is missing. */ });
-  }
+  const canvas=actor.querySelector('canvas');
+  composeDoll(currentShot()).then(doll=>{
+    if(w!==worldView)return;
+    const g=canvas.getContext('2d');g.clearRect(0,0,canvas.width,canvas.height);
+    g.drawImage(doll,...WALKER_CROP,0,0,canvas.width,canvas.height);
+  }).catch(()=>say('Her outfit could not load.'));
   const size=()=>actor.style.setProperty('--size',((state.doll==='adult'?.325:.225)*w.height)+'px');
   size();
   positionWalker();
