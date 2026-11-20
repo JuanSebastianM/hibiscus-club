@@ -56,7 +56,7 @@ Nothing else is stored or logged: no IP addresses, User-Agents, referrers, playe
 | `postcard` | `png` | a postcard is downloaded |
 | `sound`, `sparkle` | `on`, `off` | the top-bar toggles |
 
-`dist/analytics.js` checks every event against the same lists, adds up makeover and try-on changes, and sends batches with `navigator.sendBeacon` (or `fetch` with `keepalive`) when the page is hidden or every 20 seconds. Sending never delays the game, and a failed request is dropped. Nothing is sent from `localhost`, `127.0.0.1` or a `file:` page, when the browser sends Global Privacy Control or Do Not Track, or when the player turns sharing off. The island guide (**How to play**) explains this in plain words in both languages and has the on/off switch. The switch is saved with the game as `state.analytics` and is on by default.
+`dist/analytics.js` checks every event against the same lists, adds up makeover and try-on changes, and sends batches with `navigator.sendBeacon` (or `fetch` with `keepalive`) when the page is hidden or every 20 seconds. Sending never delays the game, and a failed request is dropped. Nothing is sent from `localhost`, `127.0.0.1` or a `file:` page, when the browser sends Global Privacy Control or Do Not Track, or when the player turns sharing off. A small **Privacy** link at the bottom of every page opens a dialog that explains this in plain words in both languages and has the on/off switch. The island guide (**How to play**) points to it. The switch is saved with the game as `state.analytics` and is on by default.
 
 To add an event, add it to `SCHEMA` in both `worker/events.js` and `dist/analytics.js`, call `track('event','detail')` in the game, and run the tests. The tests fail if the two lists differ or if the game uses a name that is not listed.
 
@@ -89,7 +89,7 @@ Until all three secrets are set, `/stats` shows these steps and no data. The pag
 
 ### Turn it off
 
-- One player: the switch in the island guide, Global Privacy Control, or Do Not Track.
+- One player: the switch in the **Privacy** dialog (link at the bottom of every page), Global Privacy Control, or Do Not Track.
 - Web Analytics: empty the token in `index.html`, or remove the site in the dashboard.
 - Everything: remove `main`, `binding`, `run_worker_first` and `analytics_engine_datasets` from `wrangler.jsonc` to return to an assets-only Worker. The game then sends to a missing `/api/e`, which is harmless. Alternatively, also remove the `analytics.js` script tag from `index.html`. Delete the secrets and the API token when you no longer need them.
 
@@ -161,7 +161,7 @@ The island is an original AI-generated illustration with five HTML links positio
 
 | File | Responsibility |
 | --- | --- |
-| `dist/index.html` | Page shell, navigation, accessible dialogs, script loading, Web Analytics token |
+| `dist/index.html` | Page shell, navigation, Privacy footer link, accessible dialogs, script loading, Web Analytics token |
 | `dist/analytics.js` | Anonymous play statistics: event lists, batching, privacy checks, optional Web Analytics beacon |
 | `dist/i18n.js` | Translation layer (`t()`, plurals, language choice) and the English dictionary |
 | `dist/i18n-es.js` | Spanish dictionary |

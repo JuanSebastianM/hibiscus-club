@@ -23,7 +23,7 @@ function loadGame(){
     life:loadIslandLife(raw.life),
     looks:{adult:readLook(raw.looks?.adult,'adult'),little:readLook(raw.looks?.little,'little')},
     stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound!==false,sparkle:raw.sparkle!==false,
-    analytics:raw.analytics!==false, // anonymous play counts (analytics.js); the island guide has the switch
+    analytics:raw.analytics!==false, // anonymous play counts (analytics.js); the Privacy dialog has the switch
     visits:places.filter(p=>Array.isArray(raw.visits)&&raw.visits.includes(p.id)).map(p=>p.id),
     missions:smallInt(raw.missions,Number.MAX_SAFE_INTEGER),
     bouquets:smallInt(raw.bouquets,Number.MAX_SAFE_INTEGER),
@@ -251,7 +251,8 @@ document.addEventListener('click',async e=>{
     const dialog=document.querySelector('#remove-photo');dialog.dataset.id=d.remove;dialog.showModal();return;
   }
   switch(d.action){
-    case 'help':syncPrivacy();help.showModal();break;
+    case 'help':help.showModal();break;
+    case 'privacy':syncPrivacy();privacyDialog.showModal();break;
     case 'snap':takePhoto();break;
     case 'rehearse':startRunway();break;
     case 'restart':clearTimeout(timer);startRound();draw();break;
@@ -271,7 +272,8 @@ function setLanguage(code){
   state.lang=code;persist();
   if(I18N.setLang(code))track('lang',code);
 }
-/* Island guide privacy switch: saved with the game; off stops all counting at once. */
+/* Privacy dialog (footer link on every page): the switch is saved with the game; off stops all counting at once. */
+const privacyDialog=document.querySelector('#privacy');
 function syncPrivacy(){
   const box=document.querySelector('#analytics-switch'),optOut=(()=>{try{return HibiscusAnalytics.browserOptOut}catch{return false}})();
   box.checked=state.analytics;box.disabled=optOut;
@@ -281,6 +283,11 @@ document.addEventListener('change',e=>{
   if(e.target.id!=='analytics-switch')return;
   state.analytics=e.target.checked;persist();
   try{HibiscusAnalytics.setEnabled(state.analytics)}catch{}
+});
+/* Focus goes back to the footer link, unless something else (a room change) already took it. */
+privacyDialog.addEventListener('close',()=>{
+  const a=document.activeElement;
+  if(!a||a===document.body||privacyDialog.contains(a))document.querySelector('.footer-link').focus({preventScroll:true});
 });
 window.addEventListener('langchange',()=>{
   const y=window.scrollY,x=window.scrollX;
