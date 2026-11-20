@@ -18,7 +18,17 @@ const outlines = {
   compass:'<circle cx="12" cy="12" r="9"/><path d="m16 7-2.5 6.5L7 17l3-7z"/>',
   id:'<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8.5" cy="10" r="2"/><path d="M5 16q3-5 7 0m2-7h4m-4 4h4"/>',
   sparkle:'<path d="m11 2 2 7 7 2-7 2-2 8-2-8-7-2 7-2z"/>',
+  'sparkle-off':'<path d="m11 2 2 7 7 2-7 2-2 8-2-8-7-2 7-2zM3 3l18 18"/>',
   play:'<path d="m7 4 13 8-13 8z"/>',
-  download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>'
+  download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  shuffle:'<path d="M3 7h3c5 0 7 10 12 10h3m-3-3 3 3-3 3M3 17h3c2 0 3-1.5 4-3m4-4c1-1.5 2-3 4-3h3m-3-3 3 3-3 3"/>',
+  shoe:'<path d="M3 17V8h5c0 3 3 4 6 4l5 1.5c2 .6 2.5 2 2.5 3.5H3zM3 20h18.5"/>',
+  gem:'<path d="M6 4h12l4 5-10 12L2 9zM2 9h20M9 4 7.5 9 12 21l4.5-12L15 4"/>',
+  comb:'<path d="M3 9h18v4H3zM5 13v6m3-6v6m3-6v6m3-6v6m3-6v6m3-6v6"/>',
+  lipstick:'<path d="M8 21v-8h8v8zM9.5 13V8l5-4v9M7 21h10"/>',
+  polish:'<path d="M7 11h10v9a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1zM10 11V7h4v4M11 7V3h2v4"/>',
+  bow:'<path d="M12 12C8 6 3 5 3 9s5 4 9 3c-4 1-7 5-5 7 2 1 4-4 5-7 1 3 3 8 5 7 2-2-1-6-5-7 4 1 9 1 9-3s-5-3-9 3Z"/><circle cx="12" cy="12" r="1.6"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>'
 };
 function icon(name,size=20){return '<svg aria-hidden="true" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+(outlines[name]||'')+'</svg>'}

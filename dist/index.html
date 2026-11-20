@@ -9,24 +9,32 @@
   <link rel="icon" href="assets/flower.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="island-life.css">
+  <link rel="stylesheet" href="makeover.css">
 </head>
 <body>
   <a class="skip" href="#game">Skip to game</a>
   <header class="topbar"><div class="bar-inner">
     <a class="brand" href="#map" aria-label="Hibiscus Club home"><img src="assets/wordmark.png" alt="Hibiscus Club"></a>
     <nav id="navigation" aria-label="Club navigation"></nav>
-    <div class="header-tools"><span id="wallet" class="wallet" title="Stars earned by playing"></span><button class="sound circle" aria-label="Turn sound on" title="Turn sound on"></button></div>
+    <div class="header-tools"><span id="wallet" class="wallet" title="Stars to spend"></span><button class="sparkle-toggle circle" aria-label="Turn sparkles off" title="Turn sparkles off"></button><button class="sound circle" aria-label="Turn sound on" title="Turn sound on"></button></div>
   </div></header>
   <main id="game" tabindex="-1"></main>
   <div id="announcer" role="status" aria-live="polite"></div>
-  <dialog id="help" aria-labelledby="guide-title"><form method="dialog"><h2 id="guide-title">Island guide</h2><p>Choose a map pin to play. Each first visit adds a stamp to your island passport.</p><p>Switch between Grown-up and Little Me on your player card. Each keeps her own outfit and accessories.</p><p>Match cards, deliver a bouquet, or photograph a style challenge to earn stars. Collect 10 stars to unlock the golden postcard frame.</p><p>Use a mouse, touch, or Tab and Enter. Your looks, stars, and scrapbook save in this browser.</p><button class="primary">Back to the island</button></form></dialog>
+  <dialog id="help" aria-labelledby="guide-title"><form method="dialog"><h2 id="guide-title">Island guide</h2><p>Choose a map pin to play. Each first visit adds a stamp to your island passport. Switch between Grown-up and Little Me on your player card. Each keeps her own look.</p><p><b>Dress-Up Studio:</b> outfits, shoes and jewelry, each with color swatches. <b>Beauty Salon:</b> hairstyles, hair color, makeup, nails and hair accessories. Tap <b>Surprise me!</b> for a random look from your wardrobe, and <b>Save look</b> to keep up to six favorites per character.</p><p>Earn stars by matching cards, delivering bouquets, rehearsing on the runway, helping islanders and photographing style challenges. Spend them on anything with a lock: tap it to try it on, then choose <b>Buy</b> to keep it. Try-ons go back to the shop when you leave the room. Golden hour, the gold postcard frame, unlocks once you have earned 10 stars in all.</p><p>Use a mouse, touch, or Tab and Enter. Arrow keys move between room tabs. Your looks, stars, wardrobe and scrapbook save in this browser.</p><button class="primary">Back to the island</button></form></dialog>
   <dialog id="remove-photo" aria-labelledby="remove-title"><h2 id="remove-title">Remove this postcard?</h2><p>This frees one space in your scrapbook.</p><form method="dialog" class="dialog-actions"><button class="primary">Keep photo</button><button type="button" data-action="confirm-remove">Remove photo</button></form></dialog>
+  <dialog id="buy-dialog" aria-labelledby="buy-title"><h2 id="buy-title">Buy this?</h2><p id="buy-text"></p><form method="dialog" class="dialog-actions"><button type="button" class="primary" data-action="confirm-buy">Buy it!</button><button>Not now</button></form></dialog>
+  <dialog id="remove-favorite" aria-labelledby="unfav-title"><h2 id="unfav-title">Remove this favorite?</h2><p>This frees one favorite slot. Everything in the look stays in your wardrobe.</p><form method="dialog" class="dialog-actions"><button class="primary">Keep it</button><button type="button" data-action="confirm-unfav">Remove</button></form></dialog>
   <dialog id="encounter" aria-label="Island conversation"></dialog>
   <dialog id="name-dialog" aria-labelledby="name-title"><h2 id="name-title">Choose her name</h2><form id="name-form"><label for="character-name">Character name</label><input id="character-name" name="name" maxlength="48" autocomplete="off" required><div class="dialog-actions"><button class="primary">Save name</button><button type="button" onclick="this.closest('dialog').close()">Cancel</button></div></form></dialog>
+  <script src="music.js"></script>
   <script src="icons.js"></script>
+  <script src="catalog.js"></script>
   <script src="portrait.js"></script>
   <script src="runway.js"></script>
   <script src="island-life.js"></script>
+  <script src="fx.js"></script>
+  <script src="shop.js"></script>
+  <script src="makeover.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
