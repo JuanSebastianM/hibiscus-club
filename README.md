@@ -1,6 +1,6 @@
 # Hibiscus Club
 
-Hibiscus Club is a single-player browser game inspired by early-2000s fashion-doll CD-ROMs. Dress the same character at two ages from head to toe, walk around the island helping its residents, spend the stars you earn in the island shop, rehearse a runway routine, and turn a favorite look into a downloadable postcard. The island map is the single home: its five buildings open rooms, and its three walk-in places let you explore on foot.
+Hibiscus Club is a single-player browser game inspired by early-2000s fashion-doll CD-ROMs. Dress the same character at two ages from head to toe, walk around the island helping its residents, spend the stars you earn in the island shop, rehearse a runway routine, and turn a favorite look into a downloadable postcard. The island map is the single home: its five buildings and the Dream House on the hill open rooms, and its three walk-in places let you explore on foot.
 
 ## Play locally
 
@@ -39,14 +39,14 @@ Nothing else is stored or logged: no IP addresses, User-Agents, referrers, playe
 | Event | Detail | When |
 | --- | --- | --- |
 | `visit` | the room the page opened on | page load |
-| `room` | `map`, `wardrobe`, `salon`, `booth`, `scrapbook`, `arcade`, `garden`, `runway`, `life` (any walk-in place) | a room opens; moving between walk-in places is not counted again |
+| `room` | `map`, `wardrobe`, `salon`, `booth`, `scrapbook`, `arcade`, `garden`, `runway`, `life` (any walk-in place), `house` | a room opens; moving between walk-in places is not counted again |
 | `district` | `boardwalk`, `market`, `pavilion` | a walk-in place is entered |
 | `lang` | `en`, `es` | language switched |
 | `character` | `adult`, `little` | character switched |
 | `makeover` | `outfit`, `shoes`, `jewelry`, `hair`, `hair-color`, `makeup`, `nails`, `accessory` | something she owns is put on (counted per category, sent with a count) |
-| `tryon` | the same categories | a locked option is tried on (counted like `makeover`) |
-| `purchase` | the same categories, plus price band `1-9`, `10-19` or `20-plus` | each option bought |
-| `surprise` | `wardrobe`, `salon` | Surprise me! |
+| `tryon` | the same categories, and `decor` | a locked option is tried on, or a paid Dream House piece previewed (counted like `makeover`) |
+| `purchase` | the same categories and `decor`, plus price band `1-9`, `10-19` or `20-plus` | each option or Dream House piece bought |
+| `surprise` | `wardrobe`, `salon`, `house` | Surprise me! |
 | `favorite` | `saved`, `worn` | a favorite look is saved or worn |
 | `game-start`, `game-done` | `memory`, `bouquet`, `runway` | first card, first flower or rehearsal start; win |
 | `chat` | `boardwalk`, `market`, `pavilion` | she walks up to a resident |
@@ -55,7 +55,11 @@ Nothing else is stored or logged: no IP addresses, User-Agents, referrers, playe
 | `findable` | `boardwalk`, `market`, `pavilion` | a hidden treasure is picked up |
 | `tutorial` | `done`, `skipped` | the first-visit tour of a walk-in place ends |
 | `name` | `yes`, `no` | a name is set, or the first name prompt is skipped. The name itself is never sent. |
-| `photo` | `studio`, `boardwalk`, `market`, `pavilion` (the scenery) | a postcard is taken |
+| `photo` | `studio`, `boardwalk`, `market`, `pavilion` (the scenery), `house` | a postcard or a Dream House room photo is taken |
+| `decor-room` | `bedroom`, `kitchen`, `living`, `bathroom`, `playroom`, `patio` | a room of the Dream House is opened |
+| `decor-place` | `bedroom`, `kitchen`, `living`, `bathroom`, `playroom`, `patio`, `walls`, `floor` (the collection the piece comes from) | a piece is placed (counted like `makeover`; never its position) |
+| `decor-done` | the six rooms | a room is furnished for the first time |
+| `decor-goal` | `bed`, `wall`, `rug`, `paint`, `top`, `friend`, `photo` | a room-tour goal is met |
 | `challenge` | the brief: `picnic`, `disco`, `seashell`, `mall`, `rosy`, `midnight`, `homecoming`, `bob` | a style challenge is completed |
 | `postcard` | `png` | a postcard is downloaded |
 | `sound`, `sparkle` | `on`, `off` | the top-bar toggles |
@@ -77,7 +81,7 @@ Analytics Engine keeps events for three months. It is available on the Workers F
    Alternatively, run `npx wrangler secret put STATS_KEY` (and the same for the other two). Never put them in `wrangler.jsonc`.
 3. Open `https://<your worker address>/stats` and enter the stats key. A private cookie (HttpOnly, Secure, SameSite=Strict, limited to `/stats`) keeps you signed in for seven days. It holds a signed expiry, not the key. **Sign out** removes it. Changing `STATS_KEY` signs everyone out.
 
-Until all three secrets are set, `/stats` shows these steps and no data. The page shows visits per day (per hour for 24 hours), top countries, devices, the game language, rooms, mini-game starts against completions, makeover changes and try-ons by category, purchases by category and price band, postcards, challenges, favorites, Surprise me!, walk-in places (trips, conversations, treasures), stories and daily errands, the first-visit tour and name prompt, and settings, for 24 hours, 7 days, 30 days or 90 days. It is server-rendered, makes no third-party requests and is marked `noindex`. Analytics Engine may sample busy events. Every stored row stands for `_sample_interval` real events, so the page counts `SUM(_sample_interval * double1)` and says so when any figure is an estimate.
+Until all three secrets are set, `/stats` shows these steps and no data. The page shows visits per day (per hour for 24 hours), top countries, devices, the game language, rooms, mini-game starts against completions, makeover changes and try-ons by category, purchases by category and price band, the Dream House (rooms opened and furnished, pieces placed by collection, Surprise me!, room photos, previews, room-tour goals), postcards, challenges, favorites, Surprise me!, walk-in places (trips, conversations, treasures), stories and daily errands, the first-visit tour and name prompt, and settings, for 24 hours, 7 days, 30 days or 90 days. It is server-rendered, makes no third-party requests and is marked `noindex`. Analytics Engine may sample busy events. Every stored row stands for `_sample_interval` real events, so the page counts `SUM(_sample_interval * double1)` and says so when any figure is an estimate.
 
 ### Cloudflare Web Analytics (optional)
 
@@ -139,6 +143,22 @@ Mara collects shells on Pearl Boardwalk, Rosa tends the Flower Market, and Kit r
 
 **Take a scenic postcard** uses your current location in the photo booth. The studio and booth also let you select any district or the original pink studio. Saved postcards retain the scenery you chose.
 
+## The Dream House
+
+Tap the house pin on the hill (or go to `#house`). Six empty rooms wait to be decorated from scratch: **Bedroom**, **Kitchen**, **Living Room**, **Bathroom**, **Playroom** and **Patio**. The row of room cards at the top shows a live miniature of each room; tap one to decorate it.
+
+- **Furnish.** The tabs hold **This room** (the room's own furniture), **Other rooms** (everything else, with a filter by room), **Wall decor**, **Floor decor** (rugs, pets, plants and party things), **Paint & floors** and **Friends**. Tap a card to add the piece to a free spot, or drag the card onto the room (on a phone, hold the card a moment, then drag). Big furniture goes against the back wall, wall decor onto the wall, rugs flat on the floor under everything.
+- **Arrange.** Drag a piece to move it; it stays under your finger or pointer. Standing pieces keep their feet on the floor, get a little smaller further back, and are drawn in depth order, so a chair in front of a table overlaps it. Wall pieces stay on the wall and rugs on the floor. Small things (lamps, the fruit bowl, the toaster, the rubber duck, the disco ball…) can stand on the floor or sit on a table, counter or shelf: drop them on top, and they ride along when the table moves. The selected piece has a × to remove it and a corner handle to resize it, and the toolbar under the room has **Flip** (only for pieces whose art can be mirrored), **Smaller**, **Bigger** (50 % to 180 %), **Back**, **Forward**, **Copy**, **Remove**, **Undo** and **Redo**. A room holds up to 40 pieces.
+- **Walls and floors.** Indoors there are six paints (blush, lilac, mint, butter, sky, peach) and six wallpapers (candy stripes, mint stripes, polka dots, gingham, little florals, paneled), and three woods, three tiles and two carpets. The patio is outdoors under a sky: pink or mint cottage siding, a flower trellis or a bamboo fence, on a lawn, a wooden deck, garden stones or beach sand.
+- **Friends.** Invite the Grown-up and Little Me into any room. Each stands on the floor like a piece of furniture and wears the look she has on (never a try-on); change her outfit in the studio and she wears the new one when you come back.
+- **Surprise me!** furnishes the room you are in from what you own: the room's own furniture along the back wall, a seating or play arrangement in the middle, a rug, small things at the front, a few things on the wall and something on a tabletop. It keeps your friends, and **Undo** brings back the room you had. **Start over** empties the room and resets its walls and floor after a confirmation (Undo works here too).
+- **Room photo** downloads a PNG of the room (with your friends if they are there) in the striped postcard frame, and adds it to the Scrapbook (if the 24 spaces are full it only downloads, and says so). Room photos in the Scrapbook can be downloaded again and removed like postcards.
+- **Keyboard.** Every action works without a mouse. Choose a piece in the **In this room** list (or focus the room and press N or P to pick the next or previous one); then the arrow keys move it (Shift for bigger steps), + and − resize, F flips, Page Up and Page Down bring it forward or send it back, D copies, Delete removes, Ctrl+Z undoes and Ctrl+Y redoes, Escape lets go. Changes are announced. The arrow keys move between the tabs.
+
+Most of the 96 pieces are free. Ten showpieces cost stars from the shared wallet: Dreamy Canopy Bed 20, Cozy Fireplace 15, Dream Dollhouse 15, Fishy Aquarium 15, Rainbow Ball Pit 12, Splash Pool 12, Hideaway Teepee 12, Striped Porch Swing 12, Disco Ball 10 and Heart Mirror 8 (131 together). A locked card shows its price; tapping it puts the piece in the room as a preview with **Buy** and **Put back** under the room. Buying asks for confirmation and then the piece is yours for every room. A preview is never saved, never appears in a room photo, and goes back to the shop when you switch rooms or leave the house.
+
+**Rewards.** The first time each room is furnished (six pieces, three of them from the room's own collection) it pays 5 stars, 30 for the house. The **Room tour** card lists seven little goals, each paid once: tuck in a bed (3), hang something on a wall (3), roll out a rug (3), pick new paint or a new floor (2), set something on a table or shelf (3), invite someone over (3) and take a room photo (3), 20 in all.
+
 ## Stars and stamps
 
 | Activity | How to finish | Reward |
@@ -150,10 +170,11 @@ Mara collects shells on Pearl Boardwalk, Rosa tends the Flower Market, and Kit r
 | Daily errands | Three a day per character, new every day. | 2 to 4 stars each, usually 7 to 9 a day |
 | Treasures | Six a day per character, hidden in the walk-in places. | 1 star each |
 | Style challenge | Photograph the two pieces the brief names. Eight briefs rotate, and each one can be met by both characters with free starter options. | 10 stars and the next brief |
+| Dream House | Furnish each room for the first time; finish the seven room-tour goals. | 5 per room (30), and 20 for the tour, once |
 
-At 10 stars earned in all, **Golden hour** becomes available in the booth for both characters. Spending stars never locks it again. Visiting each of the eight places on the map adds its stamp to the island passport.
+At 10 stars earned in all, **Golden hour** becomes available in the booth for both characters. Spending stars never locks it again. Visiting each of the nine places on the map adds its stamp to the island passport.
 
-The eleven star-shop items cost 156 stars together. The stories give 66 once, and the walk-in places give each character about 13 to 15 stars a day (both characters about 28), so the whole shop is reachable in three or four days of walk-in play alone, sooner with the mini-games, which pay every time.
+The eleven star-shop items cost 156 stars together. The stories give 66 once, and the walk-in places give each character about 13 to 15 stars a day (both characters about 28), so the whole shop is reachable in three or four days of walk-in play alone, sooner with the mini-games, which pay every time. The Dream House showpieces add 131 stars of things to buy, and the house itself pays 50 stars once.
 
 ## The star shop
 
@@ -185,7 +206,13 @@ The island map and the three district pictures are still paintings, brought to l
 
 `dist/fx.js` draws the glitter pointer trail, click bursts and win confetti on one overlay canvas that ignores pointer input. Its animation loop stops when no particles are left. The sparkle button in the top bar turns the effects off, and the reduced-motion setting replaces them with a brief still sparkle.
 
-The island is an original AI-generated illustration with eight HTML links positioned over it: five round icon pins on the buildings (rooms) and three photo-bubble pins on the dock, the flower beds and the bridge (walk-in places). The gingham, paper frames, stamps, and game controls are drawn with CSS and vector icons.
+The island is an original AI-generated illustration with nine HTML links positioned over it: six round icon pins on the buildings and the hilltop (rooms) and three photo-bubble pins on the dock, the flower beds and the bridge (walk-in places). The gingham, paper frames, stamps, and game controls are drawn with CSS and vector icons.
+
+The Dream House draws each room on two stacked canvases: the empty room, painted once per wall and floor choice at its full 1536 × 1152 size and scaled by CSS, and the pieces, redrawn in one `requestAnimationFrame` only when something changed. Dragging updates one position per frame and touches no other element, so 40 pieces stay smooth (in headless Chromium a drag with 40 pieces runs at a steady 16.7 ms per frame). Pieces are picked by their painted pixels (a small alpha mask per sprite), not their boxes. The room is a dollhouse cutaway in a gentle one-point perspective (lines along the room's depth meet far above it), and `decor-logic.js` holds its geometry: the back wall from x 150 to 1386 down to y 640, the floor widening to the front edge at y 1108, the frame around it. A standing piece is positioned by the point where it touches the floor (the manifest's `anchor`), sized by its `defaultScale` and by its depth, and drawn in depth order of that point; rugs come before everything that stands, wall pieces before both, and a piece on a tabletop right after its table. Only the sprites of pieces in the room in view are downloaded; the picker uses the 128 px thumbnails with lazy loading, and the room cards draw their miniatures from the same thumbnails. None of the decorator's scripts, its stylesheet, the manifest or a sprite is requested anywhere else in the game: `game.js` loads them the first time the house (or a room photo in the Scrapbook) is shown.
+
+**Adding furniture.** Put the sprite in `dist/assets/decor/<room>/<id>.webp` and a 128 px thumbnail in `dist/assets/decor/thumbs/<id>.webp`, and add its entry (id, room, English and Spanish name, `placement`, `anchor`, `defaultScale`, `mirror`, `footprint`) to `dist/assets/decor/manifest.json`; `art/slice_decor.py` writes all of this when it slices a sheet. That is enough for it to appear in the picker. Optionally, in `dist/decor-data.js`, give it a price in `prices`, a tabletop in `surfaces` (where small pieces can sit on it), and a place in a room's `recipes` for Surprise me. `node --test test/*.mjs` checks that every id named in `decor-data.js` exists.
+
+**Painted room backdrops.** The rooms are procedural for now (`dist/decor-paint.js`). When painted empty rooms arrive (about 4:3, three colour schemes per room), put each in `dist/assets/decor/rooms/` and add an entry to `backdrops` in `decor-data.js`: `{room:'bedroom', id:'pink', file:'assets/decor/rooms/bedroom-pink.webp', swatch:'#f9d6e4'}`, plus its name as `house.scheme.<id>` in both dictionaries. The room then offers a **Painted rooms** group above the paint and floor choices; choosing one draws the picture over the whole room instead of the procedural walls and floor, and choosing a paint or floor goes back to procedural. A painted room should follow the same layout as the procedural one (above), so pieces stand on its floor and hang on its wall; it is downloaded only when chosen.
 
 | File | Responsibility |
 | --- | --- |
@@ -207,6 +234,11 @@ The island is an original AI-generated illustration with eight HTML links positi
 | `dist/vendor/three/` | three.js (MIT), bundled locally and loaded only when a living scene is shown |
 | `dist/fx.js` | Glitter pointer trail, sparkle bursts, and win confetti on one overlay canvas |
 | `dist/runway.js` | Spotlight sequence, replay, input checking, and rehearsal reward |
+| `dist/decorator.js` and `dist/decorator.css` | Dream House: room cards, the room stage, dragging, keyboard, toolbar, picker, previews and buying, rewards, room photos (loaded on demand) |
+| `dist/decor-logic.js` | Dream House rules without the page: room geometry, placement constraints, depth order, the save format and its validation, goals, Surprise me layouts |
+| `dist/decor-paint.js` | Dream House: the procedural rooms (walls, floors, frame, the patio's sky) and painted backdrops |
+| `dist/decor-data.js` | Dream House data: rooms, wall and floor treatments, prices, tabletops, room-tour goals, Surprise me recipes, painted backdrops |
+| `dist/assets/decor/` | 96 furniture and decor sprites, their thumbnails and `manifest.json` |
 | `dist/icons.js` | Interface icons |
 | `dist/assets/` | Doll bases, item sprites, scenes, wordmark, and island art |
 | `art/` | Source sheets, the slicing, cropping and fitting scripts, and the contact-sheet lab |
@@ -217,6 +249,7 @@ The island is an original AI-generated illustration with eight HTML links positi
 | `worker/stats.js` | Private stats page: sign-in, SQL API queries, server-rendered HTML |
 | `test/analytics.test.mjs` | `node --test`: event lists in sync, validation, privacy rules, translation keys |
 | `test/wardrobe.test.mjs` | `node --test`: per-doll hairstyles, old looks falling back, style challenges achievable, shop balance, saved ownership |
+| `test/house.test.mjs` | `node --test`: Dream House data, placement constraints, tabletops, depth order and reordering, save validation and size, goals, Surprise me layouts |
 | `test/island.test.mjs` | `node --test`: per-character stories, old saves migrating without lost or repeated stars, the next objective, daily errands deterministic per day and character, the clock guard, rotating small talk |
 
 To add a wearable, put its sprite in `dist/assets/items/`, add an entry with its fit to `catalog.js`, and give it a price in `shop.js` if it should be sold. A new hairstyle also needs its id in `HAIR_STYLES` for each doll that wears it (a kid style: `fit.little` and the `little` list). A shoe's foot placement, open parts and trim line per view are in `SHOE_FIT` in `catalog.js`. Option thumbnails are drawn lazily, one per frame, and cached for the visit. Choosing an option rebuilds only the controls and repaints the existing doll canvas, so the doll never blinks out. The studio’s turn control lists the views in `CATALOG.views`.
@@ -244,6 +277,8 @@ To add a string, add the same key to both dictionaries and call `t('group.key', 
 
 The game stores character looks, stars, stamps, challenge progress, delivered bouquets, best memory score, audio preference, and scrapbook in the browser’s `localStorage` under `hibiscus-club-v1`. `lang` holds the language the player picked (`en` or `es`), or `null` until the player chooses one. The shop adds `spent` (stars spent, while `stars` stays the lifetime total), `owned` (bought option keys such as `item:butterfly-clip`, `tint:gold-hoops:rose-gold`, `hair-color:lilac` or `lips:cherry`) and `favorites` (up to six looks per character). `analytics` is `false` when the player has turned off anonymous play counts (anything else counts as on). The island adventure adds `tutorial` (`done` or `skipped` once the first-visit tour is over), `dayMax` (the latest day the dailies were played, `YYYY-MM-DD`) and, in each character's `life` record, `quests` (her story stages), `credit`, `asked` (the name prompt was shown), `talks` (conversations per resident) and `daily` (`day`, `prog` per errand, and `found`, a bit mask of treasures). `stages`, the three shared story stages of older saves, is read once and migrated: the Grown-up keeps them as her first three stories, and Little Me's finished old stories become `credit` (6, 8 and 10 stars), which her new stories use up in order before paying out, so no star is lost or paid twice; her unfinished old story starts over as one of her own. Players who already had story progress or friendships skip the tour. Everything read back is validated. Older saves keep working: integer-style looks are mapped to the catalog, and anything a saved look or favorite already wears stays owned. Bought options that are free now stay in `owned` (stars spent are not refunded). A saved look, favorite or postcard of Little Me in a hairstyle she no longer has (Beach Babe Waves, Sassy Side Pony, Half-Up Curl Cascade) shows her default Ringlet Pigtails, keeping the hair color and everything else. An unfinished memory round, bouquet, or rehearsal lasts for the current page session. Leaving the runway ends that rehearsal.
 
+The Dream House adds `house`: `{v:1, at, rooms, owned, done, goals}`. `at` is the room last decorated; `rooms` has one entry per room, `{w: wall, f: floor, b?: painted backdrop, p: pieces}`, and each piece is a short array `[id, x, y, scale %, flip 0|1, z?, host?]` in whole room pixels (`z` is the bring-forward/send-back step and `host` the index of the table a small piece sits on, both only when set). `owned` lists the paid pieces bought, `done` the rooms already rewarded as furnished and `goals` the room-tour goals paid. Six full rooms (240 pieces) take about 8 KB. `game.js` only checks the shape on load (an object under 64 KB); everything is validated when the house first opens: unknown ids, wall or floor names and rooms are dropped or reset to the room's defaults, numbers are clamped into the room, each room keeps at most 40 pieces and each character once, a paid piece that is not owned is dropped, and every piece is put back where its kind belongs. Previews are never written. A room photo in `photos` is a normal postcard entry with `kind: 'room'` and `room`, a small snapshot of the room (`{r, w, f, p, looks}`) that is drawn again when the Scrapbook is shown; older saves have none, and an entry whose snapshot is not understood is shown as an ordinary postcard.
+
 Each browser profile and site address has its own save. Using a different port gives you a separate game. Private browsing or clearing site data can erase progress. If the browser blocks storage, the current session remains playable. Exported PNGs remain wherever you downloaded them.
 
 ## Verification
@@ -251,6 +286,8 @@ Each browser profile and site address has its own save. Using a different port g
 The game was exercised in Chromium at 1440 × 960 and with a 375 × 812 phone viewport, in English and Spanish. It has not been tested in Safari or Firefox, or on phone hardware. The checks covered every tab and option type on both characters, with keyboard focus kept on the chosen option. They also covered trying on and leaving (reverted), trying on and buying (the balance drops and persists after a reload), refusing a purchase without enough stars, and Golden hour staying unlocked after spending. Surprise me was run hundreds of times, using owned options only. Favorites were saved, worn and removed. Three style challenges were completed, and a postcard PNG was downloaded. An old integer-format save was migrated with stars and photos. The runway and Island Life were checked for the current look. All rooms and tabs were checked for horizontal overflow at phone width, with no console errors. Every item was reviewed on contact sheets in all four views on both dolls. The music was checked to keep scheduling across room changes and to stop and restart cleanly from the speaker button. In each language, a scripted walk through every room, tab, dialog and mini-game looked for text left in the other language, and the two dictionaries were checked for matching keys and variables.
 
 The one-map rework was checked the same way in both languages and both sizes: a new player going from the map into a place, getting named, taking the tour and finishing the first story by following the bar and markers; every story of both characters played to the end with each reward paid once (36 and 30 stars); a day's errands and treasures completed, the "come back tomorrow" state, a reload keeping the set, a faked next day bringing new sets for both characters and a clock set back not refilling them; crafted old saves (fresh, mid-story, all three old stories done, pre-shop, junk); every pin by mouse, touch and keyboard, `#life`, old hashes and Back/Forward; the living scenes mounting and unmounting; the name dialog's suggestions, typing, skipping, changing and hostile input, with no name in any `/api/e` payload; reduced motion, sparkles off and no WebGL; and no horizontal overflow or text under 13 px on any route.
+
+The Dream House was checked in Chromium at 1440 × 960 and 375 × 812 in English and Spanish: all six rooms furnished by mouse drags from the picker, by keyboard only, by touch drags (Chrome DevTools touch events) and by taps; flip, resize (buttons, keys and the corner handle), bring forward and send back, copy, remove, undo and redo, the 40-piece cap and Start over with its confirmation; previewing a paid piece, leaving the house and switching rooms with it unbought (dropped, never saved), buying with too few stars (refused) and buying (wallet and save updated); first-furnish rewards and room-tour goals paid once; a reload restoring every room exactly; crafted old, corrupt and oversized saves; both characters placed and updated after an outfit change; room photos downloaded and shown in the Scrapbook; Surprise me run hundreds of times per room (also in `test/house.test.mjs`); the map pin, passport stamp, Back/Forward and every other room; no horizontal overflow, no text under 13 px, no text left in the other language, and tap targets of at least 40 px on the new screens.
 
 ## License
 

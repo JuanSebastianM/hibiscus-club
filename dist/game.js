@@ -5,7 +5,8 @@ const places = [
   {id:'salon',icon:'wand',color:'#a272cb',x:69,y:26},
   {id:'arcade',icon:'gamepad',color:'#548cd5',x:81,y:54},
   {id:'garden',icon:'flower',color:'#6aaf81',x:13,y:45},
-  {id:'booth',icon:'camera',color:'#e3924f',x:43,y:70}
+  {id:'booth',icon:'camera',color:'#e3924f',x:43,y:70},
+  {id:'house',icon:'home',color:'#ec6a63',x:52,y:11} // Dream House, up on the hill (decorator.js)
 ].map(p=>Object.defineProperty(p,'name',{get(){return t('place.'+p.id)},enumerable:true}));
 const walkPins={boardwalk:{x:62,y:74},market:{x:25,y:65},pavilion:{x:49,y:41}};
 const stampIds=[...districts.map(d=>d.id),...places.map(p=>p.id)];
@@ -31,7 +32,7 @@ function loadGame(){
     missions:smallInt(raw.missions,Number.MAX_SAFE_INTEGER),
     bouquets:smallInt(raw.bouquets,Number.MAX_SAFE_INTEGER),
     best:smallInt(raw.best,Number.MAX_SAFE_INTEGER),
-    photos:(Array.isArray(raw.photos)?raw.photos:[]).filter(p=>p&&Object.hasOwn(dollNames,p.doll)&&typeof p.id==='string'&&/^[\w-]+$/.test(p.id)).slice(0,24).map(p=>({...readLook(p,p.doll),doll:p.doll,id:p.id})),
+    photos:(Array.isArray(raw.photos)?raw.photos:[]).filter(p=>p&&Object.hasOwn(dollNames,p.doll)&&typeof p.id==='string'&&/^[\w-]+$/.test(p.id)).slice(0,24).map(p=>({...readLook(p,p.doll),doll:p.doll,id:p.id,...houseShot(p)})),
     /* Star shop (save format additions): `stars` stays the lifetime total earned, `spent` is what the
        shop has taken, `owned` lists bought option keys, `favorites` holds up to six looks per doll. */
     spent:0,
@@ -41,7 +42,10 @@ function loadGame(){
     /* Island adventure: the first-visit tour ('done' or 'skipped' once over) and the latest day the
        daily errands were played (so turning the clock back never refills them). */
     tutorial:['done','skipped'].includes(raw.tutorial)?raw.tutorial:null,
-    dayMax:typeof raw.dayMax==='string'&&DAY_RE.test(raw.dayMax)?raw.dayMax:''
+    dayMax:typeof raw.dayMax==='string'&&DAY_RE.test(raw.dayMax)?raw.dayMax:'',
+    /* Dream House rooms (decorator.js): only shape-checked here; decor-logic.js validates every room
+       and piece when the house first opens. */
+    house:houseSave(raw.house)
   };
   // Players who already walked the island before the tour existed don't need it.
   if(!game.tutorial&&Object.values(game.life).some(p=>p.quests.some(Boolean)||p.topics.some(Boolean)))game.tutorial='done';
@@ -186,7 +190,37 @@ function garden(){
   return sectionTitle(t('place.garden'),t('garden.sub'),true)+`<div class="workbench"><section class="panel garden"><div class="eyeline">${icon('flower')} ${t('garden.table')}</div><div class="bouquet" role="img" aria-label="${t('garden.preview')}">${[0,1,2].map(i=>`<span class="stem stem-${i} ${stems[i]===undefined?'empty':''}">${stems[i]===undefined?'✧':flowerGlyph[stems[i]]}</span>`).join('')}<div class="vase"></div></div><div class="flower-picks">${flowerKeys.map((_,i)=>`<button data-flower="${i}" ${stems.length===3?'disabled':''}><span>${flowerGlyph[i]}</span>${flowerName(i)}</button>`).join('')}</div></section><div class="panel game-details"><div class="eyeline">${icon('ticket')} ${t('garden.orderEyeline')}</div><h2>${t('garden.orderTitle')}</h2><p>${t('garden.orderText')}</p><ul class="order">${order.map(i=>`<li>${flowerGlyph[i]} ${flowerName(i)}</li>`).join('')}</ul><p class="garden-note" role="status">${gardenNote?t(gardenNote):t('garden.progress',{n:stems.length})}</p><button class="primary wide" data-action="wrap" ${stems.length!==3?'disabled':''}>${t('garden.wrap')}</button><button class="sub-link" data-action="undo" ${!stems.length?'disabled':''}>${t('garden.undo')}</button></div></div>`;
 }
 function scrapbook(){
-  return sectionTitle(t('page.scrapbook'),t('scrapbook.sub'),true)+`<div class="album-head"><b>${t('scrapbook.count',{n:state.photos.length})}</b><a class="primary" href="#booth">${icon('camera',17)} ${t('scrapbook.booth')}</a></div>`+(state.photos.length?`<div class="album-grid">${state.photos.map((s,i)=>`<article class="album-card"><canvas data-photo="${s.id}" role="img" aria-label="${escapeText(t('scrapbook.photo',{n:i+1,doll:dollNames[s.doll],outfit:itemName(s.outfit)}))}"></canvas><div><button data-download="${s.id}" aria-label="${t('scrapbook.download',{n:i+1})}">${icon('download',17)} ${t('scrapbook.png')}</button><button data-remove="${s.id}" aria-label="${t('scrapbook.removeLabel',{n:i+1})}">${t('scrapbook.remove')}</button></div></article>`).join('')}</div>`:`<section class="album-empty"><span>${icon('book',48)}</span><h2>${t('scrapbook.emptyTitle')}</h2><p>${t('scrapbook.emptyText')}</p><a class="primary" href="#booth">${t('scrapbook.first')}</a></section>`);
+  return sectionTitle(t('page.scrapbook'),t('scrapbook.sub'),true)+`<div class="album-head"><b>${t('scrapbook.count',{n:state.photos.length})}</b><a class="primary" href="#booth">${icon('camera',17)} ${t('scrapbook.booth')}</a></div>`+(state.photos.length?`<div class="album-grid">${state.photos.map((s,i)=>`<article class="album-card"><canvas data-photo="${s.id}" role="img" aria-label="${escapeText(s.kind==='room'?t('scrapbook.roomPhoto',{n:i+1,room:t('house.the.'+s.room.r)}):t('scrapbook.photo',{n:i+1,doll:dollNames[s.doll],outfit:itemName(s.outfit)}))}"></canvas><div><button data-download="${s.id}" aria-label="${t('scrapbook.download',{n:i+1})}">${icon('download',17)} ${t('scrapbook.png')}</button><button data-remove="${s.id}" aria-label="${t('scrapbook.removeLabel',{n:i+1})}">${t('scrapbook.remove')}</button></div></article>`).join('')}</div>`:`<section class="album-empty"><span>${icon('book',48)}</span><h2>${t('scrapbook.emptyTitle')}</h2><p>${t('scrapbook.emptyText')}</p><a class="primary" href="#booth">${t('scrapbook.first')}</a></section>`);
+}
+/* ---------- Dream House: decorator.js and its data load only when the house (or a room photo in the
+   scrapbook) is shown. These few functions are all game.js knows about it. ---------- */
+const HOUSE_FILES=['decor-data.js','decor-logic.js','decor-paint.js','decorator.js'];
+let houseFiles=null;
+function houseReady(){
+  if(!houseFiles)houseFiles=new Promise((ok,no)=>{
+    const css=document.createElement('link');css.rel='stylesheet';css.href='decorator.css';document.head.appendChild(css);
+    const done=[new Promise(r=>{css.onload=r;css.onerror=r})];
+    for(const f of HOUSE_FILES){const s=document.createElement('script');s.src=f;s.async=false;done.push(new Promise((r,x)=>{s.onload=r;s.onerror=x}));document.head.appendChild(s)}
+    Promise.all(done).then(ok,no);
+  }).catch(e=>{houseFiles=null;throw e});
+  return houseFiles;
+}
+function houseRoom(){
+  if(typeof Decorator!=='undefined')return Decorator.html();
+  houseReady().then(()=>{if(route==='house')draw()}).catch(()=>{const m=main.querySelector('.house-loading');if(m)m.textContent=t('house.loadError')});
+  return sectionTitle(places.find(p=>p.id==='house').name,t('house.sub'),true)+`<div class="house-loading" role="status"><span aria-hidden="true">✦</span> ${t('house.loading')}</div>`;
+}
+function leaveHouse(){try{return typeof Decorator!=='undefined'?Decorator.leave():''}catch{return ''}}
+function houseSave(raw){
+  try{return raw&&typeof raw==='object'&&!Array.isArray(raw)&&JSON.stringify(raw).length<64000?raw:null}catch{return null}
+}
+/* A scrapbook page is a doll postcard, or a room photo (kind 'room' with a small snapshot of the room). */
+function houseShot(p){
+  try{return p.kind==='room'&&p.room&&typeof p.room==='object'&&!Array.isArray(p.room)&&typeof p.room.r==='string'&&I18N.has('house.the.'+p.room.r)&&JSON.stringify(p.room).length<8000?{kind:'room',room:p.room}:{}}catch{return {}}
+}
+function paintPhoto(canvas,shot){
+  if(shot?.kind==='room')return houseReady().then(()=>Decorator.paintRoomPhoto(canvas,shot));
+  return paintPortrait(canvas,shot,true);
 }
 function draw(){
   const focused=document.activeElement;
@@ -194,13 +228,13 @@ function draw(){
   const val=key?focused.dataset[key]:null;
   detachWorld();
   navBar();
-  main.innerHTML=isDistrictRoute(route)?lifeScene():route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():isMakeoverRoute()?makeoverRoom():studio();
+  main.innerHTML=isDistrictRoute(route)?lifeScene():route==='map'?mapScreen():route==='arcade'?arcade():route==='garden'?garden():route==='scrapbook'?scrapbook():route==='runway'?runway():route==='house'?houseRoom():isMakeoverRoute()?makeoverRoom():studio();
   if(isDistrictRoute(route))attachWorld();
   if(route==='map')try{HibiscusScenes.mount(main.querySelector('.map-art'),'island')}catch{} // living scene; plain picture if unavailable
   if(isMakeoverRoute())paintStage();
   else{const c=document.querySelector('#preview, #card-preview');
     if(c)paintCanvas(c,currentShot(),route==='booth').catch(()=>say(t('common.portraitError')));}
-  main.querySelectorAll('[data-photo]').forEach(el=>paintPortrait(el,state.photos.find(s=>s.id===el.dataset.photo),true).catch(()=>say(t('scrapbook.loadError'))));
+  main.querySelectorAll('[data-photo]').forEach(el=>paintPhoto(el,state.photos.find(s=>s.id===el.dataset.photo)).catch(()=>say(t('scrapbook.loadError'))));
   if(key&&val!==null){
     const buttons=Array.from(main.querySelectorAll('button'));
     buttons.find(b=>b.dataset[key]===val&&(!focused.hasAttribute('data-value')||b.dataset.value===focused.dataset.value))?.focus({preventScroll:true});
@@ -216,6 +250,7 @@ function navigate(){
   // Old links: #life (the former Island Life tab) opens the place where she last was, with no extra history entry.
   if(id==='life'){id=districts[lifePlayer().scene].id;history.replaceState(null,'','#'+id);}
   const dropped=leaving&&leaving!==id&&dropTrial();
+  const houseLeft=leaving==='house'&&id!=='house'?leaveHouse():'';
   route=[...places.map(p=>p.id),...DISTRICT_IDS,'scrapbook','runway'].includes(id)?id:'map';
   const walking=isDistrictRoute(route);
   document.documentElement.dataset.room=walking?'life':route; // style.css: each room's pastel theme; walk-in places share "life"
@@ -228,6 +263,7 @@ function navigate(){
   setPageTitle();
   draw();window.scrollTo(0,0);
   if(dropped)say(t('shop.droppedLeave'));
+  else if(houseLeft)say(houseLeft);
   else if(walking&&route!==leaving)sceneSay(t('life.arrive',{place:districtOf(route).name,next:objective().text}));
 }
 function takePhoto(){
@@ -282,7 +318,7 @@ document.addEventListener('click',async e=>{
   if(d.flower!==undefined){if(!bouquetStarted){bouquetStarted=true;track('game-start','bouquet')}if(stems.length<3)stems.push(Number(d.flower));gardenNote='';draw();return;}
   if(d.download){
     try{
-      const canvas=document.createElement('canvas');await paintPortrait(canvas,state.photos.find(p=>p.id===d.download),true);
+      const canvas=document.createElement('canvas');await paintPhoto(canvas,state.photos.find(p=>p.id===d.download));
       const link=document.createElement('a');link.download='hibiscus-postcard-'+d.download+'.png';
       link.href=canvas.toDataURL('image/png');link.click();track('postcard','png');
     }catch{say(t('scrapbook.downloadError'));}
@@ -334,6 +370,7 @@ window.addEventListener('langchange',()=>{
   const y=window.scrollY,x=window.scrollX;
   setPageTitle();
   if(isMakeoverRoute()&&document.querySelector('#stage')){navBar();relocalizeRoom();}
+  else if(route==='house'&&typeof Decorator!=='undefined'&&Decorator.relocalize())navBar();
   else draw();
   relocalizeBuyDialog();relocalizeEncounter();
   if(nameDialog.open)fillNameDialog();

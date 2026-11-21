@@ -16,9 +16,12 @@ const RANGES = {
 const SERIES = { a: '#7a4fb0', b: '#c2387a' }; // lilac, berry: validated as a 2-slot palette on #fffafd
 
 const NAMES = {
-  room: { map: 'Island map', wardrobe: 'Dress-Up Studio', salon: 'Beauty Salon', booth: 'Photo Booth', scrapbook: 'Scrapbook', arcade: 'Star Arcade', garden: 'Flower Garden', runway: 'Island Runway', life: 'Walk-in places' },
-  district: { boardwalk: 'Pearl Boardwalk', market: 'Flower Market', pavilion: 'Starlight Pavilion', studio: 'Pink studio' },
-  category: { outfit: 'Outfits', shoes: 'Shoes', jewelry: 'Jewelry', hair: 'Hairstyles', 'hair-color': 'Hair color', makeup: 'Makeup', nails: 'Nails', accessory: 'Hair accessories' },
+  room: { map: 'Island map', wardrobe: 'Dress-Up Studio', salon: 'Beauty Salon', booth: 'Photo Booth', scrapbook: 'Scrapbook', arcade: 'Star Arcade', garden: 'Flower Garden', runway: 'Island Runway', life: 'Walk-in places', house: 'Dream House' },
+  district: { boardwalk: 'Pearl Boardwalk', market: 'Flower Market', pavilion: 'Starlight Pavilion', studio: 'Pink studio', house: 'Dream House room photo' },
+  category: { outfit: 'Outfits', shoes: 'Shoes', jewelry: 'Jewelry', hair: 'Hairstyles', 'hair-color': 'Hair color', makeup: 'Makeup', nails: 'Nails', accessory: 'Hair accessories', decor: 'Dream House furniture' },
+  houseRoom: { bedroom: 'Bedroom', kitchen: 'Kitchen', living: 'Living room', bathroom: 'Bathroom', playroom: 'Playroom', patio: 'Patio' },
+  decorCategory: { bedroom: 'Bedroom pieces', kitchen: 'Kitchen pieces', living: 'Living room pieces', bathroom: 'Bathroom pieces', playroom: 'Playroom pieces', patio: 'Patio pieces', walls: 'Wall decor', floor: 'Floor decor' },
+  decorGoal: { bed: 'Place a bed', wall: 'Hang something on a wall', rug: 'Roll out a rug', paint: 'New paint or floor', top: 'Something on a tabletop', friend: 'Invite a character', photo: 'Take a room photo' },
   game: { memory: 'Memory Match', bouquet: 'Bouquet orders', runway: 'Runway rehearsal' },
   challenge: { picnic: 'Picnic in paradise', disco: 'Disco by the sea', seashell: 'Seashell sweetheart', mall: 'Mall crawl Saturday', rosy: 'Rosy glow-up', midnight: 'Midnight boardwalk', homecoming: 'Island homecoming', bob: 'Bouncy bob bash' },
   // each character has her own four stories (Grown-up / Little Me), so they are counted by position
@@ -211,6 +214,7 @@ function dashboard(d, rangeKey) {
   const rows = (e, names) => listOf(e, names).map(([label, , id]) => [label, get(e, id)]);
   const games = SCHEMA.events['game-start'].map(id => [NAMES.game[id], get('game-start', id), get('game-done', id)]);
   const makeover = SCHEMA.events.makeover.map(id => [NAMES.category[id], get('makeover', id), get('tryon', id)]);
+  const houseRooms = SCHEMA.events['decor-room'].map(id => [NAMES.houseRoom[id], get('decor-room', id), get('decor-done', id)]);
   const purchases = SCHEMA.events.purchase.map(id => [id, d.bands[id] || {}]).filter(([, b]) => sum(b) > 0);
   const purchaseTable = purchases.length
     ? `<table><thead><tr><th scope="col">Category</th>${SCHEMA.bands.map(b => `<th scope="col" class="num">${esc(NAMES.band[b])}</th>`).join('')}<th scope="col" class="num">Total</th></tr></thead><tbody>${
@@ -234,6 +238,9 @@ function dashboard(d, rangeKey) {
       ${rankTable('Postcards taken, by scenery', rows('photo', NAMES.district), { head: 'Scenery', empty: 'No postcards yet.' })}
       ${rankTable('Style challenges completed', rows('challenge', NAMES.challenge), { head: 'Brief', empty: 'No challenges completed yet.' })}
       ${small('Scrapbook and favorites', [['Postcards downloaded', sum(ev.postcard)], ['Favorite looks saved', get('favorite', 'saved')], ['Favorite looks worn', get('favorite', 'worn')], ['Surprise me! in the studio', get('surprise', 'wardrobe')], ['Surprise me! in the salon', get('surprise', 'salon')]])}
+      ${pairTable('Dream House rooms', houseRooms, 'Opened', 'Furnished', { head: 'Room', note: 'Furnished counts each room the first time it reaches six pieces (a one-time reward).' })}
+      ${rankTable('Dream House pieces placed', rows('decor-place', NAMES.decorCategory), { head: 'Collection', empty: 'No pieces placed yet.' })}
+      ${small('Dream House extras', [['Surprise me! in the house', get('surprise', 'house')], ['Room photos taken', get('photo', 'house')], ['Paid pieces previewed', get('tryon', 'decor')], ...rows('decor-goal', NAMES.decorGoal).map(([k, v]) => ['Room tour: ' + k, v])])}
       ${small('Walk-in places', [...rows('district', NAMES.district).filter(r => r[0] !== 'Pink studio').map(([k, v]) => ['Trips to ' + k, v]), ...rows('chat', NAMES.district).filter(r => r[0] !== 'Pink studio').map(([k, v]) => ['Conversations at ' + k, v]), ...rows('findable', NAMES.district).filter(r => r[0] !== 'Pink studio').map(([k, v]) => ['Treasures found at ' + k, v])])}
       ${small('Stories and daily errands', [...rows('errand', NAMES.errand).map(([k, v]) => [k + ' finished', v]), ...rows('daily', NAMES.daily).map(([k, v]) => ['Daily errand: ' + k, v])])}
       ${small('First visit', [['Tour finished', get('tutorial', 'done')], ['Tour skipped', get('tutorial', 'skipped')], ['Name set', get('name', 'yes')], ['Name prompt skipped', get('name', 'no')]])}
