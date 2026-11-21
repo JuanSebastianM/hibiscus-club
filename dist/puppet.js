@@ -197,6 +197,13 @@ const HibiscusPuppet=(()=>{
     g.putImageData(im,0,0);
     let mask=null;
     if(!whole){mask=mk(cw,ch);const mg=mask.getContext('2d'),mi=mg.createImageData(cw,ch);for(let k=0;k<msk.length;k++)if(msk[k]){mi.data[k*4]=mi.data[k*4+1]=mi.data[k*4+2]=mi.data[k*4+3]=255}mg.putImageData(mi,0,0)}
+    // worn.js: a layer with a sharper twin (spec.hd = {k, data}: k x the doll canvas) gets its texture at k x,
+    // texel by texel from the twin where it holds the pixel (else from the layer: what was filled in here)
+    if(spec.hd){const k=spec.hd.k,hd=spec.hd.data,HW=W*k,c2=mk(cw*k,ch*k),g=g2(c2),im2=g.createImageData(cw*k,ch*k),o2=im2.data;
+      for(let Y=0;Y<ch*k;Y++){const y=(Y/k)|0;for(let X=0;X<cw*k;X++){const x=(X/k)|0;if(!reach[y*cw+x])continue;
+        const i=((y+y0)*W+x+x0)*4,j=((y0*k+Y)*HW+x0*k+X)*4,q=(Y*cw*k+X)*4,s=hd[j+3]>=d[i+3]*.9?hd:d,b=s===hd?j:i;
+        o2[q]=s[b];o2[q+1]=s[b+1];o2[q+2]=s[b+2];o2[q+3]=s[b+3]}}
+      g.putImageData(im2,0,0);const {hd:_,...rest}=spec;return {...rest,canvas:c2,mask,box:[x0,y0,cw,ch],alpha:reach}}
     return {...spec,canvas:c,mask,box:[x0,y0,cw,ch],alpha:reach};
   }
   function dilateBox(m,w,h,r){
@@ -456,13 +463,13 @@ const HibiscusPuppet=(()=>{
   async function buildDollModel(shot,view){
     const layers=await composeDollLayers(shot,view);await later();
     const rg=R.dressedRig(layers.doll,view,layers.shot.outfit),dv=dollView(layers.doll,view);
-    const fan=R.sleevesOf(layers.shot.outfit)==='long';
+    const fan=R.sleevesOf(layers.shot.outfit)==='long'||!!layers.worn; // worn.js: no raised arms, so the shoulder bends smoothly (no disc kept under a short sleeve)
     const {lab,armMask}=await baseLabels(rg,dv,!fan);await later();
-    const kindOutfit=R.outfitKind(layers.shot.outfit),outfitFit=catalogItem(layers.shot.outfit)?.fit?.[layers.doll]?.[view]||{};
+    const kindOutfit=R.outfitKind(layers.shot.outfit),outfitFit=layers.worn?{}:catalogItem(layers.shot.outfit)?.fit?.[layers.doll]?.[view]||{}; // worn.js: no flat-outfit fit
     const armIdx=layers.layers.findIndex(l=>l.kind==='arm');
     const groups={hairB:[],far:[],torso:[],legs:[],skirt:[],arms:[],over:[],raised:[],hairF:[]};
     // raised-arm emotes (front view, outfits that can show them): the posed pictures, loaded now
-    const poseSpec=view==='front'&&R.raisedOK(layers.shot.outfit)?R.POSE_ARMS[layers.doll]:null;
+    const poseSpec=view==='front'&&R.raisedOK(layers.shot.outfit)&&!layers.worn?R.POSE_ARMS[layers.doll]:null; // worn.js: arm-safe emotes
     const poseImgs=poseSpec&&Promise.all(Object.entries(poseSpec).map(([name,s])=>asset(s.file).then(img=>[name,s,img]))).catch(e=>{if(config.debug)console.warn(e);return null});
     const capSrc=[]; // puffed / tee sleeves (outfit pixels labelled L_PUFF): they follow a raised arm as a cap
     let posed=null;
@@ -487,6 +494,7 @@ const HibiscusPuppet=(()=>{
       let canvas=L.canvas;
       if(L.kind==='shoesBack'&&layers.nearShoe)canvas=layers.nearShoe;
       let d=pixelsOf(canvas).data;
+      const hd=L.hd?{k:Math.round(L.hd.width/W),data:g2(L.hd).getImageData(0,0,L.hd.width,L.hd.height).data}:null; // worn.js: sharper textures
       const box=alphaBox(d);if(!box)continue;
       const hairKind=['hairBack','hairFront','clipBehind','hood'].includes(L.kind)||(L.kind==='charm'&&L.behind); // a hood worn up moves like the hair
       const headKind=['earrings','studs','clip','charm','glassesUnder','glasses','hat'].includes(L.kind)&&!hairKind;
@@ -570,7 +578,7 @@ const HibiscusPuppet=(()=>{
           :P===L_PUFF?[[i=>lb[i]===P&&!sleeveOf(0,i)&&!sleeveOf(1,i),spec],...[0,1].map(a=>[i=>lb[i]===P&&sleeveOf(a,i),{...spec,puffSide:a}])]:[[member,spec]];
         if(poseSpec&&P===L_PUFF&&sleeves==='puff'&&['outfit','over'].includes(L.kind))capSrc.push({d,lb,hem});
         for(const [mem,sp] of variants){
-          const pc=makePiece(d,ex,mem,sp);
+          const pc=makePiece(d,ex,mem,hd?{...sp,hd}:sp);
           if(!pc)continue;
           groups[GROUP_OF[P]].push(pc);
           if(P===L_HEAD&&rg.face){overlaySrc=canvas;headPiece=pc;groups.torso.push({overlay:true})}
