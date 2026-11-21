@@ -319,7 +319,7 @@ def overlay(img: Image.Image, geo: dict, dbg: dict, path: Path, name: str) -> No
     # 1.8 m figure at the back wall and at the front: the yardstick in use
     s = geo["scale"] * PX_PER_M
     for fx, fy in [((geo["floor"][0][0] + geo["floor"][1][0]) / 2 - 300, yb), (300, min(geo["floor"][2][1], H) - 40)]:
-        k = (fy - vy) / (yb - vy)
+        k = min(1.5, (fy - vy) / (yb - vy))  # as the game: growth toward the viewer capped at 1.5
         hh = 1.8 * s * k
         d.rectangle([fx - 0.25 * s * k, fy - hh, fx + 0.25 * s * k, fy], outline=(255, 255, 255, 255), fill=(0, 0, 0, 70), width=3)
     d.text((10, 10), f"{name} scale {geo['scale']} vp {geo['vp']}", fill=(0, 0, 0, 255))
