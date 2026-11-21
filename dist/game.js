@@ -8,7 +8,8 @@ const places = [
   {id:'booth',icon:'camera',color:'#e3924f',x:43,y:70},
   {id:'house',icon:'home',color:'#ec6a63',x:52,y:11} // Dream House, up on the hill (decorator.js)
 ].map(p=>Object.defineProperty(p,'name',{get(){return t('place.'+p.id)},enumerable:true}));
-const walkPins={boardwalk:{x:62,y:74},market:{x:25,y:65},pavilion:{x:49,y:41}};
+const walkPins={boardwalk:{x:62,y:74},market:{x:25,y:65},pavilion:{x:49,y:41},
+  beach:{x:31,y:90,side:true},park:{x:87,y:33}}; // Sunny Cove on the south-west sand, Breezy Park on the green east of the salon
 const stampIds=[...districts.map(d=>d.id),...places.map(p=>p.id)];
 const dollNames={get adult(){return t('doll.adult')},get little(){return t('doll.little')}};
 const saveKey='hibiscus-club-v1';
@@ -137,7 +138,7 @@ function challenge(){
 function mapPins(o){
   const room=p=>`<a class="pin pin-room" style="--x:${p.x}%;--y:${p.y}%;--ink:${p.color}" href="#${p.id}" aria-label="${escapeText(t('map.pinRoom',{place:p.name}))}"><i>${icon(p.icon,20)}</i><strong>${p.name}</strong></a>`;
   const walk=d=>{const next=o.at===d.id,at=walkPins[d.id];
-    return `<a class="pin pin-walk ${next?'is-next':''}" style="--x:${at.x}%;--y:${at.y}%;--ink:${d.color}" href="#${d.id}" aria-label="${escapeText(t(next?'map.pinWalkNext':'map.pinWalk',{place:d.name}))}"><i style="background-image:url('assets/scenes/${d.id}.jpg')"></i><strong>${d.name}</strong>${next?`<span class="pin-next" aria-hidden="true">★ ${t('life.markerNext')}</span>`:''}</a>`};
+    return `<a class="pin pin-walk ${next?'is-next':''} ${at.side?'pin-label-side':''}" style="--x:${at.x}%;--y:${at.y}%;--ink:${d.color}" href="#${d.id}" aria-label="${escapeText(t(next?'map.pinWalkNext':'map.pinWalk',{place:d.name}))}"><i style="background-image:url('assets/scenes/${d.id}.jpg')"></i><strong>${d.name}</strong>${next?`<span class="pin-next" aria-hidden="true">★ ${t('life.markerNext')}</span>`:''}</a>`};
   return places.map(room).join('')+districts.map(walk).join('');
 }
 function mapQuest(o){

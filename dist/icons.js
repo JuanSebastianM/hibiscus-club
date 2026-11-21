@@ -30,6 +30,9 @@ const outlines = {
   polish:'<path d="M7 11h10v9a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1zM10 11V7h4v4M11 7V3h2v4"/>',
   bow:'<path d="M12 12C8 6 3 5 3 9s5 4 9 3c-4 1-7 5-5 7 2 1 4-4 5-7 1 3 3 8 5 7 2-2-1-6-5-7 4 1 9 1 9-3s-5-3-9 3Z"/><circle cx="12" cy="12" r="1.6"/>',
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
-  home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/>'
+  home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/>',
+  /* walk-in places: Sunny Cove and Breezy Park */
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5m0 14v2.5M2.5 12H5m14 0h2.5M5.3 5.3 7 7m10 10 1.7 1.7M5.3 18.7 7 17m10-10 1.7-1.7"/>',
+  kite:'<path d="M12 2 18 8.5 12 15 6 8.5Z"/><path d="M6 8.5h12M12 2v13"/><path d="M12 15c-1 2 1.5 3 .5 5s-2 1.5-2 3"/>'
 };
 function icon(name,size=20){return '<svg aria-hidden="true" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+(outlines[name]||'')+'</svg>'}

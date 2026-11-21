@@ -5,7 +5,7 @@ const isDistrictRoute=r=>DISTRICT_IDS.includes(r);
 /* The route decides where she is: arriving somewhere new puts her at the entrance. */
 function enterDistrict(id){
   const p=lifePlayer(),i=DISTRICT_IDS.indexOf(id);
-  if(i>=0&&p.scene!==i){p.scene=i;p.x=.43;p.y=.86;}
+  if(i>=0&&p.scene!==i){p.scene=i;p.x=clamp(.43,districts[i].xMin??.07,districts[i].xMax??.93);p.y=.86;}
 }
 const here=()=>district().id;
 function travelStrip(o){
@@ -29,7 +29,7 @@ function tokens(){
     if(e.type!=='find'||e.at!==idx||dailyDone(e,s.day.prog[n]))return;
     s.plan.tokens[idx].forEach(([x,y],k)=>{
       if(s.day.prog[n]&1<<k)return;
-      out.push(`<button class="token find-token" data-token="f${k}" style="left:${x*100}%;top:${y*100}%;--z:${Math.round(y*100)}" aria-label="${escapeText(t('life.findLabel.'+i))}"><span aria-hidden="true">${icon(i==='pavilion'?'music':i==='market'?'flower':'gem',17)}</span></button>`);
+      out.push(`<button class="token find-token" data-token="f${k}" style="left:${x*100}%;top:${y*100}%;--z:${Math.round(y*100)}" aria-label="${escapeText(t('life.findLabel.'+i))}"><span aria-hidden="true">${icon(district().findIcon||(i==='pavilion'?'music':i==='market'?'flower':'gem'),17)}</span></button>`);
     });
   });
   return out.join('');
@@ -43,7 +43,7 @@ function targetState(target){
   if(target==='person'){
     const offer=offerable();if(offer>=0&&storiesOf()[offer].giver===at)return 'task';
     const {plan,day}=dailySummary(),g=plan.errands.findIndex(e=>e.type==='greet');
-    if(g>=0&&!dailyDone(plan.errands[g],day.prog[g])&&!(day.prog[g]&1<<lifePlayer().scene))return 'task';
+    if(g>=0&&!dailyDone(plan.errands[g],day.prog[g])&&plan.errands[g].who.includes(lifePlayer().scene)&&!(day.prog[g]&1<<lifePlayer().scene))return 'task';
   }
   return '';
 }
@@ -64,7 +64,7 @@ function dailyList(){
   const s=dailySummary();
   const rows=s.plan.errands.map((e,i)=>{
     const done=dailyDone(e,s.day.prog[i]),o=done?null:dailyObjective(e,s.day.prog[i]);
-    const progress=!done&&(e.type==='find'||e.type==='greet')?t('common.ratio',{n:bits(s.day.prog[i]),total:3})+' · ':'';
+    const progress=!done&&(e.type==='find'||e.type==='greet')?t('common.ratio',{n:dailyCount(e,s.day.prog[i]),total:3})+' · ':'';
     return `<li class="${done?'finished':''}"><span class="story-seal">${icon(done?'check':'star',15)}</span><div><strong>${escapeText(dailyTitle(e))}</strong><p>${done?t('life.dailyDone',{count:e.reward}):escapeText(progress+objectiveWhere(o))}</p></div><span class="story-reward">${done?'':`★ ${I18N.num(e.reward)}`}</span></li>`;
   }).join('');
   const rest=s.done===s.total?`<p class="tomorrow">${icon('check',15)} ${t('life.tomorrow',{count:hoursToMidnight()})}</p>`:'';
@@ -89,7 +89,7 @@ function lifeScene(){
     <div class="hud" id="hud">${hud()}</div>
     <div id="world" tabindex="0" role="group" aria-label="${t('life.world',{place:d.name})}" style="--scene:url('assets/scenes/${d.id}.jpg')">
       <div class="destination-ring" hidden></div>
-      <button class="world-person ${ps?'is-'+ps:''}" data-world-target="person" style="left:${d.person[0]*100}%;top:${d.person[1]*100}%;" aria-label="${escapeText(personLabel(ps))}"><img src="assets/scenes/${slug}.png" alt="" draggable="false"><span class="tag">${icon('heart',13)} ${d.resident}</span>${marker(ps)}</button>
+      <button class="world-person ${ps?'is-'+ps:''}" data-world-target="person" style="left:${d.person[0]*100}%;top:${d.person[1]*100}%;${d.personSize?`height:${d.personSize}%;`:""}" aria-label="${escapeText(personLabel(ps))}"><img src="assets/scenes/${slug}.png" alt="" draggable="false"><span class="tag">${icon('heart',13)} ${d.resident}</span>${marker(ps)}</button>
       <button class="world-object ${os?'is-'+os:''}" data-world-target="object" style="left:${d.object[0]*100}%;top:${d.object[1]*100}%" aria-label="${escapeText(objectLabel(os))}"><span class="tag">${icon(d.icon,15)}<span class="tag-text">${d.spot}</span></span>${marker(os)}</button>
       <div class="tokens">${tokens()}</div><div class="coach-slot"></div>
       <div class="walker" aria-hidden="true"><div class="walker-shadow"></div><div class="walker-body"><canvas class="walker-doll" width="${WALKER_CROP[2]}" height="${WALKER_CROP[3]}"></canvas></div><span class="walker-name">${escapeText(playerLabel())}</span></div>
@@ -97,7 +97,7 @@ function lifeScene(){
     <div id="coach"></div>
     ${travelStrip(o)}</section></div>
     <aside class="life-right"><section class="journal" id="journal" tabindex="-1">${journal()}</section>
-    <section class="life-profile"><h2 class="sr-only">${t('common.character')}</h2>${dollSwitch()}<div class="profile-actions"><a href="#wardrobe" class="sub-link">${t('life.changeOutfit')}</a><button class="sub-link" data-life-action="photo">${icon('camera',16)} ${t('life.photo')}</button></div></section></aside></div>`;
+    <section class="life-profile"><h2 class="sr-only">${t('common.character')}</h2>${dollSwitch()}<div class="profile-actions"><a href="#wardrobe" class="sub-link">${t('life.changeOutfit')}</a>${lifePlayer().scene<SCENERY_PLACES?`<button class="sub-link" data-life-action="photo">${icon('camera',16)} ${t('life.photo')}</button>`:''}</div></section></aside></div>`;
 }
 /* Redraws everything that depends on progress without rebuilding the scene (she keeps walking). */
 function refreshQuestUI(){
@@ -214,7 +214,7 @@ function walkTo(x,y,arrive,status){
   if(!w)return;
   stopWalk();
   const p=lifePlayer(),fromX=p.x,fromY=p.y;
-  x=clamp(x,.07,.93);y=clamp(y,district().floor,.94);
+  const d=district();x=clamp(x,d.xMin??.07,d.xMax??.93);y=clamp(y,floorAt(d,x),.94); // per-scene walkable limits
   const dx=x-fromX,dy=y-fromY,side=dx<0?-1:1;
   let duration=Math.hypot(dx,dy*w.height/w.width)*2600;
   // the moving puppet walks at its natural pace with planted feet: side view for mostly sideways
@@ -318,10 +318,10 @@ function announceNext(prefix){
 /* A greeting counts toward a "say hi to everyone" errand. */
 function greet(){
   const p=lifePlayer(),{plan,day}=dailySummary(),g=plan.errands.findIndex(e=>e.type==='greet');
-  if(g<0||dailyDone(plan.errands[g],day.prog[g])||day.prog[g]&1<<p.scene)return;
+  if(g<0||dailyDone(plan.errands[g],day.prog[g])||day.prog[g]&1<<p.scene||!plan.errands[g].who.includes(p.scene))return;
   day.prog[g]|=1<<p.scene;
   if(dailyDone(plan.errands[g],day.prog[g]))finishDaily(g);
-  else{persist();refreshQuestUI();say(t('daily.greet.progress',{n:bits(day.prog[g])}))}
+  else{persist();refreshQuestUI();say(t('daily.greet.progress',{n:dailyCount(plan.errands[g],day.prog[g])}))}
 }
 function finishDaily(i){
   const e=dailySummary().plan.errands[i];
@@ -460,7 +460,7 @@ function handleLifeAction(button){
     case 'again':{const target=dialog.dataset.target;openEncounter(target);return true}
     case 'bye':dialog.close();return true;
     case 'name':stopWalk(true);openNameDialog(false);return true;
-    case 'photo':look().backdrop=p.scene+1;persist();location.hash='booth';return true;
+    case 'photo':look().backdrop=p.scene<SCENERY_PLACES?p.scene+1:0;persist();location.hash='booth';return true;
     case 'journal':{const j=document.querySelector('#journal');j?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});j?.focus({preventScroll:true});return true}
   }
   return false;

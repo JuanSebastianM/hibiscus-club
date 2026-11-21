@@ -140,7 +140,18 @@ const RESIDENTS={
       mouth:[[86.5,61.4,0],[90,62.5,.6],[94,62.9,1],[98,62.6,1],[101,61.8,.5],[104,60.6,0]],corners:[[86.5,61.4],[104,60.6]],cheeks:[[86,56,5],[104,55,5]],chin:71,jawMax:1.5,teeth:true,lash:[.5,.75],lidSample:1.5}},
   kit:{size:[176,432],joints:{root:[97,425],hips:[97,205],spine:[98,160],chest:[100,110],neck:[103,76],head:[103,68]},neckCut:74,
     face:{eyes:[[[92,37.5],[94.5,36],[98,35.7],[101,36.5],[102,38],[98,39.2],[94.5,39]],[[110,39.5],[112.5,38.2],[116,38],[119,39],[119.5,40.8],[116,41.6],[112.5,41.3]]],
-      mouth:[[94,53.6,0],[98,55.8,.6],[102,56.6,1],[106,56.5,1],[110,55.8,.6],[113,54,0]],corners:[[94,53.6],[113,54]],cheeks:[[92,47,5],[112,48,5]],chin:66,jawMax:1.6,teeth:true,lash:[.55,.8],lidSample:1.5}}
+      mouth:[[94,53.6,0],[98,55.8,.6],[102,56.6,1],[106,56.5,1],[110,55.8,.6],[113,54,0]],corners:[[94,53.6],[113,54]],cheeks:[[92,47,5],[112,48,5]],chin:66,jawMax:1.6,teeth:true,lash:[.55,.8],lidSample:1.5}},
+  /* Pack-2 residents (art/build_residents_pack2.py). Their talk and smile pictures register with the
+     neutral one, so `frames` makes the mouth real: puppet.js blends the lower face of <id>-talk.png and
+     <id>-smile.png inside the feathered ellipse face.patch [cx, cy, rx, ry] instead of drawing a mouth. */
+  sol:{size:[176,432],joints:{root:[88,425],hips:[96,205],spine:[99,170],chest:[100,135],neck:[101,102],head:[101,95]},neckCut:100,frames:true,
+    face:{eyes:[[[86.5,66.5],[89,64.6],[92,63.9],[95,64.5],[98,66.4],[95,68.4],[90,68.3]],[[109,69.5],[111,68],[114,67.6],[117,68.5],[118.5,70],[115,71.4],[111.5,71.3]]],
+      mouth:[[95,84.4,0],[98,85.3,.6],[101,85.8,1],[104,85.7,1],[106.5,85.3,.5],[108,84.8,0]],corners:[[95,84.4],[108,84.8]],cheeks:[[93,76,5],[112,78,5]],chin:92,jawMax:1.5,teeth:true,lash:[.5,.75],lidSample:1.5,
+      patch:[101.5,85.5,10,6.5]}},
+  teo:{size:[176,432],joints:{root:[88,425],hips:[88,220],spine:[88,165],chest:[88,120],neck:[88,89],head:[88,79]},neckCut:87,frames:true,
+    face:{eyes:[[[73.5,51],[75.5,49.6],[78,49.2],[80.5,49.8],[81.5,51],[79,52.4],[76,52.3]],[[94.5,51],[96.5,49.5],[99,49.2],[101.5,49.8],[102.5,51.2],[100,52.4],[97,52.3]]],
+      mouth:[[77,68.6,0],[81,69.4,.6],[86,69.8,1],[91,69.8,1],[96,69.4,.5],[100,68.8,0]],corners:[[77,68.6],[100,68.8]],cheeks:[[74,62,5],[102,62,5]],chin:80,jawMax:1.5,teeth:true,lash:[.45,.65],lidSample:1,lidGap:.4,
+      patch:[88.5,70,15,6.5]}}
 };
 /* Drawn expression heads (art/ART-REQUESTS.md section 2), made game-ready by art/build_faces.py from
    art/source/pack2/02-faces: each sheet is a 4 x 3 grid in EXPRESSIONS order, cells of `cell` doll-local
@@ -234,7 +245,7 @@ function residentRig(id){
   const key='res|'+id;if(cache[key])return cache[key];
   const R=RESIDENTS[id];if(!R)return null;
   const f=R.face;
-  return cache[key]={doll:'resident',view:'front',side:false,dir:0,resident:id,size:R.size,px:{...R.joints},
+  return cache[key]={doll:'resident',view:'front',side:false,dir:0,resident:id,size:R.size,px:{...R.joints},frames:!!R.frames,
     joints:Object.fromEntries(Object.entries(R.joints).map(([k,[x,y]])=>[k,[x/R.size[0],y/R.size[1]]])),
     neckCut:R.neckCut,face:{...f,mouth:f.mouth.map(p=>p.slice()),eyes:f.eyes,corners:f.corners,cheeks:f.cheeks},legLength:0};
 }
