@@ -281,7 +281,7 @@ const HibiscusPuppet=(()=>{
     constructor(rg,src,k=3){
       const f=rg.face;this.f=f;this.rg=rg;this.k=k;
       const all=[...f.eyes.flat(),...f.mouth.map(p=>[p[0],p[1]])];
-      if(f.patch){const [px,py,rx,ry]=f.patch;all.push([px-rx,py-ry],[px+rx,py+ry])} // real mouth frames (setFrames)
+      for(const [px,py,rx,ry] of [f.patch,...(f.blinkPatch||[])].filter(Boolean))all.push([px-rx,py-ry],[px+rx,py+ry]); // real frames (setFrames)
       const xs=all.map(p=>p[0]),ys=all.map(p=>p[1]),u=rg.resident?3:8;
       this.box=[Math.floor(Math.min(...xs)-u),Math.floor(Math.min(...ys)-u*1.5),0,0];
       this.box[2]=Math.ceil(Math.max(...xs)+u)-this.box[0];this.box[3]=Math.ceil(Math.max(...ys)+u*1.4+(f.jawMax||3))-this.box[1];
@@ -298,18 +298,26 @@ const HibiscusPuppet=(()=>{
       this.state='';
     }
     /* Real frames (pack-2 residents): the talk and smile pictures, registered with the neutral one, cut
-       to the feathered ellipse face.patch round the mouth. draw() blends them in place of the drawn mouth. */
+       to the feathered ellipse face.patch round the mouth. draw() blends them in place of the drawn mouth.
+       A resident whose smile picture has closed, smiling eyes and no skin above her eyes to draw a lid
+       from (Gigi) sets face.blinkFrame and face.blinkPatch (an ellipse per eye): her blink is that picture's eyes. */
     setFrames(frames){
-      const [px,py,rx,ry]=this.f.patch,k=this.k,[bx,by]=this.box,out={};
-      for(const [name,img] of Object.entries(frames)){
+      const k=this.k,[bx,by]=this.box,out={};
+      const cut=(img,ellipses)=>{
         const c=mk(this.canvas.width,this.canvas.height),g=c.getContext('2d');
         g.imageSmoothingQuality='high';g.setTransform(k,0,0,k,-bx*k,-by*k);g.drawImage(img,0,0,this.rg.size[0],this.rg.size[1]);
-        // feathered ellipse: solid in the middle, fading over its outer 45 %
-        g.globalCompositeOperation='destination-in';g.translate(px,py);g.scale(rx,ry);
-        const gr=g.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,'#000');gr.addColorStop(.55,'#000');gr.addColorStop(1,'rgba(0,0,0,0)');
-        g.fillStyle=gr;g.fillRect(-1,-1,2,2);
-        out[name]=c;
-      }
+        // feathered ellipses: solid in the middle, fading over their outer 45 %
+        const m=mk(this.canvas.width,this.canvas.height),mg=m.getContext('2d');
+        for(const [px,py,rx,ry] of ellipses){
+          mg.setTransform(k,0,0,k,-bx*k,-by*k);mg.translate(px,py);mg.scale(rx,ry);
+          const gr=mg.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,'#000');gr.addColorStop(.55,'#000');gr.addColorStop(1,'rgba(0,0,0,0)');
+          mg.fillStyle=gr;mg.fillRect(-1,-1,2,2);
+        }
+        g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(m,0,0);
+        return c;
+      };
+      for(const [name,img] of Object.entries(frames))out[name]=cut(img,[this.f.patch]);
+      if(this.f.blinkPatch&&frames[this.f.blinkFrame])out.blink=cut(frames[this.f.blinkFrame],this.f.blinkPatch);
       this.frames=out;this.state='';
     }
     pixel(x,y){const d=this.sd.data,w=this.sd.width,i=(Math.round(clamp(y,0,this.sd.height-1))*w+Math.round(clamp(x,0,w-1)))*4;return [d[i],d[i+1],d[i+2],d[i+3]]}
@@ -364,7 +372,10 @@ const HibiscusPuppet=(()=>{
         if(a>.02&&this.frames.talk){g.globalAlpha=a;g.drawImage(this.frames.talk,0,0);any=true}
         g.globalAlpha=1;g.setTransform(k,0,0,k,-bx*k,-by*k);
       }
-      this.eyes.forEach((e,i)=>{const b=f.blink[Math.min(i,f.blink.length-1)];if(b>.02){this.drawLid(e,b);any=true}});
+      if(this.frames?.blink){ // closed eyes from a real frame, faded in with the blink
+        const b=smooth(.15,.8,Math.max(...f.blink));
+        if(b>.02){g.setTransform(1,0,0,1,0,0);g.globalAlpha=b;g.drawImage(this.frames.blink,0,0);g.globalAlpha=1;g.setTransform(k,0,0,k,-bx*k,-by*k);any=true}
+      }else this.eyes.forEach((e,i)=>{const b=f.blink[Math.min(i,f.blink.length-1)];if(b>.02){this.drawLid(e,b);any=true}});
       if(f.jaw>.05&&!this.frames){this.drawMouth(f,disp);any=true}
       if(any){g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(this.faceMask,0,0);g.globalCompositeOperation='source-over'}
       this.visible=any;return any;
