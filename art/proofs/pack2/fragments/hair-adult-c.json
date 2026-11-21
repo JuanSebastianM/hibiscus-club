@@ -1,6 +1,6 @@
 {
  "signature": {
-  "script": "2d7c03ab2eb3-v1",
+  "script": "bb0956e31976-v2",
   "source": "a2368f2eba4e",
   "worn": "15afda1be94a"
  },
@@ -334,24 +334,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 18.5,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      -1
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.9
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.072,
+      "rmse": 22.3
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 24.1
+     }
     },
-    "max_band_dev_px": 1,
-    "iou": 0.928,
-    "proof_item_uncovered": 0.04,
+    "max_band_dev_px": 0,
+    "identical_px": 0.969,
+    "iou": 0.954,
+    "proof_item_uncovered": 0.012,
     "sprite_over_background": 0.005
    },
    "flags": []
@@ -381,24 +404,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 17.6,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      -1
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.0
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.0
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.038,
+      "rmse": 28.7
+     }
     },
-    "max_band_dev_px": 1,
-    "iou": 0.953,
-    "proof_item_uncovered": 0.012,
+    "max_band_dev_px": 0,
+    "identical_px": 0.969,
+    "iou": 0.957,
+    "proof_item_uncovered": 0.008,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -428,24 +474,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 17.1,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      -1
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.1
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.6
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.049,
+      "rmse": 29.4
+     }
     },
-    "max_band_dev_px": 1,
-    "iou": 0.952,
-    "proof_item_uncovered": 0.012,
+    "max_band_dev_px": 0,
+    "identical_px": 0.973,
+    "iou": 0.956,
+    "proof_item_uncovered": 0.008,
     "sprite_over_background": 0.002
    },
    "flags": []
@@ -475,24 +544,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 14.1,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      -1
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.9
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       -1
+      ],
+      "gain": 0.117,
+      "rmse": 19.5
+     }
     },
     "max_band_dev_px": 1,
-    "iou": 0.983,
-    "proof_item_uncovered": 0.001,
+    "identical_px": 0.989,
+    "iou": 0.984,
+    "proof_item_uncovered": 0.0,
     "sprite_over_background": 0.003
    },
    "flags": []
@@ -502,9 +594,9 @@
    "worn_sheet": "art/source/pack2/01-hair/hair-adult-c-worn.webp",
    "proof_box": [
     112,
-    618,
+    619,
     491,
-    579
+    578
    ],
    "sprite": "../../../dist/assets/pack2/hair/space-buns-front.webp",
    "sprite_box": [
@@ -520,31 +612,54 @@
    "registration": {
     "shift_vs_sprite_box": [
      0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
      -1
     ],
-    "rgb_rmse": 118.4,
+    "rgb_rmse": 118.6,
     "band_offsets": {
-     "top": [
-      0,
-      1
-     ],
-     "middle": [
-      0,
-      1
-     ],
-     "bottom": [
-      -2,
-      -20
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 16.0
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.9
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.074,
+      "rmse": 194.0
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.661,
-    "proof_item_uncovered": 0.02,
-    "sprite_over_background": 0.005
+    "max_band_dev_px": 0,
+    "identical_px": 0.665,
+    "iou": 0.669,
+    "proof_item_uncovered": 0.006,
+    "sprite_over_background": 0.001
    },
    "flags": [
-    "shape differs (IoU < 0.8)",
-    "parts drawn 20px apart"
+    "drawing differs from proof (only 66% of pixels identical)",
+    "shape differs (IoU < 0.8)"
    ]
   },
   "space-buns/left": {
@@ -572,22 +687,45 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 16.9,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 13.8
+     }
     },
     "max_band_dev_px": 0,
+    "identical_px": 0.971,
     "iou": 0.965,
     "proof_item_uncovered": 0.008,
     "sprite_over_background": 0.001
@@ -619,24 +757,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 17.0,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 20.0
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 13.5
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.965,
-    "proof_item_uncovered": 0.008,
+    "identical_px": 0.974,
+    "iou": 0.968,
+    "proof_item_uncovered": 0.006,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -666,24 +827,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 14.7,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 16.4
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.3
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.3
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.987,
-    "proof_item_uncovered": 0.002,
+    "identical_px": 0.98,
+    "iou": 0.988,
+    "proof_item_uncovered": 0.001,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -693,9 +877,9 @@
    "worn_sheet": "art/source/pack2/01-hair/hair-adult-c-worn.webp",
    "proof_box": [
     111,
-    1236,
+    1237,
     494,
-    558
+    557
    ],
    "sprite": "../../../dist/assets/pack2/hair/crimped-twists-front.webp",
    "sprite_box": [
@@ -711,31 +895,54 @@
    "registration": {
     "shift_vs_sprite_box": [
      0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
      -1
     ],
-    "rgb_rmse": 133.7,
+    "rgb_rmse": 133.9,
     "band_offsets": {
-     "top": [
-      0,
-      1
-     ],
-     "middle": [
-      0,
-      1
-     ],
-     "bottom": [
-      8,
-      -20
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 28.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.068,
+      "rmse": 210.6
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.609,
-    "proof_item_uncovered": 0.021,
-    "sprite_over_background": 0.005
+    "max_band_dev_px": 0,
+    "identical_px": 0.61,
+    "iou": 0.616,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.001
    },
    "flags": [
-    "shape differs (IoU < 0.8)",
-    "parts drawn 20px apart"
+    "drawing differs from proof (only 61% of pixels identical)",
+    "shape differs (IoU < 0.8)"
    ]
   },
   "crimped-twists/left": {
@@ -743,9 +950,9 @@
    "worn_sheet": "art/source/pack2/01-hair/hair-adult-c-worn.webp",
    "proof_box": [
     730,
-    1209,
-    451,
-    585
+    1237,
+    389,
+    557
    ],
    "sprite": "../../../dist/assets/pack2/hair/crimped-twists-left.webp",
    "sprite_box": [
@@ -755,48 +962,70 @@
     546
    ],
    "offset": [
-    111,
+    49,
     2
    ],
    "registration": {
     "shift_vs_sprite_box": [
-     62,
-     -28
+     0,
+     0
     ],
-    "rgb_rmse": 121.4,
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 122.0,
     "band_offsets": {
-     "top": [
-      -20,
-      20
-     ],
-     "middle": [
-      -7,
-      -1
-     ],
-     "bottom": [
-      20,
-      -20
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 51.6
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 115.2
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.044,
+      "rmse": 165.9
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.481,
-    "proof_item_uncovered": 0.15,
-    "sprite_over_background": 0.331
+    "max_band_dev_px": 0,
+    "identical_px": 0.638,
+    "iou": 0.638,
+    "proof_item_uncovered": 0.005,
+    "sprite_over_background": 0.003
    },
    "flags": [
-    "shape differs (IoU < 0.8)",
-    "parts drawn 20px apart",
-    "15% of proof hair not covered"
+    "drawing differs from proof (only 64% of pixels identical)",
+    "shape differs (IoU < 0.8)"
    ]
   },
   "crimped-twists/right": {
    "proof": "hair/crimped-twists-right.webp",
    "worn_sheet": "art/source/pack2/01-hair/hair-adult-c-worn.webp",
    "proof_box": [
-    1207,
-    1211,
-    450,
-    583
+    1270,
+    1237,
+    387,
+    557
    ],
    "sprite": "../../../dist/assets/pack2/hair/crimped-twists-right.webp",
    "sprite_box": [
@@ -811,33 +1040,55 @@
    ],
    "registration": {
     "shift_vs_sprite_box": [
-     -63,
-     -26
+     0,
+     0
     ],
-    "rgb_rmse": 121.2,
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     -1,
+     0
+    ],
+    "rgb_rmse": 121.8,
     "band_offsets": {
-     "top": [
-      20,
-      20
-     ],
-     "middle": [
-      8,
-      -6
-     ],
-     "bottom": [
-      -20,
-      -20
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 50.2
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.002,
+      "rmse": 113.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.044,
+      "rmse": 166.5
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.48,
-    "proof_item_uncovered": 0.153,
-    "sprite_over_background": 0.332
+    "max_band_dev_px": 0,
+    "identical_px": 0.638,
+    "iou": 0.639,
+    "proof_item_uncovered": 0.005,
+    "sprite_over_background": 0.004
    },
    "flags": [
-    "shape differs (IoU < 0.8)",
-    "parts drawn 20px apart",
-    "15% of proof hair not covered"
+    "drawing differs from proof (only 64% of pixels identical)",
+    "shape differs (IoU < 0.8)"
    ]
   },
   "crimped-twists/back": {
@@ -865,22 +1116,45 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 13.4,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.2
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 13.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.2
+     }
     },
     "max_band_dev_px": 0,
+    "identical_px": 0.986,
     "iou": 0.992,
     "proof_item_uncovered": 0.002,
     "sprite_over_background": 0.0

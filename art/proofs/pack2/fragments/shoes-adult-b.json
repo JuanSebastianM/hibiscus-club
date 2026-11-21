@@ -1,6 +1,6 @@
 {
  "signature": {
-  "script": "2d7c03ab2eb3-v1",
+  "script": "bb0956e31976-v2",
   "source": "f3e498491ae1",
   "worn": "d6f0a9f2077f"
  },
@@ -443,27 +443,51 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 71.0,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      1
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 88.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.004,
+      "rmse": 75.6
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 55.8
+     }
     },
-    "max_band_dev_px": 1,
+    "max_band_dev_px": 0,
+    "identical_px": 0.367,
     "iou": 0.772,
     "proof_item_uncovered": 0.001,
     "sprite_over_background": 0.002
    },
    "flags": [
+    "drawing differs from proof (only 37% of pixels identical)",
     "shape differs (IoU < 0.8)"
    ],
    "parts": {
@@ -516,29 +540,52 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 83.5,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      -1,
-      0
-     ],
-     "bottom": [
-      -9,
-      -17
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 78.6
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 77.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.028,
+      "rmse": 88.6
+     }
     },
-    "max_band_dev_px": 17,
+    "max_band_dev_px": 0,
+    "identical_px": 0.399,
     "iou": 0.794,
     "proof_item_uncovered": 0.0,
     "sprite_over_background": 0.001
    },
    "flags": [
-    "shape differs (IoU < 0.8)",
-    "parts drawn 17px apart"
+    "drawing differs from proof (only 40% of pixels identical)",
+    "shape differs (IoU < 0.8)"
    ]
   },
   "jelly-sandals/right": {
@@ -566,39 +613,62 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 83.4,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      9,
-      -18
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 78.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 77.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.027,
+      "rmse": 88.3
+     }
     },
-    "max_band_dev_px": 18,
+    "max_band_dev_px": 0,
+    "identical_px": 0.405,
     "iou": 0.792,
     "proof_item_uncovered": 0.0,
     "sprite_over_background": 0.001
    },
    "flags": [
-    "shape differs (IoU < 0.8)",
-    "parts drawn 18px apart"
+    "drawing differs from proof (only 40% of pixels identical)",
+    "shape differs (IoU < 0.8)"
    ]
   },
   "jelly-sandals/back": {
    "proof": "shoes-adult/jelly-sandals-back.webp",
    "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
    "proof_box": [
-    1801,
+    1798,
     70,
-    595,
-    559
+    541,
+    463
    ],
    "sprite": "../../../dist/assets/pack2/shoes-adult/jelly-sandals-back.webp",
    "sprite_box": [
@@ -608,59 +678,81 @@
     350
    ],
    "offset": [
-    95,
-    207
+    2,
+    111
    ],
    "registration": {
     "shift_vs_sprite_box": [
-     96,
-     96
+     0,
+     0
     ],
-    "rgb_rmse": 95.8,
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 99.3,
     "band_offsets": {
-     "top": [
-      0,
-      -20
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      -1,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 100.2
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.039,
+      "rmse": 104.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.005,
+      "rmse": 93.1
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.221,
-    "proof_item_uncovered": 0.362,
-    "sprite_over_background": 0.527
+    "max_band_dev_px": 0,
+    "identical_px": 0.312,
+    "iou": 0.553,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.002
    },
    "flags": [
-    "shape differs (IoU < 0.8)",
-    "parts drawn 20px apart",
-    "36% of proof shoe not covered"
+    "drawing differs from proof (only 31% of pixels identical)",
+    "shape differs (IoU < 0.8)"
    ],
    "parts": {
     "left": {
      "offset": [
-      -1,
+      2,
       111
      ],
      "shift_vs_set_registration": [
-      -96,
-      -96
+      0,
+      0
      ],
      "rgb_rmse": 99.3
     },
     "right": {
      "offset": [
-      277,
+      280,
       111
      ],
      "shift_vs_set_registration": [
-      -96,
-      -96
+      0,
+      0
      ],
      "rgb_rmse": 99.2
     }
@@ -691,27 +783,51 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 55.0,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 51.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 47.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 64.1
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.703,
-    "proof_item_uncovered": 0.012,
+    "identical_px": 0.451,
+    "iou": 0.704,
+    "proof_item_uncovered": 0.01,
     "sprite_over_background": 0.001
    },
    "flags": [
+    "drawing differs from proof (only 45% of pixels identical)",
     "shape differs (IoU < 0.8)"
    ],
    "parts": {
@@ -764,28 +880,51 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 66.3,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      10,
-      -13
-     ],
-     "bottom": [
-      -1,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 65.8
+     },
+     "middle": {
+      "shift": [
+       9,
+       -12
+      ],
+      "gain": 0.136,
+      "rmse": 78.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.001,
+      "rmse": 57.0
+     }
     },
-    "max_band_dev_px": 13,
-    "iou": 0.805,
-    "proof_item_uncovered": 0.035,
+    "max_band_dev_px": 12,
+    "identical_px": 0.625,
+    "iou": 0.808,
+    "proof_item_uncovered": 0.032,
     "sprite_over_background": 0.001
    },
    "flags": [
-    "parts drawn 13px apart"
+    "parts drawn 12px apart"
    ]
   },
   "flower-flip-flops/right": {
@@ -813,29 +952,52 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 66.8,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      -14,
-      -15
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 64.7
+     },
+     "middle": {
+      "shift": [
+       -11,
+       -12
+      ],
+      "gain": 0.155,
+      "rmse": 79.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 57.7
+     }
     },
-    "max_band_dev_px": 15,
-    "iou": 0.793,
-    "proof_item_uncovered": 0.045,
+    "max_band_dev_px": 12,
+    "identical_px": 0.629,
+    "iou": 0.795,
+    "proof_item_uncovered": 0.042,
     "sprite_over_background": 0.001
    },
    "flags": [
     "shape differs (IoU < 0.8)",
-    "parts drawn 15px apart"
+    "parts drawn 12px apart"
    ]
   },
   "flower-flip-flops/back": {
@@ -863,27 +1025,51 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 72.0,
     "band_offsets": {
-     "top": [
-      0,
-      -1
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.009,
+      "rmse": 89.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 72.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 59.3
+     }
     },
-    "max_band_dev_px": 1,
+    "max_band_dev_px": 0,
+    "identical_px": 0.404,
     "iou": 0.566,
-    "proof_item_uncovered": 0.018,
+    "proof_item_uncovered": 0.015,
     "sprite_over_background": 0.001
    },
    "flags": [
+    "drawing differs from proof (only 40% of pixels identical)",
     "shape differs (IoU < 0.8)"
    ],
    "parts": {
@@ -936,27 +1122,51 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 74.8,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      1
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 66.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 78.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.002,
+      "rmse": 75.2
+     }
     },
-    "max_band_dev_px": 1,
+    "max_band_dev_px": 0,
+    "identical_px": 0.451,
     "iou": 0.513,
-    "proof_item_uncovered": 0.03,
+    "proof_item_uncovered": 0.029,
     "sprite_over_background": 0.002
    },
    "flags": [
+    "drawing differs from proof (only 45% of pixels identical)",
     "shape differs (IoU < 0.8)"
    ],
    "parts": {
@@ -1009,22 +1219,45 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 51.9,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      1
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 45.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.011,
+      "rmse": 69.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 39.8
+     }
     },
-    "max_band_dev_px": 1,
+    "max_band_dev_px": 0,
+    "identical_px": 0.791,
     "iou": 0.843,
     "proof_item_uncovered": 0.03,
     "sprite_over_background": 0.001
@@ -1056,22 +1289,45 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 51.5,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 46.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 68.6
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 39.7
+     }
     },
     "max_band_dev_px": 0,
+    "identical_px": 0.791,
     "iou": 0.842,
     "proof_item_uncovered": 0.03,
     "sprite_over_background": 0.001
@@ -1103,24 +1359,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 44.2,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      1
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 62.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.028,
+      "rmse": 47.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 25.3
+     }
     },
-    "max_band_dev_px": 1,
-    "iou": 0.882,
-    "proof_item_uncovered": 0.053,
+    "max_band_dev_px": 0,
+    "identical_px": 0.849,
+    "iou": 0.884,
+    "proof_item_uncovered": 0.051,
     "sprite_over_background": 0.003
    },
    "flags": [],

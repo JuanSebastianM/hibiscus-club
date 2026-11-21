@@ -1,6 +1,6 @@
 {
  "signature": {
-  "script": "2d7c03ab2eb3-v1",
+  "script": "bb0956e31976-v2",
   "source": "06624b6937ed",
   "worn": "a1d0cbd13f0a"
  },
@@ -80,18 +80,19 @@
       "column": 0
      },
      "faceHole": {
-      "x": 32,
-      "y": 288,
-      "w": 384,
-      "h": 166,
-      "area": 42516,
+      "x": 110,
+      "y": 92,
+      "w": 238,
+      "h": 154,
+      "area": 25460,
       "closedBelow": false,
       "face": {
-       "x": 32,
-       "y": 288,
-       "w": 384,
-       "h": 166
-      }
+       "x": 110,
+       "y": 92,
+       "w": 238,
+       "h": 154
+      },
+      "topPieceOnly": true
      }
     },
     "left": {
@@ -168,24 +169,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 20.4,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 21.0
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 25.0
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.1
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.883,
-    "proof_item_uncovered": 0.049,
+    "identical_px": 0.976,
+    "iou": 0.918,
+    "proof_item_uncovered": 0.007,
     "sprite_over_background": 0.005
    },
    "flags": []
@@ -215,24 +239,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 13.4,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.4
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.0
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.3
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.957,
-    "proof_item_uncovered": 0.012,
+    "identical_px": 0.995,
+    "iou": 0.964,
+    "proof_item_uncovered": 0.005,
     "sprite_over_background": 0.003
    },
    "flags": []
@@ -262,24 +309,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 13.0,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.1
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.1
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.956,
-    "proof_item_uncovered": 0.012,
+    "identical_px": 0.995,
+    "iou": 0.966,
+    "proof_item_uncovered": 0.002,
     "sprite_over_background": 0.003
    },
    "flags": []
@@ -309,24 +379,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 13.1,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 10.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.1
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.977,
-    "proof_item_uncovered": 0.005,
+    "identical_px": 0.989,
+    "iou": 0.978,
+    "proof_item_uncovered": 0.004,
     "sprite_over_background": 0.002
    },
    "flags": []

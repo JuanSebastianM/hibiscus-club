@@ -1,6 +1,6 @@
 {
  "signature": {
-  "script": "2d7c03ab2eb3-v1",
+  "script": "bb0956e31976-v2",
   "source": "bd2c56146dc4",
   "worn": "ae3d8c47bd93"
  },
@@ -378,24 +378,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 23.4,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 22.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 25.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 21.6
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.928,
-    "proof_item_uncovered": 0.011,
+    "identical_px": 0.95,
+    "iou": 0.935,
+    "proof_item_uncovered": 0.003,
     "sprite_over_background": 0.001
    },
    "flags": []
@@ -425,22 +448,45 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 34.8,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      -1
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 20.0
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.006,
+      "rmse": 49.9
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 22.0
+     }
     },
-    "max_band_dev_px": 1,
+    "max_band_dev_px": 0,
+    "identical_px": 0.925,
     "iou": 0.92,
     "proof_item_uncovered": 0.005,
     "sprite_over_background": 0.002
@@ -472,24 +518,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 34.8,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.0
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 50.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 21.3
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.915,
-    "proof_item_uncovered": 0.006,
+    "identical_px": 0.937,
+    "iou": 0.917,
+    "proof_item_uncovered": 0.003,
     "sprite_over_background": 0.002
    },
    "flags": []
@@ -519,22 +588,45 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 17.2,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.9
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.2
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 20.2
+     }
     },
     "max_band_dev_px": 0,
+    "identical_px": 0.968,
     "iou": 0.976,
     "proof_item_uncovered": 0.0,
     "sprite_over_background": 0.001
@@ -566,24 +658,47 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 24.2,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.2
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 28.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 35.2
+     }
     },
     "max_band_dev_px": 0,
-    "iou": 0.906,
-    "proof_item_uncovered": 0.012,
+    "identical_px": 0.95,
+    "iou": 0.915,
+    "proof_item_uncovered": 0.001,
     "sprite_over_background": 0.002
    },
    "flags": []
@@ -613,29 +728,50 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 39.0,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      15,
-      -20
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 16.0
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 40.3
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.018,
+      "rmse": 83.0
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.897,
-    "proof_item_uncovered": 0.005,
+    "max_band_dev_px": 0,
+    "identical_px": 0.922,
+    "iou": 0.899,
+    "proof_item_uncovered": 0.002,
     "sprite_over_background": 0.002
    },
-   "flags": [
-    "parts drawn 20px apart"
-   ]
+   "flags": []
   },
   "curly-buns/right": {
    "proof": "hair/curly-buns-right.webp",
@@ -662,29 +798,50 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 39.9,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      -14,
-      -20
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 39.1
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.043,
+      "rmse": 90.5
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.894,
-    "proof_item_uncovered": 0.005,
+    "max_band_dev_px": 0,
+    "identical_px": 0.927,
+    "iou": 0.898,
+    "proof_item_uncovered": 0.0,
     "sprite_over_background": 0.001
    },
-   "flags": [
-    "parts drawn 20px apart"
-   ]
+   "flags": []
   },
   "curly-buns/back": {
    "proof": "hair/curly-buns-back.webp",
@@ -711,22 +868,45 @@
      0,
      0
     ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
     "rgb_rmse": 18.3,
     "band_offsets": {
-     "top": [
-      0,
-      0
-     ],
-     "middle": [
-      0,
-      0
-     ],
-     "bottom": [
-      0,
-      0
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.5
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.3
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 24.6
+     }
     },
     "max_band_dev_px": 0,
+    "identical_px": 0.964,
     "iou": 0.98,
     "proof_item_uncovered": 0.0,
     "sprite_over_background": 0.001
@@ -737,10 +917,10 @@
    "proof": "hair/curly-bob-front.webp",
    "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
    "proof_box": [
-    63,
-    1192,
+    65,
+    1217,
     594,
-    602
+    577
    ],
    "sprite": "../../../dist/assets/pack2/hair/curly-bob-front.webp",
    "sprite_box": [
@@ -755,42 +935,66 @@
    ],
    "registration": {
     "shift_vs_sprite_box": [
+     -3,
+     29
+    ],
+    "method": "scalp match",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     -3,
+     29
+    ],
+    "best_full_mask_shift": [
      -5,
      4
     ],
-    "rgb_rmse": 75.8,
+    "rgb_rmse": 84.6,
     "band_offsets": {
-     "top": [
-      3,
-      20
-     ],
-     "middle": [
-      4,
-      9
-     ],
-     "bottom": [
-      4,
-      -11
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.007,
+      "rmse": 52.9
+     },
+     "middle": {
+      "shift": [
+       2,
+       -12
+      ],
+      "gain": 0.345,
+      "rmse": 75.6
+     },
+     "bottom": {
+      "shift": [
+       -11,
+       -12
+      ],
+      "gain": 0.252,
+      "rmse": 115.2
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.719,
-    "proof_item_uncovered": 0.078,
-    "sprite_over_background": 0.163
+    "max_band_dev_px": 12,
+    "identical_px": 0.485,
+    "iou": 0.72,
+    "proof_item_uncovered": 0.085,
+    "sprite_over_background": 0.105
    },
    "flags": [
+    "drawing differs from proof (only 49% of pixels identical)",
     "shape differs (IoU < 0.8)",
-    "parts drawn 20px apart"
+    "parts drawn 12px apart"
    ]
   },
   "curly-bob/left": {
    "proof": "hair/curly-bob-left.webp",
    "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
    "proof_box": [
-    694,
-    1210,
+    696,
+    1229,
     460,
-    584
+    565
    ],
    "sprite": "../../../dist/assets/pack2/hair/curly-bob-left.webp",
    "sprite_box": [
@@ -805,41 +1009,65 @@
    ],
    "registration": {
     "shift_vs_sprite_box": [
+     -1,
+     34
+    ],
+    "method": "scalp match",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     -1,
+     34
+    ],
+    "best_full_mask_shift": [
      -3,
      15
     ],
-    "rgb_rmse": 65.9,
+    "rgb_rmse": 74.3,
     "band_offsets": {
-     "top": [
-      2,
-      20
-     ],
-     "middle": [
-      0,
-      3
-     ],
-     "bottom": [
-      1,
-      -10
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.015,
+      "rmse": 38.8
+     },
+     "middle": {
+      "shift": [
+       -2,
+       -12
+      ],
+      "gain": 0.542,
+      "rmse": 66.9
+     },
+     "bottom": {
+      "shift": [
+       -1,
+       -12
+      ],
+      "gain": 0.314,
+      "rmse": 107.5
+     }
     },
-    "max_band_dev_px": 20,
-    "iou": 0.826,
-    "proof_item_uncovered": 0.017,
-    "sprite_over_background": 0.086
+    "max_band_dev_px": 12,
+    "identical_px": 0.584,
+    "iou": 0.835,
+    "proof_item_uncovered": 0.021,
+    "sprite_over_background": 0.055
    },
    "flags": [
-    "parts drawn 20px apart"
+    "drawing differs from proof (only 58% of pixels identical)",
+    "parts drawn 12px apart"
    ]
   },
   "curly-bob/right": {
    "proof": "hair/curly-bob-right.webp",
    "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
    "proof_box": [
-    1229,
-    1210,
+    1228,
+    1228,
     461,
-    584
+    566
    ],
    "sprite": "../../../dist/assets/pack2/hair/curly-bob-right.webp",
    "sprite_box": [
@@ -854,41 +1082,65 @@
    ],
    "registration": {
     "shift_vs_sprite_box": [
+     5,
+     33
+    ],
+    "method": "scalp match",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     5,
+     33
+    ],
+    "best_full_mask_shift": [
      6,
      15
     ],
-    "rgb_rmse": 67.8,
+    "rgb_rmse": 75.6,
     "band_offsets": {
-     "top": [
-      -2,
-      19
-     ],
-     "middle": [
-      0,
-      2
-     ],
-     "bottom": [
-      -2,
-      -12
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.045,
+      "rmse": 39.0
+     },
+     "middle": {
+      "shift": [
+       1,
+       -12
+      ],
+      "gain": 0.551,
+      "rmse": 71.3
+     },
+     "bottom": {
+      "shift": [
+       4,
+       -12
+      ],
+      "gain": 0.312,
+      "rmse": 106.7
+     }
     },
-    "max_band_dev_px": 19,
-    "iou": 0.826,
-    "proof_item_uncovered": 0.018,
-    "sprite_over_background": 0.085
+    "max_band_dev_px": 12,
+    "identical_px": 0.571,
+    "iou": 0.836,
+    "proof_item_uncovered": 0.02,
+    "sprite_over_background": 0.055
    },
    "flags": [
-    "parts drawn 19px apart"
+    "drawing differs from proof (only 57% of pixels identical)",
+    "parts drawn 12px apart"
    ]
   },
   "curly-bob/back": {
    "proof": "hair/curly-bob-back.webp",
    "worn_sheet": "art/source/pack2/01-hair/hair-little-a-worn.webp",
    "proof_box": [
-    1737,
-    1201,
+    1736,
+    1218,
     580,
-    593
+    576
    ],
    "sprite": "../../../dist/assets/pack2/hair/curly-bob-back.webp",
    "sprite_box": [
@@ -903,31 +1155,55 @@
    ],
    "registration": {
     "shift_vs_sprite_box": [
+     -1,
+     26
+    ],
+    "method": "scalp match",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     -1,
+     26
+    ],
+    "best_full_mask_shift": [
      0,
      9
     ],
-    "rgb_rmse": 57.9,
+    "rgb_rmse": 72.1,
     "band_offsets": {
-     "top": [
-      0,
-      19
-     ],
-     "middle": [
-      0,
-      5
-     ],
-     "bottom": [
-      0,
-      -9
-     ]
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.039,
+      "rmse": 38.6
+     },
+     "middle": {
+      "shift": [
+       1,
+       -12
+      ],
+      "gain": 0.535,
+      "rmse": 60.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       -12
+      ],
+      "gain": 0.462,
+      "rmse": 97.0
+     }
     },
-    "max_band_dev_px": 19,
-    "iou": 0.897,
-    "proof_item_uncovered": 0.006,
-    "sprite_over_background": 0.077
+    "max_band_dev_px": 12,
+    "identical_px": 0.567,
+    "iou": 0.894,
+    "proof_item_uncovered": 0.007,
+    "sprite_over_background": 0.051
    },
    "flags": [
-    "parts drawn 19px apart"
+    "drawing differs from proof (only 57% of pixels identical)",
+    "parts drawn 12px apart"
    ]
   }
  }
