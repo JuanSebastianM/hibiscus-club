@@ -1131,13 +1131,13 @@ function heldLayer(shot,view,id,bodyPic,arm){
    DOLL_CANVAS.baseline and the body centred on the same x, so turning does not move the doll.
    Layer order: far clip, hair back, outfit back, shoes back, body (+gem), shoes, outfit, near arm
    (side views), sleeves over the arm, necklace, earrings under hair, hair front, earrings, clip. */
-function composeDoll(raw,view='front'){
+function composeDoll(raw,view='front',scale=1){
   if(!CATALOG.views.includes(view))view='front';
   const shot=normalShot(raw);
-  return memo(dollCaches.doll,lookKey(shot,view),async()=>{
+  return memo(dollCaches.doll,lookKey(shot,view)+(scale!==1?'|x'+scale:''),async()=>{ // worn.js: scale 2 = a sharper canvas, same doll coordinates
     const {ops}=await dollOps(shot,view);
-    const c=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),g=c.getContext('2d');
-    g.imageSmoothingQuality='high';
+    const c=makeCanvas(DOLL_CANVAS.width*scale,DOLL_CANVAS.height*scale),g=c.getContext('2d');
+    g.imageSmoothingQuality='high';if(scale!==1)g.setTransform(scale,0,0,scale,0,0);
     for(const op of ops)op.draw(g);
     return c;
   });
@@ -1151,6 +1151,7 @@ function normalShot(raw){const doll=raw.doll==='little'?'little':'adult';return 
    hair), shade (hair contact shadow, drawn source-atop), hairFront, clip, charm, glasses (the frame),
    hat. */
 async function dollOps(shot,view){
+  if(typeof Worn!=='undefined'){const w=await Worn.ops(shot,view);if(w)return w} // worn.js: dressed-doll art (pilot, ?worn=1)
   const doll=shot.doll,dv=dollView(doll,view),[ox,oy]=dv.origin;
   const hairFit=catalogItem(shot.hair).fit[doll][view];
   const earItem=catalogItem(shot.earrings),clipItem=catalogItem(shot.clip);
@@ -1238,10 +1239,11 @@ async function dollOps(shot,view){
 async function composeDollLayers(raw,view='front'){
   if(!CATALOG.views.includes(view))view='front';
   const shot=normalShot(raw);
-  const {ops,doll,origin,shoes}=await dollOps(shot,view);
+  const {ops,doll,origin,shoes,worn}=await dollOps(shot,view);
   const acc=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),ag=acc.getContext('2d');ag.imageSmoothingQuality='high';
   const layers=[];
   for(const op of ops){
+    if(op.layers){for(const l of await op.layers())layers.push({...l,behind:false});op.draw(ag);continue} // worn.js: the dressed body split for the puppet
     let canvas=op.layer;
     if(op.kind==='shade'){ // source-atop: keep only what lies over the layers drawn so far
       canvas=makeCanvas(acc.width,acc.height);const g=canvas.getContext('2d');
@@ -1250,7 +1252,7 @@ async function composeDollLayers(raw,view='front'){
     layers.push({kind:op.kind,canvas,behind:!!op.behind});
     op.draw(ag);
   }
-  const out={doll,view,origin,layers,shot};
+  const out={doll,view,origin,layers,shot,worn:worn||null};
   if(shoes&&sideView(view)){const parts=await shoeSideParts(doll,view,shot.shoes,shot.shoesTint);if(parts){out.farShoe=parts.far;out.nearShoe=parts.near}}
   return out;
 }
@@ -1414,10 +1416,11 @@ function portraitGeometry(shot,postcard=false){
 }
 async function paintPortrait(canvas, shot, postcard=false, view='front') {
   const scenic=shot.backdrop>0,scene=scenic?districts[shot.backdrop-1]:null;
-  const [doll,background]=await Promise.all([composeDoll(shot,view),scenic?asset('assets/scenes/'+scene.id+'.jpg'):null]);
+  const ws=typeof Worn!=='undefined'?Worn.portraitScale(shot):1,cs=postcard?1:ws; // worn.js: a sharper doll and canvas
+  const [doll,background]=await Promise.all([composeDoll(shot,view,ws),scenic?asset('assets/scenes/'+scene.id+'.jpg'):null]);
   const geo=portraitGeometry(shot,postcard);
-  canvas.width=geo.w;canvas.height=geo.h;
-  const c=canvas.getContext('2d');
+  canvas.width=geo.w*cs;canvas.height=geo.h*cs;
+  const c=canvas.getContext('2d');if(cs!==1)c.scale(cs,cs);
   portraitBackground(c,shot,postcard,geo,background);
   const {x,y,width,height}=geo;
   c.save();c.beginPath();c.rect(x,y,width,height);c.clip();
@@ -1433,10 +1436,12 @@ async function paintPortraitParts(shot,postcard=false){
   const scenic=shot.backdrop>0,scene=scenic?districts[shot.backdrop-1]:null;
   const background=scenic?await asset('assets/scenes/'+scene.id+'.jpg'):null;
   const geo=portraitGeometry(shot,postcard);
-  const back=makeCanvas(geo.w,geo.h);portraitBackground(back.getContext('2d'),shot,postcard,geo,background);
+  const cs=!postcard&&typeof Worn!=='undefined'?Worn.portraitScale(shot):1; // worn.js: a sharper canvas (the geometry scaled with it)
+  const back=makeCanvas(geo.w*cs,geo.h*cs),bc=back.getContext('2d');if(cs!==1)bc.scale(cs,cs);portraitBackground(bc,shot,postcard,geo,background);
   let front=null;
   if(postcard){front=makeCanvas(geo.w,geo.h);portraitExtras(front.getContext('2d'),shot,postcard,geo)}
-  return {back,front,geo};
+  const sg=cs===1?geo:{...geo,w:geo.w*cs,h:geo.h*cs,x:geo.x*cs,y:geo.y*cs,width:geo.width*cs,height:geo.height*cs,k:geo.k*cs,footY:geo.footY*cs,doll:geo.doll.map(v=>v*cs)};
+  return {back,front,geo:sg};
 }
 function portraitBackground(c,shot,postcard,geo,background){
   const scenic=shot.backdrop>0;

@@ -44,8 +44,10 @@ You are producing art for a 2D paper-doll dress-up game. Hard requirements:
 
 Attach: `art/source/base-adult-turnaround.webp`, `art/source/base-little-turnaround.webp`.
 
-Redraw each base doll at high resolution, faithfully: same character, same face, same body, same
-pose, same simple bodysuit, same lighting. This is an upscale with real detail, not a redesign.
+**Status:** the Grown-up files were delivered and their size and position are exactly right, but
+they are the old small picture enlarged about 3.2 times: at 100 % zoom the face, skin and outline
+are soft and stair-stepped. Please redo them with block A2 below. The Little Me files are still
+missing.
 
 Deliver eight files, each **1536 x 3072 px**, transparent, one view per file, the doll centred,
 the top of the head 150 px from the top edge and the soles of the feet 150 px from the bottom
@@ -56,6 +58,22 @@ edge in every view:
 
 "Left" means she faces the left edge of the picture; "right" means she faces the right edge.
 The four views of one doll must be the same height and the same person.
+
+### A2. Redo of the base dolls with real detail
+
+Attach: the delivered `base-adult-*.png` files (they fix the exact size, pose and position) and
+the two turnaround sheets (they fix the character).
+
+Repaint each base doll with real detail at this size. Do not enlarge or upscale the attached
+picture: paint it again at full resolution.
+
+- At 100 % zoom there must be no stair-stepped outline, no blocky pixels and no blur: crisp
+  eyelashes, irises with a highlight, individual eyebrow hairs, lip texture, fingernails, toes,
+  skin shading with smooth gradients, a clean anti-aliased outline.
+- Keep exactly the same silhouette, pose, proportions, face, skin tone, bodysuit and position on
+  the canvas as the attached files. Laid over them, the outlines must coincide.
+- Same file names and sizes as above, for both dolls (Little Me: same method from her turnaround
+  sheet; head top 150 px from the top edge, soles 150 px from the bottom edge).
 
 ## B. Pilot: three dressed dolls (do this before block C)
 
@@ -77,6 +95,23 @@ outfit, same size and doll position as the base files:
 
 Check before sending: lay each file over the matching base file. The head, neck, hands, legs and
 feet must line up exactly; only the clothing differs.
+
+**Status of the pilot:** all twelve files line up exactly with the base and the clothes look
+properly worn. Three things to correct when these are redone on the A2 base, and to follow for
+every outfit in block C:
+
+- **Never paste a piece of the base picture over the clothing.** In the crochet side views a
+  rectangle of the bare arm covers the cap sleeve. Sleeves and caps lie over the shoulder; the arm
+  comes out below them.
+- **No trace of the lilac bodysuit may remain** under or beside the outfit (its leg lines show
+  through the crochet mesh). Bare skin that a neckline uncovers keeps the base doll's shading (the
+  chest under the open denim jacket came out flat and too saturated).
+- **Keep the lengths of the reference design.** The denim skirt came out much shorter than the
+  reference and the jacket more cropped. Skirt hems end at mid-thigh, as in the reference card.
+
+Extra files that make the animation cleaner, for every outfit: in the **left and right views**
+also deliver the same picture **without the near arm** (the arm closest to the camera removed, the
+clothing behind it painted in), same canvas, named `...-left-noarm.png` and `...-right-noarm.png`.
 
 ## C. The rest of the wardrobe (only after the pilot is approved)
 
