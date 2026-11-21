@@ -1,7 +1,8 @@
 /* Star shop, ownership, "Surprise me" looks and option thumbnails for the makeover rooms.
    Everything here reads the wardrobe through catalog.js and draws with portrait.js helpers; it never
    changes either. Ownership keys:
-     item:<itemId>              outfits, shoes, hair styles, earrings, necklaces, hair accessories
+     item:<itemId>              outfits, shoes, hair styles, earrings, necklaces, hair accessories,
+                                hats, glasses, bags and toys
      tint:<itemId>:<tintId>     a colourway of an item
      hair-color:<id>            a hair colour
      lips:<id> blush:<id> shadow:<id> gem:<id> nails:<id>   makeup shades and face gems
@@ -21,15 +22,18 @@ const Shop=(()=>{
     // hair: at most two styles per character cost stars (see the wardrobe test)
     'item:space-buns':15,'item:short-braids':12,'item:top-ponytail':12,
     'item:butterfly-necklace':12,'tint:gold-hoops:rose-gold':6,'item:butterfly-clip':10,
+    // accessories: two showpieces per character, the rest free
+    'item:tiara':16,'item:heart-purse':14,'item:party-crown':14,'item:teddy-bear':12,
     // fantasy hair colours
     'hair-color:bubblegum':20,'hair-color:lilac':20,
     // sparkly makeup
     'shadow:gold':8,'gem:crystals':8
   };
-  const ITEM_FIELDS=['outfit','shoes','hair','earrings','necklace','clip'];
+  const ITEM_FIELDS=['outfit','shoes','hair','earrings','necklace','clip','hat','glasses','bag','toy'];
   const MAKEUP_FIELDS=['lips','blush','shadow','gem','nails'];
   /* Fields that are bought and tried on together (an item and its colourway). */
-  const GROUPS=[['outfit','outfitTint'],['shoes','shoesTint'],['earrings','earringsTint'],['hair'],['hairColor'],['necklace'],['clip'],['lips'],['blush'],['shadow'],['gem'],['nails']];
+  const GROUPS=[['outfit','outfitTint'],['shoes','shoesTint'],['earrings','earringsTint'],['hair'],['hairColor'],['necklace'],['clip'],['lips'],['blush'],['shadow'],['gem'],['nails'],
+    ['hat'],['glasses'],['bag'],['toy']];
   const STYLE_FIELDS=GROUPS.flat();
 
   function keyFor(field,value,look){
@@ -88,7 +92,10 @@ const Shop=(()=>{
     'toddler-sandals':'neutral','jelly-shoes':'pink','bunny-slippers':'neutral','light-up-sneakers':'lilac','cowboy-boots':'warm','ballet-slippers':'warm',
     'black-platform-sandals':'neutral','lilac-mary-jane-heels':'lilac','pink-chunky-sneakers':'pink','red-mary-janes':'warm','white-velcro-sneakers':'neutral','strawberry-rain-boots':'warm',
     'gold-hoops':'gold','pearl-studs':'neutral','heart-studs':'pink','star-studs':'gold','pearl-starfish-necklace':'neutral','butterfly-necklace':'lilac',
-    'hibiscus-clip':'pink','butterfly-clip':'lilac','red-bow':'warm','peach-blossom':'warm','satin-bow':'pink','gold-star':'gold'};
+    'hibiscus-clip':'pink','butterfly-clip':'lilac','red-bow':'warm','peach-blossom':'warm','satin-bow':'pink','gold-star':'gold',
+    'bucket-hat':'gold','sun-hat':'neutral','baseball-cap':'warm','tiara':'pink','bow-headband':'pink','sun-bonnet':'lilac','bear-beanie':'lilac','party-crown':'gold',
+    'heart-sunglasses':'pink','round-tinted-glasses':'lilac','cat-eye-glasses':'warm','star-sunglasses':'gold','round-play-glasses':'blue',
+    'beaded-tote':'lilac','heart-purse':'pink','beach-tote':'gold','mini-backpack':'warm','plush-bunny':'neutral','teddy-bear':'neutral','kitten-plush':'neutral','sand-bucket':'gold'};
   const gemFamily={heart:'pink','star-freckles':'gold',glitter:'neutral',crystals:'blue',butterfly:'lilac'};
   const themes=['pink','warm','gold','mint','blue','lilac']; // named by i18n keys theme.<family>
   function familyOfHex(hex){
@@ -140,6 +147,11 @@ const Shop=(()=>{
         const list=catalogOptions(field,doll).filter(it=>owned('item:'+it.id)).map(it=>({v:it.id,w:w(family(field,it.id,look))}));
         list.push({v:'none',w:noneW});
         look[field]=weighted(list,rnd);
+      }
+      // accessories now and then: a hat, glasses or something in her hand only some of the time
+      for(const [field,rate] of [['hat',.25],['glasses',.2],['bag',.3],['toy',.3]]){
+        const list=catalogOptions(field,doll).filter(it=>owned('item:'+it.id)).map(it=>({v:it.id,w:w(family(field,it.id,look))}));
+        look[field]=list.length&&rnd()<rate?weighted(list,rnd):'none';
       }
       const hairs=catalogOptions('hair',doll).filter(it=>owned('item:'+it.id));
       look.hair=hairs[Math.floor(rnd()*hairs.length)].id;

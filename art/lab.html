@@ -238,6 +238,22 @@ Object.assign(sheets,{
       }}},
   async portraits(){heading('paintPortrait per view');for(const d of dolls)for(const v of CATALOG.views){const c=document.createElement('canvas');await paintPortrait(c,L(d,{backdrop:Number(q.get('bd')||0),...extra}),q.get('postcard')==='1',v);c.style.width=(c.width*scale)+'px';const f=document.createElement('figure');const cap=document.createElement('figcaption');cap.textContent=d+' '+v;f.append(c,cap);section.append(f)}}
 });
+/* ---------- accessories (art/fit_acc.py) ----------
+   acc: every hat, pair of glasses, bag and toy on its doll in all four views (cats=hat,glasses,...;
+   hair= the style worn, default her default; outfit=). acchair: hats and glasses (cats=) against every
+   hairstyle of the doll, front and left (views=). */
+Object.assign(sheets,{
+  async acc(){const cats=(q.get('cats')||'hat,glasses,bag,toy').split(',');
+    for(const d of dolls)for(const cat of cats){const its=catalogOptions(cat,d);if(!its.length)continue;heading(cat+' · '+d);
+      const head=cat==='hat'||cat==='glasses';
+      for(const it of its)if(want(it.id))for(const v of q.get('views')?views:CATALOG.views)
+        await tile(it.id+' '+v,L(d,{[cat]:it.id,hair:q.get('hair')||defaultLook(d).hair,...(q.get('outfit')?{outfit:q.get('outfit')}:{}),...extra}),
+          {view:v,zoom:zoom||(head?headBox(d,v):fullBox(d,v)),scale:zoom?scale:(head?1:.5),grid})}},
+  async acchair(){const cats=(q.get('cats')||'hat,glasses').split(','),hv=q.get('views')?views:['front','left'];
+    for(const d of dolls)for(const cat of cats)for(const it of catalogOptions(cat,d))if(want(it.id)){heading(it.id+' · '+d);
+      for(const h of CATALOG.hairStyles[d])for(const v of hv)
+        await tile(h+' '+v,L(d,{[cat]:it.id,hair:h,...extra}),{view:v,zoom:zoom||headBox(d,v),scale:zoom?scale:.7,grid})}}
+});
 const original0={id:'original'};
 (async()=>{try{await sheets[sheetName]()}catch(e){console.error(e);const p=document.createElement('pre');p.textContent=e.stack;out.append(p)}window.labDone=true})();
 </script>

@@ -388,6 +388,7 @@ function hairLayers(doll,view,id,colorId){
     if(fit.scalp!==false){const dv=dollView(doll,view);let force=null;
       if(fit.scalpFill){force=makeCanvas(full.width,full.height);const fg=ctx2d(force);fg.translate(...dv.origin);fg.fillStyle='#000';fg.beginPath();fit.scalpFill.forEach(sh=>shapePathInto(fg,sh));fg.fill()}
       scalpShow(full,await spriteCanvas(dv.art),dv.origin,CATALOG.dolls[doll].skin,force)}
+    if(fit.holeFill)holeFill(full,dollView(doll,view).origin,fit.holeFill);
     if(fit.cutDoll)eraseShapes(doll,view,full,fit.cutDoll);
     if(fit.soften){const dv=dollView(doll,view);softenHairline(full,await spriteCanvas(dv.art),dv.origin,fit.soften)}
     const under=fit.under?underHair(full,await spriteCanvas(dollView(doll,view).art),dollView(doll,view).origin,fit.under):null;
@@ -408,6 +409,20 @@ function hairLayers(doll,view,id,colorId){
     fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);fg.restore();
     return done({back:full,front});
   });
+}
+/* fit.holeFill: doll-local shapes inside which the hair's see-through pixels are backed with its own
+   colour, shadowed (a gap the style leaves at the temple, off her head, reads as hair behind it rather
+   than as a hole). The colour is the mean of the opaque hair round the shapes. */
+function holeFill(full,[ox,oy],shapes){
+  const W=full.width,H=full.height,g=full.getContext('2d'),im=g.getImageData(0,0,W,H),d=im.data;
+  const m=makeCanvas(W,H),mg=ctx2d(m);mg.translate(ox,oy);mg.fillStyle='#000';mg.beginPath();shapes.forEach(s=>shapePathInto(mg,s));mg.fill();
+  const md=mg.getImageData(0,0,W,H).data;
+  let n=0;const c=[0,0,0];
+  for(let i=0;i<W*H;i++){if(!md[i*4+3])continue;for(let k=-6;k<=6;k+=3){const q=(i+k)*4;if(d[q+3]>240){c[0]+=d[q];c[1]+=d[q+1];c[2]+=d[q+2];n++}}}
+  if(!n)return;
+  for(let i=0;i<W*H;i++){const w=md[i*4+3]/255;if(!w)continue;const q=i*4,a=d[q+3]/255;if(a>.99)continue;
+    const na=a+(1-a)*w;for(let k=0;k<3;k++)d[q+k]=(d[q+k]*a+c[k]/n*.68*(1-a)*w)/na;d[q+3]=na*255}
+  g.putImageData(im,0,0);
 }
 /* Hair behind the head (styles that cover the ears, front view). Between her cheek, ear, jaw and neck
    and the inner edge of the hair hanging beside them the art shows nothing, so the backdrop would read as
@@ -898,7 +913,50 @@ function drawGem(g,shot,view='front'){
 
 /* ---------- composition ---------- */
 function lookKey(shot,view='front'){
-  return [shot.doll,view,shot.outfit,shot.outfitTint,shot.shoes,shot.shoesTint,shot.hair,shot.hairColor,shot.earrings,shot.earringsTint,shot.necklace,shot.clip,shot.lips,shot.blush,shot.shadow,shot.gem,shot.nails].join('|');
+  return [shot.doll,view,shot.outfit,shot.outfitTint,shot.shoes,shot.shoesTint,shot.hair,shot.hairColor,shot.earrings,shot.earringsTint,shot.necklace,shot.clip,shot.lips,shot.blush,shot.shadow,shot.gem,shot.nails,
+    shot.hat,shot.glasses,shot.bag,shot.toy].join('|');
+}
+/* ---------- accessories (catalog.js ACC, art/fit_acc.py) ----------
+   accLayer: the item's sprite at its fit as a doll-canvas layer; `lens` (glasses, side views) = only
+   the frame front, which is drawn again over the hair. Undefined when the item has no fit for the view
+   (glasses from behind). */
+function accLayer(doll,view,id,part='all'){
+  const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
+  if(!fit)return Promise.resolve(null);
+  return memo(dollCaches.layer,['acc',doll,view,id,part].join('|'),async()=>{
+    const src=await itemSprite(item,view,'main');
+    const [c,g]=dollLayer(doll,view);
+    if(part==='lens'){g.beginPath();shapePathInto(g,{poly:fit.lens});g.clip()}
+    drawFitted(g,src,fit);
+    return c;
+  });
+}
+/* Hair under a hat: the style's layers with everything above the hat's lower edge (fit.cut) erased,
+   so buns, ponytails and volume never poke through the crown (the hat covers the rest). */
+function hatHair(doll,view,hair,shot,cut){
+  return memo(dollCaches.layer,['hathair',doll,view,shot.hair,shot.hairColor,shot.hat].join('|'),async()=>{
+    const out={};
+    for(const k of ['back','front','shade']){
+      if(!hair[k]){out[k]=hair[k];continue}
+      const c=makeCanvas(hair[k].width,hair[k].height),g=c.getContext('2d');g.drawImage(hair[k],0,0);
+      eraseShapes(doll,view,c,[{poly:cut,feather:1.5}]);out[k]=c;
+    }
+    return out;
+  });
+}
+/* Something she holds: the sprite, then her fingers (fit.grip) redrawn over its handle from the body
+   picture (front, back) or the near arm (side views, so the thigh behind the hand is not). */
+function heldLayer(shot,view,id,bodyPic,arm){
+  const doll=shot.doll,item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
+  if(!fit)return Promise.resolve(null);
+  return memo(dollCaches.layer,['held',bodyKey(shot,view),id].join('|'),async()=>{
+    const src=await itemSprite(item,view,'main');
+    const [c,g]=dollLayer(doll,view);
+    drawFitted(g,src,fit);
+    if(fit.grip){g.save();g.beginPath();shapePathInto(g,{poly:fit.grip});g.clip();
+      if(arm){g.setTransform(1,0,0,1,0,0);g.drawImage(arm,0,0)}else g.drawImage(bodyPic,0,0);g.restore()}
+    return c;
+  });
 }
 /* composeDoll(shot, view) resolves to a DOLL_CANVAS sized transparent canvas of the dressed doll seen
    from `view` (one of CATALOG.views; anything else means 'front'). `shot` is a look (see readLook in
@@ -922,13 +980,15 @@ function normalShot(raw){const doll=raw.doll==='little'?'little':'adult';return 
 /* The dressed doll as an ordered list of draw operations; composeDoll() runs them in order on one
    canvas, composeDollLayers() runs each on its own canvas. op = {kind, draw(g), layer?} where `layer`
    (when set) is a DOLL_CANVAS sized canvas the op draws unchanged at 0,0. Kinds: clipBehind, hairBack,
-   outfitBack, shoesBack, body, gem, shoesFront, outfit, arm, over, necklace, earrings, studs, shade
-   (hair contact shadow, drawn source-atop), hairFront, clip, charm. */
+   outfitBack, shoesBack, body, gem, shoesFront, outfit, pack (backpack), arm, over, held (a bag or
+   toy in her hand), necklace, earrings, studs, glassesUnder (side views: the whole glasses, under the
+   hair), shade (hair contact shadow, drawn source-atop), hairFront, clip, charm, glasses (the frame),
+   hat. */
 async function dollOps(shot,view){
   const doll=shot.doll,dv=dollView(doll,view),[ox,oy]=dv.origin;
   const hairFit=catalogItem(shot.hair).fit[doll][view];
   const earItem=catalogItem(shot.earrings),clipItem=catalogItem(shot.clip);
-  const [body,outfit,shoes,hair,necklace,earrings,clipLayer]=await Promise.all([
+  let [body,outfit,shoes,hair,necklace,earrings,clipLayer]=await Promise.all([
     bodyLayer(shot,view),outfitLayer(doll,view,shot.outfit,shot.outfitTint),
     shot.shoes==='none'?null:shoeLayers(doll,view,shot.shoes,shot.shoesTint),
     hairLayers(doll,view,shot.hair,shot.hairColor),
@@ -939,7 +999,16 @@ async function dollOps(shot,view){
   const arm=sideView(view)?await armLayer(shot,view,body):null;
   const bodyPic=shoes?fitFeet(body,shoes,catalogItem(shot.shoes).fit[doll][view],dv,doll):body;
   const ops=[],put=(kind,layer)=>ops.push({kind,layer,draw:g=>g.drawImage(layer,0,0)});
-  const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
+  // accessories (none on every look saved before them, so those draw exactly as before)
+  const acc=f=>shot[f]&&shot[f]!=='none'?catalogItem(shot[f]):null;
+  const hatItem=acc('hat'),hatFit=hatItem?.fit?.[doll]?.[view],glassItem=acc('glasses'),bagItem=acc('bag')||acc('toy');
+  const [hat,glasses,lens,held]=await Promise.all([
+    hatFit?accLayer(doll,view,hatItem.id):null,
+    glassItem?accLayer(doll,view,glassItem.id):null,
+    glassItem?.fit?.[doll]?.[view]?.lens?accLayer(doll,view,glassItem.id,'lens'):null,
+    bagItem?(bagItem.kind==='pack'?accLayer(doll,view,bagItem.id):heldLayer(shot,view,bagItem.id,bodyPic,arm)):null]);
+  if(hatFit?.cut)hair=await hatHair(doll,view,hair,shot,hatFit.cut);
+  const clipAt={...hairFit.clip,...(hatFit&&hatFit.clip===false?{hide:true}:{})},clipBehind=!!clipAt.behind;
   const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
   const drawProc=g=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
   const stud=earItem?.stud&&dv.face?.lobes&&!(hairFit.earsUnder&&view==='front')?earItem.stud:null;
@@ -947,7 +1016,7 @@ async function dollOps(shot,view){
   // back view: earrings sit under the hair, so only show where the style leaves the ears free
   const earsUnder=!!hairFit.earsUnder||view==='back';
   const clips=kind=>{if(clipLayer)put(kind,clipLayer);if(proc)ops.push({kind:'charm',behind:kind==='clipBehind',draw:drawProc})};
-  if(clipBehind)clips('clipBehind');
+  if(clipBehind&&!clipAt.hide)clips('clipBehind');
   if(hair.back)put('hairBack',hair.back);
   if(outfit.back)put('outfitBack',outfit.back);
   if(shoes)put('shoesBack',shoes.back);
@@ -957,19 +1026,28 @@ async function dollOps(shot,view){
   if(shoes&&!outfitFit.shoesOver)put('shoesFront',shoes.front);
   put('outfit',outfit.front);
   if(shoes&&outfitFit.shoesOver)put('shoesFront',shoes.front);
+  // a backpack: its straps over the outfit, under the near arm in side views
+  if(held&&bagItem.kind==='pack')put('pack',held);
   if(arm&&outfitFit.arm!=='hidden'){
     if(outfitFit.armClip?.some(s=>s.feather))put('arm',softClip(arm,ox,oy,outfitFit.armClip));
     else if(outfitFit.armClip)ops.push({kind:'arm',draw:g=>{g.save();g.translate(ox,oy);g.beginPath();outfitFit.armClip.forEach(s=>shapePathInto(g,s));g.setTransform(1,0,0,1,0,0);g.clip();g.drawImage(arm,0,0);g.restore()}});
     else put('arm',arm);
   }
   if(outfit.over)put('over',outfit.over);
+  // a bag or toy in her hand, her fingers over its handle
+  if(held&&bagItem.kind!=='pack')put('held',held);
   if(necklace)put('necklace',necklace);
   const ears=()=>{if(earrings)put('earrings',earrings);if(stud)ops.push({kind:'studs',draw:drawStuds})};
   if(earsUnder)ears();
+  // glasses: in side views the arms run under the hair to the ear and only the frame front is drawn
+  // again over it; from the front the whole frame sits on the face, over the hair beside it
+  if(glasses&&lens)put('glassesUnder',glasses);
   if(hair.shade)ops.push({kind:'shade',draw:g=>{g.save();g.globalCompositeOperation='source-atop';g.drawImage(hair.shade,0,0);g.restore()}});
   put('hairFront',hair.front);
   if(!earsUnder)ears();
-  if(!clipBehind)clips('clip');
+  if(!clipBehind&&!clipAt.hide)clips('clip');
+  if(glasses)put('glasses',lens||glasses);
+  if(hat)put('hat',hat);
   return {ops,doll,view,origin:[ox,oy],shoes};
 }
 /* The same dressed doll as separate aligned layers (puppet.js): resolves to {doll, view, origin, layers}

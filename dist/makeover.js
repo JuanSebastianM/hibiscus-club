@@ -7,6 +7,7 @@ const roomTabs={
     {id:'outfits',icon:'hanger',zoom:'full'},
     {id:'shoes',icon:'shoe',zoom:'feet'},
     {id:'jewelry',icon:'gem',zoom:'bust'},
+    {id:'extras',aria:'tab.extrasLabel',icon:'hat',zoom:'full'}, // hats, glasses, a bag (Grown-up) or a toy (Little Me)
     {id:'scenery',icon:'pin',zoom:'full'}],
   salon:[
     {id:'hair',icon:'comb',zoom:'hair'},
@@ -126,6 +127,7 @@ function visibleTabs(room){
     if(t.id==='nails')return makeupOptions('nails',d).length>1;
     if(t.id==='makeup')return ['lips','blush','shadow','gem'].some(f=>makeupOptions(f,d).length>1);
     if(t.id==='accessories')return catalogOptions('clip',d).length>0;
+    if(t.id==='extras')return CATALOG.accessories.some(f=>catalogOptions(f,d).length>0);
     return true;
   });
 }
@@ -140,6 +142,8 @@ function tabBody(room,tab,shown){
     case 'shoes':return group(t('group.shoes'),cardGrid([...itemCards('shoes',shown),noneCard('shoes',t('none.shoes'),shown)]))+tintGroup('shoes',shown);
     case 'jewelry':return (catalogOptions('earrings',d).length?group(t('group.earrings'),cardGrid([...itemCards('earrings',shown),noneCard('earrings',t('none.earrings'),shown)],'compact'))+tintGroup('earrings',shown):'')+
       (catalogOptions('necklace',d).length?group(t('group.necklaces'),cardGrid([...itemCards('necklace',shown),noneCard('necklace',t('none.necklace'),shown)],'compact')):'');
+    case 'extras':return CATALOG.accessories.filter(f=>catalogOptions(f,d).length).map(f=>
+      group(t('group.'+f),cardGrid([...itemCards(f,shown),noneCard(f,t('none.'+f),shown)],'compact'))).join('');
     case 'scenery':return group(t('group.scenery'),options('backdrop',sceneryNames));
     case 'hair':return group(t('group.hairstyle'),cardGrid(itemCards('hair',shown,{hair:true})))+
       group(t('group.hairColor'),chipGrid(hairColorOptions().map(h=>chip('hairColor',h.id,h.name,hairColorSwatch(h),shown))));
@@ -243,7 +247,7 @@ function paintCanvas(canvas,shot,postcard=false,view='front'){
 function sparkleOnDoll(field,power){
   const stage=document.querySelector('#stage');if(!stage)return;
   const r=stage.getBoundingClientRect(),zoom=activeTab(route).zoom;
-  const at={outfit:.5,outfitTint:.5,shoes:.86,shoesTint:.86,necklace:.33,earrings:.28,earringsTint:.28,hair:.2,hairColor:.2,clip:.16}[field]??.3;
+  const at={outfit:.5,outfitTint:.5,shoes:.86,shoesTint:.86,necklace:.33,earrings:.28,earringsTint:.28,hair:.2,hairColor:.2,clip:.16,hat:.12,glasses:.16,bag:.55,toy:.6}[field]??.3;
   const y=zoom==='full'?at:.42;
   try{HibiscusFx.burst(r.left+r.width/2,r.top+r.height*y,power)}catch{}
 }
@@ -257,7 +261,8 @@ function maybeCompliment(){
 /* ---------- actions ---------- */
 /* Analytics category of a look field or an ownership key (see analytics.js). */
 const FIELD_CATEGORY={outfit:'outfit',outfitTint:'outfit',shoes:'shoes',shoesTint:'shoes',earrings:'jewelry',earringsTint:'jewelry',necklace:'jewelry',
-  hair:'hair',hairColor:'hair-color',lips:'makeup',blush:'makeup',shadow:'makeup',gem:'makeup',nails:'nails',clip:'accessory'};
+  hair:'hair',hairColor:'hair-color',lips:'makeup',blush:'makeup',shadow:'makeup',gem:'makeup',nails:'nails',clip:'accessory',
+  hat:'accessory',glasses:'accessory',bag:'accessory',toy:'accessory'}; // no new event details: worn things count as accessories
 function keyCategory(key){
   const [kind,id]=key.split(':');
   if(kind==='item'||kind==='tint')return FIELD_CATEGORY[catalogItem(id)?.category];

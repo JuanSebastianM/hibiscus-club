@@ -21,7 +21,10 @@ const LOOKS={
     {...D.adult,outfit:'hoodie-dress-leg-warmers',hair:'side-ponytail',shoes:'fuzzy-slippers'},
     {...D.adult,outfit:'tennis-dress',hair:'high-bun-tendrils',shoes:'pink-chunky-sneakers'},
     {...D.adult,outfit:'tankini-board-shorts',hair:'long-braids',shoes:'flower-flip-flops'},
-    {...D.adult,outfit:'sequin-halter-dress',hair:'flip-bob',shoes:'wedge-sandals',necklace:'butterfly-necklace'}],
+    {...D.adult,outfit:'sequin-halter-dress',hair:'flip-bob',shoes:'wedge-sandals',necklace:'butterfly-necklace'},
+    // accessories (11..): hat, glasses and a bag in her hand; a cap and a backpack
+    {...D.adult,outfit:'tennis-dress',hair:'long-waves',hat:'sun-hat',glasses:'heart-sunglasses',bag:'beaded-tote'},
+    {...D.adult,outfit:'baby-tee-cargo',hair:'space-buns',hat:'baseball-cap',glasses:'cat-eye-glasses',bag:'mini-backpack'}],
   little:[
     {...D.little},
     {...D.little,outfit:'denim-overalls',hair:'curly-buns',shoes:'white-velcro-sneakers'},
@@ -34,7 +37,10 @@ const LOOKS={
     {...D.little,outfit:'tulle-party-dress',hair:'ringlet-pigtails',shoes:'jelly-shoes'},
     {...D.little,outfit:'ballet-wrap-set',hair:'top-ponytail',shoes:'ballet-slippers'},
     {...D.little,outfit:'dino-romper',hair:'curly-bob',shoes:'light-up-sneakers'},
-    {...D.little,outfit:'beach-poncho',hair:'tiny-pigtails',shoes:'toddler-sandals'}]
+    {...D.little,outfit:'beach-poncho',hair:'tiny-pigtails',shoes:'toddler-sandals'},
+    // accessories (11..): a beanie, glasses and a plush; a crown and the teddy
+    {...D.little,hat:'bear-beanie',glasses:'star-sunglasses',toy:'plush-bunny'},
+    {...D.little,outfit:'dino-romper',hair:'curly-buns',hat:'party-crown',toy:'teddy-bear'}]
 };
 const lookOf=(doll,i)=>({...LOOKS[doll][i%LOOKS[doll].length],doll});
 /* The pose of an animation at time t (seconds). walk: t in seconds at the natural speed. */
@@ -49,11 +55,11 @@ function poseFor(rig,anim,t,doll,seed=7,outfit){
   if(anim==='blink'){p.face.blink=[t,t];return p}
   if(anim==='jaw'){p.face.jaw=t*(rig.face?.jawMax||3);return p}
   if(anim==='smileface'){p.face.smile=t;p.face.squint=t*.6;return p}
-  const e=R.emotePose(anim,t,ctx);R.addPose(p,e.pose,1);
+  const e=R.emotePose(anim,t,ctx);R.addPose(p,e.pose,1);if(e.pose.raise)p.raise=e.pose.raise;
   return p;
 }
-async function frame({doll='adult',look=0,view='front',anim='idle',t=0,crop=null,scale=.6,bg='#cfe6d4',resident=null,pose=null}={}){
-  const opts=resident?{resident}:{shot:lookOf(doll,look),view};
+async function frame({doll='adult',look=0,view='front',anim='idle',t=0,crop=null,scale=.6,bg='#cfe6d4',resident=null,pose=null,shot=null}={}){
+  const opts=resident?{resident}:{shot:shot?{...shot,doll}:lookOf(doll,look),view};
   const cr=crop||(resident?[0,0,176,432]:[0,0,600,1060]);
   const c=document.createElement('canvas');c.width=Math.round(cr[2]*scale);c.height=Math.round(cr[3]*scale);
   const back=document.createElement('canvas');back.width=c.width;back.height=c.height;const bg2=back.getContext('2d');bg2.fillStyle=bg;bg2.fillRect(0,0,c.width,c.height);
