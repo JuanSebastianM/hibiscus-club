@@ -33,6 +33,10 @@ const outlines = {
   home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/>',
   /* walk-in places: Sunny Cove and Breezy Park */
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5m0 14v2.5M2.5 12H5m14 0h2.5M5.3 5.3 7 7m10 10 1.7 1.7M5.3 18.7 7 17m10-10 1.7-1.7"/>',
-  kite:'<path d="M12 2 18 8.5 12 15 6 8.5Z"/><path d="M6 8.5h12M12 2v13"/><path d="M12 15c-1 2 1.5 3 .5 5s-2 1.5-2 3"/>'
+  kite:'<path d="M12 2 18 8.5 12 15 6 8.5Z"/><path d="M6 8.5h12M12 2v13"/><path d="M12 15c-1 2 1.5 3 .5 5s-2 1.5-2 3"/>',
+  /* Sundae Street and Treetop Hideout */
+  cone:'<circle cx="12" cy="8" r="4.5"/><path d="M7.6 9.6 12 21.5l4.4-11.9"/><path d="M9.3 14h5.4M10.5 17.5h3"/>',
+  chest:'<path d="M4 20v-9.5C4 7.4 7.6 5 12 5s8 2.4 8 5.5V20z"/><path d="M4 12h16"/><path d="M10.5 10.5h3v4h-3z"/>',
+  feather:'<path d="M19.5 4.5C11 4.5 6.5 10 6.5 17.5"/><path d="M19.5 4.5c0 7.5-4.8 12.6-13 13"/><path d="M4 20l2.5-2.5M10.5 12.5h4M9.3 15.2h3"/>'
 };
 function icon(name,size=20){return '<svg aria-hidden="true" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">'+(outlines[name]||'')+'</svg>'}

@@ -12,7 +12,7 @@ const HibiscusAnalytics=(()=>{
   const ROOMS=['map','wardrobe','salon','booth','scrapbook','arcade','garden','runway','life','house'];
   const HOUSE_ROOMS=['bedroom','kitchen','living','bathroom','playroom','patio'];
   const DECOR_CATEGORIES=[...HOUSE_ROOMS,'walls','floor']; // where a placed piece comes from (its manifest room)
-  const DISTRICTS=['boardwalk','market','pavilion','beach','park'];
+  const DISTRICTS=['boardwalk','market','pavilion','beach','park','icecream','treehouse'];
   const CATEGORIES=['outfit','shoes','jewelry','hair','hair-color','makeup','nails','accessory'];
   const GAMES=['memory','bouquet','runway'];
   const SCHEMA={
@@ -20,7 +20,7 @@ const HibiscusAnalytics=(()=>{
       'visit':ROOMS,'room':ROOMS,'district':DISTRICTS,'lang':['en','es'],'character':['adult','little'],
       'makeover':CATEGORIES,'tryon':[...CATEGORIES,'decor'],'surprise':['wardrobe','salon','house'],'favorite':['saved','worn'],
       'purchase':[...CATEGORIES,'decor'],'game-start':GAMES,'game-done':GAMES,'chat':DISTRICTS,
-      'errand':['story-1','story-2','story-3','story-4','story-5','story-6'],'photo':['studio',...DISTRICTS,'house'],
+      'errand':['story-1','story-2','story-3','story-4','story-5','story-6','story-7','story-8'],'photo':['studio',...DISTRICTS,'house'],
       'daily':['deliver','find','greet','compliment','tidy'],'findable':DISTRICTS,'tutorial':['done','skipped'],'name':['yes','no'],
       'challenge':['picnic','disco','seashell','mall','rosy','midnight','homecoming','bob'],
       'postcard':['png'],'sound':['on','off'],'sparkle':['on','off'],

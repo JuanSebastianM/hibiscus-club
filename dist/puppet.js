@@ -281,7 +281,7 @@ const HibiscusPuppet=(()=>{
     constructor(rg,src,k=3){
       const f=rg.face;this.f=f;this.rg=rg;this.k=k;
       const all=[...f.eyes.flat(),...f.mouth.map(p=>[p[0],p[1]])];
-      if(f.patch){const [px,py,rx,ry]=f.patch;all.push([px-rx,py-ry],[px+rx,py+ry])} // real mouth frames (setFrames)
+      for(const [px,py,rx,ry] of [f.patch,...(f.blinkPatch||[])].filter(Boolean))all.push([px-rx,py-ry],[px+rx,py+ry]); // real frames (setFrames)
       const xs=all.map(p=>p[0]),ys=all.map(p=>p[1]),u=rg.resident?3:8;
       this.box=[Math.floor(Math.min(...xs)-u),Math.floor(Math.min(...ys)-u*1.5),0,0];
       this.box[2]=Math.ceil(Math.max(...xs)+u)-this.box[0];this.box[3]=Math.ceil(Math.max(...ys)+u*1.4+(f.jawMax||3))-this.box[1];
@@ -298,18 +298,26 @@ const HibiscusPuppet=(()=>{
       this.state='';
     }
     /* Real frames (pack-2 residents): the talk and smile pictures, registered with the neutral one, cut
-       to the feathered ellipse face.patch round the mouth. draw() blends them in place of the drawn mouth. */
+       to the feathered ellipse face.patch round the mouth. draw() blends them in place of the drawn mouth.
+       A resident whose smile picture has closed, smiling eyes and no skin above her eyes to draw a lid
+       from (Gigi) sets face.blinkFrame and face.blinkPatch (an ellipse per eye): her blink is that picture's eyes. */
     setFrames(frames){
-      const [px,py,rx,ry]=this.f.patch,k=this.k,[bx,by]=this.box,out={};
-      for(const [name,img] of Object.entries(frames)){
+      const k=this.k,[bx,by]=this.box,out={};
+      const cut=(img,ellipses)=>{
         const c=mk(this.canvas.width,this.canvas.height),g=c.getContext('2d');
         g.imageSmoothingQuality='high';g.setTransform(k,0,0,k,-bx*k,-by*k);g.drawImage(img,0,0,this.rg.size[0],this.rg.size[1]);
-        // feathered ellipse: solid in the middle, fading over its outer 45 %
-        g.globalCompositeOperation='destination-in';g.translate(px,py);g.scale(rx,ry);
-        const gr=g.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,'#000');gr.addColorStop(.55,'#000');gr.addColorStop(1,'rgba(0,0,0,0)');
-        g.fillStyle=gr;g.fillRect(-1,-1,2,2);
-        out[name]=c;
-      }
+        // feathered ellipses: solid in the middle, fading over their outer 45 %
+        const m=mk(this.canvas.width,this.canvas.height),mg=m.getContext('2d');
+        for(const [px,py,rx,ry] of ellipses){
+          mg.setTransform(k,0,0,k,-bx*k,-by*k);mg.translate(px,py);mg.scale(rx,ry);
+          const gr=mg.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,'#000');gr.addColorStop(.55,'#000');gr.addColorStop(1,'rgba(0,0,0,0)');
+          mg.fillStyle=gr;mg.fillRect(-1,-1,2,2);
+        }
+        g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(m,0,0);
+        return c;
+      };
+      for(const [name,img] of Object.entries(frames))out[name]=cut(img,[this.f.patch]);
+      if(this.f.blinkPatch&&frames[this.f.blinkFrame])out.blink=cut(frames[this.f.blinkFrame],this.f.blinkPatch);
       this.frames=out;this.state='';
     }
     pixel(x,y){const d=this.sd.data,w=this.sd.width,i=(Math.round(clamp(y,0,this.sd.height-1))*w+Math.round(clamp(x,0,w-1)))*4;return [d[i],d[i+1],d[i+2],d[i+3]]}
@@ -364,7 +372,10 @@ const HibiscusPuppet=(()=>{
         if(a>.02&&this.frames.talk){g.globalAlpha=a;g.drawImage(this.frames.talk,0,0);any=true}
         g.globalAlpha=1;g.setTransform(k,0,0,k,-bx*k,-by*k);
       }
-      this.eyes.forEach((e,i)=>{const b=f.blink[Math.min(i,f.blink.length-1)];if(b>.02){this.drawLid(e,b);any=true}});
+      if(this.frames?.blink){ // closed eyes from a real frame, faded in with the blink
+        const b=smooth(.15,.8,Math.max(...f.blink));
+        if(b>.02){g.setTransform(1,0,0,1,0,0);g.globalAlpha=b;g.drawImage(this.frames.blink,0,0);g.globalAlpha=1;g.setTransform(k,0,0,k,-bx*k,-by*k);any=true}
+      }else this.eyes.forEach((e,i)=>{const b=f.blink[Math.min(i,f.blink.length-1)];if(b>.02){this.drawLid(e,b);any=true}});
       if(f.jaw>.05&&!this.frames){this.drawMouth(f,disp);any=true}
       if(any){g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(this.faceMask,0,0);g.globalCompositeOperation='source-over'}
       this.visible=any;return any;
@@ -531,7 +542,7 @@ const HibiscusPuppet=(()=>{
     // drawn expression heads (puppet-rig.js EXPRESSION_ART), when a sheet exists for this doll and view
     const expr=headPiece&&await expressionHeads(layers.doll,view,headPiece,layers.shot).catch(e=>{if(config.debug)console.warn(e);return null});
     if(expr){headPiece.expr=expr;overlaySrc=null}
-    return finishModel(rg,order,overlaySrc,{farOffset,look:layers.shot,doll:layers.doll,expr:!!expr});
+    return finishModel(rg,order,overlaySrc,{farOffset,look:layers.shot,doll:layers.doll,expr:!!expr,exprNames:expr?new Set(Object.keys(expr)):null});
   }
   /* Drawn heads (puppet-rig.js EXPRESSION_ART, built by art/build_faces.py): for each expression the
      bare base head gets the drawn cell blended in (its alpha is the region mask), then the game's own
@@ -544,14 +555,18 @@ const HibiscusPuppet=(()=>{
     const spec=R.EXPRESSION_ART[doll]?.[view==='front'?'front':'side'];
     if(!spec?.file||typeof applyFaceMakeup!=='function')return null;
     const srcView=view==='right'?'left':view,dv=dollView(doll,srcView);
-    const [sheet,lipsSheet,base]=await Promise.all([asset(spec.file),spec.lips?asset(spec.lips):null,spriteCanvas(dv.art)]);
+    const sm=spec.smile; // the Grown-up's smiling talk heads, when present (a failed load keeps the others)
+    const [sheet,lipsSheet,base,smileSheet,smileLips]=await Promise.all([asset(spec.file),spec.lips?asset(spec.lips):null,spriteCanvas(dv.art),
+      sm?asset(sm.file).catch(()=>null):null,sm?.lips?asset(sm.lips).catch(()=>null):null]);
     const [cw,ch]=spec.cell,k=spec.scale||1,[ax,ay]=spec.at,o=R.ORIGINS[doll][srcView];
     const face=shiftFace(dv.face||{},-ax,-ay),[bx,by]=piece.box,out={};
     // where the crop goes in the head piece (canvas px of this view)
     const right=view==='right',px=right?R.ORIGINS[doll].right[0]+R.MIRROR[doll]-(ax+cw):ax+o[0],py=ay+o[1];
-    R.EXPRESSIONS.forEach((name,n)=>{
+    const cells=R.EXPRESSIONS.map((name,n)=>[name,n,4,sheet,lipsSheet]);
+    if(smileSheet)R.SMILE_EXPRESSIONS.forEach((name,n)=>{if(sm.names.includes(name))cells.push([name,n,6,smileSheet,smileLips])});
+    cells.forEach(([name,n,cols,sheet,lipsSheet])=>{
       if(name==='neutral')return; // the rest pose is the live doll's own face
-      const sx=(n%4)*cw*k,sy=Math.floor(n/4)*ch*k;
+      const sx=(n%cols)*cw*k,sy=Math.floor(n/cols)*ch*k;
       const c=mk(cw,ch),g=g2(c);g.imageSmoothingQuality='high';
       g.drawImage(base,ax,ay,cw,ch,0,0,cw,ch);g.drawImage(sheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
       const im=g.getImageData(0,0,cw,ch);
@@ -559,7 +574,7 @@ const HibiscusPuppet=(()=>{
       let lipsMask=null;
       if(lipsSheet&&region!=='eyes'){const lc=mk(cw,ch),lg=g2(lc);lg.imageSmoothingQuality='high';lg.drawImage(lipsSheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
         const ld=lg.getImageData(0,0,cw,ch).data;lipsMask=new Float32Array(cw*ch);for(let i=0;i<lipsMask.length;i++)lipsMask[i]=ld[i*4]/255}
-      applyFaceMakeup(im.data,cw,ch,shot,face,{lipsMask,eyesClosed:name==='blink'?1:name==='half-closed'?.6:name==='laugh'?.7:0});
+      applyFaceMakeup(im.data,cw,ch,shot,face,{lipsMask,eyesClosed:name==='blink'||name==='smile-blink'?1:name==='half-closed'?.6:name==='laugh'||name==='smile-laugh'?.7:0});
       g.putImageData(im,0,0);
       // keep it only where the cell blends (its alpha), over the live head piece
       g.globalCompositeOperation='destination-in';g.drawImage(sheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
@@ -825,6 +840,9 @@ void main(){
     /* Drawn heads: per channel the current and the previous expression with cross-fade weights. */
     exprWeights(f){
       const tg=R.expressionTargets({...f,jawMax:this.rig.face?.jawMax},this.doll),now=this.t;
+      // a head this model does not have (a smiling cell left out by build_faces.py) falls back to its pack-2 shape
+      const has=this.model?.exprNames,pick=k=>!k||!has||has.has(k)?k:R.EXPRESSION_FALLBACK[k]??null;
+      tg.eye=pick(tg.eye);tg.mouth=pick(tg.mouth);
       const st=this.expr||(this.expr={eye:{cur:null,prev:null,at:-9},mouth:{cur:null,prev:null,at:-9}});
       const step=(c,key,fade)=>{if(key!==c.cur){c.prev=c.cur;c.cur=key;c.at=now;c.fade=fade}const u=clamp((now-c.at)/(c.fade||.05),0,1);return [c.cur,u,c.prev,1-u]};
       const [e0,we0,e1,we1]=step(st.eye,tg.eye,tg.eyeFade),[m0,wm0,m1,wm1]=step(st.mouth,tg.mouth,tg.mouthFade);
@@ -896,7 +914,9 @@ void main(){
         for(const mesh of gpu.meshes)if(mesh.userData.piece.overlay)mesh.visible=vis;
       }
       const r=G.renderer;
-      r.setViewport(0,0,pw,ph);r.setScissor(0,0,pw,ph);r.setScissorTest(true);
+      // the scissor (so the clear) reaches 2 px past the picture: scaling it into the page samples the edge
+      // texels, which would otherwise hold another puppet's last frame (a thin line beside a resident)
+      r.setViewport(0,0,pw,ph);r.setScissor(0,0,Math.min(G.w,pw+2),Math.min(G.h,ph+2));r.setScissorTest(true);
       r.render(gpu.scene,G.camera);
       r.setScissorTest(false);
       // into the page's canvas
@@ -944,7 +964,7 @@ void main(){
 
   return {
     /* create(canvas, opts) -> puppet, or null when puppets are off. opts: shot + view (doll) or
-       resident ('mara' | 'rosa' | 'kit' | 'sol' | 'teo'); layout(p) -> {size:[w,h] canvas px to set, crop:[x,y,w,h]
+       resident ('mara' | 'rosa' | 'kit' | 'sol' | 'teo' | 'gigi' | 'nina'); layout(p) -> {size:[w,h] canvas px to set, crop:[x,y,w,h]
        of the doll canvas, dest:[x,y,w,h] in the canvas, clip, back (canvas drawn first), front
        (drawn last)}; onActive(on): true when it starts drawing, false when the page must show the
        still picture again; energy (idle amplitude 0..1); seed. */

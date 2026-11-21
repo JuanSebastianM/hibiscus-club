@@ -221,6 +221,46 @@ test('expression art: every doll and view names a sheet slot, and the face picks
   assert.equal(R.expressionFor({ ...base, smile: .9 }), 'big-smile');
   for (const k of ['laugh', 'surprise']) assert.ok(R.EXPRESSIONS.includes(R.expressionFor({ ...base, [k]: 1 })));
 });
+test("expression slots: Little Me's profile heads, and the Grown-up talking, blinking and laughing from her smile", () => {
+  // both dolls have side heads now (Little Me's sheet was redrawn as a true profile)
+  assert.ok(R.EXPRESSION_ART.little.side && R.EXPRESSION_ART.adult.side, 'both dolls have side heads');
+  // the Grown-up's smiling heads: one row of six, every name has a region and a pack-2 fallback, files exist
+  assert.equal(R.SMILE_EXPRESSIONS.length, 6);
+  for (const name of R.SMILE_EXPRESSIONS) {
+    assert.ok(['eyes', 'mouth', 'face'].includes(R.EXPRESSION_REGION[name]), name);
+    assert.ok(name in R.EXPRESSION_FALLBACK, name + ' falls back');
+    const fb = R.EXPRESSION_FALLBACK[name];
+    assert.ok(fb === null || R.EXPRESSIONS.includes(fb), name + ' -> ' + fb);
+  }
+  for (const v of ['front', 'side']) {
+    const sm = R.EXPRESSION_ART.adult[v].smile;
+    assert.ok(sm, 'adult ' + v + ' smile sheet');
+    for (const f of [sm.file, sm.lips]) assert.ok(existsSync(new URL(f, dist)), f + ' exists');
+    for (const n of sm.names) assert.ok(R.SMILE_EXPRESSIONS.includes(n), n);
+  }
+  assert.equal(R.EXPRESSION_ART.little.front.smile, undefined, 'Little Me keeps her own talk shapes');
+  const T = (f, d) => R.expressionTargets({ blink: [0, 0], jaw: 0, smile: 0, wide: 0, glance: 0, laugh: 0, surprise: 0, jawMax: 4, ...f }, d);
+  // the Grown-up: smile, talk, smile; a smiling blink; a smiling laugh; at rest her own face
+  assert.deepEqual([T({}, 'adult').eye, T({}, 'adult').mouth], [null, null]);
+  assert.equal(T({ jaw: .1 }, 'adult').mouth, null, 'a tiny jaw drift at rest keeps her own face');
+  assert.equal(T({ jaw: .4 }, 'adult').mouth, 'smile-rest', 'between syllables: the drawn resting smile');
+  assert.equal(T({ jaw: 1.2 }, 'adult').mouth, 'smile-eh'); assert.equal(T({ jaw: 1.2, wide: -1 }, 'adult').mouth, 'smile-oh');
+  assert.equal(T({ jaw: 3 }, 'adult').mouth, 'smile-ah');
+  assert.equal(T({ blink: [1, 1] }, 'adult').eye, 'smile-blink'); assert.equal(T({ laugh: 1 }, 'adult').mouth, 'smile-laugh');
+  assert.deepEqual([T({ blink: [1, 1], jaw: 3 }, 'adult').eye, T({ blink: [1, 1], jaw: 3 }, 'adult').mouth], ['smile-blink', 'smile-ah']);
+  // Little Me (front and profile) keeps the pack-2 shapes
+  assert.equal(T({ jaw: 1.2 }, 'little').mouth, 'talk-eh'); assert.equal(T({ jaw: .4 }, 'little').mouth, null);
+  assert.equal(T({ blink: [1, 1] }, 'little').eye, 'blink'); assert.equal(T({ laugh: 1 }, 'little').mouth, 'laugh');
+  // talking moves through the smiling heads without ever showing the closed pack-2 mouth
+  const rg = R.rig('adult', 'front'), seen = new Set();
+  for (let t = 0; t < 8; t += 1 / 30) {
+    const p = R.idlePose(t, { seed: 3, doll: 'adult', rig: rg, energy: 1 });R.addPose(p, R.talkPose(t, { seed: 3, doll: 'adult', rig: rg }), 1);
+    const m = R.expressionTargets({ ...p.face, jawMax: rg.face.jawMax }, 'adult').mouth;
+    assert.ok(m === null || m.startsWith('smile-'), 'talk shape ' + m);
+    seen.add(m);
+  }
+  for (const n of ['smile-eh', 'smile-ah']) assert.ok(seen.has(n), n + ' while talking');
+});
 test('no side-eye: while SIDE_GLANCES is off, idle and emotes never pick a glance, and nothing looks surprised at rest', () => {
   assert.equal(R.SIDE_GLANCES, false);
   const glance = new Set(['look-left', 'look-right']);

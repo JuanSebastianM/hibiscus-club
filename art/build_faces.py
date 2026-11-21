@@ -19,6 +19,17 @@ Output, in doll-local pixels of the base picture at 2x: dist/assets/faces/faces-
 (RGBA: colour + blend mask) and faces-<doll>-<front|side>-lips.webp (lips in the red channel), each a
 4 x 3 grid of cells of BOX[...] size; and the EXPRESSION_ART lines for dist/puppet-rig.js.
 With --check, writes registration difference images and a preview sheet to out_dir.
+
+The Grown-up also has smiling talk sheets (art/source/round2/talking-mouths/faces-adult-<front|side>-smile.webp,
+one row of six heads: resting open smile, talking eh, oh, ah, a smiling blink and a big laugh). Her rest face
+smiles with teeth, so these make talking move from that smile and back. They are registered the same way
+(the resting smile is the reference cell) into faces-adult-<kind>-smile.webp (+ -lips), a 6 x 1 grid of the
+same cells, listed as `smile` in her EXPRESSION_ART entry. A cell whose registration is off (its skull
+outline far from the reference cell's after the fit) is left out and reported, and the game falls back to
+the matching pack-2 shape for it.
+
+    python3 art/build_faces.py adult-front-smile adult-side-smile [--check out_dir]
+
 Needs Pillow and numpy.
 """
 import json, sys, os
@@ -27,9 +38,13 @@ from PIL import Image, ImageFilter, ImageDraw
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 SRC = os.path.join(ROOT, 'art/source/pack2/02-faces/faces-{doll}-{kind}.webp')
+SRC_SMILE = os.path.join(ROOT, 'art/source/round2/talking-mouths/faces-{doll}-{kind}-smile.webp')
 BASE = os.path.join(ROOT, 'dist/assets/dolls/{doll}-{view}.webp')
 OUT = os.path.join(ROOT, 'dist/assets/faces')
 NAMES = ['neutral', 'soft-smile', 'big-smile', 'laugh', 'blink', 'half-closed', 'talk-eh', 'talk-oh', 'talk-ah', 'surprised', 'look-left', 'look-right']
+# the Grown-up's smiling talk sheets (puppet-rig.js SMILE_EXPRESSIONS), one row
+SMILE_NAMES = ['smile-rest', 'smile-eh', 'smile-oh', 'smile-ah', 'smile-blink', 'smile-laugh']
+SMILE_MAX_OUTLINE = 2.5  # doll px: a smile cell whose skull outline is further than this from the reference is left out
 SCALE = 2  # output px per doll px
 
 # Per doll and sheet (doll-local px of the base picture): the face-interior ellipse(s) that are blended
@@ -42,27 +57,28 @@ SPEC = {
                              eyes=[[53, 82, 16, 8.5]], mouth=[[42, 125, 24, 18]]),
     ('little', 'front'): dict(view='front', face=[[207, 152, 60, 52]], box=[140, 94, 134, 116], rows=(6, 150), feat=[150, 104, 112, 92],
                               eyes=[[176, 123, 26, 15], [238, 123, 26, 15]], mouth=[[208, 180, 34, 20]]),
-    # Little Me's side sheet is drawn in three-quarter view and cannot be laid on her strict profile
-    # (a second cheek and nose show); it is built for reference only and not used by the game.
+    # Little Me's side sheet was redrawn as a true left profile (the first, three-quarter drawing is kept as
+    # faces-little-side-threequarter-old.webp and not used); its heads are drawn large in their cells.
     ('little', 'side'):  dict(view='left', face=[[36, 150, 36, 50]], box=[0, 94, 82, 112], rows=(8, 140), feat=[8, 100, 60, 92],
-                              eyes=[[31, 115, 14, 9]], mouth=[[18, 171, 20, 14]], unused=True),
+                              eyes=[[31, 115, 14, 9]], mouth=[[18, 171, 20, 14]], tight=True),
 }
 # What each expression swaps: only the eyes (blinks and glances keep the live doll's brows, cheeks and
 # lips and their makeup), only the mouth and chin (talking), or the whole face interior.
 REGION = {'neutral': 'face', 'soft-smile': 'face', 'big-smile': 'face', 'laugh': 'face', 'surprised': 'face',
           'blink': 'eyes', 'half-closed': 'eyes', 'look-left': 'eyes', 'look-right': 'eyes',
-          'talk-eh': 'mouth', 'talk-oh': 'mouth', 'talk-ah': 'mouth'}
+          'talk-eh': 'mouth', 'talk-oh': 'mouth', 'talk-ah': 'mouth',
+          'smile-rest': 'mouth', 'smile-eh': 'mouth', 'smile-oh': 'mouth', 'smile-ah': 'mouth', 'smile-blink': 'eyes', 'smile-laugh': 'face'}
 
 def load(path):
     return np.asarray(Image.open(path).convert('RGBA')).astype(np.float32)
 
-def cells(sheet):
+def cells(sheet, cols=4, rows=3):
     H, W = sheet.shape[:2]
     out = []
-    for r in range(3):
-        for c in range(4):
-            y0, y1 = round(r * H / 3), round((r + 1) * H / 3)
-            x0, x1 = round(c * W / 4), round((c + 1) * W / 4)
+    for r in range(rows):
+        for c in range(cols):
+            y0, y1 = round(r * H / rows), round((r + 1) * H / rows)
+            x0, x1 = round(c * W / cols), round((c + 1) * W / cols)
             out.append(sheet[y0:y1, x0:x1])
     return out
 
@@ -213,10 +229,24 @@ def lips_mask(img, mouth_box):
 MOUTH = {('adult', 'front'): [176, 106, 62, 38], ('adult', 'side'): [24, 104, 40, 34],
          ('little', 'front'): [178, 160, 60, 34], ('little', 'side'): [4, 150, 30, 34]}
 
-def build(doll, kind, check=None):
+def outline_error(ref, cell, side):
+    """how far (cell px, median) the cell's skull outline is from the reference's once moved onto it"""
+    ox, oy = cell_offset(ref, cell, side)
+    ra, ca = ref[..., 3], cell[..., 3]
+    rt, ct = head_top(ra), head_top(ca)
+    h = int((ra > 128).any(1).sum() * .38)
+    rl, rr = edges(ra, rt, rt + h); cl, cr = edges(ca, ct, ct + h)
+    pairs = [(rr, cr)] if side else [(rl, cl), (rr, cr)]
+    d = np.concatenate([np.abs(b - c + ox)[~np.isnan(b - c)] for b, c in pairs])
+    return float(np.median(d))
+
+def build(doll, kind, check=None, smile=False):
     spec = SPEC[(doll, kind)]
     base = load(BASE.format(doll=doll, view=spec['view']))
-    sheet = cells(load(SRC.format(doll=doll, kind=kind)))
+    names = SMILE_NAMES if smile else NAMES
+    cols, rows = (6, 1) if smile else (4, 3)
+    sheet = cells(load((SRC_SMILE if smile else SRC).format(doll=doll, kind=kind)), cols, rows)
+    tag = f'{doll}-{kind}' + ('-smile' if smile else '')
     side = kind == 'side'
     bh, bw = base.shape[:2]
     # 1. registration: silhouette for every cell, features on the neutral one (offset applied to all)
@@ -227,6 +257,12 @@ def build(doll, kind, check=None):
     for c in sheet:
         # the cells share the drawing's scale: each is moved onto the neutral cell by its skull outline
         ox, oy = cell_offset(sheet[0], c, side)
+        if spec.get('tight') or smile:
+            # the drawings carry a pale rim along their outline (painted against a light ground): pull the
+            # alpha in by ~1.5 doll px so the rim never lands on the live head (registration used the full outline)
+            c = c.copy()
+            k = int(round(1.5 / s0)) | 1
+            c[..., 3] = np.asarray(Image.fromarray(c[..., 3].astype(np.uint8)).filter(ImageFilter.MinFilter(k))).astype(np.float32)
         regs.append(sample(c, s0, dx0 - ox * s0, dy0 - oy * s0, bw, bh))
     # 2. lighting: smooth ratio base / neutral measured on skin only
     neutral = regs[0]
@@ -242,19 +278,29 @@ def build(doll, kind, check=None):
     ratio = np.where(cov[..., None] > .25, ratio, wide)
     # 3. blend mask: the face interior, where the drawn head and the base head both are
     x, y, W, H = spec['box']
-    out = np.zeros((3 * H * SCALE, 4 * W * SCALE, 4), np.uint8)
-    lips = np.zeros((3 * H * SCALE, 4 * W * SCALE), np.uint8)
+    out = np.zeros((rows * H * SCALE, cols * W * SCALE, 4), np.uint8)
+    lips = np.zeros((rows * H * SCALE, cols * W * SCALE), np.uint8)
+    skipped = []
     report = []
     region = {'face': face, 'eyes': face * ellipse_mask(bw, bh, spec['eyes'], 3), 'mouth': face * ellipse_mask(bw, bh, spec['mouth'], 3.5)}
     for n, reg in enumerate(regs):
         col = np.clip(reg[..., :3] * ratio, 0, 255)
-        rm = region[REGION[NAMES[n]]]
-        a = rm * (reg[..., 3] / 255) * np.clip(base[..., 3] / 255 * 1.2, 0, 1)
+        rm = region[REGION[names[n]]]
+        if smile and n:
+            err = outline_error(sheet[0], sheet[n], side) * s0
+            report.append(f'{tag} {names[n]}: skull outline {err:.2f} doll px from the resting smile')
+            if err > SMILE_MAX_OUTLINE:
+                skipped.append(names[n])
+                continue
+        # `tight` sheets blend only where the drawing is solid: its pale anti-aliased outline (a profile's lips
+        # and chin, which move with the expression) would otherwise show as a light seam inside the live head
+        ca = np.clip((reg[..., 3] / 255 - .4) / .5, 0, 1) if (spec.get('tight') or smile) else reg[..., 3] / 255
+        a = rm * ca * np.clip(base[..., 3] / 255 * 1.2, 0, 1)
         # where the drawn chin drops below the base chin (open mouths), keep the drawn pixels
-        a = np.maximum(a, rm * (reg[..., 3] / 255) * (base[..., 3] < 10))
+        a = np.maximum(a, rm * ca * (base[..., 3] < 10))
         rgba = np.concatenate([col, a[..., None] * 255], -1)[y:y + H, x:x + W]
         big = Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), 'RGBA').resize((W * SCALE, H * SCALE), Image.LANCZOS)
-        r, c = divmod(n, 4)
+        r, c = divmod(n, cols)
         out[r * H * SCALE:(r + 1) * H * SCALE, c * W * SCALE:(c + 1) * W * SCALE] = np.asarray(big)
         lm = lips_mask(np.concatenate([col, reg[..., 3:4]], -1), MOUTH[(doll, kind)])[y:y + H, x:x + W]
         lbig = Image.fromarray((np.clip(lm, 0, 1) * 255).astype(np.uint8), 'L').resize((W * SCALE, H * SCALE), Image.LANCZOS)
@@ -262,21 +308,24 @@ def build(doll, kind, check=None):
         if n == 0:
             m = face > .5
             d = np.abs(luma(np.concatenate([col, reg[..., 3:4]], -1)) - luma(base))[m & (reg[..., 3] > 200) & (base[..., 3] > 200)]
-            report.append(f'{doll} {kind}: scale {s0:.4f}, feature ncc {v:.3f}, neutral vs base luma diff mean {d.mean():.1f} (median {np.median(d):.1f}) in the face')
+            report.append(f'{tag}: scale {s0:.4f}, feature ncc {v:.3f}, neutral vs base luma diff mean {d.mean():.1f} (median {np.median(d):.1f}) in the face')
         if check is not None:
             os.makedirs(check, exist_ok=True)
             comp = base.copy()
             comp[..., :3] = comp[..., :3] * (1 - a[..., None]) + col * a[..., None]
             if n == 0:
                 diff = np.abs(luma(np.concatenate([col, reg[..., 3:4]], -1)) - luma(base)) * (reg[..., 3] > 200) * (base[..., 3] > 200)
-                Image.fromarray(np.clip(diff * 4, 0, 255).astype(np.uint8)).crop((x - 20, y - 20, x + W + 20, y + H + 20)).resize(((W + 40) * 3, (H + 40) * 3), Image.NEAREST).save(f'{check}/reg-{doll}-{kind}-diff.png')
+                Image.fromarray(np.clip(diff * 4, 0, 255).astype(np.uint8)).crop((x - 20, y - 20, x + W + 20, y + H + 20)).resize(((W + 40) * 3, (H + 40) * 3), Image.NEAREST).save(f'{check}/reg-{tag}-diff.png')
                 ov = base.copy(); ov[..., :3] = ov[..., :3] * .5 + reg[..., :3] * .5 * (reg[..., 3:4] / 255) + ov[..., :3] * .5 * (1 - reg[..., 3:4] / 255)
-                Image.fromarray(ov.astype(np.uint8)).crop((x - 30, y - 50, x + W + 30, y + H + 30)).resize(((W + 60) * 3, (H + 80) * 3), Image.LANCZOS).save(f'{check}/reg-{doll}-{kind}-overlay.png')
-            Image.fromarray(comp.astype(np.uint8)).crop((x - 10, y - 10, x + W + 10, y + H + 10)).save(f'{check}/cell-{doll}-{kind}-{n:02d}.png')
+                Image.fromarray(ov.astype(np.uint8)).crop((x - 30, y - 50, x + W + 30, y + H + 30)).resize(((W + 60) * 3, (H + 80) * 3), Image.LANCZOS).save(f'{check}/reg-{tag}-overlay.png')
+            Image.fromarray(comp.astype(np.uint8)).crop((x - 10, y - 10, x + W + 10, y + H + 10)).save(f'{check}/cell-{tag}-{n:02d}.png')
     os.makedirs(OUT, exist_ok=True)
-    Image.fromarray(out, 'RGBA').save(os.path.join(OUT, f'faces-{doll}-{kind}.webp'), quality=90, method=6)
+    Image.fromarray(out, 'RGBA').save(os.path.join(OUT, f'faces-{tag}.webp'), quality=90, method=6)
     rgb = np.stack([lips, lips * 0, lips * 0], -1)
-    Image.fromarray(rgb, 'RGB').save(os.path.join(OUT, f'faces-{doll}-{kind}-lips.webp'), quality=92, method=6)
+    Image.fromarray(rgb, 'RGB').save(os.path.join(OUT, f'faces-{tag}-lips.webp'), quality=92, method=6)
+    if smile:
+        return report, {'file': f'assets/faces/faces-{tag}.webp', 'lips': f'assets/faces/faces-{tag}-lips.webp',
+                        'names': [n for n in names if n not in skipped]}
     if spec.get('unused'):
         os.remove(os.path.join(OUT, f'faces-{doll}-{kind}.webp')); os.remove(os.path.join(OUT, f'faces-{doll}-{kind}-lips.webp'))
         return report + [f'{doll} {kind}: not used by the game (three-quarter drawing)'], None
@@ -287,10 +336,16 @@ if __name__ == '__main__':
     only = [a for a in sys.argv[1:] if '-' in a and not a.startswith('--') and a != check]
     art = {}
     for doll, kind in SPEC:
-        if only and f'{doll}-{kind}' not in only:
-            continue
-        rep, spec = build(doll, kind, check)
-        print('\n'.join(rep))
-        if spec:
-            art.setdefault(doll, {})[kind] = spec
+        for smile in (False, True):
+            tag = f'{doll}-{kind}' + ('-smile' if smile else '')
+            if smile and not os.path.exists(SRC_SMILE.format(doll=doll, kind=kind)):
+                continue
+            if (only and tag not in only) or (not only and smile is None):
+                continue
+            rep, spec = build(doll, kind, check, smile)
+            print('\n'.join(rep))
+            if spec and smile:
+                art.setdefault(doll, {}).setdefault(kind, {})['smile'] = spec
+            elif spec:
+                art.setdefault(doll, {}).setdefault(kind, {}).update(spec)
     print(json.dumps(art))

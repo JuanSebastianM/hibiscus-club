@@ -1,4 +1,5 @@
-/* Walk-in places: the scene of one district (route #boardwalk, #market or #pavilion), the walker, the
+/* Walk-in places: the scene of one district (route #boardwalk, #market, #pavilion, #beach, #park, #icecream or
+   #treehouse), the walker, the
    quest HUD and markers, sparkles to find, conversations, the name prompt and the first-visit tour.
    The rules and data are in quests.js; display text in i18n.js (life.*, quest.*, daily.*, tour.*). */
 const isDistrictRoute=r=>DISTRICT_IDS.includes(r);
@@ -97,7 +98,7 @@ function lifeScene(){
     <div id="coach"></div>
     ${travelStrip(o)}</section></div>
     <aside class="life-right"><section class="journal" id="journal" tabindex="-1">${journal()}</section>
-    <section class="life-profile"><h2 class="sr-only">${t('common.character')}</h2>${dollSwitch()}<div class="profile-actions"><a href="#wardrobe" class="sub-link">${t('life.changeOutfit')}</a>${lifePlayer().scene<SCENERY_PLACES?`<button class="sub-link" data-life-action="photo">${icon('camera',16)} ${t('life.photo')}</button>`:''}</div></section></aside></div>`;
+    <section class="life-profile"><h2 class="sr-only">${t('common.character')}</h2>${dollSwitch()}<div class="profile-actions"><a href="#wardrobe" class="sub-link">${t('life.changeOutfit')}</a><button class="sub-link" data-life-action="photo">${icon('camera',16)} ${t('life.photo')}</button></div></section></aside></div>`;
 }
 /* Redraws everything that depends on progress without rebuilding the scene (she keeps walking). */
 function refreshQuestUI(){
@@ -138,7 +139,7 @@ function showWalkerView(view){
   w.actor.style.setProperty('--facing',want===view||view==='front'?1:view==='left'?-1:1);
   w.shown=view;
 }
-const walkerDepth=y=>.83+(y-.60)*.94;
+const walkerDepth=y=>depthAt(district(),y); // per-place perspective (quests.js)
 function positionWalker(moving=false,side,view){
   if(!worldView)return;
   const w=worldView,p=lifePlayer();
@@ -164,7 +165,7 @@ function attachPuppets(w,shot){
   if(typeof HibiscusPuppet==='undefined'||!HibiscusPuppet.supported())return;
   try{w.puppet?.destroy();w.resident?.destroy()}catch{}
   const dpr=()=>Math.min(2,window.devicePixelRatio||1);
-  const crop=WALKER_CROP,maxDepth=walkerDepth(.94);
+  const crop=WALKER_CROP,maxDepth=Math.max(walkerDepth(.94),depthAt(null,.94));
   try{
     w.puppet=HibiscusPuppet.create(w.canvas,{shot,view:'front',role:'walker',
       layout:()=>{const h=Math.max(40,Math.round(w.size*dpr()*maxDepth)),cw=Math.round(h*crop[2]/crop[3]);return {size:[cw,h],crop,dest:[0,0,cw,h]}},

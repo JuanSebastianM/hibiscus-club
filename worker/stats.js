@@ -17,15 +17,15 @@ const SERIES = { a: '#7a4fb0', b: '#c2387a' }; // lilac, berry: validated as a 2
 
 const NAMES = {
   room: { map: 'Island map', wardrobe: 'Dress-Up Studio', salon: 'Beauty Salon', booth: 'Photo Booth', scrapbook: 'Scrapbook', arcade: 'Star Arcade', garden: 'Flower Garden', runway: 'Island Runway', life: 'Walk-in places', house: 'Dream House' },
-  district: { boardwalk: 'Pearl Boardwalk', market: 'Flower Market', pavilion: 'Starlight Pavilion', beach: 'Sunny Cove', park: 'Breezy Park', studio: 'Pink studio', house: 'Dream House room photo' },
+  district: { boardwalk: 'Pearl Boardwalk', market: 'Flower Market', pavilion: 'Starlight Pavilion', beach: 'Sunny Cove', park: 'Breezy Park', icecream: 'Sundae Street', treehouse: 'Treetop Hideout', studio: 'Pink studio', house: 'Dream House room photo' },
   category: { outfit: 'Outfits', shoes: 'Shoes', jewelry: 'Jewelry', hair: 'Hairstyles', 'hair-color': 'Hair color', makeup: 'Makeup', nails: 'Nails', accessory: 'Hair accessories', decor: 'Dream House furniture' },
   houseRoom: { bedroom: 'Bedroom', kitchen: 'Kitchen', living: 'Living room', bathroom: 'Bathroom', playroom: 'Playroom', patio: 'Patio' },
   decorCategory: { bedroom: 'Bedroom pieces', kitchen: 'Kitchen pieces', living: 'Living room pieces', bathroom: 'Bathroom pieces', playroom: 'Playroom pieces', patio: 'Patio pieces', walls: 'Wall decor', floor: 'Floor decor' },
   decorGoal: { bed: 'Place a bed', wall: 'Hang something on a wall', rug: 'Roll out a rug', paint: 'New paint or floor', top: 'Something on a tabletop', friend: 'Invite a character', photo: 'Take a room photo' },
   game: { memory: 'Memory Match', bouquet: 'Bouquet orders', runway: 'Runway rehearsal' },
   challenge: { picnic: 'Picnic in paradise', disco: 'Disco by the sea', seashell: 'Seashell sweetheart', mall: 'Mall crawl Saturday', rosy: 'Rosy glow-up', midnight: 'Midnight boardwalk', homecoming: 'Island homecoming', bob: 'Bouncy bob bash' },
-  // each character has her own six stories (Grown-up / Little Me), so they are counted by position
-  errand: { 'story-1': 'Story 1', 'story-2': 'Story 2', 'story-3': 'Story 3', 'story-4': 'Story 4', 'story-5': 'Story 5 (Sunny Cove)', 'story-6': 'Story 6 (Breezy Park)' },
+  // each character has her own eight stories (Grown-up / Little Me), so they are counted by position
+  errand: { 'story-1': 'Story 1', 'story-2': 'Story 2', 'story-3': 'Story 3', 'story-4': 'Story 4', 'story-5': 'Story 5 (Sunny Cove)', 'story-6': 'Story 6 (Breezy Park)', 'story-7': 'Story 7 (Sundae Street)', 'story-8': 'Story 8 (Treetop Hideout)' },
   daily: { deliver: 'Deliveries', find: 'Find hidden things', greet: 'Say hi to everyone', compliment: 'Compliments', tidy: 'Tidy up' },
   device: { phone: 'Phone', tablet: 'Tablet', desktop: 'Desktop', unknown: 'Unknown' },
   lang: { en: 'English', es: 'Spanish' },

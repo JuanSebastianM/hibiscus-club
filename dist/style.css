@@ -146,11 +146,11 @@ h1{font:italic bold var(--fs-display)/1.04 Georgia,"Times New Roman",serif;lette
 .pass-title{gap:10px}.pass-icon{padding:7px;border:1px solid var(--sky-300);background:var(--white);border-radius:9px;color:var(--sky-700);display:grid}
 .pass-title h2,.panel h3{font-size:var(--fs-lg)}.pass-title h2{color:var(--sky-800)}.pass-title p{color:var(--sky-800);font-size:var(--fs-xs)}
 .pass-title b{margin-left:auto;border-radius:18px;padding:3px 11px;background:var(--white);border:1px solid var(--sky-300);font-size:var(--fs-xs);color:var(--sky-800);white-space:nowrap}
-.stamp-groups{display:grid;grid-template-columns:5fr 6fr;gap:14px;margin-top:4px;padding-top:10px}
+.stamp-groups{display:grid;grid-template-columns:1fr;gap:14px;margin-top:4px;padding-top:10px} /* thirteen stamps: the walk-in places, then the rooms, each on its own row */
 .stamp-group h3{display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--sky-800);margin:0 0 6px}
 .stamps{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:5px;list-style:none;margin:0;padding:0}
-.stamp-group:first-child .stamps{--n:5}.stamp-group:last-child .stamps{--n:6} /* five walk-in places; six rooms, the Dream House included */
-@media(max-width:1180px){.stamp-groups{grid-template-columns:1fr}} /* eleven stamps need the full width below wide screens */
+.stamp-group:first-child .stamps{--n:7}.stamp-group:last-child .stamps{--n:6} /* seven walk-in places; six rooms, the Dream House included */
+@media(max-width:600px){.stamp-group:first-child .stamps{--n:4}} /* phones: the seven places in rows of four, so their names fit */
 .stamp{display:grid;justify-items:center;align-content:start;gap:5px;font-size:var(--fs-xs);font-weight:bold;text-align:center;color:var(--text-muted);line-height:1.2;padding:4px;border-radius:10px}
 .stamp span{position:relative;display:grid;place-items:center;width:40px;height:40px;border:1.5px dashed #b9a6bb;border-radius:50%;background:#f8f4f8;color:#7d6880}
 .stamp-walk span img{width:100%;height:100%;border-radius:50%;object-fit:cover;opacity:.55}.stamp-walk.earned span img,.stamp-walk:hover span img{opacity:1}

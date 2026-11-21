@@ -94,7 +94,7 @@ window.lab={LOOKS,lookOf,poseFor,frame,still,diff,sheet,figure,out};
 const bar=document.querySelector('#bar');
 const sel=(name,opts,val)=>{const l=document.createElement('label');l.textContent=name+' ';const s=document.createElement('select');s.name=name;for(const o of opts){const op=document.createElement('option');op.value=o;op.textContent=o;s.append(op)}s.value=val;l.append(s);bar.append(l);return s};
 const state={doll:q.get('doll')||'adult',look:+(q.get('look')||0),view:q.get('view')||'front',anim:q.get('anim')||'idle',t:+(q.get('t')||0),scale:+(q.get('scale')||.6)};
-const sDoll=sel('doll',['adult','little','mara','rosa','kit'],state.doll),sLook=sel('look',[0,1,2,3,4,5],state.look),sView=sel('view',CATALOG.views,state.view);
+const sDoll=sel('doll',['adult','little','mara','rosa','kit','sol','teo','gigi','nina'],state.doll),sLook=sel('look',[0,1,2,3,4,5],state.look),sView=sel('view',CATALOG.views,state.view);
 const sAnim=sel('anim',['rest','idle','walk','talk','blink','jaw','smileface','smile','laugh','wave','cheer','sway','shy','pose','nod'],state.anim);
 const lt=document.createElement('label');lt.textContent='t ';const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=4;slider.step=.01;slider.value=state.t;lt.append(slider);bar.append(lt);
 const play=document.createElement('label');play.innerHTML='<input type="checkbox"> play';bar.append(play);
@@ -103,7 +103,7 @@ let busy=false,pending=false;
 async function draw(){
   if(busy){pending=true;return}busy=true;
   try{
-    const res=['mara','rosa','kit'].includes(sDoll.value)?sDoll.value:null;
+    const res=['mara','rosa','kit','sol','teo','gigi','nina'].includes(sDoll.value)?sDoll.value:null;
     const c=await frame({doll:res?'adult':sDoll.value,look:+sLook.value,view:sView.value,anim:sAnim.value,t:+slider.value,scale:state.scale,resident:res});
     view.width=c.width;view.height=c.height;view.getContext('2d').drawImage(c,0,0);
   }catch(e){console.error(e)}
@@ -115,7 +115,7 @@ else (async()=>{
   const s=q.get('sheet');if(s==='none'){window.labDone=true;return}
   const dolls=(q.get('dolls')||'adult,little').split(','),views=(q.get('views')||'front,left,right,back').split(','),looks=(q.get('looks')||'0').split(',').map(Number);
   const times=(q.get('times')||'0,0.5,1,1.5').split(',').map(Number),scale=+(q.get('scale')||.3),crop=q.get('crop')?q.get('crop').split(',').map(Number):null;
-  for(const doll of dolls)await sheet({doll,looks,views,anim:q.get('anim')||'idle',times,scale,crop,resident:['mara','rosa','kit'].includes(doll)?doll:null});
+  for(const doll of dolls)await sheet({doll,looks,views,anim:q.get('anim')||'idle',times,scale,crop,resident:['mara','rosa','kit','sol','teo','gigi','nina'].includes(doll)?doll:null});
   window.labDone=true;
 })().catch(e=>{console.error(e);window.labDone=true});
 })();

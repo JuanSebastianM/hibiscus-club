@@ -116,7 +116,7 @@ SCENES = {
         ]),
     "icecream": dict(
         x0=272,
-        overlays=[],
+        overlays=["foliage", "lights", "sky"],
         poi=dict(name="ice-cream cart", at=[0.83, 0.75],
                  box=[0.7, 0.38, 0.96, 0.9]),
         resident=[0.585, 0.8], approach=[0.66, 0.9],
@@ -162,7 +162,9 @@ SCENES = {
         ]),
     "treehouse": dict(
         x0=0,
-        overlays=[],
+        overlays=["foliage", "sky", "water"],
+        # darker and greener than the other places: lifted and warmed a little so it sits with them
+        grade=dict(gamma=0.86, gain=(1.07, 1.0, 0.98)),
         poi=dict(name="treasure chest", at=[0.235, 0.77],
                  box=[0.15, 0.66, 0.32, 0.87]),
         resident=[0.585, 0.88], approach=[0.36, 0.89],
@@ -205,6 +207,15 @@ def crop(img: Image.Image, x0: float, size) -> Image.Image:
     if img.mode == "RGBA":
         return img.convert("RGBa").resize(size, Image.LANCZOS, box=window(x0)).convert("RGBA")
     return img.resize(size, Image.LANCZOS, box=window(x0))
+
+
+def apply_grade(img: Image.Image, grade) -> Image.Image:
+    """A gentle tone grade: per-channel gain after a gamma lift (both on 0..1 values)."""
+    if not grade:
+        return img
+    a = np.asarray(img).astype(np.float32) / 255
+    a = a ** grade.get("gamma", 1.0) * np.array(grade.get("gain", (1, 1, 1)), np.float32)
+    return Image.fromarray(np.clip(np.rint(a * 255), 0, 255).astype(np.uint8), "RGB")
 
 
 def save_jpeg(img: Image.Image, path: Path, target: int):
@@ -357,7 +368,8 @@ def run(only, preview_dir):
             continue
         src = Image.open(SRC / f"scene-{sid}.webp").convert("RGB")
         x0 = m["x0"]
-        bg = crop(src, x0, (W_OUT, H_OUT))
+        bg_plain = crop(src, x0, (W_OUT, H_OUT))
+        bg = apply_grade(bg_plain, m.get("grade"))
         q, nbytes = save_jpeg(bg, OUT / f"{sid}.jpg", JPEG_TARGET)
         entry = {
             "source": f"art/source/pack2/06-island-places/scene-{sid}.webp",
@@ -368,6 +380,8 @@ def run(only, preview_dir):
             "floor": m["floor"], "floorNote": m["floorNote"],
             "animate": m["animate"], "overlays": {}, "registration": {},
         }
+        if m.get("grade"):
+            entry["grade"] = m["grade"]
         if "lights" in m:
             entry["lights"] = m["lights"]
         if "notes" in m:
@@ -386,7 +400,7 @@ def run(only, preview_dir):
             entry["registration"][layer + "_mismatch_cut_px"] = ncut
             entry["registration"][layer + "_cleaned"] = registration(bg_full, np.array(ov))
             full = crop(ov, x0, (W_OUT, H_OUT))
-            entry["registration"][layer + "_crop"] = registration(np.array(bg), np.array(full))
+            entry["registration"][layer + "_crop"] = registration(np.array(bg_plain), np.array(full))
             half = crop(ov, x0, (round(W_OUT * FX_SCALE), round(H_OUT * FX_SCALE)))
             sizes = {}
             for tag, img in (("full", full), ("half", half)):
