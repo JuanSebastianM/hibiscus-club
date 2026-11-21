@@ -67,7 +67,8 @@ def hugf(y0, y1, m=2):
 # (uniform), only widened to cover the torso from the armpits down (COVER_ROWS)
 HUG = {"adult": {"fb": [], "side": [hugf(176, 500, 2)]},
        "little": {"fb": [], "side": [hugf(216, 545, 2)]}}
-COVER_ROWS = {"adult": (286, 495), "little": (352, 540)}
+THIGHS = {"adult": {"y0": 430, "y1": 499}, "little": {"y0": 492, "y1": 567}}
+COVER_ROWS ={"adult": (286, 495), "little": (352, 540)}
 # bodysuit repainted as skin wherever the outfit lets it show (only lilac pixels change)
 SKIN = {"adult": {"front": [{"rect": [0, 165, 397, 345]}], "left": [{"rect": [0, 140, 182, 580]}],
                   "right": [{"rect": [0, 140, 182, 580]}], "back": [{"rect": [0, 140, 397, 580]}]},
@@ -78,16 +79,32 @@ CONFIG = {
     # id: src (p = pack2, r = round2), k, top, and per view / piece options
     "sarong-swimsuit": dict(src="p", k=.70, top=166),
     "tankini-board-shorts": dict(src="p", k=.71, top=170),
-    "crochet-cover-up": dict(src="p", k=.69, top=175),
+    "crochet-cover-up": dict(src="p", k=.69, top=175, armY=282, slip=dict(color="#f3b9a6", **{"from": .12})),
     "aqua-velour-tracksuit": dict(src="r", k=1.2, top=142, armY=465, sideHug=[hugf(176, 845, 2)]),
-    "tennis-dress": dict(src="p", k=.77, top=134),
-    "baby-tee-cargo": dict(src="p", pieces=[dict(part="capris", k=.92, top=166), dict(part="top", k=.92, top=166)]),
+    "tennis-dress": dict(src="p", k=.77, top=134, armY=300),
+    "baby-tee-cargo": dict(src="p", k=.92, top=166, armY=296, pieces=[dict(part="capris"), dict(part="top")]),
     "sequin-halter-dress": dict(src="p", k=.74, top=141),
-    "butterfly-satin-skirt": dict(src="p", k=.88, top=158),
-    "puffer-vest-slip-dress": dict(src="p", k=.70, top=114),
+    "butterfly-satin-skirt": dict(src="p", k=.88, top=158, armY=300),
+    "puffer-vest-slip-dress": dict(src="r", k=.86, top=132),
     "plaid-knit-vest-set": dict(src="p", k=.70, top=135),
-    "hoodie-dress-leg-warmers": dict(src="r", pieces=[dict(part="dress", k=.9, top=150)]),
-    "denim-overall-dress": dict(src="p", k=.73, top=177),
+    "hoodie-dress-leg-warmers": dict(src="p", k=1.0, top=156, vmap=[(0, 146), (130, 280), (575, 731)], armY=468, pieces=[
+        dict(part="legwarmers-left", left=dict(part="legwarmers"), right=dict(part="legwarmers")),
+        dict(part="legwarmers-right", left=dict(skip=True), right=dict(skip=True)),
+        dict(part="dress", front=dict(fill=[dict(keep=[[30, 55], [128, 38], [128, 95], [30, 105]], dy=-12)]),
+             back=dict(fill=[dict(keep=[[30, 55], [128, 38], [128, 95], [30, 105]], dy=-12)]))],
+        front=dict(behind=[{"poly": [[160, 110], [240, 110], [236, 182], [164, 182]]}])),
+    "denim-overall-dress": dict(src="p", k=.73, top=177, armY=300),
+    # ----- Little Me -----
+    "ruffle-swimsuit": dict(src="p", k=.67, top=193),
+    "rash-guard-set": dict(src="p", k=.72, top=178, armY=335),
+    # the hood is up: it hangs behind her head and hair (the face stays clear)
+    "beach-poncho": dict(src="p", k=.87, top=-12, thighs=False, suit={"color": "#7fcabd", "y0": 400}, behind=[{"poly": [[-60, -120], [470, -120], [470, 214], [-60, 214]]}]),
+    "rainbow-tutu-tee": dict(src="p", k=.70, top=177, armY=330),
+    "dino-romper": dict(src="p", k=.72, top=175, armY=330),
+    "tulle-party-dress": dict(src="p", k=.75, top=175, armY=300),
+    "raincoat-set": dict(src="r", k=1.08, top=185, armY=495, sideHug=[hugf(216, 830, 2)]),
+    "bear-onesie": dict(src="r", k=1.1, top=170, armY=495, sideHug=[hugf(216, 830, 2)]),
+    "ballet-wrap-set": dict(src="r", k=.83, top=200, armY=492),
 }
 EXTRA = {}
 
@@ -217,19 +234,23 @@ def gen_piece(iid, doll, view, cfg, src):
             ImageDraw.Draw(m).polygon([tuple(p) for p in poly], fill=255)
         cl = cl & ~(np.array(m) > 0)
     k = cfg["k"]
-    top = view_top(cfg, src, iid, view, part)
-    vmap = cfg.get("vmap")
+    top = view_top(cfg, src, iid, view)  # the whole sprite's top in this view
+    offy = entry(src, iid, view)["parts"][part]["offset"][1] if part else 0
+    vmap = cfg.get("vmap")  # [(whole-sprite y, doll y)] for the front view, piecewise linear
 
     def dolly(sy):
         if vmap:
-            return float(np.interp(sy, [p[0] for p in vmap], [p[1] for p in vmap])) + (top - cfg["top"])
-        return top + sy * k
+            return float(np.interp(sy + offy, [p[0] for p in vmap], [p[1] for p in vmap])) + (top - cfg["top"])
+        return top + (sy + offy) * k
 
     side = view in ("left", "right")
     gc = cfg.get("gc", {}).get(view)
-    if gc is None:  # the garment's centre column: mean of the upper half (shoulders, chest)
-        ys, xs = np.nonzero(alpha[: max(1, H // 2)])
-        gc = float(xs.mean()) if len(xs) else W / 2
+    if gc is None:  # the garment's centre column: mean of the upper half (shoulders, chest) of the whole
+        # view sprite, so stacked parts (a top and trousers, leg warmers) keep their places in the drawing
+        whole, _ = sprite_file(src, iid, view)
+        wa = load_rgba(whole)[..., 3] > 100
+        ys, xs = np.nonzero(wa[: max(1, wa.shape[0] // 2)])
+        gc = (float(xs.mean()) if len(xs) else wa.shape[1] / 2) - (entry(src, iid, view)["parts"][part]["offset"][0] if part else 0)
     if side:
         gs = [(rs[0][0], rs[-1][1]) if (rs := runs(cl[y])) else None for y in range(H)]
     else:
@@ -336,7 +357,7 @@ def view_cfg(c, view, piece=None):
 
 
 def scale_for(c):
-    ks = [p["k"] for p in c.get("pieces", [])] or [c["k"]]
+    ks = [p.get("k", c.get("k")) for p in c.get("pieces", [])] or [c["k"]]
     return min(1.0, max(ks) * c.get("res", 1.0))
 
 
@@ -371,6 +392,15 @@ def build():
                 if cfg.get("slip"):  # an opaque lining drawn first, so the doll never shows through lace or tulle
                     files[view]["slip"] = [Ws, Hs]
                     fpieces.append({"part": "slip", "warp": warp})
+                # fills: copies of strips of the garment moved by (dx, dy) doll px and drawn under it, to close a
+                # dip where the doll would show (between a hood and a dropped shoulder); `keep` is a sprite
+                # polygon (full-res px, viewer-left side; mirrored for the other side unless mirror=False)
+                for fl in cfg.get("fill", []):
+                    polys = [fl["keep"]] + ([[[g["W"] - x, y] for x, y in fl["keep"]]] if fl.get("mirror", True) else [])
+                    for j, poly in enumerate(polys):
+                        dxs = fl.get("dx", 0) * (1 if j == 0 else -1)
+                        fpieces.append({"part": part or "main", "keep": [[[round(x * sx, 1), round(y * sx, 1)] for x, y in poly]],
+                                        "warp": [[r[0], round(r[1] + fl.get("dy", 0), 1), 0, round(r[3] + dxs, 1), Ws, round(r[5] + dxs, 1)] for r in warp]})
                 piece = {"part": part or "main", "warp": warp}
                 if cfg.get("sleeve") and view in ("front", "back"):
                     piece["parts"] = sleeve_limbs(cfg, doll, view, g["W"], g["H"], sx, s)
@@ -403,6 +433,13 @@ def build():
                         fit[key] = v
             if "skin" not in fit:
                 fit["skin"] = SKIN[doll][view]
+            if c.get("suit"):  # the bodysuit's legs recoloured as swim shorts (portrait.js tintSuit)
+                fit["suit"] = c["suit"]
+            if c.get("thighs", True):  # the bodysuit's short legs redrawn as bare thighs (portrait.js bareThighs)
+                th = dict(THIGHS[doll])
+                if view in CENTRE[doll]:
+                    th["c"] = CENTRE[doll][view]
+                fit["thighs"] = th
             fits[view] = fit
         wear[iid] = {"cat": cat, "doll": doll, "s": round(s, 4), "files": files, "fit": fits}
     return wear
