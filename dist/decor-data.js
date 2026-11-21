@@ -50,14 +50,22 @@ const DECOR={
     'pavers':{kind:'pavers',base:'#efe3d3',ink:'#d8c6b0'},
     'sand':{kind:'sand',base:'#f7e3b8',ink:'#ecd29c'}
   },
-  /* Painted backdrops (none yet). When the owner supplies painted empty rooms, list them here, one
-     entry per room and colour scheme, and the room offers them above the paint and floor choices:
-       {room:'bedroom', id:'pink', file:'assets/decor/rooms/bedroom-pink.webp', swatch:'#f9d6e4'}
-     The picture is drawn over the whole 1536 x 1152 room and must follow the same layout as the
-     procedural rooms (see ROOM in decor-logic.js): back wall bottom at y 640, back corners at
-     x 150 and 1386, floor front edge at y 1108, frame 30 px at the sides. Its name is the
-     i18n key house.scheme.<id>. A save remembers the chosen backdrop; if its entry is removed the
-     room falls back to its paint and floor. */
+  /* Painted backdrops: three painted colour schemes per room (art/build_rooms.py makes the 1536 x 1152
+     pictures and 192 x 144 thumbnails; art/measure_rooms.py measures them and writes this list).
+     The first scheme of a room is the look of a room that was never decorated. Per entry, in room px:
+       floor     the floor quadrilateral: back-left, back-right, front-right, front-left (the side
+                 lines run to the vanishing point; the front corners may lie outside the picture)
+       vp        the vanishing point [x, horizon y]
+       scale     furniture scale at the back wall (1 = the manifest's 280 px per metre), growing
+                 toward the viewer as (y - horizon) / (backY - horizon)
+       wall      zones for wall decor [x0, y0, x1, y1] ('hang': only for hanging pieces, by their top)
+       openings  windows, doors and arches on the back wall [x0, y0, x1, y1, kind]: wall decor keeps
+                 off them unless overOpenings below allows it
+       skirt, rail, ceil  skirting height, chair rail / tile cap y, ceiling line y
+       clear     floor kept free in front of doors (Surprise me and free spots avoid it)
+       light     which way contact shadows lean (+ right, - left)
+     A room's names are i18n keys house.scheme.<id>. A save remembers the scheme; an unknown id falls
+     back to the room's paint and floor. */
   /* BEGIN generated backdrops: art/measure_rooms.py writes this block; do not edit by hand */
   backdrops:[
     {"room":"bedroom","id":"bedroom-1","file":"assets/decor/rooms/bedroom-1.webp","thumb":"assets/decor/rooms/thumbs/bedroom-1.webp","swatch":"#ca8877","floor":[[244,938],[1292,938],[1543,1152],[-7,1152]],"vp":[768,492],"scale":0.923,"wall":[[256,232,1280,698]],"openings":[[538,262,1002,778,"window"]],"skirt":36,"rail":698,"ceil":214,"clear":[],"light":0.05},
@@ -80,6 +88,11 @@ const DECOR={
     {"room":"patio","id":"patio-3","file":"assets/decor/rooms/patio-3.webp","thumb":"assets/decor/rooms/thumbs/patio-3.webp","swatch":"#ca9d60","floor":[[335,798],[1211,798],[1995,1152],[-530,1152]],"vp":[795,610],"scale":0.622,"wall":[[588,470,646,770],[890,470,954,770],[342,470,400,770],[1142,470,1200,770],[345,262,1200,345,"hang"]],"openings":[[400,345,590,798,"window"],[646,330,890,798,"arch"],[954,345,1142,798,"window"]],"skirt":0,"rail":null,"ceil":null,"clear":[[656,798,880,933]],"light":0.05,"outdoor":true}
   ],
   /* END generated backdrops */
+  /* Wall pieces that may cover an opening of a painted room, and which kinds (curtains frame a
+     window; garlands and bunting can cross a window, door or arch; a plant can hang in a window). */
+  overOpenings:{'curtain-window':['window'],'fairy-lights':['window','door','arch'],'pennant-banner':['window','door','arch'],'hanging-plant':['window','arch']},
+  /* Pieces that hang by their top and may hang from a painted patio's pergola beam ('hang' zones). */
+  hangers:['pennant-banner','fairy-lights','hanging-plant'],
   /* The few showpieces that cost stars (about a tenth of the 96 pieces), priced like the wardrobe's
      star rewards. Everything else is free. */
   prices:{'canopy-bed':20,'fireplace':15,'dollhouse':15,'fish-tank':15,'ball-pit':12,'kiddie-pool':12,

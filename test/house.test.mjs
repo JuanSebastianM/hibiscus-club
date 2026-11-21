@@ -193,7 +193,7 @@ test('saves: round trip, unknown ids dropped, numbers clamped, caps enforced, pa
   assert.equal(sofa[3], L.SCALE.max * 100);
   assert.equal(k.p.find(e => e[0] === 'wall-clock')[4], 0, 'the clock cannot be mirrored');
   assert.equal(Object.keys(house.rooms).length, 6);
-  assert.deepEqual(plain(house.rooms.patio), { w: 'pink-siding', f: 'lawn', p: [] });
+  assert.deepEqual(plain(house.rooms.patio), { w: 'pink-siding', f: 'lawn', b: 'patio-1', p: [] }, 'a room never decorated starts painted');
   // paid piece not owned is dropped
   assert.equal(L.readHouse({ rooms: { bedroom: { p: [['canopy-bed', 500, 800, 100, 0]] } } }).rooms.bedroom.p.length, 0);
   // the cap
