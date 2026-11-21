@@ -314,12 +314,21 @@ function shoeLayers(doll,view,id,tintId){
     // an open shoe drawn in two layers (f.over = {x,y,w,h,rot} of its `over` sprite part): the part
     // under the foot (sole, insole) whole into `back`, the part over it (straps, uppers) whole into
     // `front`, so the foot lies between them; both count for the mask
+    // The mask of an open shoe is its outline filled row by row (both layers of that foot), so the foot
+    // shows through every gap between the straps but nothing of it sticks out past the shoe: no toes
+    // over a closed toe cage, no instep bulging above it, no heel hanging off the sole.
     const layered=(under,over,f)=>{
-      for(const [g,src,q] of [[bg,under,f],[fg,over,f.over],[mg,under,f],[mg,over,f.over]]){
+      const [m,tg]=dollLayer(doll,view);
+      for(const [g,src,q] of [[bg,under,f],[fg,over,f.over],[tg,under,f],[tg,over,f.over]]){
         g.save();const [w,h]=place(g,src,q);g.drawImage(src,0,0,w,h);
-        if(g===mg){g.fillStyle='#000';for(const p of q.keep||[]){pathPoly(g,scaled(p,w,h));g.fill()}}
+        if(g===tg){g.fillStyle='#000';for(const p of q.keep||[]){pathPoly(g,scaled(p,w,h));g.fill()}}
         g.restore();
       }
+      const md=ctx2d(m),im=md.getImageData(0,0,m.width,m.height),d=im.data,W=m.width;
+      for(let y=0;y<m.height;y++){let l=-1,r=-1;for(let x=0;x<W;x++)if(d[(y*W+x)*4+3]>60){if(l<0)l=x;r=x}
+        if(l>=0)for(let x=l;x<=r;x++)d[(y*W+x)*4+3]=255}
+      md.putImageData(im,0,0);
+      mg.save();mg.setTransform(1,0,0,1,0,0);mg.drawImage(m,0,0);mg.restore();
     };
     // one shoe sprite: whole into `back`, its over-the-foot parts into `front`
     const shoe=(src,f)=>{
@@ -612,6 +621,38 @@ function shapePathInto(g,s){
   else if(s.rect)g.rect(...s.rect);
   else if(s.ellipse){const [x,y,rx,ry,rot]=s.ellipse;g.moveTo(x+rx,y);g.ellipse(x,y,rx,ry,(rot||0)*Math.PI/180,0,Math.PI*2)}
 }
+/* A strand of a sprite laid along a doll-local path (side and back views of a necklace): rb.src is the
+   strand's centre line in sprite px, rb.dst the path it is laid on (doll-local); both are resampled by
+   length, and rb.ease foreshortens the ends where the strand turns toward or away from the viewer
+   ('ring': both ends, 'in': the start, 'out': the end). A band rb.in px on the inner side of the strand
+   and rb.out px on the outer side (pendants) is carried along, at rb.k doll px per sprite px; rb.hand
+   (1 or -1, mirrored views flip it) says on which side of the path the outer side lies. Drawn as
+   affine-mapped triangles. */
+function drawRibbon(g,src,rb){
+  const n=rb.n||28,f=Math.min(1,rb.k*2.2);
+  let s=src;if(f<.98){s=makeCanvas(src.width*f,src.height*f);const sg=s.getContext('2d');sg.imageSmoothingQuality='high';sg.drawImage(src,0,0,s.width,s.height)}
+  const resample=(pts,map)=>{const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
+    return Array.from({length:n+1},(_,j)=>{const at=map(j/n)*L[L.length-1];let i=1;while(i<L.length-1&&L[i]<at)i++;const u=(at-L[i-1])/((L[i]-L[i-1])||1);
+      return [pts[i-1][0]+(pts[i][0]-pts[i-1][0])*u,pts[i-1][1]+(pts[i][1]-pts[i-1][1])*u]})};
+  const ease={ring:t=>(1-Math.cos(Math.PI*t))/2,in:t=>1-Math.cos(Math.PI*t/2),out:t=>Math.sin(Math.PI*t/2)}[rb.ease]||(t=>t);
+  const S=resample(rb.src.map(([x,y])=>[x*f,y*f]),t=>t),D=resample(rb.dst,ease);
+  const normals=(P,turn)=>P.map((_,i)=>{const a=P[Math.max(0,i-1)],b=P[Math.min(P.length-1,i+1)];let tx=b[0]-a[0],ty=b[1]-a[1];const l=Math.hypot(tx,ty)||1;tx/=l;ty/=l;return turn>0?[-ty,tx]:[ty,-tx]});
+  const NS=normals(S,1),ND=normals(D,-(rb.hand??1)),ki=rb.in*f,ko=rb.out*f,kk=rb.k/f;
+  const band=(P,N,a,b)=>P.map((p,i)=>[[p[0]-N[i][0]*a,p[1]-N[i][1]*a],[p[0]+N[i][0]*b,p[1]+N[i][1]*b]]);
+  const BS=band(S,NS,ki,ko),BD=band(D,ND,ki*kk,ko*kk);
+  const tri=(s0,s1,s2,d0,d1,d2)=>{
+    const den=(s1[0]-s0[0])*(s2[1]-s0[1])-(s2[0]-s0[0])*(s1[1]-s0[1]);if(Math.abs(den)<1e-6)return;
+    const a=((d1[0]-d0[0])*(s2[1]-s0[1])-(d2[0]-d0[0])*(s1[1]-s0[1]))/den,c=((d2[0]-d0[0])*(s1[0]-s0[0])-(d1[0]-d0[0])*(s2[0]-s0[0]))/den;
+    const b=((d1[1]-d0[1])*(s2[1]-s0[1])-(d2[1]-d0[1])*(s1[1]-s0[1]))/den,d=((d2[1]-d0[1])*(s1[0]-s0[0])-(d1[1]-d0[1])*(s2[0]-s0[0]))/den;
+    const cx=(d0[0]+d1[0]+d2[0])/3,cy=(d0[1]+d1[1]+d2[1])/3,grow=p=>{const dx=p[0]-cx,dy=p[1]-cy,l=Math.hypot(dx,dy)||1;return [p[0]+dx/l*.6,p[1]+dy/l*.6]};
+    g.save();pathPoly(g,[d0,d1,d2].map(grow));g.clip();
+    g.transform(a,b,c,d,d0[0]-a*s0[0]-c*s0[1],d0[1]-b*s0[0]-d*s0[1]);g.drawImage(s,0,0);g.restore();
+  };
+  for(let i=0;i<n;i++){
+    const [sa,sb]=BS[i],[sc,sd]=BS[i+1],[da,db]=BD[i],[dc,dd]=BD[i+1];
+    tri(sa,sc,sd,da,dc,dd);tri(sa,sd,sb,da,dd,db);
+  }
+}
 /* Earrings (fit.left / fit.right, either may be absent in side views; f.part picks the sprite part)
    and plain sprite items such as necklaces. */
 function spriteItemLayer(doll,view,id,tintId){
@@ -625,6 +666,13 @@ function spriteItemLayer(doll,view,id,tintId){
         const part=f.part||side,src=await itemSprite(item,view,part,tintId);
         const w=f.w,h=src.height*w/src.width,[ax,ay]=item.anchor?.[part]||[.5,0];
         g.save();g.translate(f.x,f.y);if(f.rot)g.rotate(f.rot*Math.PI/180);g.drawImage(src,-ax*w,-ay*h,w,h);g.restore();
+      }
+    }else if(fit.ribbons){ // necklaces seen from the side and behind (drawRibbon)
+      for(const rb of fit.ribbons)drawRibbon(g,await itemSprite(item,rb.art||view,'main',tintId),rb);
+      for(const p of fit.pendants||[]){
+        const src=await itemSprite(item,p.art||view,'main',tintId),[sx,sy,sw,sh]=p.rect,w=p.w,h=sh*w/sw;
+        g.save();g.translate(p.at[0],p.at[1]);if(p.flip)g.scale(-1,1);if(p.rot)g.rotate(p.rot*Math.PI/180);
+        g.drawImage(src,sx,sy,sw,sh,-w/2,0,w,h);g.restore();
       }
     }else{
       let src=await itemSprite(item,view,'main',tintId);
@@ -932,17 +980,98 @@ function accLayer(doll,view,id,part='all'){
   });
 }
 /* Hair under a hat: the style's layers with everything above the hat's lower edge (fit.cut) erased,
-   so buns, ponytails and volume never poke through the crown (the hat covers the rest). */
-function hatHair(doll,view,hair,shot,cut){
+   so buns, ponytails and volume never poke through the crown (the hat covers the rest). Before the cut
+   the volume beside the head is pressed in under the hat (hatSqueeze), so the lengths come out from
+   under its edge instead of standing out beside it in tufts. tune = the hat fit's hairTune[style]
+   ({off, R, inset}). */
+function hatHair(doll,view,hair,shot,cut,hat,body,tune={}){
   return memo(dollCaches.layer,['hathair',doll,view,shot.hair,shot.hairColor,shot.hat].join('|'),async()=>{
     const out={};
     for(const k of ['back','front','shade']){
       if(!hair[k]){out[k]=hair[k];continue}
-      const c=makeCanvas(hair[k].width,hair[k].height),g=c.getContext('2d');g.drawImage(hair[k],0,0);
-      eraseShapes(doll,view,c,[{poly:cut,feather:1.5}]);out[k]=c;
+      const c=makeCanvas(hair[k].width,hair[k].height),g=c.getContext('2d');g.drawImage(hair[k],0,0);out[k]=c;
     }
+    // Little Me's bonnet and beanie sit low over her short styles and were drawn for them: unchanged
+    if(hat&&body&&!(tune.off??doll==='little'))hatSqueeze([out.back,out.front,out.shade].filter(Boolean),hat,body,dollView(doll,view).origin,{R:doll==='little'?62:54,...tune});
+    for(const k of ['back','front','shade'])if(out[k])eraseShapes(doll,view,out[k],[{poly:cut,feather:1.5}]);
     return out;
   });
+}
+/* Press the hair's volume in under a hat, row by row (doll-canvas layers, changed in place). On each
+   side of the head the hair's outer edge is moved in to the hat's own edge (a little inside it) on every
+   row the hat spans down to its widest point there (where the hair comes out from under it); below
+   that the edge eases back out to the style's own over R px. Only the hair outside the bald head's
+   silhouette moves (remapped linearly between its outer edge and the head), so the face, bangs and the
+   hair lying on the head are untouched; nothing moves where the hair is already inside the target.
+   Hair above the hat's top is removed. */
+function hatSqueeze(layers,hat,body,[ox,oy],{R=54,inset=3}={}){
+  const W=layers[0].width,H=layers[0].height;
+  const alpha=c=>ctx2d(c).getImageData(0,0,c.width,c.height).data;
+  const ha=alpha(hat),ba=alpha(body),BW=body.width,BH=body.height;
+  const datas=layers.map(c=>{const g=ctx2d(c);return {g,im:g.getImageData(0,0,W,H)}});
+  // per row: hat, head and hair extents
+  const HL=new Float32Array(H).fill(NaN),HR=new Float32Array(H).fill(NaN),BL=new Float32Array(H).fill(NaN),BR=new Float32Array(H).fill(NaN),hl=new Float32Array(H).fill(NaN),hr=new Float32Array(H).fill(NaN);
+  let top=-1,bottom=-1;
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++)if(ha[(y*W+x)*4+3]>110){if(isNaN(HL[y]))HL[y]=x;HR[y]=x+1}
+    if(!isNaN(HL[y])){if(top<0)top=y;bottom=y}
+    const by=y-oy;if(by>=0&&by<BH)for(let x=0;x<BW;x++)if(ba[(by*BW+x)*4+3]>110){if(isNaN(BL[y]))BL[y]=x+ox;BR[y]=x+ox+1}
+    for(const {im} of datas){const d=im.data;for(let x=0;x<W;x++)if(d[(y*W+x)*4+3]>40){if(isNaN(hl[y])||x<hl[y])hl[y]=x;break}
+      for(let x=W-1;x>=0;x--)if(d[(y*W+x)*4+3]>40){if(isNaN(hr[y])||x+1>hr[y])hr[y]=x+1;break}}
+  }
+  if(top<0)return;
+  // where the hair comes out on each side: the lowest row of the hat's widest part on that side
+  let minL=Infinity,maxR=-Infinity;for(let y=top;y<=bottom;y++){if(HL[y]<minL)minL=HL[y];if(HR[y]>maxR)maxR=HR[y]}
+  let eL=top,eR=top;for(let y=top;y<=bottom;y++){if(HL[y]<=minL+3)eL=y;if(HR[y]>=maxR-3)eR=y}
+  const ease=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
+  const win=(a,y,f)=>{let v=NaN;for(let j=y-4;j<=y+4;j++)if(j>=0&&j<H&&!isNaN(a[j]))v=isNaN(v)?a[j]:f(v,a[j]);return v};
+  const tL=new Float32Array(H).fill(NaN),tR=new Float32Array(H).fill(NaN);
+  // below the hat the edge also widens to cover the head (an ear) as soon as it can: at most `slope` px
+  // a row, so it never steps out
+  const slope=1.1;
+  for(let y=top;y<H&&y<=Math.max(eL,eR)+R;y++){
+    if(y<=eL)tL[y]=HL[y]+inset;else{const s=ease((y-eL)/R);let v=(HL[eL]+inset)*(1-s)+(isNaN(hl[y])?HL[eL]:hl[y])*s;
+      if(!isNaN(BL[y]))v=Math.min(v,Math.max(BL[y]-1,tL[y-1]-slope));tL[y]=v}
+    if(y<=eR)tR[y]=HR[y]-inset;else{const s=ease((y-eR)/R);let v=(HR[eR]-inset)*(1-s)+(isNaN(hr[y])?HR[eR]:hr[y])*s;
+      if(!isNaN(BR[y]))v=Math.max(v,Math.min(BR[y]+1,tR[y-1]+slope));tR[y]=v}
+  }
+  for(const [t,e0] of [[tL,eL],[tR,eR]]){ // a smooth edge below the hat (the head's edge steps a pixel at a time)
+    const c=Float32Array.from(t);
+    for(let y=e0+1;y<H;y++){if(isNaN(c[y]))break;let s=0,n=0;for(let j=y-3;j<=y+3;j++)if(j>e0&&!isNaN(c[j])){s+=c[j];n++}t[y]=s/n}
+  }
+  // the hair's own edge, smoothed over a few rows (curls), where each row is read from
+  const smooth=(a,f)=>{const m=Float32Array.from({length:H},(_,y)=>win(a,y,f)),o=new Float32Array(H).fill(NaN);
+    for(let y=0;y<H;y++){let s=0,n=0;for(let j=y-3;j<=y+3;j++)if(j>=0&&j<H&&!isNaN(m[j])){s+=m[j];n++}if(n)o[y]=s/n}return o};
+  const sL=smooth(hl,Math.min),sR=smooth(hr,Math.max);
+  for(const {g,im} of datas){
+    const d=im.data,row=new Uint8ClampedArray(W*4);
+    for(let y=0;y<top;y++)for(let x=0;x<W;x++)d[(y*W+x)*4+3]=0; // nothing of the style above the hat
+    for(let y=top;y<H;y++){
+      if(isNaN(tL[y])&&isNaN(tR[y]))break;
+      row.set(d.subarray(y*W*4,(y+1)*W*4));
+      const cx=isNaN(HL[y])?(HL[Math.min(eL,eR)]+HR[Math.min(eL,eR)])/2:(HL[y]+HR[y])/2;
+      const aL=isNaN(BL[y])?cx:BL[y],aR=isNaN(BR[y])?cx:BR[y];
+      for(const side of [-1,1]){
+        const t=side<0?tL[y]:tR[y],e=side<0?sL[y]:sR[y];
+        if(isNaN(t)||isNaN(e))continue;
+        if(side<0?t<=e+.5:t>=e-.5)continue; // already inside
+        // the hair between its edge and the head moves; where the head (an ear) reaches out past the
+        // target, the hair lies inside the target and the ear shows beside it
+        const a=side<0?Math.max(aL,t+6):Math.min(aR,t-6);
+        const x0=side<0?0:Math.floor(a),x1=side<0?Math.ceil(a):W;
+        for(let x=x0;x<x1;x++){
+          const o=(y*W+x)*4,X=x+.5,cov=Math.min(1,Math.max(0,side<0?X+.5-t:t-(X-.5))); // antialiased edge
+          if(!cov){d[o+3]=0;continue}
+          const sx=e+(X-t)*(a-e)/(a-t)-.5,xi=Math.floor(sx),f=sx-xi;
+          let r=0,gg=0,b=0,al=0;
+          for(const [px,w] of [[xi,1-f],[xi+1,f]]){if(px<0||px>=W||!w)continue;const i=px*4,A=row[i+3]*w;r+=row[i]*A;gg+=row[i+1]*A;b+=row[i+2]*A;al+=A}
+          if(al<.5){d[o+3]=0;continue}
+          d[o]=r/al;d[o+1]=gg/al;d[o+2]=b/al;d[o+3]=al*cov;
+        }
+      }
+    }
+    g.putImageData(im,0,0);
+  }
 }
 /* Something she holds: the sprite, then her fingers (fit.grip) redrawn over its handle from the body
    picture (front, back) or the near arm (side views, so the thigh behind the hand is not). */
@@ -1007,7 +1136,7 @@ async function dollOps(shot,view){
     glassItem?accLayer(doll,view,glassItem.id):null,
     glassItem?.fit?.[doll]?.[view]?.lens?accLayer(doll,view,glassItem.id,'lens'):null,
     bagItem?(bagItem.kind==='pack'?accLayer(doll,view,bagItem.id):heldLayer(shot,view,bagItem.id,bodyPic,arm)):null]);
-  if(hatFit?.cut)hair=await hatHair(doll,view,hair,shot,hatFit.cut);
+  if(hatFit?.cut)hair=await hatHair(doll,view,hair,shot,hatFit.cut,hat,body,hatFit.hairTune?.[shot.hair]);
   const clipAt={...hairFit.clip,...(hatFit&&hatFit.clip===false?{hide:true}:{})},clipBehind=!!clipAt.behind;
   const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
   const drawProc=g=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
@@ -1124,6 +1253,9 @@ function fitFeet(body,shoes,fit,dv,doll){
     const src=new Uint8ClampedArray(d),top=Math.max(0,Math.floor(foot.top)),ramp=foot.ramp??30,sx=foot.sx??1,cx=foot.cx??W/2;
     const sole=new Float32Array(W).fill(-1);
     for(let x=0;x<W;x++)for(let y=H-1;y>=top;y--)if(src[(y*W+x)*4+3]>128){sole[x]=y+.5;break}
+    // a level bed (front and back views) lifts the whole foot by one row map from its lowest point, so the
+    // leg keeps its outline; a sloped one (side views) is matched column by column
+    if(foot.bed.every(p=>p[1]===foot.bed[0][1])){const lo=Math.max(...sole);if(lo>top)sole.fill(lo)}
     const bed=foot.bed,bedAt=x=>{if(x<=bed[0][0])return bed[0][1];for(let i=1;i<bed.length;i++)if(x<=bed[i][0]){const [x0,y0]=bed[i-1],[x1,y1]=bed[i];return y0+(y1-y0)*(x-x0)/(x1-x0)}return bed[bed.length-1][1]};
     const at=(x,y,j)=>x<0||y<0||x>=W||y>=H?0:src[(y*W+x)*4+j];
     for(let y=top;y<H;y++){
@@ -1132,7 +1264,7 @@ function fitFeet(body,shoes,fit,dv,doll){
         const o=(y*W+x)*4,xs=cx+(x+.5-cx)/k-.5,xi=Math.round(Math.min(W-1,Math.max(0,xs)));
         const yb=sole[xi],yt=bedAt(x+.5);
         let ys=-1;
-        if(yb>top&&yt>top)ys=top+(y+.5-top)*(yb-top)/(yt-top)-.5;
+        if(yb>top&&yt>top)ys=yb<yt-1?y:top+(y+.5-top)*(yb-top)/(yt-top)-.5; // a column that ends above the bed (the calf's edge, not the foot) stays
         if(ys<0||ys>H){d[o+3]=0;continue}
         // bilinear, premultiplied
         const x0=Math.floor(xs),y0=Math.floor(ys),fx=xs-x0,fy=ys-y0;let r=0,gg=0,b=0,a=0;

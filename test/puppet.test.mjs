@@ -350,3 +350,27 @@ test('residents have every torso joint and a face', () => {
     assert.ok(rg.neckCut > rg.face.chin - 10 && rg.neckCut < rg.px.chest[1]);
   }
 });
+
+test('portrait puppet: choosing a scenery, frame or sticker repaints at once, even in the same clothes', async () => {
+  // puppet.js portrait(), run with stand-ins for the renderer
+  const src = read('puppet.js').match(/\n {4}portrait\(canvas,opts=\{\}\)\{[\s\S]*?\n {4}\},\n/)[0].trim().replace(/,$/, '');
+  const loads = [], shown = [];
+  const env = {
+    normalShot: s => ({ ...s }), kick() {},
+    lookKey: s => [s.doll, s.outfit, s.hair].join('|'), // as in portrait.js: no scenery, frame or sticker
+    paintPortraitParts: s => { loads.push(s.backdrop); return Promise.resolve({ geo: {}, back: s.backdrop }); }
+  };
+  const api = new Function(...Object.keys(env), `return {${src}}`)(...Object.values(env));
+  const p = { ready: Promise.resolve(true), dead: false, fail() {}, setView() {}, emote() {}, setLook: s => shown.push(s.backdrop) };
+  api.create = () => p;
+  const q = api.portrait({}, { shot: { doll: 'adult', outfit: 'a', hair: 'h', backdrop: 0 } });
+  await q.ready;
+  const tick = () => new Promise(r => setTimeout(r, 0));
+  q.setLookPortrait({ doll: 'adult', outfit: 'a', hair: 'h', backdrop: 3 });
+  await tick();
+  assert.deepEqual(loads, [0, 3], 'the new scenery is loaded');
+  assert.deepEqual(shown, [3], 'and shown');
+  q.setLookPortrait({ doll: 'adult', outfit: 'a', hair: 'h', backdrop: 3 });
+  await tick();
+  assert.deepEqual(shown, [3], 'the same look and scenery changes nothing');
+});

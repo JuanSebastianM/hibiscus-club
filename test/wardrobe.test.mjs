@@ -187,6 +187,47 @@ test('only the open shoes carry an over layer ({part}); the first wardrobe keeps
   assert.ok(read('portrait.js').includes('fit.left?.over?.part'), 'shoeLayers tells the two apart by over.part');
 });
 
+test('open shoes lift the foot onto their footbed in every view: the heel stands on the sole from behind too', () => {
+  const { CATALOG } = loadWardrobe();
+  const floor = { adult: 866, little: 856 };
+  for (const id of ['jelly-sandals', 'flower-flip-flops', 'wedge-sandals', 'toddler-sandals', 'jelly-shoes']) {
+    const it = CATALOG.items[id], doll = it.dolls[0], fit = it.fit[doll];
+    for (const view of CATALOG.views) assert.ok(fit[view].foot?.bed?.length, `${id} ${view} has a footbed`);
+    const back = fit.back.foot.bed[0][1], side = fit.left.foot.bed;
+    assert.ok(back < floor[doll] - 8, `${id}: from behind the heel is lifted onto the sole (${back})`);
+    assert.ok(fit.back.foot.top < back - 40, `${id}: the lift is spread over the lower leg, not squashed into the heel`);
+    // as high as the side view's bed under the heel (within the insole seen from above)
+    const heel = side.filter(([x]) => x > side[side.length - 1][0] - 45).map(([, y]) => y);
+    assert.ok(Math.abs(back - Math.max(...heel)) < 12, `${id}: back and side agree on the heel height`);
+    for (const view of ['left', 'right']) assert.ok(Number.isFinite(fit[view].trim), `${id} ${view}: the foot is kept inside the shoe`);
+  }
+  // the right view mirrors the left
+  const j = CATALOG.items['jelly-sandals'].fit.adult;
+  assert.equal(j.left.foot.bed.length, j.right.foot.bed.length);
+});
+
+test('necklaces from the side lie around the neck (near half only) and from behind across the nape', () => {
+  const { CATALOG } = loadWardrobe();
+  for (const id of ['pearl-starfish-necklace', 'butterfly-necklace']) for (const doll of ['adult', 'little']) {
+    const fit = CATALOG.items[id].fit[doll];
+    const chin = { adult: 150, little: 200 }[doll];
+    for (const view of ['left', 'right', 'back']) {
+      const rbs = fit[view].ribbons;
+      assert.ok(rbs?.length, `${id} ${doll} ${view} is laid along the neck`);
+      for (const rb of rbs) {
+        assert.ok(rb.src.length >= 2 && rb.dst.length >= 2 && rb.k > 0 && rb.in >= 0 && rb.out >= 0);
+        // it starts at the base of the neck, below the chin: never hanging from the ear or the jaw
+        assert.ok(rb.dst.every(([, y]) => y >= chin - 2), `${id} ${doll} ${view}: below the chin`);
+      }
+    }
+    // the right view is the left mirrored (handedness flipped), the clasp at the nape
+    const l = fit.left.ribbons[0], r = fit.right.ribbons[0], M = { adult: 181, little: 207 }[doll];
+    assert.equal(r.hand, -(l.hand ?? 1));
+    assert.deepEqual([...r.dst[0]], [M - l.dst[0][0], l.dst[0][1]]);
+    assert.ok(l.dst[0][0] > l.dst[l.dst.length - 1][0], `${id} ${doll}: from the nape (back) to the front`);
+  }
+});
+
 test('every new item has an English and a Spanish name, and its colourways are named in both', () => {
   const ctx = loadWardrobe(), en = [...ctx.I18N.keys('en')], es = [...ctx.I18N.keys('es')];
   for (const id of [...Object.values(NEW_OUTFITS), ...Object.values(NEW_SHOES)].flat()) {
