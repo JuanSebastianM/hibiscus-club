@@ -445,6 +445,11 @@ for(const doll of ['adult','little']){
    - k / kx / ky with at: see above.
    Defaults: front 'arms' when the style reaches below her shoulders, else 'top'; side
    views 'side'; back 'top'; clips at the head's default spot of the view. */
+/* the face kept clear of front hair (portrait.js openFace), [y, xl, xr] rows in the front view: from the
+   brows past the outer eye corners and the cheekbones, along the jaw to the chin. Also what the
+   face-open check (art/lab.html?sheet=faceopen, test/face-open.test.mjs) measures. */
+const FACE_OPEN={adult:[[66,168,249],[86,166,248],[100,163,247],[120,166,241],[140,177,233],[157,196,222]],
+  little:[[97,150,264],[122,152,262],[150,150,263],[170,158,256],[190,170,244],[205,190,222]]};
 const HEAD_C={adult:{front:[200,62],back:[200,62],left:[90,62],right:[91,62]},little:{front:[203,105],back:[203,105],left:[110,105],right:[99,105]}};
 const SHOULDER_Y={adult:178,little:236};
 const CLIP_AT={adult:{front:{x:162,y:32,rot:-25},left:{x:122,y:24,behind:true},right:{x:59,y:24},back:{x:238,y:34,rot:20,scale:.85}},
@@ -457,6 +462,8 @@ const HAIR_TUNE={
   /* drawn differently from its proof (a fuller bob, its swoop lower on the forehead): raised to the
      proof's hairline; seen from the right her forehead is flatter than the proof's, so the sheer
      hairline in front of it is moved onto her forehead */
+  /* its baby curls cross the brows on purpose (as on the proof): the face is not opened through them */
+  'ringlet-pigtails':{little:{front:{open:false}}},
   'curly-bob':{little:{all:{earsUnder:true,dy:-8},left:{scalpFill:[{ellipse:[29,40,6,6]}]},right:{dx:4,scalpFill:[{ellipse:[184,47,8,10]}]}}},
   /* her skull is a little rounder at the back than the toddler proofs': in profile these short styles
      grow 2-2.5% about the forehead so no scalp peeks out behind them */
@@ -480,6 +487,7 @@ for(const it of items)if(it.category==='hair'){
       else if(layer==='neck')fit.front=view==='right'?mirrorShapes(FRONT_SIDE[doll],MIRROR[doll]):FRONT_SIDE[doll];
       else if(Array.isArray(layer))fit.front=layer;
       fit.clip={...CLIP_AT[doll][view],...t.clip};
+      if(view==='front'&&t.open!==false)fit.open={rows:FACE_OPEN[doll],...t.open};
       for(const k of ['earsUnder','soften','shade','scalp','scalpFill','cut','cutDoll'])if(t[k]!==undefined)fit[k]=t[k];
       (it.fit[doll]??={})[view]=fit;
     }
@@ -542,7 +550,7 @@ const legacy={
   clip:{adult:['hibiscus-clip','peach-blossom','satin-bow','gold-star'],little:['red-bow','peach-blossom','satin-bow','gold-star']},
   gem:['none','heart','star-freckles']
 };
-return {version:2,views:['front','left','right','back'],dolls,items:byId,itemList:items,hairStyles:HAIR_STYLES,makeup,hairColors,defaults,legacy,
+return {version:2,faceOpen:FACE_OPEN,views:['front','left','right','back'],dolls,items:byId,itemList:items,hairStyles:HAIR_STYLES,makeup,hairColors,defaults,legacy,
   categories:['outfit','shoes','hair','earrings','necklace','clip'],
   optional:['shoes','earrings','necklace','clip']};
 })();

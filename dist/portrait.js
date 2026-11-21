@@ -356,7 +356,7 @@ function shoeLayers(doll,view,id,tintId){
    fit.cut = sprite polys removed; fit.scalpFill = doll-local shapes for scalpShow's force;
    fit.cutDoll = doll-local shapes removed; fit.soften = feathered hairline over skin (opt-in, see
    softenHairline); fit.shade = contact shadow (opt-in, see hairShade); fit.scalp=false turns off
-   the scalp shown through partings (scalpShow). */
+   the scalp shown through partings (scalpShow); fit.open = the face kept clear (openFace). */
 function hairLayers(doll,view,id,colorId){
   const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
   if(!fit)return Promise.reject(new Error('Hair '+id+' does not fit '+doll+' '+view));
@@ -364,6 +364,7 @@ function hairLayers(doll,view,id,colorId){
     let src=await itemSprite(item,view,'main',null,colorId);
     if(fit.cut)src=maskSprite(src,{cut:fit.cut});
     const [full,g]=dollLayer(doll,view);drawFitted(g,src,fit);
+    if(fit.open)openFace(full,dollView(doll,view).origin,fit.open);
     if(fit.scalp!==false){const dv=dollView(doll,view);let force=null;
       if(fit.scalpFill){force=makeCanvas(full.width,full.height);const fg=ctx2d(force);fg.translate(...dv.origin);fg.fillStyle='#000';fg.beginPath();fit.scalpFill.forEach(sh=>shapePathInto(fg,sh));fg.fill()}
       scalpShow(full,await spriteCanvas(dv.art),dv.origin,CATALOG.dolls[doll].skin,force)}
@@ -384,6 +385,65 @@ function hairLayers(doll,view,id,colorId){
     fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);fg.restore();
     return done({back:full,front});
   });
+}
+/* Keep the face open. The styles were painted on heads a little narrower than hers, so the inner edges
+   of the front curtains would cover her outer eye corners, cheeks and jaw. open = {rows:[[y, xl, xr],
+   ...]} (doll-local; between rows linear): in each row of the face, where the window between the
+   curtains is open at the face's centre (a fringe across the centre is left alone), the inner edge of
+   the hair on each side is moved out to xl / xr. The hair between that edge and `band` px outside it is
+   gently compressed toward the outside (tucked behind the cheek); the outer silhouette, the parting
+   and everything above the first row and below the last stay where they are. The per-row amounts are
+   smoothed along the face (and faded in over `ramp` px above and below), so curls stay curls. */
+function openFace(full,[ox,oy],{rows,ramp=10,band=26}){
+  const W=full.width,H=full.height,g=full.getContext('2d'),im=g.getImageData(0,0,W,H),d=im.data;
+  const y0=rows[0][0],y1=rows[rows.length-1][0];
+  const at=y=>{y=Math.min(y1,Math.max(y0,y));let k=0;while(k<rows.length-2&&y>rows[k+1][0])k++;const [a,l0,r0]=rows[k],[b,l1,r1]=rows[k+1],u=(y-a)/(b-a||1);return [l0+(l1-l0)*u,r0+(r1-r0)*u]};
+  const Y0=Math.max(0,Math.floor(y0-ramp+oy)),Y1=Math.min(H-1,Math.ceil(y1+ramp+oy)),n=Y1-Y0+1;
+  if(n<=0)return;
+  const A=[new Float32Array(n),new Float32Array(n)],T=[new Float32Array(n),new Float32Array(n)],C=new Float32Array(n),closed=new Uint8Array(n);
+  const al=(x,Y)=>x<0||x>=W?0:d[(Y*W+x)*4+3]/255;
+  for(let j=0;j<n;j++){
+    const Y=Y0+j,[l,r]=at(Y-oy),L=l+ox,Rr=r+ox,cx=(L+Rr)/2;T[0][j]=L;T[1][j]=Rr;C[j]=cx;
+    if(al(Math.round(cx),Y)>.3||al(Math.round(cx)-6,Y)>.3||al(Math.round(cx)+6,Y)>.3){closed[j]=1;continue} // a fringe: left as drawn
+    let x=Math.round(cx);while(x>L-band&&al(x,Y)<.5)x--;A[0][j]=Math.max(0,x+1-L);
+    x=Math.round(cx);while(x<Rr+band&&al(x,Y)<.5)x++;A[1][j]=Math.max(0,Rr-x);
+  }
+  for(const a of A){ // max over +-4 rows, then a soft blur over +-7, faded in/out at the ends
+    const m=a.map((_,j)=>{let v=0;for(let k=Math.max(0,j-4);k<=Math.min(n-1,j+4);k++)v=Math.max(v,a[k]);return v});
+    for(let j=0;j<n;j++){let s=0,ws=0;for(let k=-7;k<=7;k++){const q=j+k;if(q<0||q>=n)continue;const w=1-Math.abs(k)/8;s+=m[q]*w;ws+=w}
+      const y=Y0+j-oy,fade=Math.min(1,Math.max(0,Math.min(y-(y0-ramp),(y1+ramp)-y)/ramp));a[j]=s/ws*fade*fade*(3-2*fade)}
+  }
+  // rows of (and next to) a fringe stay as drawn: fade in over 8 rows away from the nearest closed row
+  let last=-1e9;const near=new Float32Array(n).fill(1e9);
+  for(let j=0;j<n;j++){if(closed[j])last=j;near[j]=j-last}
+  last=1e9;for(let j=n-1;j>=0;j--){if(closed[j])last=j;near[j]=Math.min(near[j],last-j)}
+  for(let j=0;j<n;j++){const k=Math.min(1,Math.max(0,(near[j]-2)/8));A[0][j]*=k;A[1][j]*=k}
+  const src=new Float32Array(W*4); // one premultiplied source row
+  for(let j=0;j<n;j++){
+    const aL=A[0][j],aR=A[1][j];if(aL<.05&&aR<.05)continue;
+    const Y=Y0+j,cx=C[j],row=Y*W*4;
+    for(let x=0;x<W;x++){const i=row+x*4,a=d[i+3]/255;src[x*4]=d[i]*a;src[x*4+1]=d[i+1]*a;src[x*4+2]=d[i+2]*a;src[x*4+3]=d[i+3]}
+    // output x -> source x (monotonic): left side then right side (mirrored)
+    const map=(x,a,T0,dir)=>{ // dir -1: left curtain (hair at x < T0), +1: right
+      // u: distance from T0 into the hair (> 0) or toward the face's centre (< 0); the source edge is at -a
+      const u=(x-T0)*dir,B=Math.max(band,a*2.5),D=Math.abs(cx-T0);
+      if(u>=B||D<=a+1)return x;
+      const us=u>=0?-a+u*(B+a)/B:-a+u*(D-a)/D;
+      return T0+dir*us;
+    };
+    for(let x=0;x<W;x++){
+      let xs=x;
+      if(x<cx&&aL>=.05)xs=map(x,aL,T[0][j],-1);
+      else if(x>=cx&&aR>=.05)xs=map(x,aR,T[1][j],1);
+      if(xs===x)continue;
+      const x0=Math.floor(xs),f=xs-x0,o=row+x*4;
+      const s0=x0>=0&&x0<W?x0*4:-1,s1=x0+1>=0&&x0+1<W?(x0+1)*4:-1;
+      const p=k=>(s0<0?0:src[s0+k]*(1-f))+(s1<0?0:src[s1+k]*f);
+      const a=p(3);if(a<.5){d[o+3]=0;continue}
+      const inv=255/a;d[o]=p(0)*inv;d[o+1]=p(1)*inv;d[o+2]=p(2)*inv;d[o+3]=a;
+    }
+  }
+  g.putImageData(im,0,0);
 }
 /* Scalp through the hair: partings and sheer hairlines are painted semi-transparent, over the
    painted head's scalp. Where her own head is a little smaller than the one the style was painted

@@ -37,6 +37,8 @@ const q=new URLSearchParams(location.search);
  CATALOG.items[it.id]=it;CATALOG.itemList.push(it);}
 /* noscalp=1: hair styles without the scalp shown through partings (portrait.js scalpShow), to compare against the sprite alone. */
 if(q.get('noscalp'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])it.fit[d][v].scalp=false;
+/* noopen=1: the styles without openFace (portrait.js), to see what the art alone covers. */
+if(q.get('noopen'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)if(it.fit[d].front)delete it.fit[d].front.open;
 if(q.get('noshade'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])it.fit[d][v].shade=false;
 /* nudge=id:doll:view:dx:dy[:k[:ax:ay]],... tries a hair correction before writing it into HAIR_TUNE (k scales
    about doll point ax,ay, default the fit's centre). */
@@ -194,6 +196,29 @@ Object.assign(sheets,{
         const g=t.getContext('2d');g.fillStyle='#cfe6d4';g.fillRect(0,0,t.width,t.height);g.scale(sc,sc);g.translate(-x,-y);
         g.translate(r.tx,r.ty);g.rotate(r.rot*Math.PI/180);g.scale(r.s,r.s);g.imageSmoothingQuality='high';g.drawImage(img,0,0);
         const f=document.createElement('figure'),cap=document.createElement('figcaption');cap.textContent='proof '+h+' '+v;cap.style.width=t.width-10+'px';f.append(t,cap);section.append(f);
+      }}},
+  /* faceopen: per style, the share of the face region (CATALOG.faceOpen, front view) that the hair in
+     front of the face leaves uncovered, plus the face zoomed with the region outlined. window.faceOpen =
+     [{doll, hair, open, eyes}] (open: whole region; eyes: the eye band alone), used by
+     test/face-open.test.mjs. tiles=0 skips the pictures. */
+  async faceopen(){
+    const res=[];window.faceOpen=res;
+    const eyeBand={adult:[78,94],little:[112,132]};
+    for(const d of dolls){heading('Face open · '+d);
+      const rows=CATALOG.faceOpen[d],[ox,oy]=dollView(d,'front').origin;
+      for(const it of CATALOG.itemList.filter(i=>i.category==='hair'&&i.id!=='lab-none'&&i.dolls.includes(d))){if(!want(it.id))continue;
+        const layers=await composeDollLayers({...L(d,{hair:it.id,clip:'none',earrings:'none',necklace:'none'}),doll:d},'front');
+        const hair=layers.layers.filter(l=>l.kind==='hairFront').map(l=>l.canvas);
+        const m=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),mg=m.getContext('2d');hair.forEach(c=>mg.drawImage(c,0,0));
+        const md=mg.getImageData(0,0,m.width,m.height).data;
+        const reg=makeCanvas(m.width,m.height),rg=reg.getContext('2d');rg.translate(ox,oy);rg.beginPath();
+        rows.forEach(([y,l])=>rg.lineTo(l,y));[...rows].reverse().forEach(([y,,r])=>rg.lineTo(r,y));rg.closePath();rg.fill();
+        const rd=rg.getImageData(0,0,m.width,m.height).data;
+        let n=0,cov=0,en=0,ec=0;
+        for(let i=3;i<rd.length;i+=4)if(rd[i]>128){n++;const c=md[i]>128;if(c)cov++;const y=((i>>2)/m.width|0)-oy;if(y>=eyeBand[d][0]&&y<=eyeBand[d][1]){en++;if(c)ec++}}
+        res.push({doll:d,hair:it.id,open:1-cov/n,eyes:1-ec/en});
+        if(q.get('tiles')!=='0')await tile(`${it.id} open ${(100*(1-cov/n)).toFixed(1)}% eyes ${(100*(1-ec/en)).toFixed(1)}%`,L(d,{hair:it.id,clip:'none',earrings:'none',necklace:'none',...extra}),
+          {zoom:d==='adult'?[110,-30,180,230]:[90,-20,230,270],scale:Number(q.get('scale')||1.4),overlay:q.get('outline')?(g,sc)=>{g.strokeStyle='rgba(0,140,255,.8)';g.lineWidth=1/sc;g.beginPath();rows.forEach(([y,l])=>g.lineTo(l,y));[...rows].reverse().forEach(([y,,r])=>g.lineTo(r,y));g.closePath();g.stroke()}:null});
       }}},
   async portraits(){heading('paintPortrait per view');for(const d of dolls)for(const v of CATALOG.views){const c=document.createElement('canvas');await paintPortrait(c,L(d,{backdrop:Number(q.get('bd')||0),...extra}),q.get('postcard')==='1',v);c.style.width=(c.width*scale)+'px';const f=document.createElement('figure');const cap=document.createElement('figcaption');cap.textContent=d+' '+v;f.append(c,cap);section.append(f)}}
 });
