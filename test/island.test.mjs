@@ -249,6 +249,11 @@ test('new places: walkable floor lines and residents, objects and treasures on t
       assert.ok(y >= floorAt(d, x) && y <= .94, `${d.id} ${x},${y} is on the walkable ground`);
     }
   }
+  // treasures in the new places never sit on the resident (so a click or tap reaches her)
+  for (const d of districts.slice(3)) {
+    const size = (d.personSize ?? 27) / 100;
+    for (const [x, y] of d.spots) assert.ok(Math.abs(x - d.person[0]) > .07 || y < d.person[1] - size || y > d.person[1] + .03, `${d.id} treasure ${x},${y} is clear of ${d.resident}`);
+  }
   const beach = districts.find(d => d.id === 'beach');
   assert.ok(floorAt(beach, .15) > .66, 'feet stay in front of the lifeguard chair');
   assert.ok(Math.abs(floorAt(beach, .5) - .62) < .001);
