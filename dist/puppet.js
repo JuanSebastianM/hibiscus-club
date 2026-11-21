@@ -488,7 +488,7 @@ const HibiscusPuppet=(()=>{
       if(L.kind==='shoesBack'&&layers.nearShoe)canvas=layers.nearShoe;
       let d=pixelsOf(canvas).data;
       const box=alphaBox(d);if(!box)continue;
-      const hairKind=['hairBack','hairFront','clipBehind'].includes(L.kind)||(L.kind==='charm'&&L.behind);
+      const hairKind=['hairBack','hairFront','clipBehind','hood'].includes(L.kind)||(L.kind==='charm'&&L.behind); // a hood worn up moves like the hair
       const headKind=['earrings','studs','clip','charm','glassesUnder','glasses','hat'].includes(L.kind)&&!hairKind;
       if(L.kind==='held'||L.kind==='pack'){ // accessories that follow her hand or her chest, whole
         let limb=0;

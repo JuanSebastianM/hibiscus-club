@@ -79,18 +79,21 @@ CONFIG = {
     # id: src (p = pack2, r = round2), k, top, and per view / piece options
     "sarong-swimsuit": dict(src="p", k=.70, top=166),
     "tankini-board-shorts": dict(src="p", k=.71, top=170),
-    "crochet-cover-up": dict(src="p", k=.69, top=175, armY=282,
+    # front and back: widened over her shoulders (the cap sleeves cover the deltoid) and down to the hem
+    # (no thigh shows beside it); side views: the arm through the sleeve, the mannequin seen in the
+    # opening erased (catalog EXTRA below)
+    "crochet-cover-up": dict(src="p", k=.69, top=175, armY=282, cover_rows=(176, 560), cover=(1, 1),
                              # the mannequin seen through the mesh becomes a coral swimsuit
                              recolor=dict(hue=(340, 32), minSat=.17, to=352, sat=1.6)),
-    "aqua-velour-tracksuit": dict(src="r", k=1.2, top=142, armY=465, sideHug=[hugf(176, 845, 2)],
+    "aqua-velour-tracksuit": dict(src="r", k=1.2, top=142, armY=465, sideHug=[hugf(176, 792, 2)],
                                   front=dict(fill=[dict(keep=[[30, 30], [110, 15], [110, 70], [30, 90]], dy=-8)]),
                                   back=dict(fill=[dict(keep=[[30, 30], [110, 15], [110, 70], [30, 90]], dy=-8)])),
-    "tennis-dress": dict(src="p", k=.77, top=134, armY=300),
+    "tennis-dress": dict(src="p", k=.77, top=134, armY=300, skirtY=348),
     "baby-tee-cargo": dict(src="p", k=.92, top=166, armY=296, pieces=[dict(part="capris"), dict(part="top",
         front=dict(fill=[dict(keep=[[10, 25], [100, 5], [100, 60], [10, 80]], dy=-8)]),
         back=dict(fill=[dict(keep=[[10, 25], [100, 5], [100, 60], [10, 80]], dy=-8)]))]),
     "sequin-halter-dress": dict(src="p", k=.74, top=141),
-    "butterfly-satin-skirt": dict(src="p", k=.88, top=158, armY=300),
+    "butterfly-satin-skirt": dict(src="p", k=.88, top=158, armY=300, skirtY=342),
     "puffer-vest-slip-dress": dict(src="r", k=.86, top=132),
     "plaid-knit-vest-set": dict(src="p", k=.70, top=135),
     "hoodie-dress-leg-warmers": dict(src="p", k=1.0, top=156, vmap=[(0, 146), (130, 280), (575, 731)], armY=468, pieces=[
@@ -99,22 +102,45 @@ CONFIG = {
         dict(part="dress", front=dict(fill=[dict(keep=[[30, 55], [128, 38], [128, 95], [30, 105]], dy=-12)]),
              back=dict(fill=[dict(keep=[[30, 55], [128, 38], [128, 95], [30, 105]], dy=-12)]))],
         front=dict(behind=[{"poly": [[160, 110], [240, 110], [236, 182], [164, 182]]}])),
-    "denim-overall-dress": dict(src="p", k=.73, top=177, armY=300),
+    "denim-overall-dress": dict(src="p", k=.73, top=177, armY=300, skirtY=372),
     # ----- Little Me -----
     "ruffle-swimsuit": dict(src="p", k=.67, top=193),
     "rash-guard-set": dict(src="p", k=.72, top=178, armY=335),
-    # the hood is up: it hangs behind her head and hair (the face stays clear)
-    "beach-poncho": dict(src="p", k=.87, top=-12, thighs=False, suit={"color": "#7fcabd", "y0": 400}, behind=[{"poly": [[-60, -120], [470, -120], [470, 214], [-60, 214]]}]),
-    "rainbow-tutu-tee": dict(src="p", k=.70, top=177, armY=330),
+    # the hood is worn up, over her hair (catalog.js HOOD: the face opening and the hair tucked under it)
+    "beach-poncho": dict(src="p", k=.87, top=-12, thighs=False, suit={"color": "#7fcabd", "y0": 400}),
+    "rainbow-tutu-tee": dict(src="p", k=.70, top=177, armY=330, skirtY=364),
     "dino-romper": dict(src="p", k=.72, top=175, armY=330),
-    "tulle-party-dress": dict(src="p", k=.75, top=175, armY=300),
+    "tulle-party-dress": dict(src="p", k=.75, top=175, armY=300, skirtY=374),
     "raincoat-set": dict(src="r", k=1.08, top=185, armY=495, sideHug=[hugf(216, 830, 2)],
                          front=dict(fill=[dict(keep=[[40, 40], [100, 25], [100, 90], [40, 100]], dy=-14, dx=-3)]),
                          back=dict(fill=[dict(keep=[[40, 40], [100, 25], [100, 90], [40, 100]], dy=-14, dx=-3)])),
     "bear-onesie": dict(src="r", k=1.1, top=170, armY=495, sideHug=[hugf(216, 830, 2)]),
     "ballet-wrap-set": dict(src="r", k=.83, top=200, armY=492),
 }
-EXTRA = {}
+def sleeve_hole(cx, cy, rx, ry, rim, feather=2.5):
+    """Side views, short sleeves: the near arm passes through the sleeve. It is drawn over the outfit
+    inside the opening (the ellipse of the sleeve's dark inside, doll px, left view) and below the
+    sleeve's lower rim (doll y `rim`), so the arm comes out of the sleeve instead of out of the bodice
+    under it; the rim's front lip stays over the arm."""
+    return {"left": {"armBase": True, "armClip": [{"ellipse": [cx, cy, rx, ry], "feather": feather},
+                                 {"poly": [[-80, rim], [300, rim], [300, 950], [-80, 950]], "feather": feather}]}}
+
+
+EXTRA = {
+    "crochet-cover-up": {"left": {**sleeve_hole(95, 262, 36, 28, 296)["left"], "erase": [{"ellipse": [92, 262, 40, 31], "feather": 2}]}},
+    "tennis-dress": sleeve_hole(105, 268, 26, 9, 285),
+    "baby-tee-cargo": sleeve_hole(101, 273, 27, 12, 292),
+    "butterfly-satin-skirt": sleeve_hole(109, 244, 28, 8, 257),
+    "denim-overall-dress": sleeve_hole(104, 276, 27, 8, 290),
+    "rash-guard-set": sleeve_hole(124, 314, 33, 11, 330),
+    "rainbow-tutu-tee": sleeve_hole(121, 284, 36, 13, 304),
+    "dino-romper": sleeve_hole(122, 297, 35, 14, 318),
+    "tulle-party-dress": sleeve_hole(130, 268, 27, 10, 286),
+    # long sleeves from the side: the hand comes out of the cuff's opening, with a soft edge
+    "raincoat-set": sleeve_hole(99, 490, 25, 8, 495),
+    "bear-onesie": sleeve_hole(112, 497, 21, 5, 500),
+    "ballet-wrap-set": sleeve_hole(110, 474, 22, 7, 478),
+}
 
 
 # ------------------------------------------------------------------ helpers
@@ -309,14 +335,109 @@ def gen_piece(iid, doll, view, cfg, src):
         if cover is not None and lim[0] <= y <= lim[1]:
             b = body[y] if 0 <= y < len(body) else None
             s = src_sp[i]
-            if b and s and s[1] - s[0] > 4:
+            # (not the last short runs of a scalloped or curved hem: stretched across the legs they
+            # would draw out into streaks)
+            if b and s and s[1] - s[0] > 4 and (s[1] - s[0]) * kx > .55 * (b[1] - b[0]):
                 d0, d1 = o + s[0] * kx, o + s[1] * kx
                 n0, n1 = min(d0, b[0] - cover[0]), max(d1, b[1] + cover[1])
                 kx = (n1 - n0) / (s[1] - s[0])
                 o = n0 - s[0] * kx
         o += cfg.get("dx", {}).get(view, 0) if isinstance(cfg.get("dx"), dict) else cfg.get("dx", 0)
         out.append((sy, dolly(sy), o, o + W * kx))
+    if side and cfg.get("skirtY") is not None:
+        out = hang_skirt(out, src_sp, body, W, cfg)
+    for _ in range(4):  # a run of two or three wide rows comes down one pass at a time
+        out = despike(out, W, src_sp)
+    out = hem_tail(out, W, src_sp)
     return {"part": part or "main", "rows": out, "W": W, "H": H}
+
+
+def hem_tail(out, W, spans):
+    """Below the garment's last full-width row (the bottom of the hem), the short runs left (fringe,
+    strands of tulle, the briefs under a poncho) keep that row's scale: widened to the body like the
+    rows above they would be drawn out sideways into whiskers."""
+    full = [i for i, s in enumerate(spans) if s and (s[1] - s[0]) >= .75 * max((q[1] - q[0]) for q in spans[max(0, i - 12):i + 1] if q)]
+    if not full:
+        return out
+    j = full[-1]
+    kj = (out[j][3] - out[j][2]) / W
+    res = list(out[:j + 1])
+    for sy, dy, a, b in out[j + 1:]:
+        k = (b - a) / W
+        if k > kj * 1.03:
+            c = (a + b) / 2
+            a, b = c - kj * W / 2, c + kj * W / 2
+        res.append((sy, dy, a, b))
+    return res
+
+
+def despike(out, W, spans, r=3, lim=1.2):
+    """A single row stretched far wider than the rows round it (a hem's last short run, a strap or the
+    briefs under a poncho measured as the garment's span and widened to the body) draws its faint
+    pixels out into a long horizontal whisker. Such a row takes the median scale of its neighbours,
+    about its own centre."""
+    ks = [(b - a) / W for _, _, a, b in out]
+    res = []
+    for i, (sy, dy, a, b) in enumerate(out):
+        med = float(np.median(ks[max(0, i - r):i + r + 1]))
+        # only rows whose own run is short (a hem's last bit, a strap): a full row widened to cover the
+        # hips or the seat stays as it is
+        sp = [q[1] - q[0] for q in spans[max(0, i - r):i + r + 1] if q]
+        short = not spans[i] or (spans[i][1] - spans[i][0]) < .75 * float(np.median(sp or [1]))
+        if ks[i] > lim * med and short:
+            c = (a + b) / 2
+            a, b = c - med * W / 2, c + med * W / 2
+        res.append((sy, dy, a, b))
+    return res
+
+
+def hang_skirt(out, src_sp, body, W, cfg):
+    """Side views of skirts and dresses: below the waist seam (doll y `skirtY`) the rows are not hugged
+    onto the body one by one (that bends the pleats into waves and the hem into a mermaid flare); the
+    skirt hangs from the waist as drawn, with the waist row's scale and offset, and is only widened
+    where the body (hips, seat) would show beside it. The widening never shrinks again further down
+    (a running maximum, smoothed), so the skirt falls from the widest point of the hips like a cone."""
+    m = cfg.get("skirtM", 3)
+    i0 = next((i for i, r in enumerate(out) if r[1] >= cfg["skirtY"]), None)
+    if not i0:
+        return out
+    _, _, a, b = out[i0 - 1]
+    kx0, o0 = (b - a) / W, a
+    need = []
+    for i in range(i0, len(out)):
+        s = src_sp[i]
+        y = int(round(out[i][1]))
+        bd = body[y] if 0 <= y < len(body) else None
+        if not s or not bd:
+            need.append((0.0, 0.0))
+            continue
+        d0, d1 = o0 + s[0] * kx0, o0 + s[1] * kx0
+        need.append((max(0.0, d0 - (bd[0] - m)), max(0.0, (bd[1] + m) - d1)))
+    run, acc = [], (0.0, 0.0)
+    for nl, nr in need:
+        acc = (max(acc[0], nl), max(acc[1], nr))
+        run.append(acc)
+    # ease the widening in over the rows above where it is first needed (no kink at the seat)
+    r = cfg.get("skirtEase", 4)
+    sm = [tuple(float(np.mean([q[j] for q in run[max(0, i - r):i + r + 1]])) for j in range(2)) for i in range(len(run))]
+    sm = [(max(x[0], y[0]), max(x[1], y[1])) for x, y in zip(sm, run)]  # never less than the body needs
+    res = out[:i0]
+    # the last rows of a curved hem are short runs: widening them as much as the rows above would draw
+    # them out into a streak, so rows much narrower than the skirt keep the waist row's scale
+    widest = 1
+    for k, i in enumerate(range(i0, len(out))):
+        s = src_sp[i]
+        sy, dy, _, _ = out[i]
+        kx, o = kx0, o0
+        if s:
+            widest = max(widest, s[1] - s[0])  # the widest row so far (the skirt only grows to its hem)
+        if s and s[1] - s[0] > .6 * widest:
+            n0 = o0 + s[0] * kx0 - sm[k][0]
+            n1 = o0 + s[1] * kx0 + sm[k][1]
+            kx = (n1 - n0) / (s[1] - s[0])
+            o = n0 - s[0] * kx
+        res.append((sy, dy, o, o + W * kx))
+    return res
 
 
 def body_centre(doll, view):
