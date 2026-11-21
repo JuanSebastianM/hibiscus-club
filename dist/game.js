@@ -114,7 +114,11 @@ const briefs=[
   {key:'rosy',need:{blush:'rose',gem:'heart'}},
   {key:'midnight',need:{hairColor:'jet',clip:'gold-star'}},
   {key:'homecoming',need:{outfit:{adult:'hibiscus-flares',little:'yellow-dot-dress'},clip:'satin-bow'}},
-  {key:'bob',need:{hair:'curly-bob',earrings:'heart-studs'}}
+  {key:'bob',need:{hair:{adult:'flip-bob',little:'curly-bob'},earrings:'heart-studs'}}, // curly-bob is Little Me's only
+  // second wardrobe (free pieces); not in the play-statistics list (worker/events.js), so not counted
+  {key:'splash',need:{outfit:{adult:'tankini-board-shorts',little:'ruffle-swimsuit'},shoes:{adult:'flower-flip-flops',little:'jelly-shoes'}},stat:false},
+  {key:'rainy',need:{outfit:{adult:'hoodie-dress-leg-warmers',little:'raincoat-set'},shoes:{adult:'fuzzy-slippers',little:'cowboy-boots'}},stat:false},
+  {key:'school',need:{outfit:{adult:'plaid-knit-vest-set',little:'dino-romper'},shoes:{adult:'ribbon-ballet-flats',little:'ballet-slippers'}},stat:false}
 ];
 const brief=()=>briefs[state.missions%briefs.length];
 const briefPlan={outfit:['wardrobe','outfits'],shoes:['wardrobe','shoes'],earrings:['wardrobe','jewelry'],necklace:['wardrobe','jewelry'],
@@ -298,7 +302,7 @@ function takePhoto(){
   shot.id=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
   state.photos.unshift(shot);
   const b=brief(),won=briefMet(b,shot);
-  if(won){state.missions++;state.stars+=10;track('challenge',b.key);}
+  if(won){state.missions++;state.stars+=10;if(b.stat!==false)track('challenge',b.key);}
   track('photo',['studio',...districts.map(d=>d.id)][shot.backdrop]||'studio');
   persist();draw();tone(true);say(t(won?'booth.savedWon':'booth.saved'));
 }

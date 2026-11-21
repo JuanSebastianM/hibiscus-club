@@ -311,6 +311,16 @@ function shoeLayers(doll,view,id,tintId){
     const [back,bg]=dollLayer(doll,view),[front,fg]=dollLayer(doll,view),[mask,mg]=dollLayer(doll,view);
     const place=(g,src,f)=>{const w=f.w,h=f.h??src.height*w/src.width;g.translate(f.x,f.y);if(f.rot)g.rotate(f.rot*Math.PI/180);return [w,h]};
     const scaled=(poly,w,h)=>poly.map(([u,v])=>[u*w,v*h]);
+    // an open shoe drawn in two layers (f.over = {x,y,w,h,rot} of its `over` sprite part): the part
+    // under the foot (sole, insole) whole into `back`, the part over it (straps, uppers) whole into
+    // `front`, so the foot lies between them; both count for the mask
+    const layered=(under,over,f)=>{
+      for(const [g,src,q] of [[bg,under,f],[fg,over,f.over],[mg,under,f],[mg,over,f.over]]){
+        g.save();const [w,h]=place(g,src,q);g.drawImage(src,0,0,w,h);
+        if(g===mg){g.fillStyle='#000';for(const p of q.keep||[]){pathPoly(g,scaled(p,w,h));g.fill()}}
+        g.restore();
+      }
+    };
     // one shoe sprite: whole into `back`, its over-the-foot parts into `front`
     const shoe=(src,f)=>{
       bg.save();const [w,h]=place(bg,src,f);bg.drawImage(src,0,0,w,h);bg.restore();
@@ -329,6 +339,15 @@ function shoeLayers(doll,view,id,tintId){
       }
       fg.save();fg.setTransform(1,0,0,1,0,0);fg.drawImage(t,0,0);fg.restore();
     };
+    if(fit.near?.over){ // open shoe, side view
+      layered(await itemSprite(item,view,fit.near.part,tintId),await itemSprite(item,view,fit.near.over.part,tintId),fit.near);
+      return {back,front,mask};
+    }
+    if(fit.left?.over||fit.right?.over){ // open shoes, front and back views
+      for(const side of ['left','right']){const f=fit[side];if(!f)continue;
+        layered(await itemSprite(item,view,f.part,tintId),await itemSprite(item,view,f.over.part,tintId),f)}
+      return {back,front,mask};
+    }
     if(fit.near){
       const src=await itemSprite(item,view,'main',tintId);
       if(fit.far){
@@ -748,6 +767,41 @@ function coverBodysuit(d,w,h,shapes,info){
     }
   }
 }
+/* The bodysuit's lilac below doll y `y0` recoloured `color` (shading kept), so under a short cover-up it
+   reads as the swim shorts the outfit comes with rather than as bare skin. */
+function tintSuit(d,w,h,{color,y0=0},info){
+  const [cr,cg,cb]=hexRgb(color),ref=info.suitLuma;
+  for(let y=Math.max(0,y0|0);y<h;y++)for(let x=0;x<w;x++){
+    const i=(y*w+x)*4;if(d[i+3]<40)continue;
+    const r=d[i],g=d[i+1],b=d[i+2],wt=Math.min(1,Math.max(0,(b/(r||1)-.6)/.24))*(g<b+6?1:0);if(!wt)continue;
+    const k=luma(r,g,b)/ref;
+    d[i]=r+(Math.min(255,cr*k)-r)*wt;d[i+1]=g+(Math.min(255,cg*k)-g)*wt;d[i+2]=b+(Math.min(255,cb*k)-b)*wt;
+  }
+}
+/* Bare thighs under short outfits (swimsuits, tutus, ponchos): the base doll's bodysuit ends in a hemmed
+   short leg, which a skin repaint leaves as a flat band with a seam. Here rows y0..y1 (doll-local, from
+   under the outfit to just below that hem) are redrawn from the thigh below the hem, mirrored about y1
+   (so the shading continues smoothly) and stretched across each leg's width at that row: left and right
+   of the centre line c (front, back), or the widest run (side views, where the near arm is kept). */
+function bareThighs(d,w,h,{y0,y1,band=36},c,arm){
+  const A=(x,y)=>d[(y*w+x)*4+3];
+  let keep=null;
+  if(arm){const m=makeCanvas(w,h),g=ctx2d(m);pathPoly(g,arm);g.fill();keep=g.getImageData(0,0,w,h).data}
+  const runs=y=>{const r=[];let s=-1;for(let x=0;x<=w;x++){const on=x<w&&A(x,y)>100;if(on&&s<0)s=x;else if(!on&&s>=0){r.push([s,x]);s=-1}}return r};
+  const legs=y=>{const r=runs(y);if(!r.length)return [];
+    if(c==null){const b=r.reduce((p,q)=>q[1]-q[0]>p[1]-p[0]?q:p);return [b]}
+    const L=r.filter(q=>q[0]<c),R=r.filter(q=>q[1]>c);if(!L.length||!R.length)return [];
+    const l=L[L.length-1],rr=R[0];return [[l[0],Math.min(l[1],c)],[Math.max(rr[0],c),rr[1]]]};
+  const src=new Uint8ClampedArray(d);
+  for(let y=Math.max(0,y0|0);y<Math.min(h,y1|0);y++){
+    const ys=Math.min(h-1,Math.round(y1+(y1-y)*band/(y1-y0)));
+    const dl=legs(y),sl=legs(ys);if(dl.length!==sl.length)continue;
+    dl.forEach(([a,b],i)=>{const [sa,sb]=sl[i];
+      for(let x=a;x<b;x++){const o=(y*w+x)*4;if(keep&&keep[o+3]>0)continue;
+        const xs=Math.min(w-1,Math.max(0,Math.round(sa+(x+.5-a)*(sb-sa)/(b-a)-.5))),q=(ys*w+xs)*4;
+        if(!src[q+3])continue;d[o]=src[q];d[o+1]=src[q+1];d[o+2]=src[q+2]}});
+  }
+}
 function bodyKey(shot,view){return [shot.doll,view,shot.outfit,shot.lips,shot.blush,shot.shadow,shot.nails,shot.shoes].join('|')}
 /* Eyeshadow, blush and lipstick on pixels d (w x h) whose coordinates match `face` (the doll view's
    landmarks, see shiftFace). puppet.js runs it again on drawn expression heads: opts.lipsMask (Float32
@@ -787,7 +841,9 @@ function bodyLayer(shot,view){
     const w=base.width,h=base.height,c=makeCanvas(w,h),g=ctx2d(c);g.drawImage(base,0,0);
     const im=g.getImageData(0,0,w,h),d=im.data;
     const outfitFit=catalogItem(shot.outfit)?.fit?.[doll]?.[view];
+    if(outfitFit?.suit)tintSuit(d,w,h,outfitFit.suit,info);
     if(outfitFit?.skin?.length)coverBodysuit(d,w,h,outfitFit.skin,info);
+    if(outfitFit?.thighs)bareThighs(d,w,h,outfitFit.thighs,view==='front'||view==='back'?outfitFit.thighs.c:null,dv.arm);
     applyFaceMakeup(d,w,h,shot,dv.face||{});
     const opt=(list,id)=>CATALOG.makeup[list].find(o=>o.id===id);
     const nails=opt('nails',shot.nails);

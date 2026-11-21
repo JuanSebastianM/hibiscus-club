@@ -59,6 +59,11 @@ main:focus-visible{outline:none}
 .tab-body .option-group:last-child{margin-bottom:14px}
 .option-group h3{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.group-note{font:italic var(--fs-sm) Georgia;color:var(--text-muted);font-weight:normal}
 .group-hint{font-size:var(--fs-sm);color:var(--text-soft);margin:-4px 0 16px}
+/* outfit rack theme filters: one row of pills that wraps on a phone */
+.rack-filters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.rack-filter{min-height:40px;padding:6px 14px;border:1.5px solid var(--a200);border-radius:999px;background:var(--white);color:var(--text-soft);font-weight:bold;font-size:var(--fs-sm)}
+.rack-filter:hover{border-color:var(--a300)}
+.rack-filter[aria-pressed=true]{background:var(--a700);border-color:var(--a700);color:#fff}
 .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
 .item-grid.compact{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
 .item-card{position:relative;display:grid;align-content:start;gap:5px;padding:5px 5px 8px;border:1.5px solid var(--a200);border-radius:12px;background:var(--white);color:var(--text-soft);font-weight:bold;font-size:var(--fs-xs);line-height:1.25;text-align:center;transition:transform .12s ease,box-shadow .12s ease}

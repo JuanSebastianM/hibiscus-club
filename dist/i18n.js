@@ -95,6 +95,9 @@ const I18N=(()=>{
     'brief.midnight':'Midnight boardwalk',
     'brief.homecoming':'Island homecoming',
     'brief.bob':'Bouncy bob bash',
+    'brief.splash':'Splash pad party',
+    'brief.rainy':'Rainy-day cozy',
+    'brief.school':'First day of school',
 
     /* ---- photo booth ---- */
     'booth.sub':'Frame your portrait and save it to your scrapbook.',
@@ -223,6 +226,13 @@ const I18N=(()=>{
     'view.back':'Back',
     'view.group':'Turn her around',
     'group.outfits':'Outfit rack',
+    'rack.label':'Show outfits for',
+    'rack.all':'All',
+    'rack.beach':'Beach',
+    'rack.sporty':'Sporty',
+    'rack.party':'Party',
+    'rack.cozy':'Cozy',
+    'rack.everyday':'Everyday',
     'group.shoes':'Shoes',
     'group.earrings':'Earrings',
     'group.necklaces':'Necklaces',
