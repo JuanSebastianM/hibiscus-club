@@ -23,6 +23,7 @@ h2{margin:8px 8px 0;font-size:14px}
 <body>
 <div id="out"></div>
 <script src="i18n.js"></script>
+<script src="hair-fit.js"></script>
 <script src="catalog.js"></script>
 <script src="island-life.js"></script>
 <script src="portrait.js"></script>
@@ -34,15 +35,20 @@ const q=new URLSearchParams(location.search);
   fit:{adult:{front:{x:0,y:0,w:1,h:1,clip:{x:170,y:30}}},little:{front:{x:0,y:0,w:1,h:1,clip:{x:160,y:60}}}}};
  for(const v of ['left','right','back']){it.art[v]=it.art.front;for(const d of ['adult','little'])it.fit[d][v]={x:0,y:0,w:1,h:1,clip:{x:60,y:30,hide:true}}}
  CATALOG.items[it.id]=it;CATALOG.itemList.push(it);}
-/* noscalp=1: hair styles without their scalp underlayer (to compare against the sprite alone). */
-if(q.get('noscalp'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])delete it.fit[d][v].scalp;
+/* noscalp=1: hair styles without the scalp shown through partings (portrait.js scalpShow), to compare against the sprite alone. */
+if(q.get('noscalp'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])it.fit[d][v].scalp=false;
+if(q.get('noshade'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])it.fit[d][v].shade=false;
+/* nudge=id:doll:view:dx:dy[:k[:ax:ay]],... tries a hair correction before writing it into HAIR_TUNE (k scales
+   about doll point ax,ay, default the fit's centre). */
+for(const n of (q.get('nudge')||'').split(',').filter(Boolean)){const [id,d,v,dx,dy,k=1,ax,ay]=n.split(':');const f=CATALOG.items[id].fit[d][v];
+  const cx=ax===undefined?f.x+f.w/2:+ax,cy=ay===undefined?f.y+f.h/2:+ay;f.x=cx+(f.x-cx)*k+(+dx);f.y=cy+(f.y-cy)*k+(+dy);f.w*=+k;f.h*=+k;}
 const out=document.querySelector('#out');
 const sheetName=q.get('sheet')||'outfits';
 const only=q.get('ids')?q.get('ids').split(','):null;
 let section=null;
 function heading(t){const h=document.createElement('h2');h.textContent=t;out.append(h);section=document.createElement('div');section.className='sheet';out.append(section)}
 /* Render a look cropped to a doll-local box. */
-async function tile(label,look,{zoom,scale=1,grid=0,bg='#cfe6d4',view='front',overlay}={}){
+async function tile(label,look,{zoom,scale=1,grid=0,bg=q.get('bg')||'#cfe6d4',view='front',overlay}={}){
   const doll=look.doll;const [ox,oy]=dollView(doll,view).origin;
   const c=await composeDoll(look,view);
   const [x,y,w,h]=zoom||[-100,-140,600,1050];
@@ -166,6 +172,29 @@ Object.assign(sheets,{
     const colors=q.get('colors')?(q.get('colors')==='all'?CATALOG.hairColors.map(c=>c.id):q.get('colors').split(',')):[null];
     for(const d of dolls){heading('Heads · '+d);for(const h of styles.filter(h=>catalogItem(h)?.dolls.includes(d)))for(const c of colors)for(const v of hv)
       await tile(h+' '+(c?c+' ':'')+v,L(d,{hair:h,clip:'none',earrings:'none',necklace:'none',...(c?{hairColor:c}:{}),...extra}),{zoom:box[d][v],scale:q.get('scale')?scale:(d==='adult'?1.6:1.2),grid,view:v})}},
+  /* proofs: each style on its doll next to its worn proof (art/proofs/pack2), the proof mapped into
+     doll space by the registration (art/fit_hair_pack2.py), so both tiles show the same head box.
+     Per view: the doll at game size (game=k, default .75), the head zoomed, the proof zoomed.
+     hair=a,b; views=; colors=a,b|all; zoom-scale via scale=. bald=1 adds the bald base. */
+  async proofs(){
+    const reg=(await (await fetch('/art/proofs/pack2/hair-registration.json')).json()).items;
+    const box={adult:{front:[110,-70,180,280],back:[110,-70,180,280],left:[-10,-70,200,280],right:[-19,-70,200,280]},
+      little:{front:[85,-80,236,330],back:[85,-80,236,330],left:[-25,-80,260,330],right:[-28,-80,260,330]}};
+    const hv=q.get('views')?views:CATALOG.views,gk=Number(q.get('game')||.75);
+    const colors=q.get('colors')?(q.get('colors')==='all'?CATALOG.hairColors.map(c=>c.id):q.get('colors').split(',')):[null];
+    const styles=(q.get('hair')||CATALOG.itemList.filter(i=>i.category==='hair'&&i.id!=='lab-none').map(i=>i.id).join(',')).split(',');
+    for(const d of dolls)for(const h of styles.filter(h=>catalogItem(h)?.dolls.includes(d))){heading(h+' · '+d);
+      for(const c of colors)for(const v of hv){
+        const look=L(d,{hair:h,clip:'none',earrings:'none',necklace:'none',...(c?{hairColor:c}:{}),...extra}),sc=q.get('scale')?scale:(d==='adult'?1.6:1.3);
+        await tile(h+' '+(c||'')+' '+v+' game',look,{zoom:fullBox(d,v).map((n,i)=>i===3?560:n),scale:gk,view:v});
+        await tile(h+' '+(c||'')+' '+v,look,{zoom:box[d][v],scale:sc,view:v});
+        const r=reg[h]?.[v];if(!r||c&&c!==colors[0])continue;
+        const img=new Image();img.src='/art/proofs/pack2/hair/'+h+'-'+v+'.webp';await img.decode();
+        const [x,y,w,hh]=box[d][v],t=document.createElement('canvas');t.width=Math.round(w*sc);t.height=Math.round(hh*sc);
+        const g=t.getContext('2d');g.fillStyle='#cfe6d4';g.fillRect(0,0,t.width,t.height);g.scale(sc,sc);g.translate(-x,-y);
+        g.translate(r.tx,r.ty);g.rotate(r.rot*Math.PI/180);g.scale(r.s,r.s);g.imageSmoothingQuality='high';g.drawImage(img,0,0);
+        const f=document.createElement('figure'),cap=document.createElement('figcaption');cap.textContent='proof '+h+' '+v;cap.style.width=t.width-10+'px';f.append(t,cap);section.append(f);
+      }}},
   async portraits(){heading('paintPortrait per view');for(const d of dolls)for(const v of CATALOG.views){const c=document.createElement('canvas');await paintPortrait(c,L(d,{backdrop:Number(q.get('bd')||0),...extra}),q.get('postcard')==='1',v);c.style.width=(c.width*scale)+'px';const f=document.createElement('figure');const cap=document.createElement('figcaption');cap.textContent=d+' '+v;f.append(c,cap);section.append(f)}}
 });
 const original0={id:'original'};

@@ -20,7 +20,7 @@ function loadCatalog() {
     setTimeout: fn => fn(), Intl, console
   };
   vm.createContext(ctx);
-  vm.runInContext(read('i18n.js') + read('catalog.js') + '\nthis.CATALOG=CATALOG;', ctx);
+  vm.runInContext(read('i18n.js') + read('hair-fit.js') + read('catalog.js') + '\nthis.CATALOG=CATALOG;', ctx);
   return ctx.CATALOG;
 }
 const DOLLS = ['adult', 'little'], VIEWS = ['front', 'left', 'right', 'back'];

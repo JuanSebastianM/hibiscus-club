@@ -17,27 +17,57 @@ function loadWardrobe() {
   };
   vm.createContext(ctx);
   // a style challenge naming one hairstyle for both characters, as game.js declares them
-  vm.runInContext(read('i18n.js') + read('i18n-es.js') + read('catalog.js') +
+  vm.runInContext(read('i18n.js') + read('i18n-es.js') + read('hair-fit.js') + read('catalog.js') +
     'const briefs=[{key:"mall",need:{hair:"side-ponytail"}},{key:"bob",need:{hair:"curly-bob"}}];\nvar state={owned:[]};\n' + read('shop.js') +
-    '\nthis.CATALOG=CATALOG;this.Shop=Shop;this.readLook=readLook;this.catalogOptions=catalogOptions;this.briefs=briefs;this.state=state;', ctx);
+    '\nthis.I18N=I18N;this.CATALOG=CATALOG;this.Shop=Shop;this.readLook=readLook;this.catalogOptions=catalogOptions;this.briefs=briefs;this.state=state;', ctx);
   return ctx;
 }
 
-test('Little Me only has kid hairstyles; the Grown-up keeps all six', () => {
+const ADULT_HAIR = ['long-waves', 'side-ponytail', 'half-up-curls', 'sleek-curtain-bangs', 'flip-bob', 'long-braids',
+  'high-bun-tendrils', 'space-buns', 'crimped-twists'];
+const LITTLE_HAIR = ['ringlet-pigtails', 'curly-buns', 'curly-bob', 'tiny-pigtails', 'pixie-sweep', 'top-ponytail',
+  'chin-bob-bangs', 'short-braids', 'wavy-crop'];
+
+test('each doll has only her own hairstyles, each with art and a fit in all four views', () => {
   const { catalogOptions, CATALOG } = loadWardrobe();
-  assert.deepEqual([...catalogOptions('hair', 'little').map(i => i.id)], ['ringlet-pigtails', 'curly-buns', 'curly-bob']);
-  assert.equal(catalogOptions('hair', 'adult').length, 6);
-  assert.deepEqual([...CATALOG.hairStyles.little], ['ringlet-pigtails', 'curly-buns', 'curly-bob']);
+  const listed = { adult: [...CATALOG.hairStyles.adult], little: [...CATALOG.hairStyles.little] };
+  for (const doll of ['adult', 'little']) {
+    const own = doll === 'adult' ? ADULT_HAIR : LITTLE_HAIR;
+    assert.ok(listed[doll].every(id => own.includes(id)), `${doll} wears only her own set`);
+    assert.deepEqual([...catalogOptions('hair', doll).map(i => i.id)], listed[doll]);
+    for (const id of listed[doll]) {
+      const it = CATALOG.items[id];
+      for (const view of CATALOG.views) {
+        assert.ok(it.art[view]?.main, `${id} ${view} art`);
+        const f = it.fit[doll][view];
+        assert.ok(f && [f.x, f.y, f.w, f.h].every(Number.isFinite) && f.w > 50, `${id} ${doll} ${view} fit`);
+        assert.ok(f.clip && Number.isFinite(f.clip.x), `${id} ${doll} ${view} clip`);
+      }
+      assert.ok(Array.isArray(it.lum) && it.lum[1] > it.lum[0], `${id} luminance range`);
+    }
+  }
 });
 
-test('a saved Little Me look in a removed style falls back to her default hair', () => {
+test('a saved look in a style the doll cannot wear falls back to her default hair', () => {
   const { readLook, CATALOG } = loadWardrobe();
-  for (const hair of ['long-waves', 'side-ponytail', 'half-up-curls']) {
-    const look = readLook({ hair, hairColor: 'honey', outfit: 'denim-overalls' }, 'little');
-    assert.equal(look.hair, CATALOG.defaults.little.hair);
+  for (const [doll, other] of [['little', ADULT_HAIR], ['adult', LITTLE_HAIR]]) for (const hair of other) {
+    const look = readLook({ hair, hairColor: 'honey', outfit: doll === 'little' ? 'denim-overalls' : 'black-flares-set' }, doll);
+    assert.equal(look.hair, CATALOG.defaults[doll].hair, `${doll} ${hair}`);
     assert.equal(look.hairColor, 'honey');
-    assert.equal(look.outfit, 'denim-overalls');
-    assert.equal(readLook({ hair }, 'adult').hair, hair);
+  }
+  // the six ids that were redrawn keep working for the doll that wears them
+  for (const hair of ['long-waves', 'side-ponytail', 'half-up-curls']) assert.equal(readLook({ hair }, 'adult').hair, hair);
+  for (const hair of ['ringlet-pigtails', 'curly-buns', 'curly-bob']) assert.equal(readLook({ hair }, 'little').hair, hair);
+  assert.equal(CATALOG.defaults.adult.hair, 'long-waves');
+  assert.equal(CATALOG.defaults.little.hair, 'ringlet-pigtails');
+});
+
+test('every hairstyle has an English and a Spanish name', () => {
+  const ctx = loadWardrobe();
+  for (const id of [...ADULT_HAIR, ...LITTLE_HAIR]) {
+    const en = ctx.I18N.keys('en'), es = ctx.I18N.keys('es');
+    assert.ok([...en].includes('catalog.item.' + id), `${id} en`);
+    assert.ok([...es].includes('catalog.item.' + id), `${id} es`);
   }
 });
 
@@ -69,4 +99,13 @@ test('bought keys of options that are free now stay owned; junk is dropped', () 
   assert.deepEqual([...kept], ['item:curly-buns', 'tint:pink-velour-cargo:mint', 'lips:cherry', 'hair-color:strawberry', 'item:butterfly-clip']);
   assert.equal(Shop.owned('item:curly-buns'), true);
   assert.equal(Shop.owned('item:butterfly-clip'), false);
+});
+
+test('at most two hairstyles per character cost stars, and her default is free', () => {
+  const { CATALOG, Shop } = loadWardrobe();
+  for (const doll of ['adult', 'little']) {
+    const paid = CATALOG.hairStyles[doll].filter(id => Shop.price('item:' + id) > 0);
+    assert.ok(paid.length <= 2, `${doll}: ${paid}`);
+    assert.equal(Shop.price('item:' + CATALOG.defaults[doll].hair), 0);
+  }
 });
