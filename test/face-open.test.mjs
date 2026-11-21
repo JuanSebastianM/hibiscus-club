@@ -41,6 +41,8 @@ test('every hairstyle leaves her face open in the front view', { skip: !chromium
       // no pale band between cheek/ear/jaw and hair: where the style covers the ears the hair meets her
       // skin (at most a stray px); where the ears show, only loose strands may hang clear of the face
       const maxHalo = r.earsCovered ? 0.05 : 2.5;
+      // the temple, hairline to the top of the ear: hair meets skin on every style
+      assert.ok(r.temple <= 0.02, `${r.doll} ${r.hair}: ${r.temple.toFixed(2)} px of background at the temple per row`);
       assert.ok(r.halo <= maxHalo, `${r.doll} ${r.hair}: ${r.halo.toFixed(2)} px of background between face and hair per row`);
     }
   } finally { await browser.close(); server.close() }

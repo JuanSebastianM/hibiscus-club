@@ -450,7 +450,10 @@ for(const doll of ['adult','little']){
    face-open check (art/lab.html?sheet=faceopen, test/face-open.test.mjs) measures. */
 const FACE_OPEN={adult:[[66,168,249],[86,166,248],[100,163,247],[120,166,241],[140,177,233],[157,196,222]],
   little:[[97,150,264],[122,152,262],[150,150,263],[170,158,256],[190,170,244],[205,190,222]]};
-const UNDER_ROWS={adult:{y0:56,y1:200,gap:24,dark:.68},little:{y0:94,y1:250,gap:28,dark:.68}};
+const UNDER_ROWS={adult:{y0:28,y1:200,gap:24,dark:.68},little:{y0:60,y1:250,gap:28,dark:.68}};
+/* styles that show the ears: the same fill only in the temple band, from the hairline to the top of the
+   ear, so the hair meets her temple there while the ear and earring stay fully visible */
+const TEMPLE_ROWS={adult:{y0:28,y1:82,gap:16,dark:.68},little:{y0:60,y1:110,gap:18,dark:.68}};
 const HEAD_C={adult:{front:[200,62],back:[200,62],left:[90,62],right:[91,62]},little:{front:[203,105],back:[203,105],left:[110,105],right:[99,105]}};
 const SHOULDER_Y={adult:178,little:236};
 const CLIP_AT={adult:{front:{x:162,y:32,rot:-25},left:{x:122,y:24,behind:true},right:{x:59,y:24},back:{x:238,y:34,rot:20,scale:.85}},
@@ -491,7 +494,7 @@ for(const it of items)if(it.category==='hair'){
       if(view==='front'&&t.open!==false)fit.open={rows:FACE_OPEN[doll],...t.open};
       for(const k of ['earsUnder','soften','shade','scalp','scalpFill','cut','cutDoll'])if(t[k]!==undefined)fit[k]=t[k];
       // ears covered: hair behind the head fills the strip between skin and hair (portrait.js underHair)
-      if(view==='front'&&fit.earsUnder&&t.under!==false)fit.under={...UNDER_ROWS[doll],...t.under};
+      if(view==='front'&&t.under!==false)fit.under={...(fit.earsUnder?UNDER_ROWS:TEMPLE_ROWS)[doll],...t.under};
       (it.fit[doll]??={})[view]=fit;
     }
   }

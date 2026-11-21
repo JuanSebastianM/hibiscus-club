@@ -227,8 +227,13 @@ Object.assign(sheets,{
         for(let y=UR[0];y<=UR[1];y++){const Y=Math.round(y+oy);let l=-1,r=-1;for(let x=0;x<W;x++)if(bodyA[(Y*W+x)*4+3]>128){if(l<0)l=x;r=x}
           if(l<0)continue;rowsN++;
           for(const [s0,dir] of [[l-1,-1],[r+1,1]]){let k=0;while(k<10&&ad[(Y*W+s0+dir*k)*4+3]<128)k++;if(k>0&&k<10)gapPx+=k}}
-        res.push({doll:d,hair:it.id,open:1-cov/n,eyes:1-ec/en,halo:gapPx/(2*rowsN),earsCovered:!!it.fit[d].front.earsUnder});
-        if(q.get('tiles')!=='0')await tile(`${it.id} open ${(100*(1-cov/n)).toFixed(1)}% eyes ${(100*(1-ec/en)).toFixed(1)}% halo ${res[res.length-1].halo.toFixed(2)}px`,L(d,{hair:it.id,clip:'none',earrings:'none',necklace:'none',...extra}),
+        // temple: the same from the hairline to the top of the ear (every style: the hair meets her temple)
+        let tPx=0,tRows=0;const TR={adult:[30,80],little:[62,108]}[d];
+        for(let y=TR[0];y<=TR[1];y++){const Y=Math.round(y+oy);let l=-1,r=-1;for(let x=0;x<W;x++)if(bodyA[(Y*W+x)*4+3]>128){if(l<0)l=x;r=x}
+          if(l<0)continue;tRows++;
+          for(const [s0,dir] of [[l-1,-1],[r+1,1]]){let k=0;while(k<10&&ad[(Y*W+s0+dir*k)*4+3]<128)k++;if(k>0&&k<10)tPx+=k}}
+        res.push({doll:d,hair:it.id,open:1-cov/n,eyes:1-ec/en,halo:gapPx/(2*rowsN),temple:tPx/(2*tRows),earsCovered:!!it.fit[d].front.earsUnder});
+        if(q.get('tiles')!=='0')await tile(`${it.id} open ${(100*(1-cov/n)).toFixed(1)}% eyes ${(100*(1-ec/en)).toFixed(1)}% halo ${res[res.length-1].halo.toFixed(2)}px temple ${res[res.length-1].temple.toFixed(2)}px`,L(d,{hair:it.id,clip:'none',earrings:'none',necklace:'none',...extra}),
           {zoom:d==='adult'?[110,-30,180,230]:[90,-20,230,270],scale:Number(q.get('scale')||1.4),overlay:q.get('outline')?(g,sc)=>{g.strokeStyle='rgba(0,140,255,.8)';g.lineWidth=1/sc;g.beginPath();rows.forEach(([y,l])=>g.lineTo(l,y));[...rows].reverse().forEach(([y,,r])=>g.lineTo(r,y));g.closePath();g.stroke()}:null});
       }}},
   async portraits(){heading('paintPortrait per view');for(const d of dolls)for(const v of CATALOG.views){const c=document.createElement('canvas');await paintPortrait(c,L(d,{backdrop:Number(q.get('bd')||0),...extra}),q.get('postcard')==='1',v);c.style.width=(c.width*scale)+'px';const f=document.createElement('figure');const cap=document.createElement('figcaption');cap.textContent=d+' '+v;f.append(c,cap);section.append(f)}}
