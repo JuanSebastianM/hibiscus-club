@@ -10,7 +10,7 @@ const places = [
 ].map(p=>Object.defineProperty(p,'name',{get(){return t('place.'+p.id)},enumerable:true}));
 const walkPins={boardwalk:{x:62,y:74},market:{x:25,y:65},pavilion:{x:49,y:41},
   beach:{x:31,y:90,side:true},park:{x:87,y:33}, // Sunny Cove on the south-west sand, Breezy Park on the green east of the salon
-  icecream:{x:65,y:56},treehouse:{x:37,y:14}}; // Sundae Street on the flowery terrace west of the arcade, Treetop Hideout in the trees by the waterfall
+  icecream:{x:64,y:51},treehouse:{x:37,y:14}}; // Sundae Street on the flowery terrace west of the arcade, Treetop Hideout in the trees by the waterfall
 const stampIds=[...districts.map(d=>d.id),...places.map(p=>p.id)];
 const dollNames={get adult(){return t('doll.adult')},get little(){return t('doll.little')}};
 const saveKey='hibiscus-club-v1';

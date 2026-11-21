@@ -896,7 +896,9 @@ void main(){
         for(const mesh of gpu.meshes)if(mesh.userData.piece.overlay)mesh.visible=vis;
       }
       const r=G.renderer;
-      r.setViewport(0,0,pw,ph);r.setScissor(0,0,pw,ph);r.setScissorTest(true);
+      // the scissor (so the clear) reaches 2 px past the picture: scaling it into the page samples the edge
+      // texels, which would otherwise hold another puppet's last frame (a thin line beside a resident)
+      r.setViewport(0,0,pw,ph);r.setScissor(0,0,Math.min(G.w,pw+2),Math.min(G.h,ph+2));r.setScissorTest(true);
       r.render(gpu.scene,G.camera);
       r.setScissorTest(false);
       // into the page's canvas
