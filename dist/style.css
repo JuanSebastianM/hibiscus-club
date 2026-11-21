@@ -30,6 +30,8 @@
 [data-room=scrapbook]{--a50:var(--butter-50);--a100:var(--butter-100);--a200:var(--butter-200);--a300:var(--butter-300);--a500:var(--butter-500);--a700:var(--butter-700);--a800:var(--butter-800);--b100:var(--peach-100);--b200:var(--mint-100)}
 [data-room=runway]{--a50:var(--coral-50);--a100:var(--coral-100);--a200:var(--coral-200);--a300:var(--coral-300);--a500:var(--coral-500);--a700:var(--coral-700);--a800:var(--coral-800);--b100:var(--lilac-100);--b200:var(--butter-100)}
 [data-room=life]{--a50:var(--aqua-50);--a100:var(--aqua-100);--a200:var(--aqua-200);--a300:var(--aqua-300);--a500:var(--aqua-500);--a700:var(--aqua-700);--a800:var(--aqua-800);--b100:var(--sky-100);--b200:var(--peach-100)}
+/* Dream House (decorator.css styles the house itself): coral with a mint companion */
+[data-room=house]{--a50:var(--coral-50);--a100:var(--coral-100);--a200:var(--coral-200);--a300:var(--coral-300);--a500:var(--coral-500);--a700:var(--coral-700);--a800:var(--coral-800);--b100:var(--mint-100);--b200:var(--butter-100)}
 /* every room: a sky washed in its own accent, a companion pastel in the far corner */
 [data-room]:not([data-room=map]){--page-sky:radial-gradient(75vw 55vh at 10% -10%,var(--a200),transparent 72%),radial-gradient(60vw 60vh at 100% 100%,var(--b200),transparent 70%),radial-gradient(50vw 45vh at 100% 0%,var(--b100),transparent 70%),linear-gradient(180deg,var(--a100),var(--a50) 55%)}
 
@@ -147,7 +149,7 @@ h1{font:italic bold var(--fs-display)/1.04 Georgia,"Times New Roman",serif;lette
 .stamp-groups{display:grid;grid-template-columns:3fr 5fr;gap:14px;margin-top:4px;padding-top:10px}
 .stamp-group h3{display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--sky-800);margin:0 0 6px}
 .stamps{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:5px;list-style:none;margin:0;padding:0}
-.stamp-group:first-child .stamps{--n:3}
+.stamp-group:first-child .stamps{--n:3}.stamp-group:last-child .stamps{--n:6} /* six rooms, the Dream House included */
 .stamp{display:grid;justify-items:center;align-content:start;gap:5px;font-size:var(--fs-xs);font-weight:bold;text-align:center;color:var(--text-muted);line-height:1.2;padding:4px;border-radius:10px}
 .stamp span{position:relative;display:grid;place-items:center;width:40px;height:40px;border:1.5px dashed #b9a6bb;border-radius:50%;background:#f8f4f8;color:#7d6880}
 .stamp-walk span img{width:100%;height:100%;border-radius:50%;object-fit:cover;opacity:.55}.stamp-walk.earned span img,.stamp-walk:hover span img{opacity:1}

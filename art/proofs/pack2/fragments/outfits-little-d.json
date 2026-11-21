@@ -1,0 +1,327 @@
+{
+ "signature": {
+  "script": "bb0956e31976-v2",
+  "source": "f6d9dbf578e0"
+ },
+ "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 764,
+   "haze_far_max": 10,
+   "haze_far_p99_9": 9.2,
+   "glow_ring_nonzero_frac": 0.0085,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0021,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 5175,
+     "dRGB": [
+      -113.2,
+      -112.7,
+      -72.5
+     ],
+     "dLum": -108.2
+    },
+    "64-160": {
+     "n": 7251,
+     "dRGB": [
+      -104.6,
+      -103.8,
+      -68.7
+     ],
+     "dLum": -100.0
+    },
+    "160-255": {
+     "n": 17463,
+     "dRGB": [
+      -88.1,
+      -87.2,
+      -56.0
+     ],
+     "dLum": -83.9
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 8,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 74,
+  "haze_px_removed": 16622,
+  "crosses_grid": [
+   [
+    "03-outfits/outfits-little-d.webp",
+    [
+     1,
+     0
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-d.webp",
+    [
+     1,
+     3
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-d.webp",
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-d.webp",
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-d.webp",
+    [
+     2,
+     0
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-d.webp",
+    [
+     2,
+     3
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-d.webp",
+    [
+     2,
+     1
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-d.webp",
+    [
+     2,
+     2
+    ]
+   ]
+  ],
+  "wisp_px_kept": {
+   "rainbow-tutu-tee/0": 0,
+   "rainbow-tutu-tee/1": 0,
+   "rainbow-tutu-tee/2": 0,
+   "rainbow-tutu-tee/3": 0,
+   "dino-romper/0": 0,
+   "dino-romper/1": 0,
+   "dino-romper/2": 0,
+   "dino-romper/3": 0,
+   "raincoat-set/0": 0,
+   "raincoat-set/1": 0,
+   "raincoat-set/2": 0,
+   "raincoat-set/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "rainbow-tutu-tee": {
+   "category": "outfits-little",
+   "views": {
+    "front": {
+     "file": "outfits-little/rainbow-tutu-tee-front.webp",
+     "width": 477,
+     "height": 533,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       61,
+       21,
+       477,
+       533
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-little/rainbow-tutu-tee-left.webp",
+     "width": 422,
+     "height": 529,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       689,
+       20,
+       422,
+       529
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-little/rainbow-tutu-tee-right.webp",
+     "width": 420,
+     "height": 528,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       1279,
+       21,
+       420,
+       528
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-little/rainbow-tutu-tee-back.webp",
+     "width": 476,
+     "height": 533,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       1850,
+       21,
+       476,
+       533
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "dino-romper": {
+   "category": "outfits-little",
+   "views": {
+    "front": {
+     "file": "outfits-little/dino-romper-front.webp",
+     "width": 413,
+     "height": 531,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       93,
+       593,
+       413,
+       531
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-little/dino-romper-left.webp",
+     "width": 240,
+     "height": 531,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       782,
+       594,
+       240,
+       531
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-little/dino-romper-right.webp",
+     "width": 240,
+     "height": 531,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       1366,
+       594,
+       240,
+       531
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-little/dino-romper-back.webp",
+     "width": 412,
+     "height": 531,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       1883,
+       593,
+       412,
+       531
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "raincoat-set": {
+   "category": "outfits-little",
+   "views": {
+    "front": {
+     "file": "outfits-little/raincoat-set-front.webp",
+     "width": 465,
+     "height": 611,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       66,
+       1163,
+       465,
+       611
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-little/raincoat-set-left.webp",
+     "width": 278,
+     "height": 609,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       765,
+       1165,
+       278,
+       609
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-little/raincoat-set-right.webp",
+     "width": 278,
+     "height": 609,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       1344,
+       1165,
+       278,
+       609
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-little/raincoat-set-back.webp",
+     "width": 462,
+     "height": 610,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-d.webp",
+      "box": [
+       1858,
+       1164,
+       462,
+       610
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

@@ -1,0 +1,420 @@
+{
+ "signature": {
+  "script": "bb0956e31976-v2",
+  "source": "4c34b240df87"
+ },
+ "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 6651,
+   "haze_far_max": 3,
+   "haze_far_p99_9": 2.0,
+   "glow_ring_nonzero_frac": 0.0246,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0002,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 7879,
+     "dRGB": [
+      8.8,
+      33.7,
+      26.5
+     ],
+     "dLum": 25.4
+    },
+    "64-160": {
+     "n": 10124,
+     "dRGB": [
+      2.0,
+      20.3,
+      15.5
+     ],
+     "dLum": 14.3
+    },
+    "160-255": {
+     "n": 22244,
+     "dRGB": [
+      -2.8,
+      8.7,
+      6.3
+     ],
+     "dLum": 5.0
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 16725,
+  "haze_px_removed": 25372,
+  "wisp_px_kept": {
+   "platform-boots/0": 0,
+   "platform-boots/1": 0,
+   "platform-boots/2": 0,
+   "platform-boots/3": 0,
+   "fuzzy-slippers/0": 0,
+   "fuzzy-slippers/1": 0,
+   "fuzzy-slippers/2": 0,
+   "fuzzy-slippers/3": 0,
+   "ribbon-ballet-flats/0": 0,
+   "ribbon-ballet-flats/1": 0,
+   "ribbon-ballet-flats/2": 0,
+   "ribbon-ballet-flats/3": 0
+  }
+ },
+ "splits": {
+  "platform-boots-front": {
+   "axis": "x",
+   "at": 224,
+   "gap_px": 60
+  },
+  "platform-boots-back": {
+   "axis": "x",
+   "at": 218,
+   "gap_px": 51
+  },
+  "fuzzy-slippers-front": {
+   "axis": "x",
+   "at": 267,
+   "gap_px": 17
+  },
+  "fuzzy-slippers-back": {
+   "axis": "x",
+   "at": 267,
+   "gap_px": 18
+  },
+  "ribbon-ballet-flats-front": {
+   "axis": "x",
+   "at": 250,
+   "gap_px": 45
+  },
+  "ribbon-ballet-flats-back": {
+   "axis": "x",
+   "at": 244,
+   "gap_px": 40
+  }
+ },
+ "items": {
+  "platform-boots": {
+   "category": "shoes-adult",
+   "views": {
+    "front": {
+     "file": "shoes-adult/platform-boots-front.webp",
+     "width": 445,
+     "height": 532,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       84,
+       35,
+       445,
+       532
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/platform-boots-front-l.webp",
+       "width": 196,
+       "height": 532,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/platform-boots-front-r.webp",
+       "width": 195,
+       "height": 532,
+       "offset": [
+        250,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-adult/platform-boots-left.webp",
+     "width": 442,
+     "height": 527,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       680,
+       38,
+       442,
+       527
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-adult/platform-boots-right.webp",
+     "width": 444,
+     "height": 527,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       1264,
+       38,
+       444,
+       527
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-adult/platform-boots-back.webp",
+     "width": 436,
+     "height": 534,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       1864,
+       35,
+       436,
+       534
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/platform-boots-back-l.webp",
+       "width": 196,
+       "height": 534,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/platform-boots-back-r.webp",
+       "width": 195,
+       "height": 534,
+       "offset": [
+        241,
+        0
+       ]
+      }
+     }
+    }
+   }
+  },
+  "fuzzy-slippers": {
+   "category": "shoes-adult",
+   "views": {
+    "front": {
+     "file": "shoes-adult/fuzzy-slippers-front.webp",
+     "width": 535,
+     "height": 351,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       38,
+       775,
+       535,
+       351
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/fuzzy-slippers-front-l.webp",
+       "width": 263,
+       "height": 351,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/fuzzy-slippers-front-r.webp",
+       "width": 262,
+       "height": 351,
+       "offset": [
+        273,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-adult/fuzzy-slippers-left.webp",
+     "width": 528,
+     "height": 286,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       638,
+       838,
+       528,
+       286
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-adult/fuzzy-slippers-right.webp",
+     "width": 527,
+     "height": 286,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       1222,
+       838,
+       527,
+       286
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-adult/fuzzy-slippers-back.webp",
+     "width": 536,
+     "height": 319,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       1815,
+       808,
+       536,
+       319
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/fuzzy-slippers-back-l.webp",
+       "width": 261,
+       "height": 318,
+       "offset": [
+        0,
+        1
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/fuzzy-slippers-back-r.webp",
+       "width": 263,
+       "height": 319,
+       "offset": [
+        273,
+        0
+       ]
+      }
+     }
+    }
+   }
+  },
+  "ribbon-ballet-flats": {
+   "category": "shoes-adult",
+   "views": {
+    "front": {
+     "file": "shoes-adult/ribbon-ballet-flats-front.webp",
+     "width": 502,
+     "height": 501,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       55,
+       1236,
+       502,
+       501
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/ribbon-ballet-flats-front-l.webp",
+       "width": 231,
+       "height": 501,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/ribbon-ballet-flats-front-r.webp",
+       "width": 233,
+       "height": 500,
+       "offset": [
+        269,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-adult/ribbon-ballet-flats-left.webp",
+     "width": 529,
+     "height": 405,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       631,
+       1306,
+       529,
+       405
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-adult/ribbon-ballet-flats-right.webp",
+     "width": 530,
+     "height": 406,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       1228,
+       1305,
+       530,
+       406
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-adult/ribbon-ballet-flats-back.webp",
+     "width": 485,
+     "height": 413,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-c.webp",
+      "box": [
+       1838,
+       1302,
+       485,
+       413
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/ribbon-ballet-flats-back-l.webp",
+       "width": 226,
+       "height": 413,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/ribbon-ballet-flats-back-r.webp",
+       "width": 223,
+       "height": 412,
+       "offset": [
+        262,
+        1
+       ]
+      }
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

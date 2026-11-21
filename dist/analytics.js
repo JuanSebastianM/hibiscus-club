@@ -9,21 +9,26 @@
    index.html holds a token, under the same conditions. */
 const HibiscusAnalytics=(()=>{
   /* Keep identical to SCHEMA in worker/events.js (test/analytics.test.mjs checks). */
-  const ROOMS=['map','wardrobe','salon','booth','scrapbook','arcade','garden','runway','life'];
+  const ROOMS=['map','wardrobe','salon','booth','scrapbook','arcade','garden','runway','life','house'];
+  const HOUSE_ROOMS=['bedroom','kitchen','living','bathroom','playroom','patio'];
+  const DECOR_CATEGORIES=[...HOUSE_ROOMS,'walls','floor']; // where a placed piece comes from (its manifest room)
   const DISTRICTS=['boardwalk','market','pavilion'];
   const CATEGORIES=['outfit','shoes','jewelry','hair','hair-color','makeup','nails','accessory'];
   const GAMES=['memory','bouquet','runway'];
   const SCHEMA={
     events:{
       'visit':ROOMS,'room':ROOMS,'district':DISTRICTS,'lang':['en','es'],'character':['adult','little'],
-      'makeover':CATEGORIES,'tryon':CATEGORIES,'surprise':['wardrobe','salon'],'favorite':['saved','worn'],
-      'purchase':CATEGORIES,'game-start':GAMES,'game-done':GAMES,'chat':DISTRICTS,
-      'errand':['story-1','story-2','story-3','story-4'],'photo':['studio',...DISTRICTS],
+      'makeover':CATEGORIES,'tryon':[...CATEGORIES,'decor'],'surprise':['wardrobe','salon','house'],'favorite':['saved','worn'],
+      'purchase':[...CATEGORIES,'decor'],'game-start':GAMES,'game-done':GAMES,'chat':DISTRICTS,
+      'errand':['story-1','story-2','story-3','story-4'],'photo':['studio',...DISTRICTS,'house'],
       'daily':['deliver','find','greet','compliment','tidy'],'findable':DISTRICTS,'tutorial':['done','skipped'],'name':['yes','no'],
       'challenge':['picnic','disco','seashell','mall','rosy','midnight','homecoming','bob'],
-      'postcard':['png'],'sound':['on','off'],'sparkle':['on','off']
+      'postcard':['png'],'sound':['on','off'],'sparkle':['on','off'],
+      /* Dream House */
+      'decor-room':HOUSE_ROOMS,'decor-place':DECOR_CATEGORIES,'decor-done':HOUSE_ROOMS,
+      'decor-goal':['bed','wall','rug','paint','top','friend','photo']
     },
-    counted:['makeover','tryon'],
+    counted:['makeover','tryon','decor-place'],
     bands:['1-9','10-19','20-plus'],
     characters:['adult','little'],
     langs:['en','es']

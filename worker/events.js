@@ -9,7 +9,9 @@
    e = event, d = detail, c = character, l = UI language, n = count (aggregated events only),
    b = price band (purchases only). Anything else, anywhere, rejects the whole batch. */
 
-const ROOMS = ['map', 'wardrobe', 'salon', 'booth', 'scrapbook', 'arcade', 'garden', 'runway', 'life'];
+const ROOMS = ['map', 'wardrobe', 'salon', 'booth', 'scrapbook', 'arcade', 'garden', 'runway', 'life', 'house'];
+const HOUSE_ROOMS = ['bedroom', 'kitchen', 'living', 'bathroom', 'playroom', 'patio'];
+const DECOR_CATEGORIES = [...HOUSE_ROOMS, 'walls', 'floor']; // where a placed Dream House piece comes from
 const DISTRICTS = ['boardwalk', 'market', 'pavilion'];
 const CATEGORIES = ['outfit', 'shoes', 'jewelry', 'hair', 'hair-color', 'makeup', 'nails', 'accessory'];
 const GAMES = ['memory', 'bouquet', 'runway'];
@@ -22,15 +24,15 @@ export const SCHEMA = {
     'lang': ['en', 'es'],       // language switched to
     'character': ['adult', 'little'], // character switched to
     'makeover': CATEGORIES,     // owned option put on (aggregated: n per category per flush)
-    'tryon': CATEGORIES,        // locked option tried on (aggregated like makeover)
-    'surprise': ['wardrobe', 'salon'],
+    'tryon': [...CATEGORIES, 'decor'], // locked option tried on (aggregated like makeover); decor = a paid Dream House piece previewed
+    'surprise': ['wardrobe', 'salon', 'house'],
     'favorite': ['saved', 'worn'],
-    'purchase': CATEGORIES,     // one per bought option, with a price band
+    'purchase': [...CATEGORIES, 'decor'], // one per bought option, with a price band; decor = a Dream House piece
     'game-start': GAMES,
     'game-done': GAMES,
     'chat': DISTRICTS,          // walked up to a resident and started a conversation
     'errand': ['story-1', 'story-2', 'story-3', 'story-4'], // a story finished (each character has her own four)
-    'photo': ['studio', ...DISTRICTS], // postcard taken in the booth, detail = scenery
+    'photo': ['studio', ...DISTRICTS, 'house'], // postcard taken in the booth, detail = scenery; house = a Dream House room photo
     'daily': ['deliver', 'find', 'greet', 'compliment', 'tidy'], // a daily errand finished, detail = its template
     'findable': DISTRICTS,      // a hidden treasure picked up, detail = where
     'tutorial': ['done', 'skipped'], // the first-visit tour of a walk-in place
@@ -38,9 +40,14 @@ export const SCHEMA = {
     'challenge': ['picnic', 'disco', 'seashell', 'mall', 'rosy', 'midnight', 'homecoming', 'bob'],
     'postcard': ['png'],        // postcard downloaded
     'sound': ['on', 'off'],
-    'sparkle': ['on', 'off']
+    'sparkle': ['on', 'off'],
+    /* Dream House */
+    'decor-room': HOUSE_ROOMS,       // a room of the house opened
+    'decor-place': DECOR_CATEGORIES, // pieces placed, by collection (aggregated like makeover); never a position
+    'decor-done': HOUSE_ROOMS,       // a room furnished for the first time (one-time reward)
+    'decor-goal': ['bed', 'wall', 'rug', 'paint', 'top', 'friend', 'photo'] // a room-tour goal met (one-time reward)
   },
-  counted: ['makeover', 'tryon'],
+  counted: ['makeover', 'tryon', 'decor-place'],
   bands: ['1-9', '10-19', '20-plus'],
   characters: ['adult', 'little'],
   langs: ['en', 'es']

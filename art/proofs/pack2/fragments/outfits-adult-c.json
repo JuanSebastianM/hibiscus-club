@@ -1,0 +1,269 @@
+{
+ "signature": {
+  "script": "bb0956e31976-v2",
+  "source": "918f2ba75f65"
+ },
+ "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 1629,
+   "haze_far_max": 9,
+   "haze_far_p99_9": 6.7,
+   "glow_ring_nonzero_frac": 0.0271,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0938,
+   "interior_frac_below_200": 0.0062,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 5868,
+     "dRGB": [
+      46.0,
+      42.5,
+      38.9
+     ],
+     "dLum": 43.1
+    },
+    "64-160": {
+     "n": 6773,
+     "dRGB": [
+      28.4,
+      26.1,
+      23.9
+     ],
+     "dLum": 26.5
+    },
+    "160-255": {
+     "n": 14212,
+     "dRGB": [
+      7.3,
+      5.8,
+      5.0
+     ],
+     "dLum": 6.2
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 7,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 16994,
+  "haze_px_removed": 24539,
+  "wisp_px_kept": {
+   "sarong-swimsuit/0": 0,
+   "sarong-swimsuit/1": 0,
+   "sarong-swimsuit/2": 0,
+   "sarong-swimsuit/3": 0,
+   "tankini-board-shorts/0": 0,
+   "tankini-board-shorts/1": 0,
+   "tankini-board-shorts/2": 0,
+   "tankini-board-shorts/3": 0,
+   "crochet-cover-up/0": 0,
+   "crochet-cover-up/1": 0,
+   "crochet-cover-up/2": 0,
+   "crochet-cover-up/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "sarong-swimsuit": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/sarong-swimsuit-front.webp",
+     "width": 287,
+     "height": 536,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       225,
+       33,
+       287,
+       536
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/sarong-swimsuit-left.webp",
+     "width": 211,
+     "height": 536,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       805,
+       26,
+       211,
+       536
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/sarong-swimsuit-right.webp",
+     "width": 213,
+     "height": 546,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       1372,
+       27,
+       213,
+       546
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/sarong-swimsuit-back.webp",
+     "width": 290,
+     "height": 538,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       1873,
+       32,
+       290,
+       538
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "tankini-board-shorts": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/tankini-board-shorts-front.webp",
+     "width": 293,
+     "height": 542,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       219,
+       629,
+       293,
+       542
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/tankini-board-shorts-left.webp",
+     "width": 208,
+     "height": 548,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       807,
+       623,
+       208,
+       548
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/tankini-board-shorts-right.webp",
+     "width": 208,
+     "height": 547,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       1373,
+       624,
+       208,
+       547
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/tankini-board-shorts-back.webp",
+     "width": 294,
+     "height": 543,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       1876,
+       628,
+       294,
+       543
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "crochet-cover-up": {
+   "category": "outfits-adult",
+   "views": {
+    "front": {
+     "file": "outfits-adult/crochet-cover-up-front.webp",
+     "width": 328,
+     "height": 541,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       201,
+       1225,
+       328,
+       541
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-adult/crochet-cover-up-left.webp",
+     "width": 210,
+     "height": 549,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       808,
+       1220,
+       210,
+       549
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-adult/crochet-cover-up-right.webp",
+     "width": 210,
+     "height": 549,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       1370,
+       1220,
+       210,
+       549
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-adult/crochet-cover-up-back.webp",
+     "width": 327,
+     "height": 542,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-adult-c.webp",
+      "box": [
+       1860,
+       1225,
+       327,
+       542
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

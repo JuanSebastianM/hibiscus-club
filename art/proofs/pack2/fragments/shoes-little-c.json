@@ -1,0 +1,420 @@
+{
+ "signature": {
+  "script": "bb0956e31976-v2",
+  "source": "f1e58abd36b8"
+ },
+ "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 7431,
+   "haze_far_max": 4,
+   "haze_far_p99_9": 3.0,
+   "glow_ring_nonzero_frac": 0.0295,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0007,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 7389,
+     "dRGB": [
+      30.5,
+      40.9,
+      42.0
+     ],
+     "dLum": 37.9
+    },
+    "64-160": {
+     "n": 8752,
+     "dRGB": [
+      14.5,
+      22.7,
+      23.2
+     ],
+     "dLum": 20.3
+    },
+    "160-255": {
+     "n": 18447,
+     "dRGB": [
+      0.8,
+      4.6,
+      5.0
+     ],
+     "dLum": 3.5
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 3,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 16925,
+  "haze_px_removed": 27013,
+  "wisp_px_kept": {
+   "light-up-sneakers/0": 0,
+   "light-up-sneakers/1": 0,
+   "light-up-sneakers/2": 0,
+   "light-up-sneakers/3": 0,
+   "cowboy-boots/0": 0,
+   "cowboy-boots/1": 0,
+   "cowboy-boots/2": 0,
+   "cowboy-boots/3": 0,
+   "ballet-slippers/0": 0,
+   "ballet-slippers/1": 0,
+   "ballet-slippers/2": 0,
+   "ballet-slippers/3": 0
+  }
+ },
+ "splits": {
+  "light-up-sneakers-front": {
+   "axis": "x",
+   "at": 256,
+   "gap_px": 24
+  },
+  "light-up-sneakers-back": {
+   "axis": "x",
+   "at": 254,
+   "gap_px": 21
+  },
+  "cowboy-boots-front": {
+   "axis": "x",
+   "at": 252,
+   "gap_px": 30
+  },
+  "cowboy-boots-back": {
+   "axis": "x",
+   "at": 248,
+   "gap_px": 28
+  },
+  "ballet-slippers-front": {
+   "axis": "x",
+   "at": 255,
+   "gap_px": 35
+  },
+  "ballet-slippers-back": {
+   "axis": "x",
+   "at": 249,
+   "gap_px": 28
+  }
+ },
+ "items": {
+  "light-up-sneakers": {
+   "category": "shoes-little",
+   "views": {
+    "front": {
+     "file": "shoes-little/light-up-sneakers-front.webp",
+     "width": 512,
+     "height": 408,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       43,
+       98,
+       512,
+       408
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/light-up-sneakers-front-l.webp",
+       "width": 246,
+       "height": 408,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/light-up-sneakers-front-r.webp",
+       "width": 247,
+       "height": 406,
+       "offset": [
+        265,
+        2
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-little/light-up-sneakers-left.webp",
+     "width": 518,
+     "height": 312,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       638,
+       161,
+       518,
+       312
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-little/light-up-sneakers-right.webp",
+     "width": 519,
+     "height": 314,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       1230,
+       159,
+       519,
+       314
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-little/light-up-sneakers-back.webp",
+     "width": 510,
+     "height": 327,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       1835,
+       151,
+       510,
+       327
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/light-up-sneakers-back-l.webp",
+       "width": 246,
+       "height": 327,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/light-up-sneakers-back-r.webp",
+       "width": 248,
+       "height": 327,
+       "offset": [
+        262,
+        0
+       ]
+      }
+     }
+    }
+   }
+  },
+  "cowboy-boots": {
+   "category": "shoes-little",
+   "views": {
+    "front": {
+     "file": "shoes-little/cowboy-boots-front.webp",
+     "width": 505,
+     "height": 452,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       47,
+       672,
+       505,
+       452
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/cowboy-boots-front-l.webp",
+       "width": 239,
+       "height": 452,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/cowboy-boots-front-r.webp",
+       "width": 241,
+       "height": 452,
+       "offset": [
+        264,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-little/cowboy-boots-left.webp",
+     "width": 493,
+     "height": 454,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       646,
+       669,
+       493,
+       454
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-little/cowboy-boots-right.webp",
+     "width": 493,
+     "height": 452,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       1249,
+       669,
+       493,
+       452
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-little/cowboy-boots-back.webp",
+     "width": 497,
+     "height": 450,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       1841,
+       677,
+       497,
+       450
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/cowboy-boots-back-l.webp",
+       "width": 236,
+       "height": 450,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/cowboy-boots-back-r.webp",
+       "width": 237,
+       "height": 450,
+       "offset": [
+        260,
+        0
+       ]
+      }
+     }
+    }
+   }
+  },
+  "ballet-slippers": {
+   "category": "shoes-little",
+   "views": {
+    "front": {
+     "file": "shoes-little/ballet-slippers-front.webp",
+     "width": 508,
+     "height": 355,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       44,
+       1337,
+       508,
+       355
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/ballet-slippers-front-l.webp",
+       "width": 241,
+       "height": 355,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/ballet-slippers-front-r.webp",
+       "width": 239,
+       "height": 354,
+       "offset": [
+        269,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-little/ballet-slippers-left.webp",
+     "width": 511,
+     "height": 245,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       641,
+       1407,
+       511,
+       245
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-little/ballet-slippers-right.webp",
+     "width": 511,
+     "height": 246,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       1237,
+       1406,
+       511,
+       246
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-little/ballet-slippers-back.webp",
+     "width": 495,
+     "height": 271,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-little-c.webp",
+      "box": [
+       1841,
+       1397,
+       495,
+       271
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-little/ballet-slippers-back-l.webp",
+       "width": 237,
+       "height": 271,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-little/ballet-slippers-back-r.webp",
+       "width": 236,
+       "height": 271,
+       "offset": [
+        259,
+        0
+       ]
+      }
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

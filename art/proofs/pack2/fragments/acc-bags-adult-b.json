@@ -1,0 +1,269 @@
+{
+ "signature": {
+  "script": "bb0956e31976-v2",
+  "source": "f0dd9ff07fb7"
+ },
+ "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 1307,
+   "haze_far_max": 2,
+   "haze_far_p99_9": 2.0,
+   "glow_ring_nonzero_frac": 0.0136,
+   "glow_ring_p95": 3.0,
+   "interior_frac_below_255": 0.0015,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 5783,
+     "dRGB": [
+      -75.0,
+      -51.7,
+      -57.2
+     ],
+     "dLum": -59.3
+    },
+    "64-160": {
+     "n": 6470,
+     "dRGB": [
+      -42.5,
+      -27.6,
+      -32.2
+     ],
+     "dLum": -32.6
+    },
+    "160-255": {
+     "n": 14644,
+     "dRGB": [
+      -13.7,
+      -6.9,
+      -8.9
+     ],
+     "dLum": -9.2
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 1226,
+  "haze_px_removed": 18848,
+  "wisp_px_kept": {
+   "beach-tote/0": 0,
+   "beach-tote/1": 0,
+   "beach-tote/2": 0,
+   "beach-tote/3": 0,
+   "heart-purse/0": 0,
+   "heart-purse/1": 0,
+   "heart-purse/2": 0,
+   "heart-purse/3": 0,
+   "skate-bag/0": 1,
+   "skate-bag/1": 1,
+   "skate-bag/2": 0,
+   "skate-bag/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "beach-tote": {
+   "category": "bags-adult",
+   "views": {
+    "front": {
+     "file": "bags-adult/beach-tote-front.webp",
+     "width": 405,
+     "height": 507,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       130,
+       53,
+       405,
+       507
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "bags-adult/beach-tote-left.webp",
+     "width": 213,
+     "height": 508,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       799,
+       53,
+       213,
+       508
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "bags-adult/beach-tote-right.webp",
+     "width": 213,
+     "height": 509,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       1375,
+       54,
+       213,
+       509
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "bags-adult/beach-tote-back.webp",
+     "width": 403,
+     "height": 507,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       1853,
+       53,
+       403,
+       507
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "heart-purse": {
+   "category": "bags-adult",
+   "views": {
+    "front": {
+     "file": "bags-adult/heart-purse-front.webp",
+     "width": 306,
+     "height": 513,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       183,
+       642,
+       306,
+       513
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "bags-adult/heart-purse-left.webp",
+     "width": 228,
+     "height": 510,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       795,
+       642,
+       228,
+       510
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "bags-adult/heart-purse-right.webp",
+     "width": 229,
+     "height": 511,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       1364,
+       641,
+       229,
+       511
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "bags-adult/heart-purse-back.webp",
+     "width": 304,
+     "height": 511,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       1900,
+       643,
+       304,
+       511
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "skate-bag": {
+   "category": "bags-adult",
+   "views": {
+    "front": {
+     "file": "bags-adult/skate-bag-front.webp",
+     "width": 326,
+     "height": 504,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       187,
+       1234,
+       326,
+       504
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "bags-adult/skate-bag-left.webp",
+     "width": 320,
+     "height": 509,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       733,
+       1234,
+       320,
+       509
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "bags-adult/skate-bag-right.webp",
+     "width": 318,
+     "height": 510,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       1335,
+       1233,
+       318,
+       510
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "bags-adult/skate-bag-back.webp",
+     "width": 325,
+     "height": 505,
+     "source": {
+      "sheet": "art/source/pack2/05-accessories/acc-bags-adult-b.webp",
+      "box": [
+       1876,
+       1233,
+       325,
+       505
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}

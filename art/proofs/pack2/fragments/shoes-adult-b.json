@@ -1,0 +1,1432 @@
+{
+ "signature": {
+  "script": "bb0956e31976-v2",
+  "source": "f3e498491ae1",
+  "worn": "d6f0a9f2077f"
+ },
+ "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 14306,
+   "haze_far_max": 4,
+   "haze_far_p99_9": 2.0,
+   "glow_ring_nonzero_frac": 0.0395,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0007,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 10509,
+     "dRGB": [
+      47.5,
+      59.2,
+      55.5
+     ],
+     "dLum": 55.3
+    },
+    "64-160": {
+     "n": 12704,
+     "dRGB": [
+      23.3,
+      32.8,
+      30.2
+     ],
+     "dLum": 29.7
+    },
+    "160-255": {
+     "n": 27552,
+     "dRGB": [
+      -1.8,
+      4.2,
+      3.4
+     ],
+     "dLum": 2.3
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 34338,
+  "haze_px_removed": 42404,
+  "wisp_px_kept": {
+   "jelly-sandals/0": 1,
+   "jelly-sandals/1": 3,
+   "jelly-sandals/2": 3,
+   "jelly-sandals/3": 1,
+   "flower-flip-flops/0": 0,
+   "flower-flip-flops/1": 4,
+   "flower-flip-flops/2": 0,
+   "flower-flip-flops/3": 0,
+   "wedge-sandals/0": 0,
+   "wedge-sandals/1": 0,
+   "wedge-sandals/2": 3,
+   "wedge-sandals/3": 1
+  }
+ },
+ "splits": {
+  "jelly-sandals-front": {
+   "axis": "x",
+   "at": 271,
+   "gap_px": 25
+  },
+  "jelly-sandals-back": {
+   "axis": "x",
+   "at": 268,
+   "gap_px": 23
+  },
+  "flower-flip-flops-front": {
+   "axis": "x",
+   "at": 273,
+   "gap_px": 29
+  },
+  "flower-flip-flops-back": {
+   "axis": "x",
+   "at": 269,
+   "gap_px": 25
+  },
+  "wedge-sandals-front": {
+   "axis": "x",
+   "at": 273,
+   "gap_px": 37
+  },
+  "wedge-sandals-back": {
+   "axis": "x",
+   "at": 268,
+   "gap_px": 28
+  }
+ },
+ "items": {
+  "jelly-sandals": {
+   "category": "shoes-adult",
+   "views": {
+    "front": {
+     "file": "shoes-adult/jelly-sandals-front.webp",
+     "width": 542,
+     "height": 497,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       51,
+       66,
+       542,
+       497
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/jelly-sandals-front-l.webp",
+       "width": 262,
+       "height": 497,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/jelly-sandals-front-r.webp",
+       "width": 261,
+       "height": 496,
+       "offset": [
+        281,
+        1
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-adult/jelly-sandals-left.webp",
+     "width": 529,
+     "height": 310,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       644,
+       205,
+       529,
+       310
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-adult/jelly-sandals-right.webp",
+     "width": 529,
+     "height": 311,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       1215,
+       204,
+       529,
+       311
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-adult/jelly-sandals-back.webp",
+     "width": 537,
+     "height": 350,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       1800,
+       181,
+       537,
+       350
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/jelly-sandals-back-l.webp",
+       "width": 260,
+       "height": 350,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/jelly-sandals-back-r.webp",
+       "width": 259,
+       "height": 348,
+       "offset": [
+        278,
+        0
+       ]
+      }
+     }
+    }
+   }
+  },
+  "flower-flip-flops": {
+   "category": "shoes-adult",
+   "views": {
+    "front": {
+     "file": "shoes-adult/flower-flip-flops-front.webp",
+     "width": 546,
+     "height": 385,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       49,
+       774,
+       546,
+       385
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/flower-flip-flops-front-l.webp",
+       "width": 263,
+       "height": 382,
+       "offset": [
+        0,
+        1
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/flower-flip-flops-front-r.webp",
+       "width": 262,
+       "height": 385,
+       "offset": [
+        284,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-adult/flower-flip-flops-left.webp",
+     "width": 530,
+     "height": 233,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       645,
+       877,
+       530,
+       233
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-adult/flower-flip-flops-right.webp",
+     "width": 529,
+     "height": 229,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       1214,
+       880,
+       529,
+       229
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-adult/flower-flip-flops-back.webp",
+     "width": 539,
+     "height": 287,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       1799,
+       848,
+       539,
+       287
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/flower-flip-flops-back-l.webp",
+       "width": 260,
+       "height": 287,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/flower-flip-flops-back-r.webp",
+       "width": 259,
+       "height": 286,
+       "offset": [
+        280,
+        1
+       ]
+      }
+     }
+    }
+   }
+  },
+  "wedge-sandals": {
+   "category": "shoes-adult",
+   "views": {
+    "front": {
+     "file": "shoes-adult/wedge-sandals-front.webp",
+     "width": 545,
+     "height": 506,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       49,
+       1235,
+       545,
+       506
+      ],
+      "column": 0
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/wedge-sandals-front-l.webp",
+       "width": 257,
+       "height": 506,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/wedge-sandals-front-r.webp",
+       "width": 257,
+       "height": 506,
+       "offset": [
+        288,
+        0
+       ]
+      }
+     }
+    },
+    "left": {
+     "file": "shoes-adult/wedge-sandals-left.webp",
+     "width": 531,
+     "height": 403,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       644,
+       1309,
+       531,
+       403
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "shoes-adult/wedge-sandals-right.webp",
+     "width": 530,
+     "height": 404,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       1213,
+       1308,
+       530,
+       404
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "shoes-adult/wedge-sandals-back.webp",
+     "width": 535,
+     "height": 446,
+     "source": {
+      "sheet": "art/source/pack2/04-shoes/shoes-adult-b.webp",
+      "box": [
+       1801,
+       1293,
+       535,
+       446
+      ],
+      "column": 3
+     },
+     "parts": {
+      "left": {
+       "file": "shoes-adult/wedge-sandals-back-l.webp",
+       "width": 256,
+       "height": 446,
+       "offset": [
+        0,
+        0
+       ]
+      },
+      "right": {
+       "file": "shoes-adult/wedge-sandals-back-r.webp",
+       "width": 257,
+       "height": 446,
+       "offset": [
+        278,
+        0
+       ]
+      }
+     }
+    }
+   }
+  }
+ },
+ "proofs": {
+  "jelly-sandals/front": {
+   "proof": "shoes-adult/jelly-sandals-front.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    49,
+    -2,
+    546,
+    567
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/jelly-sandals-front.webp",
+   "sprite_box": [
+    51,
+    66,
+    542,
+    497
+   ],
+   "offset": [
+    2,
+    68
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 71.0,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 88.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.004,
+      "rmse": 75.6
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 55.8
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.367,
+    "iou": 0.772,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.002
+   },
+   "flags": [
+    "drawing differs from proof (only 37% of pixels identical)",
+    "shape differs (IoU < 0.8)"
+   ],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      68
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 71.2
+    },
+    "right": {
+     "offset": [
+      283,
+      69
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 70.8
+    }
+   }
+  },
+  "jelly-sandals/left": {
+   "proof": "shoes-adult/jelly-sandals-left.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    642,
+    83,
+    533,
+    434
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/jelly-sandals-left.webp",
+   "sprite_box": [
+    644,
+    205,
+    529,
+    310
+   ],
+   "offset": [
+    2,
+    122
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 83.5,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 78.6
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 77.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.028,
+      "rmse": 88.6
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.399,
+    "iou": 0.794,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "drawing differs from proof (only 40% of pixels identical)",
+    "shape differs (IoU < 0.8)"
+   ]
+  },
+  "jelly-sandals/right": {
+   "proof": "shoes-adult/jelly-sandals-right.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    1213,
+    83,
+    533,
+    434
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/jelly-sandals-right.webp",
+   "sprite_box": [
+    1215,
+    204,
+    529,
+    311
+   ],
+   "offset": [
+    2,
+    121
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 83.4,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 78.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 77.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.027,
+      "rmse": 88.3
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.405,
+    "iou": 0.792,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "drawing differs from proof (only 40% of pixels identical)",
+    "shape differs (IoU < 0.8)"
+   ]
+  },
+  "jelly-sandals/back": {
+   "proof": "shoes-adult/jelly-sandals-back.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    1798,
+    70,
+    541,
+    463
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/jelly-sandals-back.webp",
+   "sprite_box": [
+    1800,
+    181,
+    537,
+    350
+   ],
+   "offset": [
+    2,
+    111
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 99.3,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 100.2
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.039,
+      "rmse": 104.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.005,
+      "rmse": 93.1
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.312,
+    "iou": 0.553,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.002
+   },
+   "flags": [
+    "drawing differs from proof (only 31% of pixels identical)",
+    "shape differs (IoU < 0.8)"
+   ],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      111
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 99.3
+    },
+    "right": {
+     "offset": [
+      280,
+      111
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 99.2
+    }
+   }
+  },
+  "flower-flip-flops/front": {
+   "proof": "shoes-adult/flower-flip-flops-front.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    47,
+    595,
+    550,
+    566
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/flower-flip-flops-front.webp",
+   "sprite_box": [
+    49,
+    774,
+    546,
+    385
+   ],
+   "offset": [
+    2,
+    179
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 55.0,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 51.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 47.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 64.1
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.451,
+    "iou": 0.704,
+    "proof_item_uncovered": 0.01,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "drawing differs from proof (only 45% of pixels identical)",
+    "shape differs (IoU < 0.8)"
+   ],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      180
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 55.4
+    },
+    "right": {
+     "offset": [
+      286,
+      179
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 54.6
+    }
+   }
+  },
+  "flower-flip-flops/left": {
+   "proof": "shoes-adult/flower-flip-flops-left.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    643,
+    701,
+    534,
+    411
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/flower-flip-flops-left.webp",
+   "sprite_box": [
+    645,
+    877,
+    530,
+    233
+   ],
+   "offset": [
+    2,
+    176
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 66.3,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 65.8
+     },
+     "middle": {
+      "shift": [
+       9,
+       -12
+      ],
+      "gain": 0.136,
+      "rmse": 78.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.001,
+      "rmse": 57.0
+     }
+    },
+    "max_band_dev_px": 12,
+    "identical_px": 0.625,
+    "iou": 0.808,
+    "proof_item_uncovered": 0.032,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "parts drawn 12px apart"
+   ]
+  },
+  "flower-flip-flops/right": {
+   "proof": "shoes-adult/flower-flip-flops-right.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    1212,
+    700,
+    533,
+    411
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/flower-flip-flops-right.webp",
+   "sprite_box": [
+    1214,
+    880,
+    529,
+    229
+   ],
+   "offset": [
+    2,
+    180
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 66.8,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 64.7
+     },
+     "middle": {
+      "shift": [
+       -11,
+       -12
+      ],
+      "gain": 0.155,
+      "rmse": 79.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 57.7
+     }
+    },
+    "max_band_dev_px": 12,
+    "identical_px": 0.629,
+    "iou": 0.795,
+    "proof_item_uncovered": 0.042,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "shape differs (IoU < 0.8)",
+    "parts drawn 12px apart"
+   ]
+  },
+  "flower-flip-flops/back": {
+   "proof": "shoes-adult/flower-flip-flops-back.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    1797,
+    683,
+    543,
+    454
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/flower-flip-flops-back.webp",
+   "sprite_box": [
+    1799,
+    848,
+    539,
+    287
+   ],
+   "offset": [
+    2,
+    165
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 72.0,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.009,
+      "rmse": 89.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 72.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 59.3
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.404,
+    "iou": 0.566,
+    "proof_item_uncovered": 0.015,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "drawing differs from proof (only 40% of pixels identical)",
+    "shape differs (IoU < 0.8)"
+   ],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      165
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 72.1
+    },
+    "right": {
+     "offset": [
+      282,
+      166
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 71.8
+    }
+   }
+  },
+  "wedge-sandals/front": {
+   "proof": "shoes-adult/wedge-sandals-front.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    47,
+    1192,
+    549,
+    551
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/wedge-sandals-front.webp",
+   "sprite_box": [
+    49,
+    1235,
+    545,
+    506
+   ],
+   "offset": [
+    2,
+    43
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 74.8,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 66.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 78.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.002,
+      "rmse": 75.2
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.451,
+    "iou": 0.513,
+    "proof_item_uncovered": 0.029,
+    "sprite_over_background": 0.002
+   },
+   "flags": [
+    "drawing differs from proof (only 45% of pixels identical)",
+    "shape differs (IoU < 0.8)"
+   ],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      43
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 74.9
+    },
+    "right": {
+     "offset": [
+      290,
+      43
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 74.7
+    }
+   }
+  },
+  "wedge-sandals/left": {
+   "proof": "shoes-adult/wedge-sandals-left.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    642,
+    1192,
+    535,
+    522
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/wedge-sandals-left.webp",
+   "sprite_box": [
+    644,
+    1309,
+    531,
+    403
+   ],
+   "offset": [
+    2,
+    117
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 51.9,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 45.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.011,
+      "rmse": 69.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 39.8
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.791,
+    "iou": 0.843,
+    "proof_item_uncovered": 0.03,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "wedge-sandals/right": {
+   "proof": "shoes-adult/wedge-sandals-right.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    1211,
+    1192,
+    534,
+    522
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/wedge-sandals-right.webp",
+   "sprite_box": [
+    1213,
+    1308,
+    530,
+    404
+   ],
+   "offset": [
+    2,
+    116
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 51.5,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 46.8
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 68.6
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 39.7
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.791,
+    "iou": 0.842,
+    "proof_item_uncovered": 0.03,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "wedge-sandals/back": {
+   "proof": "shoes-adult/wedge-sandals-back.webp",
+   "worn_sheet": "art/source/pack2/04-shoes/shoes-adult-b-worn.webp",
+   "proof_box": [
+    1799,
+    1192,
+    539,
+    549
+   ],
+   "sprite": "../../../dist/assets/pack2/shoes-adult/wedge-sandals-back.webp",
+   "sprite_box": [
+    1801,
+    1293,
+    535,
+    446
+   ],
+   "offset": [
+    2,
+    101
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "full",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 44.2,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 62.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.028,
+      "rmse": 47.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 25.3
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.849,
+    "iou": 0.884,
+    "proof_item_uncovered": 0.051,
+    "sprite_over_background": 0.003
+   },
+   "flags": [],
+   "parts": {
+    "left": {
+     "offset": [
+      2,
+      101
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 43.7
+    },
+    "right": {
+     "offset": [
+      280,
+      101
+     ],
+     "shift_vs_set_registration": [
+      0,
+      0
+     ],
+     "rgb_rmse": 44.7
+    }
+   }
+  }
+ }
+}

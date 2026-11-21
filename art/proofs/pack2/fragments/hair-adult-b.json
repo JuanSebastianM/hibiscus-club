@@ -1,0 +1,1156 @@
+{
+ "signature": {
+  "script": "bb0956e31976-v2",
+  "source": "4ba9ac44bc40",
+  "worn": "2dcff6c17732"
+ },
+ "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 249,
+   "haze_far_max": 7,
+   "haze_far_p99_9": 6.8,
+   "glow_ring_nonzero_frac": 0.0116,
+   "glow_ring_p95": 3.0,
+   "interior_frac_below_255": 0.0063,
+   "interior_frac_below_200": 0.0004,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 3442,
+     "dRGB": [
+      10.5,
+      16.6,
+      17.5
+     ],
+     "dLum": 14.9
+    },
+    "64-160": {
+     "n": 4707,
+     "dRGB": [
+      5.6,
+      10.8,
+      11.5
+     ],
+     "dLum": 9.3
+    },
+    "160-255": {
+     "n": 12030,
+     "dRGB": [
+      -0.9,
+      2.7,
+      3.4
+     ],
+     "dLum": 1.7
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 7,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 6258,
+  "haze_px_removed": 25961,
+  "wisp_px_kept": {
+   "sleek-curtain-bangs/0": 0,
+   "sleek-curtain-bangs/1": 0,
+   "sleek-curtain-bangs/2": 0,
+   "sleek-curtain-bangs/3": 0,
+   "flip-bob/0": 0,
+   "flip-bob/1": 0,
+   "flip-bob/2": 0,
+   "flip-bob/3": 0,
+   "long-braids/0": 0,
+   "long-braids/1": 0,
+   "long-braids/2": 0,
+   "long-braids/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "sleek-curtain-bangs": {
+   "category": "hair",
+   "views": {
+    "front": {
+     "file": "hair/sleek-curtain-bangs-front.webp",
+     "width": 332,
+     "height": 368,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       184,
+       29,
+       332,
+       368
+      ],
+      "column": 0
+     },
+     "faceHole": {
+      "x": 20,
+      "y": 120,
+      "w": 292,
+      "h": 242,
+      "area": 33648,
+      "closedBelow": false,
+      "face": {
+       "x": 20,
+       "y": 120,
+       "w": 292,
+       "h": 242
+      }
+     }
+    },
+    "left": {
+     "file": "hair/sleek-curtain-bangs-left.webp",
+     "width": 336,
+     "height": 557,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       755,
+       28,
+       336,
+       557
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hair/sleek-curtain-bangs-right.webp",
+     "width": 334,
+     "height": 557,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       1297,
+       28,
+       334,
+       557
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hair/sleek-curtain-bangs-back.webp",
+     "width": 332,
+     "height": 560,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       1871,
+       29,
+       332,
+       560
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "flip-bob": {
+   "category": "hair",
+   "views": {
+    "front": {
+     "file": "hair/flip-bob-front.webp",
+     "width": 352,
+     "height": 345,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       175,
+       626,
+       352,
+       345
+      ],
+      "column": 0
+     },
+     "faceHole": {
+      "x": 80,
+      "y": 70,
+      "w": 192,
+      "h": 270,
+      "area": 32440,
+      "closedBelow": false,
+      "face": {
+       "x": 80,
+       "y": 70,
+       "w": 192,
+       "h": 184
+      }
+     }
+    },
+    "left": {
+     "file": "hair/flip-bob-left.webp",
+     "width": 338,
+     "height": 349,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       754,
+       625,
+       338,
+       349
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hair/flip-bob-right.webp",
+     "width": 336,
+     "height": 349,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       1296,
+       625,
+       336,
+       349
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hair/flip-bob-back.webp",
+     "width": 349,
+     "height": 361,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       1863,
+       626,
+       349,
+       361
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "long-braids": {
+   "category": "hair",
+   "views": {
+    "front": {
+     "file": "hair/long-braids-front.webp",
+     "width": 289,
+     "height": 556,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       207,
+       1223,
+       289,
+       556
+      ],
+      "column": 0
+     },
+     "faceHole": {
+      "x": 32,
+      "y": 74,
+      "w": 228,
+      "h": 476,
+      "area": 79240,
+      "closedBelow": false,
+      "face": {
+       "x": 32,
+       "y": 74,
+       "w": 228,
+       "h": 476
+      }
+     }
+    },
+    "left": {
+     "file": "hair/long-braids-left.webp",
+     "width": 295,
+     "height": 553,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       752,
+       1223,
+       295,
+       553
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hair/long-braids-right.webp",
+     "width": 294,
+     "height": 553,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       1341,
+       1223,
+       294,
+       553
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hair/long-braids-back.webp",
+     "width": 289,
+     "height": 557,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-adult-b.webp",
+      "box": [
+       1895,
+       1223,
+       289,
+       557
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {
+  "sleek-curtain-bangs/front": {
+   "proof": "hair/sleek-curtain-bangs-front.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    95,
+    27,
+    507,
+    573
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/sleek-curtain-bangs-front.webp",
+   "sprite_box": [
+    184,
+    29,
+    332,
+    368
+   ],
+   "offset": [
+    89,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     -1
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 60.8,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 66.6
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.077,
+      "rmse": 82.2
+     },
+     "bottom": {
+      "shift": [
+       0,
+       -1
+      ],
+      "gain": 0.193,
+      "rmse": 12.9
+     }
+    },
+    "max_band_dev_px": 1,
+    "identical_px": 0.884,
+    "iou": 0.887,
+    "proof_item_uncovered": 0.021,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "sleek-curtain-bangs/left": {
+   "proof": "hair/sleek-curtain-bangs-left.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    734,
+    26,
+    359,
+    574
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/sleek-curtain-bangs-left.webp",
+   "sprite_box": [
+    755,
+    28,
+    336,
+    557
+   ],
+   "offset": [
+    21,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 15.4,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.01,
+      "rmse": 11.1
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.1
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.982,
+    "iou": 0.975,
+    "proof_item_uncovered": 0.005,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "sleek-curtain-bangs/right": {
+   "proof": "hair/sleek-curtain-bangs-right.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    1295,
+    26,
+    359,
+    574
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/sleek-curtain-bangs-right.webp",
+   "sprite_box": [
+    1297,
+    28,
+    334,
+    557
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 16.2,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 18.6
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.0
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.981,
+    "iou": 0.973,
+    "proof_item_uncovered": 0.005,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "sleek-curtain-bangs/back": {
+   "proof": "hair/sleek-curtain-bangs-back.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    1786,
+    27,
+    505,
+    573
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/sleek-curtain-bangs-back.webp",
+   "sprite_box": [
+    1871,
+    29,
+    332,
+    560
+   ],
+   "offset": [
+    85,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 11.7,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 11.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.002,
+      "rmse": 9.3
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.0
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.993,
+    "iou": 0.982,
+    "proof_item_uncovered": 0.002,
+    "sprite_over_background": 0.0
+   },
+   "flags": []
+  },
+  "flip-bob/front": {
+   "proof": "hair/flip-bob-front.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    95,
+    624,
+    507,
+    573
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/flip-bob-front.webp",
+   "sprite_box": [
+    175,
+    626,
+    352,
+    345
+   ],
+   "offset": [
+    80,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 17.8,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.062,
+      "rmse": 20.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.5
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.973,
+    "iou": 0.956,
+    "proof_item_uncovered": 0.017,
+    "sprite_over_background": 0.003
+   },
+   "flags": []
+  },
+  "flip-bob/left": {
+   "proof": "hair/flip-bob-left.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    734,
+    623,
+    360,
+    574
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/flip-bob-left.webp",
+   "sprite_box": [
+    754,
+    625,
+    338,
+    349
+   ],
+   "offset": [
+    20,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 16.1,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.9
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.0
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.979,
+    "iou": 0.971,
+    "proof_item_uncovered": 0.006,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "flip-bob/right": {
+   "proof": "hair/flip-bob-right.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    1294,
+    623,
+    360,
+    574
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/flip-bob-right.webp",
+   "sprite_box": [
+    1296,
+    625,
+    336,
+    349
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 16.0,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 15.4
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 13.9
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 18.8
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.979,
+    "iou": 0.969,
+    "proof_item_uncovered": 0.007,
+    "sprite_over_background": 0.002
+   },
+   "flags": []
+  },
+  "flip-bob/back": {
+   "proof": "hair/flip-bob-back.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    1786,
+    624,
+    505,
+    573
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/flip-bob-back.webp",
+   "sprite_box": [
+    1863,
+    626,
+    349,
+    361
+   ],
+   "offset": [
+    77,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 12.7,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 13.4
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 9.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.7
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.99,
+    "iou": 0.992,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "long-braids/front": {
+   "proof": "hair/long-braids-front.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    95,
+    1221,
+    507,
+    573
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/long-braids-front.webp",
+   "sprite_box": [
+    207,
+    1223,
+    289,
+    556
+   ],
+   "offset": [
+    112,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 25.5,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.002,
+      "rmse": 26.2
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 25.9
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 23.6
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.949,
+    "iou": 0.943,
+    "proof_item_uncovered": 0.007,
+    "sprite_over_background": 0.004
+   },
+   "flags": []
+  },
+  "long-braids/left": {
+   "proof": "hair/long-braids-left.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    734,
+    1221,
+    315,
+    573
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/long-braids-left.webp",
+   "sprite_box": [
+    752,
+    1223,
+    295,
+    553
+   ],
+   "offset": [
+    18,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 19.5,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 18.9
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 21.8
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.956,
+    "iou": 0.966,
+    "proof_item_uncovered": 0.003,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "long-braids/right": {
+   "proof": "hair/long-braids-right.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    1339,
+    1221,
+    314,
+    573
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/long-braids-right.webp",
+   "sprite_box": [
+    1341,
+    1223,
+    294,
+    553
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 18.9,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.4
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.023,
+      "rmse": 23.4
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.957,
+    "iou": 0.967,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.001
+   },
+   "flags": []
+  },
+  "long-braids/back": {
+   "proof": "hair/long-braids-back.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-adult-b-worn.webp",
+   "proof_box": [
+    1786,
+    1221,
+    505,
+    573
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/long-braids-back.webp",
+   "sprite_box": [
+    1895,
+    1223,
+    289,
+    557
+   ],
+   "offset": [
+    109,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     -1
+    ],
+    "rgb_rmse": 86.5,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 13.7
+     },
+     "middle": {
+      "shift": [
+       0,
+       -12
+      ],
+      "gain": 0.335,
+      "rmse": 60.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.039,
+      "rmse": 211.0
+     }
+    },
+    "max_band_dev_px": 12,
+    "identical_px": 0.833,
+    "iou": 0.825,
+    "proof_item_uncovered": 0.004,
+    "sprite_over_background": 0.001
+   },
+   "flags": [
+    "drawing differs from proof (only 83% of pixels identical)",
+    "parts drawn 12px apart"
+   ]
+  }
+ }
+}

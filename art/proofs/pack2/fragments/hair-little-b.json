@@ -1,0 +1,1162 @@
+{
+ "signature": {
+  "script": "bb0956e31976-v2",
+  "source": "0c8b829e13ee",
+  "worn": "62342edaa921"
+ },
+ "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 39,
+   "haze_far_max": 2,
+   "haze_far_p99_9": 2.0,
+   "glow_ring_nonzero_frac": 0.0215,
+   "glow_ring_p95": 8.0,
+   "interior_frac_below_255": 0.1773,
+   "interior_frac_below_200": 0.0532,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 877,
+     "dRGB": [
+      -29.3,
+      -23.9,
+      -20.8
+     ],
+     "dLum": -25.2
+    },
+    "64-160": {
+     "n": 1342,
+     "dRGB": [
+      -22.8,
+      -18.0,
+      -15.4
+     ],
+     "dLum": -19.2
+    },
+    "160-255": {
+     "n": 4727,
+     "dRGB": [
+      -11.7,
+      -8.1,
+      -5.9
+     ],
+     "dLum": -8.9
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 2,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 151,
+  "haze_px_removed": 23901,
+  "wisp_px_kept": {
+   "tiny-pigtails/0": 50,
+   "tiny-pigtails/1": 44,
+   "tiny-pigtails/2": 74,
+   "tiny-pigtails/3": 50,
+   "pixie-sweep/0": 23,
+   "pixie-sweep/1": 6,
+   "pixie-sweep/2": 3,
+   "pixie-sweep/3": 0,
+   "top-ponytail/0": 22,
+   "top-ponytail/1": 41,
+   "top-ponytail/2": 7,
+   "top-ponytail/3": 1
+  }
+ },
+ "splits": {},
+ "items": {
+  "tiny-pigtails": {
+   "category": "hair",
+   "views": {
+    "front": {
+     "file": "hair/tiny-pigtails-front.webp",
+     "width": 412,
+     "height": 309,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       92,
+       27,
+       412,
+       309
+      ],
+      "column": 0
+     },
+     "faceHole": {
+      "x": 98,
+      "y": 146,
+      "w": 256,
+      "h": 146,
+      "area": 26064,
+      "closedBelow": false,
+      "face": {
+       "x": 98,
+       "y": 146,
+       "w": 256,
+       "h": 146
+      }
+     }
+    },
+    "left": {
+     "file": "hair/tiny-pigtails-left.webp",
+     "width": 347,
+     "height": 382,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       740,
+       26,
+       347,
+       382
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hair/tiny-pigtails-right.webp",
+     "width": 348,
+     "height": 383,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       1300,
+       26,
+       348,
+       383
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hair/tiny-pigtails-back.webp",
+     "width": 411,
+     "height": 397,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       1884,
+       27,
+       411,
+       397
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "pixie-sweep": {
+   "category": "hair",
+   "views": {
+    "front": {
+     "file": "hair/pixie-sweep-front.webp",
+     "width": 327,
+     "height": 252,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       134,
+       671,
+       327,
+       252
+      ],
+      "column": 0
+     },
+     "faceHole": {
+      "x": 58,
+      "y": 104,
+      "w": 218,
+      "h": 122,
+      "area": 16708,
+      "closedBelow": false,
+      "face": {
+       "x": 58,
+       "y": 104,
+       "w": 218,
+       "h": 122
+      }
+     }
+    },
+    "left": {
+     "file": "hair/pixie-sweep-left.webp",
+     "width": 344,
+     "height": 327,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       729,
+       675,
+       344,
+       327
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hair/pixie-sweep-right.webp",
+     "width": 343,
+     "height": 327,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       1313,
+       676,
+       343,
+       327
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hair/pixie-sweep-back.webp",
+     "width": 326,
+     "height": 339,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       1927,
+       672,
+       326,
+       339
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "top-ponytail": {
+   "category": "hair",
+   "views": {
+    "front": {
+     "file": "hair/top-ponytail-front.webp",
+     "width": 336,
+     "height": 308,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       128,
+       1217,
+       336,
+       308
+      ],
+      "column": 0
+     },
+     "faceHole": {
+      "x": 62,
+      "y": 156,
+      "w": 258,
+      "h": 138,
+      "area": 25504,
+      "closedBelow": false,
+      "face": {
+       "x": 62,
+       "y": 156,
+       "w": 258,
+       "h": 138
+      },
+      "topPieceOnly": true
+     }
+    },
+    "left": {
+     "file": "hair/top-ponytail-left.webp",
+     "width": 354,
+     "height": 387,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       742,
+       1221,
+       354,
+       387
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "hair/top-ponytail-right.webp",
+     "width": 357,
+     "height": 388,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       1290,
+       1220,
+       357,
+       388
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "hair/top-ponytail-back.webp",
+     "width": 336,
+     "height": 398,
+     "source": {
+      "sheet": "art/source/pack2/01-hair/hair-little-b.webp",
+      "box": [
+       1924,
+       1217,
+       336,
+       398
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {
+  "tiny-pigtails/front": {
+   "proof": "hair/tiny-pigtails-front.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    75,
+    25,
+    445,
+    575
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/tiny-pigtails-front.webp",
+   "sprite_box": [
+    92,
+    27,
+    412,
+    309
+   ],
+   "offset": [
+    17,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 30.3,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 22.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 34.1
+     },
+     "bottom": {
+      "shift": [
+       0,
+       -3
+      ],
+      "gain": 0.142,
+      "rmse": 44.4
+     }
+    },
+    "max_band_dev_px": 3,
+    "identical_px": 0.945,
+    "iou": 0.832,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.019
+   },
+   "flags": []
+  },
+  "tiny-pigtails/left": {
+   "proof": "hair/tiny-pigtails-left.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    730,
+    24,
+    359,
+    576
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/tiny-pigtails-left.webp",
+   "sprite_box": [
+    740,
+    26,
+    347,
+    382
+   ],
+   "offset": [
+    10,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 24.3,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 19.4
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 27.0
+     },
+     "bottom": {
+      "shift": [
+       2,
+       -12
+      ],
+      "gain": 0.109,
+      "rmse": 25.8
+     }
+    },
+    "max_band_dev_px": 12,
+    "identical_px": 0.966,
+    "iou": 0.889,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.008
+   },
+   "flags": [
+    "parts drawn 12px apart"
+   ]
+  },
+  "tiny-pigtails/right": {
+   "proof": "hair/tiny-pigtails-right.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    1298,
+    24,
+    361,
+    576
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/tiny-pigtails-right.webp",
+   "sprite_box": [
+    1300,
+    26,
+    348,
+    383
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 23.5,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 18.4
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 26.7
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.032,
+      "rmse": 23.7
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.967,
+    "iou": 0.886,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.008
+   },
+   "flags": []
+  },
+  "tiny-pigtails/back": {
+   "proof": "hair/tiny-pigtails-back.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    1867,
+    25,
+    445,
+    575
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/tiny-pigtails-back.webp",
+   "sprite_box": [
+    1884,
+    27,
+    411,
+    397
+   ],
+   "offset": [
+    17,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 21.7,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 21.0
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 20.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.052,
+      "rmse": 24.8
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.971,
+    "iou": 0.942,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.009
+   },
+   "flags": []
+  },
+  "pixie-sweep/front": {
+   "proof": "hair/pixie-sweep-front.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    75,
+    669,
+    446,
+    529
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/pixie-sweep-front.webp",
+   "sprite_box": [
+    134,
+    671,
+    327,
+    252
+   ],
+   "offset": [
+    59,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 24.0,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 16.4
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 26.0
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.013,
+      "rmse": 32.7
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.933,
+    "iou": 0.942,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.005
+   },
+   "flags": []
+  },
+  "pixie-sweep/left": {
+   "proof": "hair/pixie-sweep-left.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    727,
+    673,
+    348,
+    525
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/pixie-sweep-left.webp",
+   "sprite_box": [
+    729,
+    675,
+    344,
+    327
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 22.9,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 21.9
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 23.1
+     },
+     "bottom": {
+      "shift": [
+       4,
+       -12
+      ],
+      "gain": 0.173,
+      "rmse": 25.3
+     }
+    },
+    "max_band_dev_px": 12,
+    "identical_px": 0.949,
+    "iou": 0.965,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.002
+   },
+   "flags": [
+    "parts drawn 12px apart"
+   ]
+  },
+  "pixie-sweep/right": {
+   "proof": "hair/pixie-sweep-right.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    1311,
+    674,
+    348,
+    524
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/pixie-sweep-right.webp",
+   "sprite_box": [
+    1313,
+    676,
+    343,
+    327
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 19.6,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.9
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 22.0
+     },
+     "bottom": {
+      "shift": [
+       -1,
+       -3
+      ],
+      "gain": 0.154,
+      "rmse": 23.8
+     }
+    },
+    "max_band_dev_px": 3,
+    "identical_px": 0.969,
+    "iou": 0.974,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.004
+   },
+   "flags": []
+  },
+  "pixie-sweep/back": {
+   "proof": "hair/pixie-sweep-back.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    1867,
+    670,
+    445,
+    528
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/pixie-sweep-back.webp",
+   "sprite_box": [
+    1927,
+    672,
+    326,
+    339
+   ],
+   "offset": [
+    60,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 17.1,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 16.6
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 14.7
+     },
+     "bottom": {
+      "shift": [
+       5,
+       -12
+      ],
+      "gain": 0.293,
+      "rmse": 21.0
+     }
+    },
+    "max_band_dev_px": 12,
+    "identical_px": 0.979,
+    "iou": 0.98,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.002
+   },
+   "flags": [
+    "parts drawn 12px apart"
+   ]
+  },
+  "top-ponytail/front": {
+   "proof": "hair/top-ponytail-front.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    75,
+    1215,
+    444,
+    579
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/top-ponytail-front.webp",
+   "sprite_box": [
+    128,
+    1217,
+    336,
+    308
+   ],
+   "offset": [
+    53,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 34.6,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 21.1
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.022,
+      "rmse": 41.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.031,
+      "rmse": 46.6
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.921,
+    "iou": 0.813,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.015
+   },
+   "flags": []
+  },
+  "top-ponytail/left": {
+   "proof": "hair/top-ponytail-left.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    729,
+    1219,
+    369,
+    575
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/top-ponytail-left.webp",
+   "sprite_box": [
+    742,
+    1221,
+    354,
+    387
+   ],
+   "offset": [
+    13,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 23.9,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 18.3
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 27.3
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.007,
+      "rmse": 24.3
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.971,
+    "iou": 0.905,
+    "proof_item_uncovered": 0.001,
+    "sprite_over_background": 0.007
+   },
+   "flags": []
+  },
+  "top-ponytail/right": {
+   "proof": "hair/top-ponytail-right.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    1288,
+    1218,
+    371,
+    576
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/top-ponytail-right.webp",
+   "sprite_box": [
+    1290,
+    1220,
+    357,
+    388
+   ],
+   "offset": [
+    2,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 23.7,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 18.9
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 26.5
+     },
+     "bottom": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 25.0
+     }
+    },
+    "max_band_dev_px": 0,
+    "identical_px": 0.975,
+    "iou": 0.899,
+    "proof_item_uncovered": 0.002,
+    "sprite_over_background": 0.007
+   },
+   "flags": []
+  },
+  "top-ponytail/back": {
+   "proof": "hair/top-ponytail-back.webp",
+   "worn_sheet": "art/source/pack2/01-hair/hair-little-b-worn.webp",
+   "proof_box": [
+    1867,
+    1215,
+    445,
+    579
+   ],
+   "sprite": "../../../dist/assets/pack2/hair/top-ponytail-back.webp",
+   "sprite_box": [
+    1924,
+    1217,
+    336,
+    398
+   ],
+   "offset": [
+    57,
+    2
+   ],
+   "registration": {
+    "shift_vs_sprite_box": [
+     0,
+     0
+    ],
+    "method": "kept (0,0)",
+    "anchor": "scalp",
+    "best_anchor_shift": [
+     0,
+     0
+    ],
+    "best_full_mask_shift": [
+     0,
+     0
+    ],
+    "rgb_rmse": 16.8,
+    "band_offsets": {
+     "top": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 17.5
+     },
+     "middle": {
+      "shift": [
+       0,
+       0
+      ],
+      "gain": 0.0,
+      "rmse": 12.8
+     },
+     "bottom": {
+      "shift": [
+       0,
+       -8
+      ],
+      "gain": 0.16,
+      "rmse": 23.5
+     }
+    },
+    "max_band_dev_px": 8,
+    "identical_px": 0.987,
+    "iou": 0.96,
+    "proof_item_uncovered": 0.0,
+    "sprite_over_background": 0.006
+   },
+   "flags": [
+    "parts drawn 8px apart"
+   ]
+  }
+ }
+}

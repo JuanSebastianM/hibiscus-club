@@ -1,0 +1,327 @@
+{
+ "signature": {
+  "script": "bb0956e31976-v2",
+  "source": "0b912dc385dc"
+ },
+ "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+ "report": {
+  "measure": {
+   "alpha_max": 255,
+   "haze_far_px": 419,
+   "haze_far_max": 4,
+   "haze_far_p99_9": 4.0,
+   "glow_ring_nonzero_frac": 0.0122,
+   "glow_ring_p95": 2.0,
+   "interior_frac_below_255": 0.0002,
+   "interior_frac_below_200": 0.0,
+   "outer_edge_vs_interior": {
+    "9-64": {
+     "n": 6313,
+     "dRGB": [
+      39.8,
+      49.7,
+      43.9
+     ],
+     "dLum": 46.1
+    },
+    "64-160": {
+     "n": 7927,
+     "dRGB": [
+      22.7,
+      28.9,
+      24.1
+     ],
+     "dLum": 26.5
+    },
+    "160-255": {
+     "n": 17681,
+     "dRGB": [
+      1.2,
+      4.7,
+      2.8
+     ],
+     "dLum": 3.5
+    }
+   }
+  },
+  "cleanup": {
+   "haze": 4,
+   "opaque": 255,
+   "fringe_margin": 20,
+   "decontaminate": "outer 2px only"
+  },
+  "fringe_px_fixed": 17438,
+  "haze_px_removed": 14962,
+  "crosses_grid": [
+   [
+    "03-outfits/outfits-little-c.webp",
+    [
+     1,
+     0
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-c.webp",
+    [
+     1,
+     1
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-c.webp",
+    [
+     1,
+     2
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-c.webp",
+    [
+     1,
+     3
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-c.webp",
+    [
+     2,
+     0
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-c.webp",
+    [
+     2,
+     1
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-c.webp",
+    [
+     2,
+     2
+    ]
+   ],
+   [
+    "03-outfits/outfits-little-c.webp",
+    [
+     2,
+     3
+    ]
+   ]
+  ],
+  "wisp_px_kept": {
+   "ruffle-swimsuit/0": 0,
+   "ruffle-swimsuit/1": 0,
+   "ruffle-swimsuit/2": 0,
+   "ruffle-swimsuit/3": 0,
+   "rash-guard-set/0": 0,
+   "rash-guard-set/1": 0,
+   "rash-guard-set/2": 0,
+   "rash-guard-set/3": 0,
+   "beach-poncho/0": 0,
+   "beach-poncho/1": 0,
+   "beach-poncho/2": 0,
+   "beach-poncho/3": 0
+  }
+ },
+ "splits": {},
+ "items": {
+  "ruffle-swimsuit": {
+   "category": "outfits-little",
+   "views": {
+    "front": {
+     "file": "outfits-little/ruffle-swimsuit-front.webp",
+     "width": 370,
+     "height": 512,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       114,
+       32,
+       370,
+       512
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-little/ruffle-swimsuit-left.webp",
+     "width": 307,
+     "height": 516,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       744,
+       29,
+       307,
+       516
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-little/ruffle-swimsuit-right.webp",
+     "width": 309,
+     "height": 517,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       1336,
+       28,
+       309,
+       517
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-little/ruffle-swimsuit-back.webp",
+     "width": 370,
+     "height": 513,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       1904,
+       32,
+       370,
+       513
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "rash-guard-set": {
+   "category": "outfits-little",
+   "views": {
+    "front": {
+     "file": "outfits-little/rash-guard-set-front.webp",
+     "width": 440,
+     "height": 542,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       79,
+       596,
+       440,
+       542
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-little/rash-guard-set-left.webp",
+     "width": 244,
+     "height": 540,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       779,
+       595,
+       244,
+       540
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-little/rash-guard-set-right.webp",
+     "width": 243,
+     "height": 538,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       1366,
+       596,
+       243,
+       538
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-little/rash-guard-set-back.webp",
+     "width": 438,
+     "height": 543,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       1870,
+       596,
+       438,
+       543
+      ],
+      "column": 3
+     }
+    }
+   }
+  },
+  "beach-poncho": {
+   "category": "outfits-little",
+   "views": {
+    "front": {
+     "file": "outfits-little/beach-poncho-front.webp",
+     "width": 392,
+     "height": 590,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       104,
+       1181,
+       392,
+       590
+      ],
+      "column": 0
+     }
+    },
+    "left": {
+     "file": "outfits-little/beach-poncho-left.webp",
+     "width": 285,
+     "height": 590,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       756,
+       1184,
+       285,
+       590
+      ],
+      "column": 1
+     }
+    },
+    "right": {
+     "file": "outfits-little/beach-poncho-right.webp",
+     "width": 286,
+     "height": 590,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       1345,
+       1184,
+       286,
+       590
+      ],
+      "column": 2
+     }
+    },
+    "back": {
+     "file": "outfits-little/beach-poncho-back.webp",
+     "width": 389,
+     "height": 590,
+     "source": {
+      "sheet": "art/source/pack2/03-outfits/outfits-little-c.webp",
+      "box": [
+       1895,
+       1181,
+       389,
+       590
+      ],
+      "column": 3
+     }
+    }
+   }
+  }
+ },
+ "proofs": {}
+}
