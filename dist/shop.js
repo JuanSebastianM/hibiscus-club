@@ -182,7 +182,7 @@ const Shop=(()=>{
     return img(key,async()=>{
       if(it.stud){const c=makeCanvas(T,T),g=c.getContext('2d');drawStud(g,it.stud,T*.32,T*.5,T*.13);drawStud(g,it.stud,T*.68,T*.5,T*.13);return c}
       if(it.proc){const c=makeCanvas(T,T),g=c.getContext('2d');drawCharm(g,it.proc,T/2,T/2,T*({1:.44,2:.62,3:.5}[it.proc]||.45),-.19);return c}
-      const src=it.art?.front?.main;if(!src)throw new Error('no art');
+      const src=it.thumb||it.art?.front?.main;if(!src)throw new Error('no art');
       let c=fitInto(await asset(src),T,it.category==='hair'?.04:.08);
       const tint=(it.tints||[]).find(t=>t.id===tintId);
       if(tint&&tint.id!=='original')c=tintCanvas(c,tint);
