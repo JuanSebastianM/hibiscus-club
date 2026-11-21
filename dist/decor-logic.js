@@ -459,11 +459,13 @@ const DecorLogic=(()=>{
     let rows=order.map(c=>c.map(e=>({...e,w:widthOf(e.id)})));
     // in a painted room the furniture also stands beside a window (overlapping its frame a little)
     // rather than in front of it, when the room's centrepiece still fits beside one
+    // (the stretch under the window stays open to the other, lower clusters)
+    let under=[];
     if(g.painted){
-      let soft=segs;
-      for(const o of g.openings.filter(o=>o.kind==='window'&&o.y1>yb-260)){const k=(o.x1-o.x0)*.22;soft=cut(soft,o.x0+k,o.x1-k)}
+      let soft=segs;const spans=[];
+      for(const o of g.openings.filter(o=>o.kind==='window'&&o.y1>yb-260)){const k=(o.x1-o.x0)*.22;soft=cut(soft,o.x0+k,o.x1-k);spans.push([o.x0+k,o.x1-k,yb-o.y1+(o.y1-o.y0)*.35])}
       const need=rows[0]?rows[0].reduce((s,e)=>s+e.w,0)+30:0;
-      if(soft.length>segs.length&&soft.some(([a,b])=>b-a>=need))segs=soft;
+      if(soft.length>segs.length&&soft.some(([a,b])=>b-a>=need)){segs=soft;under=spans}
     }
     if(segs.length===1){
       const avail=segs[0][1]-segs[0][0];
@@ -478,15 +480,19 @@ const DecorLogic=(()=>{
       rows.forEach((row,ri)=>{x=placeRow(row,x);x+=30+spare*(gaps[ri]/gsum)});
     }else{
       // a door in the back wall: each cluster goes where there is room for it, beside the door
-      const room=shuffle(segs.map(([a,b])=>({a,b,rows:[],left:b-a})),rnd);
+      const room=[...shuffle(segs.map(([a,b])=>({a,b,rows:[],left:b-a})),rnd),...under.map(([a,b,maxH])=>({a,b,rows:[],left:b-a,under:true,maxH}))];
       const w=r=>r.reduce((s,e)=>s+e.w,0)+30;
       let floating=null;
       rows.forEach((row,ri)=>{
-        const fit=r=>room.filter(s=>s.left>=w(r)).sort((a,b)=>b.left-a.left)[0];
+        // under a window only what is low enough to leave most of it showing
+        const tallest=r=>Math.max(...r.map(e=>item(e.id).height*item(e.id).defaultScale*g.sB));
+        const fit=r=>room.filter(s=>s.left>=w(r)&&!(s.under&&(ri===0||tallest(r)>s.maxH))).sort((a,b)=>(a.under-b.under)||b.left-a.left)[0];
+        // a cluster too wide for the wall beside the door keeps only its main piece (the widest)
+        const main=row.reduce((a,e)=>e.w>a.w?e:a,row[0]);
         let seg=fit(row);
-        if(!seg&&ri>0&&row.length>1){row=row.slice(0,1);seg=fit(row)} // a cluster's first piece alone
+        if(!seg&&row.length>1){row=[main];seg=fit(row)}
         if(seg){seg.rows.push(row);seg.left-=w(row)}
-        else if(ri===0)floating=row.slice(0,1); // the centrepiece (alone) does not fit beside the door
+        else if(ri===0)floating=[main]; // the centrepiece does not fit beside the door
       });
       for(const s of room){
         if(!s.rows.length)continue;
@@ -515,18 +521,25 @@ const DecorLogic=(()=>{
       out.push(constrain(mk(id,l+(u+shift)*(r-l),y+(rnd()-.5)*16*dk,{f}),where));
     }
     /* front corners: one or two small pieces (the other corner when one is in front of a side door) */
-    const fronts=shuffle(R.front.filter(ok),rnd).filter(id=>!out.some(p=>p.id===id)).slice(0,rnd()<.6?2:1);
-    const corners=shuffle([.07,.93],rnd);
+    // (a painted room, with its furniture at true size, has room for a third, in the middle)
+    const fronts=shuffle(R.front.filter(ok),rnd).filter(id=>!out.some(p=>p.id===id)).slice(0,g.painted?(rnd()<.6?3:2):rnd()<.6?2:1);
+    const corners=[...shuffle([.07,.93],rnd),.5+(rnd()-.5)*.3];
     fronts.forEach((id,i)=>{
       // (in a painted room, whose floor grows fast toward the viewer, a little further back)
       const y=yb+(g.painted?.56+rnd()*.14:.8+rnd()*.12)*depth,[l,r]=floorEdges(y,where),f=flipFor(item(id));
-      let p=constrain(mk(id,l+corners[i]*(r-l),y,{f}),where);
-      if(inClear(p,where)>.2)p=constrain(mk(id,l+corners[1-i]*(r-l),y,{f}),where);
+      let p=constrain(mk(id,l+corners[i]*(r-l),i===2?y+(g.front-y)*.45:y,{f}),where);
+      // a corner in front of a side door: the other corner, or if that is taken, a little way in
+      if(i<2&&inClear(p,where)>.2)p=constrain(mk(id,l+(fronts.length>1?(corners[i]<.5?.3:.7):corners[1-i])*(r-l),y,{f}),where);
       out.push(p);
     });
     /* drop anything that sits on top of an earlier piece at nearly the same depth, or blocks a door */
     const kept=[];
     for(const p of out){
+      // a piece on the walkway to a back-wall door steps forward, just past it (or is left out)
+      if(!floats.has(p)&&!p.host&&inClear(p,where)>.25){
+        const c=g.clear.find(c=>c.y0<=yb+6&&footprint(p,where).rear<=c.y1);
+        if(c){const f=footprint(p,where);p.y+=c.y1+6-f.rear;constrain(p,where)}
+      }
       if(!floats.has(p)&&inClear(p,where)>.25)continue;
       const b=box(p,where);
       const clash=kept.some(q=>{if(layer(q)!==layer(p))return false;const a=box(q,where);
@@ -540,7 +553,7 @@ const DecorLogic=(()=>{
     /* wall: two or three pieces where nothing tall stands in front */
     const tall=kept.filter(p=>layer(p)===2&&p.y<yb+140*dk).map(p=>box(p,where));
     const noWin=g.painted&&g.openings.length>0; // the painting has its own windows and doors
-    const wallIds=shuffle(R.wall.filter(id=>ok(id)&&item(id).placement==='wall'&&!(noWin&&DECOR.decorWindows.includes(id))),rnd).slice(0,2+(rnd()<.5?1:0));
+    const wallIds=shuffle(R.wall.filter(id=>ok(id)&&item(id).placement==='wall'&&!(noWin&&DECOR.decorWindows.includes(id))),rnd).slice(0,g.painted?3:2+(rnd()<.5?1:0));
     const wallBoxes=[];
     for(const id of wallIds){
       let placed=null;
