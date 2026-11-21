@@ -471,7 +471,10 @@ const HibiscusPuppet=(()=>{
     // x of arm a's axis (shoulder, elbow, wrist, hand) at canvas row y
     const armAxisX=(a,y)=>{const ch=[px['sh'+a],px['el'+a],px['wr'+a],px['hand'+a]];if(y<=ch[0][1])return ch[0][0];
       for(let k=1;k<ch.length;k++)if(y<=ch[k][1]){const [p,q]=[ch[k-1],ch[k]];return p[0]+(q[0]-p[0])*(y-p[1])/(q[1]-p[1])}return ch[3][0]};
-    const armNear=armMask&&dilate(armMask,W,H,1),overArm=armMask&&dilate(armMask,W,H,4);
+    // what the near arm really covers: its polygon where the arm layer has pixels (the bodysuit inside the
+    // polygon is left out of the arm, portrait.js armLayer), so the body is filled in only under the arm
+    const armDrawn=armMask&&armIdx>=0?(()=>{const a=pixelsOf(layers.layers[armIdx].canvas).data,m=new Uint8Array(armMask.length);for(let i=0;i<m.length;i++)m[i]=armMask[i]&&a[i*4+3]>8?1:0;return m})():armMask;
+    const armNear=armDrawn&&dilate(armDrawn,W,H,1),overArm=armMask&&dilate(armMask,W,H,4);
     // front view: beyond arm a's cut line (shoulder to armpit), i.e. the standing upper arm's side of it
     const beyondCut=(a,i,out=0)=>{if(rg.side)return false;const x=i%W,y=Math.floor(i/W),[top,pit]=rg.armCut[a];if(y<top[1]-30||y>pit[1])return false;
       const edge=(y<top[1]?top[0]:top[0]+(pit[0]-top[0])*(y-top[1])/(pit[1]-top[1]))+(a?out:-out);return a?x>edge:x<edge};

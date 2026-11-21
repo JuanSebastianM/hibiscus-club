@@ -122,12 +122,44 @@ def sleeve_hole(cx, cy, rx, ry, rim, feather=2.5):
     inside the opening (the ellipse of the sleeve's dark inside, doll px, left view) and below the
     sleeve's lower rim (doll y `rim`), so the arm comes out of the sleeve instead of out of the bodice
     under it; the rim's front lip stays over the arm."""
-    return {"left": {"armBase": True, "armClip": [{"ellipse": [cx, cy, rx, ry], "feather": feather},
+    return {"left": {"armClip": [{"ellipse": [cx, cy, rx, ry], "feather": feather},
                                  {"poly": [[-80, rim], [300, rim], [300, 950], [-80, 950]], "feather": feather}]}}
 
 
+def front_puff(poly, s0, s1, d0, d1, kx, srcW):
+    """A side-view puff sleeve taken from the front view's sprite (game px; the sleeve from its shoulder s0
+    to its hem s1) and mapped onto the near arm (doll px d0 at the shoulder, d1 at the hem), drawn over
+    the arm: the side sprite draws the sleeve end-on as a ring round an opening, which no arm can come
+    out of."""
+    sv = (s1[0] - s0[0], s1[1] - s0[1]); dv = (d1[0] - d0[0], d1[1] - d0[1])
+    ky = float(np.hypot(*dv) / np.hypot(*sv))
+    rot = float(np.degrees(np.arctan2(dv[1], dv[0]) - np.arctan2(sv[1] * ky, sv[0] * kx)))
+    return {"poly": poly, "pivot": list(s0), "to": list(d0), "rot": round(rot, 2), "scale": [kx, round(ky, 4)],
+            "over": True, "view": "front", "srcW": srcW}
+
+
+def cuff_hole(cx, cy, rx, ry, rot, feather=1.5):
+    """Side views, long sleeves: the cuff's opening is a tilted ellipse (seen a little from below). The
+    hand comes out of it: the arm is drawn inside the opening and everywhere below the line through its
+    centre along its tilt (the hand hangs in front of the cuff's front lip), so the cuff edge stays
+    clean and the dark inside of the cuff never shows beside the wrist."""
+    import math
+    t = math.tan(math.radians(rot))
+    line = [[-80, cy - (cx + 80) * t], [300, cy + (300 - cx) * t]]
+    return {"left": {"armClip": [{"ellipse": [cx, cy, rx + 1, ry + 1, rot], "feather": feather},
+                                                  {"poly": line + [[300, 950], [-80, 950]], "feather": feather}]}}
+
+
 EXTRA = {
-    "crochet-cover-up": {"left": {**sleeve_hole(95, 262, 36, 28, 296)["left"], "erase": [{"ellipse": [92, 262, 40, 31], "feather": 2}]}},
+    # side views: the bodysuit under the mesh is the coral swimsuit (tintSuit), so what shows in the cap
+    # sleeve's opening, where the mannequin patch is erased, is her arm in front of the swimsuit's side
+    "crochet-cover-up": {"left": {**sleeve_hole(95, 262, 36, 28, 286)["left"], "erase": [{"ellipse": [92, 262, 40, 31], "feather": 2}],
+                                  "suit": {"color": "#e8707e", "y0": 0}}},
+    # the poncho drapes over her shoulder: the arm comes out of its side opening (the front panel over it)
+    # and hangs below its edge
+    "beach-poncho": {"left": {"suit": {"color": "#7fcabd", "y0": 0}, "skin": [{"rect": [0, 180, 209, 250]}], "armClip": [
+        {"poly": [[102, 300], [110, 280], [128, 268], [150, 268], [162, 282], [170, 330], [174, 400], [176, 470], [98, 470], [97, 400], [99, 340]], "feather": 2.5},
+        {"poly": [[-80, 466], [300, 466], [300, 950], [-80, 950]], "feather": 3}]}},
     "tennis-dress": sleeve_hole(105, 268, 26, 9, 285),
     "baby-tee-cargo": sleeve_hole(101, 273, 27, 12, 292),
     "butterfly-satin-skirt": sleeve_hole(109, 244, 28, 8, 257),
@@ -135,11 +167,19 @@ EXTRA = {
     "rash-guard-set": sleeve_hole(124, 314, 33, 11, 330),
     "rainbow-tutu-tee": sleeve_hole(121, 284, 36, 13, 304),
     "dino-romper": sleeve_hole(122, 297, 35, 14, 318),
-    "tulle-party-dress": sleeve_hole(130, 268, 27, 10, 286),
+    # the side sprite draws the puff sleeve end-on, a ring round an opening with the mannequin inside: the
+    # opening is closed with the satin either side of it (patch), and the front view's puff sleeve is laid
+    # over the near arm, which comes out of its hem (front_puff)
+    "tulle-party-dress": {"left": {"patch": [{"shape": {"ellipse": [128, 270, 33, 25], "feather": 4}}],
+                                   "armClip": [{"poly": [[-80, 262], [300, 262], [300, 950], [-80, 950]], "feather": 3}],
+                                   "pieceExtra": {"0": {"parts": [front_puff([[58, 44], [66, 24], [86, 12], [106, 12], [114, 26], [115, 104], [96, 106], [56, 70]],
+                                                                               [104, 28], [82, 83], [130, 234], [122, 290], 1.5, 398)]}}},
+                          "right": {"pieceExtra": {"0": {"parts": [front_puff([[398 - x, y] for x, y in [[58, 44], [66, 24], [86, 12], [106, 12], [114, 26], [115, 104], [96, 106], [56, 70]]],
+                                                                                [398 - 104, 28], [398 - 82, 83], [207 - 130, 234], [207 - 122, 290], 1.5, 398)]}}}},
     # long sleeves from the side: the hand comes out of the cuff's opening, with a soft edge
-    "raincoat-set": sleeve_hole(99, 490, 25, 8, 495),
-    "bear-onesie": sleeve_hole(112, 497, 21, 5, 500),
-    "ballet-wrap-set": sleeve_hole(110, 474, 22, 7, 478),
+    "raincoat-set": cuff_hole(100, 490, 28, 7, 25),
+    "bear-onesie": cuff_hole(110, 499, 28, 10, 28),
+    "ballet-wrap-set": cuff_hole(113, 469, 18, 4, 25),
 }
 
 
@@ -564,7 +604,7 @@ def build():
                         fit[key] = v
             if "skin" not in fit:
                 fit["skin"] = SKIN[doll][view]
-            if c.get("suit"):  # the bodysuit's legs recoloured as swim shorts (portrait.js tintSuit)
+            if c.get("suit") and "suit" not in fit:  # the bodysuit's legs recoloured as swim shorts (portrait.js tintSuit)
                 fit["suit"] = c["suit"]
             if c.get("thighs", True):  # the bodysuit's short legs redrawn as bare thighs (portrait.js bareThighs)
                 th = dict(THIGHS[doll])
@@ -624,6 +664,8 @@ def mirror_extra(vx, M):
     for key, v in vx.items():
         if key in ("skin", "behind", "front", "armClip", "overRegion", "erase", "cutDoll"):
             out[key] = mirror_shapes(v, M)
+        elif key == "patch":
+            out[key] = [{**q, **({"from": [-q["from"][0], q["from"][1]]} if "from" in q else {}), "shape": mirror_shapes([q["shape"]], M)[0]} for q in v]
         elif key == "pieceExtra":
             continue  # sprite-space: given per view
         else:

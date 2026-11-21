@@ -288,6 +288,22 @@ function outfitLayer(doll,view,id,tintId){
       for(const p of parts.filter(p=>p.over)){if(!over)[over,og]=dollLayer(doll,view);drawPiece(og,psrc.get(p),p)}
     }
     if(fit.erase)eraseShapes(doll,view,c,fit.erase);
+    // patch: inside `shape` (doll-local, feathered) the garment is replaced by its own pixels from `from`
+    // (dx, dy) away, e.g. the end-on opening of a side-view puff sleeve closed with the puff above it
+    // (from omitted: filled row by row from the fabric just left and right of the shape, a smooth closed
+    // surface)
+    for(const pt of fit.patch||[]){
+      if(pt.from){const src=makeCanvas(c.width,c.height);src.getContext('2d').drawImage(c,pt.from[0],pt.from[1]);
+        const m=softClip(src,...dollView(doll,view).origin,[pt.shape]);eraseShapes(doll,view,c,[pt.shape]);c.getContext('2d').drawImage(m,0,0);continue}
+      const g2=c.getContext('2d'),W=c.width,H=c.height,im=g2.getImageData(0,0,W,H),d=im.data;
+      const [ox,oy]=dollView(doll,view).origin,m=shapeMask(W,H,[{...pt.shape,feather:0}].map(s=>{const q={...s};if(q.ellipse)q.ellipse=[q.ellipse[0]+ox,q.ellipse[1]+oy,...q.ellipse.slice(2)];if(q.poly)q.poly=q.poly.map(([x,y])=>[x+ox,y+oy]);return q}),pt.shape.feather||0);
+      const avg=(x,y,dir)=>{const s=[0,0,0];let n=0;for(let k=1;k<=4;k++){const q=(y*W+x+dir*k)*4;if(d[q+3]>200){s[0]+=d[q];s[1]+=d[q+1];s[2]+=d[q+2];n++}}return n?s.map(v=>v/n):null};
+      for(let y=0;y<H;y++){let x=0;while(x<W){if(m[y*W+x]<.02){x++;continue}let e=x;while(e<W&&m[y*W+e]>=.02)e++;
+        const L=avg(x,y,-1),R=avg(e-1,y,1),A=L||R,B=R||L;
+        if(A)for(let t=x;t<e;t++){const o=(y*W+t)*4,f=(t-x+.5)/(e-x),w=Math.min(1,m[y*W+t]);for(let k=0;k<3;k++)d[o+k]+=(A[k]+(B[k]-A[k])*f-d[o+k])*w;d[o+3]=Math.max(d[o+3],255*w)}
+        x=e}}
+      g2.putImageData(im,0,0);
+    }
     const res={front:c,back:null,over};
     // a hood worn up: drawn over her hair, the face opening cut out of it (see dollOps)
     if(fit.hood){res.hood=splitLayer(doll,view,c,fit.hood.region);if(fit.hood.face?.length)eraseShapes(doll,view,res.hood,fit.hood.face)}
@@ -692,13 +708,14 @@ function armLayer(shot,view,body){
   const dv=dollView(shot.doll,view);
   if(!dv.arm)return null;
   return memo(dollCaches.layer,'arm|'+bodyKey(shot,view),async()=>{
-    const [c,g]=dollLayer(shot.doll,view);
-    g.save();g.beginPath();shapePathInto(g,{poly:dv.arm});g.clip();g.drawImage(body,0,0);g.restore();
-    // fit.armBase (the arm drawn inside a short sleeve's opening): the bodysuit is judged on the base
-    // picture, since an outfit's skin repaint turns the torso's bodysuit into skin, which must not come
-    // along with the arm there
-    const im=g.getImageData(0,0,c.width,c.height),d=im.data;let bd=d;
-    if(catalogItem(shot.outfit)?.fit?.[shot.doll]?.[view]?.armBase){const [,bg]=dollLayer(shot.doll,view);bg.drawImage(await spriteCanvas(dv.art),0,0);bd=bg.getImageData(0,0,c.width,c.height).data}
+    // the arm cut out with a soft edge (1 px feather): a hard clip left a stepped edge along the wrist
+    const [b0,bg0]=dollLayer(shot.doll,view);bg0.drawImage(body,0,0);
+    const c=softClip(b0,...dv.origin,[{poly:dv.arm,feather:1}]),g=c.getContext('2d');
+    // the bodysuit is judged on the base picture: an outfit's skin repaint turns the torso's bodysuit
+    // into (streaky) skin, which must not come along with the arm over the outfit (behind the wrist, in
+    // a sleeve's opening)
+    const im=g.getImageData(0,0,c.width,c.height),d=im.data;
+    const [,bg]=dollLayer(shot.doll,view);bg.drawImage(await spriteCanvas(dv.art),0,0);const bd=bg.getImageData(0,0,c.width,c.height).data;
     for(let i=0;i<d.length;i+=4){
       if(!d[i+3])continue;
       const r=bd[i],gg=bd[i+1],b=bd[i+2],w=Math.min(1,Math.max(0,(b/(r||1)-.62)/.2))*(gg<b+6?1:0);
