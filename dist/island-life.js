@@ -129,6 +129,7 @@ let worldView=null;
 const WALKER_CROP=[0,60,600,970];
 function showWalkerView(view){
   const w=worldView;if(!w)return;
+  if(w.puppet?.active){w.puppet.setView(view,true);w.shown=view;return}
   const want=w.views[view]?view:w.views.front?'front':null;
   if(!want||w.shown===view)return;
   const g=w.canvas.getContext('2d');g.clearRect(0,0,w.canvas.width,w.canvas.height);
@@ -137,16 +138,19 @@ function showWalkerView(view){
   w.actor.style.setProperty('--facing',want===view||view==='front'?1:view==='left'?-1:1);
   w.shown=view;
 }
-function positionWalker(moving=false,side){
+const walkerDepth=y=>.83+(y-.60)*.94;
+function positionWalker(moving=false,side,view){
   if(!worldView)return;
   const w=worldView,p=lifePlayer();
-  const depth=.83+(p.y-.60)*.94;
+  const depth=walkerDepth(p.y);
   w.actor.style.transform=`translate3d(${p.x*w.width}px,${p.y*w.height}px,0) scale(${depth})`;
   w.actor.style.zIndex=String(Math.round(p.y*100));
   if(side)w.actor.style.setProperty('--lean',side);
   w.actor.classList.toggle('walking',moving);
-  showWalkerView(moving&&side?(side<0?'left':'right'):'front');
+  showWalkerView(moving&&view?view:moving&&side?(side<0?'left':'right'):'front');
 }
+/* Screen px per doll px of the walker (the puppet's travel is measured in doll px). */
+function walkerScale(y){const w=worldView;return w?w.size/WALKER_CROP[3]*walkerDepth(y):1} // WALKER_CROP = [x, y, w, h]
 function stopWalk(save=false){
   if(!worldView)return;
   const w=worldView;
@@ -154,8 +158,46 @@ function stopWalk(save=false){
   positionWalker();
   if(save)persist();
 }
+/* The walker and the resident as puppets (puppet.js), started once the still walker is up. When puppets
+   are off or fail, the still pictures and the glide stay exactly as before. */
+function attachPuppets(w,shot){
+  if(typeof HibiscusPuppet==='undefined'||!HibiscusPuppet.supported())return;
+  try{w.puppet?.destroy();w.resident?.destroy()}catch{}
+  const dpr=()=>Math.min(2,window.devicePixelRatio||1);
+  const crop=WALKER_CROP,maxDepth=walkerDepth(.94);
+  try{
+    w.puppet=HibiscusPuppet.create(w.canvas,{shot,view:'front',role:'walker',
+      layout:()=>{const h=Math.max(40,Math.round(w.size*dpr()*maxDepth)),cw=Math.round(h*crop[2]/crop[3]);return {size:[cw,h],crop,dest:[0,0,cw,h]}},
+      onActive:on=>{
+        if(w!==worldView)return;
+        w.actor.classList.toggle('puppet',on);w.actor.style.setProperty('--facing',1);
+        if(!on){w.puppet=null;w.canvas.width=WALKER_CROP[2];w.canvas.height=WALKER_CROP[3];const v=w.shown||'front';w.shown=null;showWalkerView(v)}
+      }});
+    w.puppet?.prefetch(['left','right','back']);
+  }catch{w.puppet=null}
+  const person=w.el.querySelector('.world-person');
+  w.resident=residentPuppet(person&&person.querySelector('img'),district().resident.toLowerCase(),'world');
+}
+/* A resident picture made to breathe, blink and talk: a canvas laid over the <img>, which is hidden
+   only while the puppet draws. */
+function residentPuppet(img,id,role){
+  if(!img||typeof HibiscusPuppet==='undefined'||!HibiscusPuppet.supported())return null;
+  const c=document.createElement('canvas');c.className='resident-puppet';c.setAttribute('aria-hidden','true');c.hidden=true;
+  img.after(c);
+  const place=()=>{c.style.left=img.offsetLeft+'px';c.style.top=img.offsetTop+'px';c.style.width=img.offsetWidth+'px';c.style.height=img.offsetHeight+'px'};
+  try{
+    const p=HibiscusPuppet.create(c,{resident:id,role,
+      layout:()=>{place();const d=Math.min(2,window.devicePixelRatio||1),h=Math.max(20,Math.round(img.offsetHeight*d)),cw=Math.round(h*176/432);return {size:[cw,h],dest:[0,0,cw,h]}},
+      onActive:on=>{img.style.visibility=on?'hidden':'';c.hidden=!on;if(!on)c.remove()}});
+    if(!p){c.remove();return null}
+    return p;
+  }catch{c.remove();return null}
+}
+/* Puppet reactions: 'talk' (for `seconds`) or an emote. No-ops without puppets. */
+function walkerDo(what,seconds){const p=worldView?.puppet;if(!p?.active)return;if(what==='talk')p.talk(seconds||1);else p.emote(what)}
 function detachWorld(){
   if(!worldView)return;
+  try{worldView.puppet?.destroy();worldView.resident?.destroy()}catch{}
   stopWalk(true);worldView.observer.disconnect();try{worldView.fx?.unmount()}catch{}worldView=null;
   hideCoach();
 }
@@ -174,15 +216,28 @@ function walkTo(x,y,arrive,status){
   const p=lifePlayer(),fromX=p.x,fromY=p.y;
   x=clamp(x,.07,.93);y=clamp(y,district().floor,.94);
   const dx=x-fromX,dy=y-fromY,side=dx<0?-1:1;
-  const duration=Math.hypot(dx,dy*w.height/w.width)*2600;
+  let duration=Math.hypot(dx,dy*w.height/w.width)*2600;
+  // the moving puppet walks at its natural pace with planted feet: side view for mostly sideways
+  // walks, front or back view when she walks toward or away from the camera
+  const pup=w.puppet?.active?w.puppet:null,sx=dx*w.width,sy=dy*w.height;
+  const view=pup?Math.abs(sy)>Math.abs(sx)*1.25?(sy>0?'front':'back'):(side<0?'left':'right'):null;
+  // a short hop strolls, a long walk is brisk (pace 0..1, puppet-rig.js paceFor)
+  let pace=0;
+  if(pup){
+    const k=walkerScale((fromY+y)/2),R=HibiscusPuppetRig,ax=Math.abs(sx)/k,ay=Math.abs(sy)/k;
+    pace=R.paceFor(state.doll,Math.hypot(ax,ay));
+    duration=1000*(ax/R.walkSpeed(state.doll,'left',pace)+ay/R.walkSpeed(state.doll,'front',pace));
+  }
   w.ring.style.left=(x*100)+'%';w.ring.style.top=(y*100)+'%';w.ring.hidden=false;
   setWorldStatus(status||t('life.walking'));
   const start=performance.now();
   function move(time){
     const progress=duration<16||w.reduced.matches?1:Math.min(1,(time-start)/duration);
+    const ox=p.x,oy=p.y;
     p.x=fromX+dx*progress;p.y=fromY+dy*progress;
+    if(pup&&!pup.dead){const along=view==='front'||view==='back'?(p.y-oy)*w.height:(p.x-ox)*w.width;pup.advance(Math.abs(along)/walkerScale(p.y),pace)}
     if(progress<1){
-      positionWalker(true,side);
+      positionWalker(true,side,view);
       w.frame=requestAnimationFrame(move);
     }else{
       positionWalker();w.frame=0;w.ring.hidden=true;persist();setWorldStatus('');
@@ -223,8 +278,9 @@ function attachWorld(){
     if(w!==worldView)return;
     w.views[view]=doll;if(w.shown===view){w.shown=null;showWalkerView(view)}
   }).catch(()=>{});
-  const size=()=>actor.style.setProperty('--size',((state.doll==='adult'?.325:.225)*w.height)+'px');
+  const size=()=>{w.size=(state.doll==='adult'?.325:.225)*w.height;actor.style.setProperty('--size',w.size+'px')};
   size();
+  attachPuppets(w,shot);
   positionWalker();
   w.observer=new ResizeObserver(()=>{w.width=el.clientWidth;w.height=el.clientHeight;size();if(!w.frame)positionWalker()});
   w.observer.observe(el);
@@ -269,7 +325,7 @@ function greet(){
 }
 function finishDaily(i){
   const e=dailySummary().plan.errands[i];
-  award(e.reward);track('daily',e.type);tone(true);persist();refreshQuestUI();
+  award(e.reward);track('daily',e.type);tone(true);walkerDo('cheer');persist();refreshQuestUI();
   announceNext(t('quest.dailyDone',{count:e.reward}));
 }
 function collectToken(id){
@@ -278,7 +334,7 @@ function collectToken(id){
   if(b){const r=b.getBoundingClientRect();try{HibiscusFx.burst(r.left+r.width/2,r.top+r.height/2,1.4)}catch{}}
   if(id[0]==='s'){
     const bit=1<<(idx*SPARKLES_PER_PLACE+k);if(s.day.found&bit)return;
-    s.day.found|=bit;award(1);track('findable',district().id);tone();persist();refreshQuestUI();
+    s.day.found|=bit;award(1);track('findable',district().id);tone();walkerDo(state.doll==='little'?'shy':'smile');persist();refreshQuestUI();
     say(t('life.sparkleFound',{thing:district().sparkleName,n:bits(s.day.found),total:s.spots}));
     return;
   }
@@ -298,7 +354,7 @@ function finishStory(i,target){
     award(pay);track('errand','story-'+(i+1));tone(true);
     done=pay?t('life.storyDone',{count:pay}):t('life.storyDoneCredit');
   }
-  persist();refreshQuestUI();
+  persist();refreshQuestUI();walkerDo('cheer');
   openEncounter(target,()=>available.step.line,true,done||'');
   announceNext(done||t('quest.stepDone'));
 }
@@ -312,13 +368,13 @@ function finishDailyStep(i,kind,target){
     :kind==='compliment'?()=>t('daily.compliment.line.'+D[e.at].id)
     :()=>t('daily.tidy.line.'+D[e.at].id);
   if(dailyDone(e,s.day.prog[i])){finishDaily(i);openEncounter(target,line,true,t('quest.dailyDone',{count:e.reward}));}
-  else{persist();refreshQuestUI();openEncounter(target,line,true,'');announceNext(t('quest.stepDone'));}
+  else{persist();refreshQuestUI();walkerDo('cheer');openEncounter(target,line,true,'');announceNext(t('quest.stepDone'));}
 }
 
 /* ---------- conversations ----------
    What the open conversation shows, kept so a language switch can redraw it: `line` returns the
    current-language text, `offer` marks the "can I help" card, `after` the step-done note (or null). */
-let encounterView=null;
+let encounterView=null,encounterPuppet=null;
 function openEncounter(target,customLine,focus=true,after=null){
   const dialog=document.querySelector('#encounter'),p=lifePlayer(),d=district(),i=p.scene,person=target==='person';
   encounterView={target,line:customLine,offer:false,after};
@@ -348,6 +404,13 @@ function openEncounter(target,customLine,focus=true,after=null){
   dialog.innerHTML=`<div class="encounter-head">${person?`<div class="resident-photo"><img alt="" src="assets/scenes/${d.resident.toLowerCase()}.png"></div>`:`<span class="object-badge">${icon(d.icon,30)}</span>`}<div><h2>${person?d.resident:d.spot}</h2><span>${person?t('life.roleStatus',{role:d.role,status:p.topics[i]?d.friend:d.new}):d.name}</span></div></div><p class="speech">${escapeText(speech)}</p>${next}<div class="responses">${opts.join('')}<button data-life-action="bye">${t(after!==null?'life.ok':person?'life.bye':'life.keepExploring')}</button></div>`;
   if(!dialog.open)dialog.showModal();
   if(focus)dialog.querySelector('.responses a,.responses button')?.focus({preventScroll:true});
+  if(person){ // the resident speaks the line, in the dialog and in the scene
+    const talkFor=Math.min(4.5,Math.max(1.2,speech.length*.045)),pic=dialog.querySelector('.resident-photo img');
+    try{encounterPuppet?.destroy()}catch{}
+    encounterPuppet=residentPuppet(pic,d.resident.toLowerCase(),'photo');
+    const ep=encounterPuppet;ep?.ready.then(ok=>{if(ok)ep.talk(talkFor)});
+    worldView?.resident?.talk(talkFor);
+  }
   coachEvent('talked');
 }
 function dailyStepLabel(i,kind){
@@ -379,6 +442,7 @@ function relocalizeEncounter(){
 }
 function handleLifeAction(button){
   const d=button.dataset,p=lifePlayer(),dialog=document.querySelector('#encounter');
+  if(dialog.open&&dialog.contains(button)&&d.lifeAction!=='bye')walkerDo('talk',1.1); // she answers
   if(d.taskStep!==undefined){if(dialog.open)finishStory(Number(d.taskStep),dialog.dataset.target);return true}
   if(d.dailyStep!==undefined){if(dialog.open)finishDailyStep(Number(d.dailyStep),d.dailyKind,dialog.dataset.target);return true}
   switch(d.lifeAction){
@@ -401,7 +465,7 @@ function handleLifeAction(button){
   }
   return false;
 }
-document.querySelector('#encounter').addEventListener('close',()=>{coachEvent('closed');if(worldView&&!document.activeElement?.closest?.('main'))worldView.el.focus({preventScroll:true})});
+document.querySelector('#encounter').addEventListener('close',()=>{try{encounterPuppet?.destroy()}catch{}encounterPuppet=null;coachEvent('closed');if(worldView&&!document.activeElement?.closest?.('main'))worldView.el.focus({preventScroll:true})});
 
 /* ---------- names ---------- */
 const NAME_IDEAS={adult:['Coral','Marisol','Jasmine','Luna','Daisy','Valeria'],little:['Pearl','Lulu','Bea','Mimi','Coco','Sofi']};
