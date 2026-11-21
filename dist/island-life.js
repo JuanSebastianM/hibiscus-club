@@ -149,6 +149,7 @@ function positionWalker(moving=false,side,view){
   if(side)w.actor.style.setProperty('--lean',side);
   w.actor.classList.toggle('walking',moving);
   showWalkerView(moving&&view?view:moving&&side?(side<0?'left':'right'):'front');
+  if(talkMode==='bubble')queueTalkLayout(); // the bubbles follow her
 }
 /* Screen px per doll px of the walker (the puppet's travel is measured in doll px). */
 function walkerScale(y){const w=worldView;return w?w.size/WALKER_CROP[3]*walkerDepth(y):1} // WALKER_CROP = [x, y, w, h]
@@ -198,6 +199,7 @@ function residentPuppet(img,id,role){
 function walkerDo(what,seconds){const p=worldView?.puppet;if(!p?.active)return;if(what==='talk')p.talk(seconds||1);else p.emote(what)}
 function detachWorld(){
   if(!worldView)return;
+  if(talkMode==='bubble'){if(talkKeep)removeBubbles();else closeEncounter()} // a language change draws them again
   try{worldView.puppet?.destroy();worldView.resident?.destroy()}catch{}
   stopWalk(true);worldView.observer.disconnect();try{worldView.fx?.unmount()}catch{}worldView=null;
   hideCoach();
@@ -213,6 +215,7 @@ function setWorldStatus(text){
 function walkTo(x,y,arrive,status){
   const w=worldView;
   if(!w)return;
+  if(talkMode==='bubble')closeEncounter(); // walking away ends an in-scene conversation
   stopWalk();
   const p=lifePlayer(),fromX=p.x,fromY=p.y;
   const d=district();x=clamp(x,d.xMin??.07,d.xMax??.93);y=clamp(y,floorAt(d,x),.94); // per-scene walkable limits
@@ -257,7 +260,7 @@ function walkToTarget(target){
       // a living walker waves hello first (the conversation opens over her a moment later); a finished
       // greeting errand cheers instead
       const w=worldView;
-      if(w?.puppet?.active&&!w.puppet.emoteQ){walkerDo('wave');setTimeout(()=>{if(worldView===w&&!document.querySelector("#encounter")?.open)openEncounter(target)},1000);return}
+      if(w?.puppet?.active&&!w.puppet.emoteQ){walkerDo('wave');setTimeout(()=>{if(worldView===w&&!talkOpen())openEncounter(target)},1000);return}
     }
     openEncounter(target);
   },target==='person'?t('life.walkingTo',{resident:d.resident}):d.walkSpot);
@@ -287,10 +290,10 @@ function attachWorld(){
   size();
   attachPuppets(w,shot);
   positionWalker();
-  w.observer=new ResizeObserver(()=>{w.width=el.clientWidth;w.height=el.clientHeight;size();if(!w.frame)positionWalker()});
+  w.observer=new ResizeObserver(()=>{w.width=el.clientWidth;w.height=el.clientHeight;size();if(!w.frame)positionWalker();queueTalkLayout()});
   w.observer.observe(el);
   el.addEventListener('click',e=>{
-    if(e.target.closest('.coach-slot'))return; // the tour card floats over the sky
+    if(e.target.closest('.coach-slot,.talk .bubble'))return; // the tour card and the conversation float over the scene
     const token=e.target.closest('[data-token]')?.dataset.token;
     if(token){walkToToken(token);return}
     const target=e.target.closest('[data-world-target]')?.dataset.worldTarget;
@@ -378,10 +381,28 @@ function finishDailyStep(i,kind,target){
 
 /* ---------- conversations ----------
    What the open conversation shows, kept so a language switch can redraw it: `line` returns the
-   current-language text, `offer` marks the "can I help" card, `after` the step-done note (or null). */
-let encounterView=null,encounterPuppet=null;
+   current-language text, `offer` marks the "can I help" card, `after` the step-done note (or null).
+   `encounterModel` is the same conversation ready to draw (speaker, line, next-step note, replies).
+
+   Where it is drawn (`talkMode`): on large screens ('bubble': at least 900 px wide, with a scene of at
+   least 600 × 380 px) it happens in the scene: the resident's line in a speech bubble over her head
+   (a caption by the object when nobody speaks) and the player's replies in a bubble over her own
+   character, placed by talk-place.js so they stay inside the scene, off both faces and apart, and
+   placed again whenever the scene or a character moves. A reply shows as her bubble for a moment
+   (TALK_ECHO_MS) before the resident's answer; the game itself has already moved on. Anywhere else,
+   or when the bubbles do not fit, it is the #encounter dialog as a bottom sheet ('sheet'), with the
+   page scrolled so the characters stay visible above it. Either way the line is announced politely. */
+let encounterView=null,encounterPuppet=null,encounterModel=null;
+let talkMode=null,talkEcho=null,talkTimer=0,talkFrame=0,talkKeep=null,talkMiss='';
+const TALK_ECHO_MS=1100;
+const talkOpen=()=>!!talkMode;
+const encounterSheet=()=>document.querySelector('#encounter');
+const encounterBox=()=>talkMode==='bubble'?worldView?.el.querySelector('.talk')||null:talkMode==='sheet'?encounterSheet():null;
+const worldSizeKey=()=>worldView?worldView.el.clientWidth+'x'+worldView.el.clientHeight:'';
+function talkFits(){const el=worldView?.el;return !!el&&el.isConnected&&matchMedia('(min-width:900px)').matches&&el.clientWidth>=600&&el.clientHeight>=380}
+const talkKey=b=>b.dataset.lifeAction||(b.dataset.taskStep!==undefined?'step-'+b.dataset.taskStep:b.dataset.dailyStep!==undefined?'daily-'+b.dataset.dailyStep:b.getAttribute('href'));
 function openEncounter(target,customLine,focus=true,after=null){
-  const dialog=document.querySelector('#encounter'),p=lifePlayer(),d=district(),i=p.scene,person=target==='person';
+  const p=lifePlayer(),d=district(),i=p.scene,person=target==='person';
   encounterView={target,line:customLine,offer:false,after};
   let line,named=false;
   if(customLine)line=customLine();
@@ -405,18 +426,176 @@ function openEncounter(target,customLine,focus=true,after=null){
     if(elsewhere)opts.push(`<a class="primary" href="#${o.at}">${t('quest.go',{place:districtOf(o.at).name})} ›</a>`);
     else if(o.at===d.id&&o.target===target)opts.push(`<button class="is-story" data-life-action="again">${t('quest.continueHere')}</button>`);
   }
-  dialog.dataset.target=target;
-  dialog.innerHTML=`<div class="encounter-head">${person?`<div class="resident-photo"><img alt="" src="assets/scenes/${d.resident.toLowerCase()}.png"></div>`:`<span class="object-badge">${icon(d.icon,30)}</span>`}<div><h2>${person?d.resident:d.spot}</h2><span>${person?t('life.roleStatus',{role:d.role,status:p.topics[i]?d.friend:d.new}):d.name}</span></div></div><p class="speech">${escapeText(speech)}</p>${next}<div class="responses">${opts.join('')}<button data-life-action="bye">${t(after!==null?'life.ok':person?'life.bye':'life.keepExploring')}</button></div>`;
-  if(!dialog.open)dialog.showModal();
-  if(focus)dialog.querySelector('.responses a,.responses button')?.focus({preventScroll:true});
-  if(person){ // the resident speaks the line, in the dialog and in the scene
-    const talkFor=Math.min(4.5,Math.max(1.2,speech.length*.045)),pic=dialog.querySelector('.resident-photo img');
-    try{encounterPuppet?.destroy()}catch{}
-    encounterPuppet=residentPuppet(pic,d.resident.toLowerCase(),'photo');
-    const ep=encounterPuppet;ep?.ready.then(ok=>{if(ok)ep.talk(talkFor)});
-    worldView?.resident?.talk(talkFor);
-  }
+  opts.push(`<button data-life-action="bye">${t(after!==null?'life.ok':person?'life.bye':'life.keepExploring')}</button>`);
+  encounterModel={target,person,speech,next,opts:opts.join(''),fresh:true,
+    name:person?d.resident:d.spot,sub:person?t('life.roleStatus',{role:d.role,status:p.topics[i]?d.friend:d.new}):d.name};
+  renderEncounter(focus);
   coachEvent('talked');
+}
+/* Draws the open conversation as bubbles when they fit, else as the bottom sheet, moving between the
+   two when the screen changes. `focus` puts the keyboard on the first reply. */
+function renderEncounter(focus){
+  const m=encounterModel;if(!m)return;
+  clearTimeout(talkTimer);
+  const sheet=encounterSheet(),painted=talkFits()&&paintBubbles(m);
+  if(painted){
+    if(talkMode==='sheet'){focus=focus||sheet.contains(document.activeElement);talkMode='bubble';sheet.close()}
+    talkMode='bubble';talkMiss='';
+    try{encounterPuppet?.destroy()}catch{}encounterPuppet=null; // the resident talks in the scene instead
+  }else{
+    if(talkMode==='bubble')removeBubbles();
+    talkMiss=talkFits()?worldSizeKey():''; // too cramped for bubbles at this size: do not retry until it changes
+    talkMode='sheet';paintSheet(m);
+  }
+  const box=encounterBox();if(!box)return;
+  if(painted==='echo'){ // her reply first; the resident answers when it has been read
+    box.focus({preventScroll:true});
+    talkTimer=setTimeout(()=>{talkEcho=null;if(encounterModel===m&&talkOpen())renderEncounter(true)},Math.max(0,talkEcho.until-performance.now()));
+    return;
+  }
+  if(m.fresh){m.fresh=false;startTalking(m,box)}
+  if(focus){box.querySelector('.responses a,.responses button')?.focus({preventScroll:true});revealTalk()}
+}
+function startTalking(m,box){
+  const say=box.querySelector('.talk-say');
+  if(say){say.textContent='';setTimeout(()=>{if(say.isConnected)say.textContent=m.name+': '+m.speech},120)} // read once by screen readers
+  if(!m.person)return;
+  const talkFor=Math.min(4.5,Math.max(1.2,m.speech.length*.045)); // the resident speaks the line in the scene (and in the sheet's photo)
+  const ep=encounterPuppet;ep?.ready.then(ok=>{if(ok&&ep===encounterPuppet)ep.talk(talkFor)});
+  worldView?.resident?.talk(talkFor);
+}
+function paintSheet(m){
+  const dialog=encounterSheet(),d=district();
+  dialog.dataset.target=m.target;
+  dialog.innerHTML=`<div class="encounter-head">${m.person?`<div class="resident-photo"><img alt="" src="assets/scenes/${d.resident.toLowerCase()}.png"></div>`:`<span class="object-badge">${icon(d.icon,30)}</span>`}<div><h2>${escapeText(m.name)}</h2><span>${escapeText(m.sub)}</span></div></div><p class="speech">${escapeText(m.speech)}</p>${m.next}<div class="responses">${m.opts}</div><p class="sr-only talk-say" aria-live="polite"></p>`;
+  const opening=!dialog.open;
+  if(opening)dialog.showModal();
+  try{encounterPuppet?.destroy()}catch{}encounterPuppet=null;
+  if(m.person)encounterPuppet=residentPuppet(dialog.querySelector('.resident-photo img'),d.resident.toLowerCase(),'photo');
+  if(opening)requestAnimationFrame(()=>revealOverSheet(dialog));
+}
+/* Phones and narrow windows: scroll so the scene ends just above the sheet, where the characters stand. */
+function revealOverSheet(dialog){
+  const el=worldView?.el;if(!el||!dialog.open)return;
+  const r=el.getBoundingClientRect(),top=innerHeight-dialog.offsetHeight-8; // (the sheet may still be sliding in)
+  const dy=r.bottom>top?r.bottom-top:r.top<0?Math.max(r.top,r.bottom-top):0;
+  if(Math.abs(dy)>4)window.scrollBy({top:dy,behavior:'auto'});
+}
+/* The bubbles: one over the resident (or the object), one over her. Returns false when they do not fit,
+   'echo' while her reply shows, or 'line'. */
+function paintBubbles(m){
+  const el=worldView.el,d=district();
+  let layer=el.querySelector('.talk');
+  if(!layer){
+    el.insertAdjacentHTML('beforeend',`<div class="talk" role="dialog" tabindex="-1"><div class="bubble bubble-npc"></div><div class="bubble bubble-me"></div><p class="sr-only talk-say" aria-live="polite"></p></div>`);
+    layer=el.querySelector('.talk');
+  }
+  layer.setAttribute('aria-label',t('life.dialog'));
+  const npc=layer.querySelector('.bubble-npc'),me=layer.querySelector('.bubble-me');
+  let echo=talkEcho&&performance.now()<talkEcho.until?talkEcho:null;
+  const fill=()=>{
+    npc.classList.toggle('is-caption',!m.person);
+    npc.innerHTML=`<span class="bubble-tag">${m.person?icon('heart',13):icon(d.icon,15)}<b>${escapeText(m.name)}</b><small>${escapeText(m.sub)}</small></span><p class="bubble-line">${escapeText(m.speech)}</p>`;
+    npc.hidden=!!echo;
+    me.classList.toggle('is-echo',!!echo);
+    me.innerHTML=echo?`<span class="bubble-tag">${escapeText(playerLabel())}</span><p class="bubble-line">${escapeText(echo.text)}</p>`:`${m.next}<div class="responses">${m.opts}</div>`;
+    el.classList.add('talking');el.dataset.talk=m.target;
+  };
+  fill();
+  if(!layoutBubbles()){
+    if(!echo){removeBubbles();return false}
+    talkEcho=echo=null;fill(); // no room for her reply: go straight to the answer
+    if(!layoutBubbles()){removeBubbles();return false}
+  }
+  // a new bubble pops in from its tail (not when it is only placed again)
+  const pop=b=>{if(b.hidden)return;b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')};
+  if(echo)pop(me);else if(m.fresh){pop(npc);pop(me)}else if(me.dataset.was!=='line')pop(me);
+  me.dataset.was=echo?'echo':'line';
+  return echo?'echo':'line';
+}
+function removeBubbles(){
+  cancelAnimationFrame(talkFrame);talkFrame=0;
+  const el=worldView?.el;if(!el)return;
+  el.querySelector('.talk')?.remove();el.classList.remove('talking','talk-caption');delete el.dataset.talk;
+}
+/* Measures both characters and the bubbles and places them (talk-place.js). Heads: the top of each
+   figure, which no bubble may cover; bodies and the tour card are avoided when possible. */
+function layoutBubbles(){
+  const w=worldView;if(!w||!encounterModel)return false;
+  const el=w.el,layer=el.querySelector('.talk');if(!layer)return false;
+  const box=el.getBoundingClientRect(),ox=box.left+el.clientLeft,oy=box.top+el.clientTop,scene={w:el.clientWidth,h:el.clientHeight};
+  const rel=n=>{const r=n.getBoundingClientRect();return {x:r.left-ox,y:r.top-oy,w:r.width,h:r.height}};
+  const headOf=(r,k,kw)=>({x:r.x+r.w*(1-kw)/2,y:r.y,w:r.w*kw,h:r.h*k});
+  const res=rel(el.querySelector('.world-person')),her=rel(w.actor.querySelector('.walker-body'));
+  const resHead=headOf(res,.25,.62),herHead=headOf(her,state.doll==='little'?.33:.25,.5);
+  let thing=encounterModel.person?null:rel(el.querySelector('.world-object .tag'));
+  // she often stands right under the object's tag: then the tag steps aside and the line is a caption
+  const tagOnHer=!!thing&&TalkPlace.hits(thing,herHead,6);
+  el.classList.toggle('talk-caption',tagOnHer);
+  if(tagOnHer)thing={...thing,caption:true};
+  const npc=layer.querySelector('.bubble-npc'),me=layer.querySelector('.bubble-me');
+  const herLeft=her.x+her.w/2<(thing||res).x+(thing||res).w/2;
+  const coachCard=el.querySelector('.coach-slot .coach-card');
+  const avoid=[resHead,herHead];if(thing&&!thing.caption)avoid.push(thing);
+  const soft=[res,her];if(!thing)soft.push(rel(el.querySelector('.world-object .tag')));
+  // full-width bubbles first; in a cramped spot narrower (taller) ones; the tour card is kept clear
+  // when possible, else only avoided where it can be
+  const widths=['34ch','28ch','23ch'],card=coachCard&&rel(coachCard);
+  const tries=[...(card?widths.map(max=>({max,avoid:[...avoid,card],soft})):[]),...widths.map(max=>({max,avoid,soft:card?[...soft,card]:soft}))];
+  for(const {max,avoid,soft} of tries){
+    layer.style.setProperty('--bmax',max);
+    const items=[],nodes=[];
+    if(!npc.hidden){
+      npc.style.left=npc.style.top='0px';
+      const sides=herLeft?['above','right','left']:['above','left','right'];
+      items.push({w:npc.offsetWidth,h:npc.offsetHeight,head:thing||resHead,prefer:thing?.caption?['bottom']:thing?[...sides,'bottom']:sides,reach:thing?0:res.h*.3,body:{x:res.x+res.w*.15,y:res.y,w:res.w*.7,h:res.h}});nodes.push(npc);
+    }
+    me.style.left=me.style.top='0px';
+    items.push({w:me.offsetWidth,h:me.offsetHeight,head:herHead,prefer:herLeft?['above','left','right']:['above','right','left'],reach:her.h*.35,body:{x:her.x+her.w*.22,y:her.y,w:her.w*.56,h:her.h}});nodes.push(me);
+    const spots=TalkPlace.place(scene,items,{avoid,soft});
+    if(!spots)continue;
+    spots.forEach((s,k)=>{const n=nodes[k];n.style.left=s.x+'px';n.style.top=s.y+'px';n.dataset.side=s.side;n.style.setProperty('--tail',s.tail+'px')});
+    return true;
+  }
+  return false;
+}
+/* Keeps the bubbles on the characters: after a resize or a step (at most once a frame). */
+function queueTalkLayout(){
+  if(talkFrame||!talkMode)return;
+  talkFrame=requestAnimationFrame(()=>{
+    talkFrame=0;if(!encounterModel||!worldView)return;
+    const fits=talkFits();
+    if(talkMode==='bubble'){if(fits&&layoutBubbles())return}
+    else if(!fits||talkMiss===worldSizeKey())return;
+    const box=encounterBox(),f=document.activeElement,was=box?.contains(f)?talkKey(f):null;
+    renderEncounter(false);
+    const b=encounterBox(),again=was&&b&&[...b.querySelectorAll('button,a')].find(x=>talkKey(x)===was);
+    if(again)again.focus({preventScroll:true});
+  });
+}
+/* Large screens: if part of the conversation is off screen, scroll just enough to show it. */
+function revealTalk(){
+  if(talkMode!=='bubble')return;
+  const rs=[...worldView.el.querySelectorAll('.talk .bubble:not([hidden])')].map(b=>b.getBoundingClientRect());if(!rs.length)return;
+  const top=Math.min(...rs.map(r=>r.top))-12,bottom=Math.max(...rs.map(r=>r.bottom))+12,h=innerHeight;
+  const dy=bottom>h?Math.min(bottom-h,top):top<0?top:0;
+  if(Math.abs(dy)>2)window.scrollBy({top:dy,behavior:'auto'});
+}
+function closeEncounter(){
+  if(talkMode==='sheet')encounterSheet().close(); // its close event ends the conversation
+  else if(talkMode==='bubble'){removeBubbles();talkEnded()}
+}
+function talkEnded(){
+  clearTimeout(talkTimer);talkMode=null;talkEcho=null;encounterModel=null;encounterView=null;
+  try{encounterPuppet?.destroy()}catch{}encounterPuppet=null;
+  coachEvent('closed');
+  if(worldView&&!document.activeElement?.closest?.('main'))worldView.el.focus({preventScroll:true});
+}
+/* game.js calls this before a language change redraws the scene, so the bubbles come back after it. */
+function holdEncounter(){
+  if(talkMode!=='bubble')return;
+  const box=encounterBox(),f=document.activeElement;
+  talkKeep={inside:!!box?.contains(f),was:box?.contains(f)?talkKey(f):null};
 }
 function dailyStepLabel(i,kind){
   const e=dailySummary().plan.errands[i],D=districts;
@@ -424,37 +603,41 @@ function dailyStepLabel(i,kind){
     :kind==='compliment'?t('daily.compliment.action.'+D[e.at].id):t('daily.tidy.action.'+D[e.at].id);
 }
 function showOffer(focus=true){
-  const p=lifePlayer(),i=offerable(),dialog=document.querySelector('#encounter');
-  if(!dialog.open||dialog.dataset.target!=='person'||i<0||storiesOf()[i].giver!==here())return;
+  const i=offerable(),m=encounterModel;
+  if(!talkOpen()||!m||m.target!=='person'||i<0||storiesOf()[i].giver!==here())return;
   const s=storiesOf()[i];
   encounterView.offer=true;
-  dialog.querySelector('.speech').textContent=s.offer;
-  dialog.querySelector('.responses').innerHTML=`<button class="primary" data-life-action="accept">${storyPayout(i)?t('life.accept',{count:storyPayout(i)}):t('life.acceptFree')}</button><button data-life-action="bye">${t('life.later')}</button>`;
-  if(focus)dialog.querySelector('[data-life-action="accept"]').focus();
-  void p;
+  Object.assign(m,{speech:s.offer,next:'',fresh:true,opts:`<button class="primary" data-life-action="accept">${storyPayout(i)?t('life.accept',{count:storyPayout(i)}):t('life.acceptFree')}</button><button data-life-action="bye">${t('life.later')}</button>`});
+  renderEncounter(focus);
 }
-/* Language change while talking: redraw the same card and keep focus on the same response. */
+/* Language change while talking: redraw the same conversation and keep focus on the same response. */
 function relocalizeEncounter(){
-  const dialog=document.querySelector('#encounter');
-  if(!dialog.open||!encounterView)return;
-  const key=b=>b.dataset.lifeAction||(b.dataset.taskStep!==undefined?'step-'+b.dataset.taskStep:b.dataset.dailyStep!==undefined?'daily-'+b.dataset.dailyStep:b.getAttribute('href'));
-  const f=document.activeElement,was=dialog.contains(f)?key(f):null;
-  const v=encounterView;
+  const kept=talkKeep;talkKeep=null;
+  if(!talkOpen()||!encounterView)return;
+  const box=encounterBox(),f=document.activeElement,inside=kept?kept.inside:!!box?.contains(f),was=kept?kept.was:inside?talkKey(f):null;
+  const v=encounterView;talkEcho=null;
   openEncounter(v.target,v.line,false,v.after);
   if(v.offer)showOffer(false);
-  const again=was&&[...dialog.querySelectorAll('button,a')].find(b=>key(b)===was);
-  (again||dialog.querySelector('button'))?.focus({preventScroll:true});
+  if(!inside)return; // the language buttons keep the focus when they were used
+  const b=encounterBox(),again=was&&b&&[...b.querySelectorAll('button,a')].find(x=>talkKey(x)===was);
+  (again||b?.querySelector('.responses button,.responses a'))?.focus({preventScroll:true});
 }
+/* What she says when she picks a reply: the button's words without the star mark or reward. */
+const replyText=b=>b.textContent.replace(/★/g,'').split(' · ')[0].trim();
 function handleLifeAction(button){
-  const d=button.dataset,p=lifePlayer(),dialog=document.querySelector('#encounter');
-  if(dialog.open&&dialog.contains(button)&&d.lifeAction!=='bye')walkerDo('talk',1.1); // she answers
-  if(d.taskStep!==undefined){if(dialog.open)finishStory(Number(d.taskStep),dialog.dataset.target);return true}
-  if(d.dailyStep!==undefined){if(dialog.open)finishDailyStep(Number(d.dailyStep),d.dailyKind,dialog.dataset.target);return true}
+  const d=button.dataset,p=lifePlayer(),box=encounterBox(),inTalk=!!box&&box.contains(button);
+  if(inTalk&&d.lifeAction!=='bye'){
+    walkerDo('talk',1.1); // she answers
+    if(talkMode==='bubble'&&button.tagName==='BUTTON')talkEcho={text:replyText(button),until:performance.now()+TALK_ECHO_MS};
+  }
+  const target=encounterModel?.target;
+  if(d.taskStep!==undefined){if(talkOpen())finishStory(Number(d.taskStep),target);return true}
+  if(d.dailyStep!==undefined){if(talkOpen())finishDailyStep(Number(d.dailyStep),d.dailyKind,target);return true}
   switch(d.lifeAction){
     case 'offer':showOffer();return true;
     case 'accept':{
       const i=offerable();
-      if(dialog.open&&dialog.dataset.target==='person'&&i>=0&&storiesOf()[i].giver===here()){
+      if(talkOpen()&&target==='person'&&i>=0&&storiesOf()[i].giver===here()){
         p.quests[i]=1;persist();refreshQuestUI();
         openEncounter('person',()=>t('life.thanks'),true,'');
         announceNext('');
@@ -462,15 +645,27 @@ function handleLifeAction(button){
     }
     case 'topic':p.topics[p.scene]=true;persist();refreshQuestUI();openEncounter('person',()=>district().answer);return true;
     case 'chat':{p.talks[p.scene]++;persist();const c=chatLine(p.scene);openEncounter('person',()=>c.text);return true}
-    case 'again':{const target=dialog.dataset.target;openEncounter(target);return true}
-    case 'bye':dialog.close();return true;
-    case 'name':stopWalk(true);openNameDialog(false);return true;
+    case 'again':{openEncounter(target);return true}
+    case 'bye':closeEncounter();return true;
+    case 'name':stopWalk(true);if(talkMode==='bubble')closeEncounter();openNameDialog(false);return true;
     case 'photo':look().backdrop=p.scene<SCENERY_PLACES?p.scene+1:0;persist();location.hash='booth';return true;
     case 'journal':{const j=document.querySelector('#journal');j?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});j?.focus({preventScroll:true});return true}
   }
   return false;
 }
-document.querySelector('#encounter').addEventListener('close',()=>{try{encounterPuppet?.destroy()}catch{}encounterPuppet=null;coachEvent('closed');if(worldView&&!document.activeElement?.closest?.('main'))worldView.el.focus({preventScroll:true})});
+encounterSheet().addEventListener('close',()=>{if(talkMode==='sheet')talkEnded()}); // Escape, a reply, or leaving the place
+/* In-scene conversation keys: Escape ends it (as the sheet's Escape does); in both, the up and down
+   arrows move between the replies. */
+document.addEventListener('keydown',e=>{
+  if(!talkMode)return;
+  const box=encounterBox();
+  if(e.key==='Escape'&&talkMode==='bubble'&&!document.querySelector('dialog[open]')){e.preventDefault();closeEncounter();return}
+  if((e.key==='ArrowDown'||e.key==='ArrowUp')&&box?.contains(document.activeElement)){
+    const list=[...box.querySelectorAll('.responses button,.responses a')],k=list.indexOf(document.activeElement);
+    if(k<0)return;
+    e.preventDefault();list[(k+(e.key==='ArrowDown'?1:list.length-1))%list.length].focus();
+  }
+});
 
 /* ---------- names ---------- */
 const NAME_IDEAS={adult:['Coral','Marisol','Jasmine','Luna','Daisy','Valeria'],little:['Pearl','Lulu','Bea','Mimi','Coco','Sofi']};
@@ -526,7 +721,7 @@ document.addEventListener('invalid',e=>{if(e.target.id==='character-name'&&!e.ta
 let coach=-1,coachWait=false; // the tour's step (-1 = not running); it carries on across places
 const COACH_STEPS=3;
 function startCoach(){
-  if(state.tutorial||!worldView||document.querySelector('dialog[open]'))return;
+  if(state.tutorial||!worldView||document.querySelector('dialog[open]')||talkOpen())return;
   if(coach<0)coach=0;
   showCoach();
 }
