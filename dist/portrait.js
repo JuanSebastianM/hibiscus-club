@@ -877,7 +877,7 @@ async function dollOps(shot,view){
     shot.shoes==='none'?null:shoeLayers(doll,view,shot.shoes,shot.shoesTint),
     hairLayers(doll,view,shot.hair,shot.hairColor),
     shot.necklace==='none'?null:spriteItemLayer(doll,view,shot.necklace),
-    !earItem||earItem.stud||hairFit.earsUnder?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint), // ears covered: no earrings at all
+    !earItem||earItem.stud||(hairFit.earsUnder&&view==='front')?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint), // ears covered (front): no earrings at all
     !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
   ]);
   const arm=sideView(view)?await armLayer(shot,view,body):null;
@@ -886,7 +886,7 @@ async function dollOps(shot,view){
   const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
   const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
   const drawProc=g=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
-  const stud=earItem?.stud&&dv.face?.lobes&&!hairFit.earsUnder?earItem.stud:null;
+  const stud=earItem?.stud&&dv.face?.lobes&&!(hairFit.earsUnder&&view==='front')?earItem.stud:null;
   const drawStuds=g=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,view==='back'?'clutch':stud,x,y+dv.face.unit*(view==='back'?.02:.06),dv.face.unit*(view==='back'?.09:.15));g.restore()};
   // back view: earrings sit under the hair, so only show where the style leaves the ears free
   const earsUnder=!!hairFit.earsUnder||view==='back';
