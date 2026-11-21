@@ -184,7 +184,8 @@ function expressionFor(f){
 function expressionTargets(f,doll){
   const b=Math.max(...(f.blink||[0])),jm=f.jawMax||4,jf=(f.jaw||0)/jm;
   const g=SIDE_GLANCES?f.glance:0;
-  const eye=b>.6?'blink':b>.12?'half-closed':g<-.35?'look-left':g>.35?'look-right':null;
+  // the Grown-up's drawn half-closed eyes read as a sideways, sleepy look: her blinks go straight to closed
+  const eye=b>(doll==='adult'?.35:.6)?'blink':b>.12&&doll!=='adult'?'half-closed':g<-.35?'look-left':g>.35?'look-right':null;
   let mouth=null,full=false;
   if(f.laugh>.3){mouth='laugh';full=true}
   else if(f.surprise>.3){mouth='surprised';full=true}
@@ -347,14 +348,14 @@ function idlePose(t,ctx){
   return p;
 }
 /* Idle variety every 5 to 11 s: {smile, blink, tilt (radians)}. Half the moments are a soft smile held
-   about 2.4 s, a quarter a slow blink (half a second down, a short hold, back up), a quarter a small
+   about 2.4 s, a quarter a slow blink (the eyes rest closed for half a second), a quarter a small
    head tilt with a smile. */
 function warmMoment(t,seed,kid){
   const ev=eventAt(seed+71,t,5,11),u=t-ev.start,out={smile:0,blink:0,tilt:0};
   if(ev.i<0)return out;
   const k=rand(seed,ev.i*5+3),sgn=rand(seed,ev.i*5+4)<.5?-1:1;
   if(k<.5){out.smile=.55*smooth(0,.5,u)*(1-smooth(2.4,3,u))}
-  else if(k<.75){out.blink=u<.45?smooth(0,.45,u):u<.75?1:1-smooth(.75,1.25,u);out.smile=.3*smooth(0,.4,u)*(1-smooth(1.4,1.9,u))}
+  else if(k<.75){out.blink=u<.12?smooth(0,.12,u):u<.62?1:1-smooth(.62,.82,u);out.smile=.3*smooth(0,.4,u)*(1-smooth(1.4,1.9,u))}
   else{const a=smooth(0,.6,u)*(1-smooth(1.9,2.5,u));out.tilt=sgn*(kid?4:2.5)*DEG*a;out.smile=.4*a}
   return out;
 }

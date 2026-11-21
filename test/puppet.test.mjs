@@ -210,7 +210,7 @@ test('expression art: every doll and view names a sheet slot, and the face picks
   const T = (f, d = 'little') => R.expressionTargets({ blink: [0, 0], jaw: 0, smile: 0, wide: 0, glance: 0, laugh: 0, surprise: 0, jawMax: 4, ...f }, d);
   assert.deepEqual([T({}).eye, T({}).mouth], [null, null]);
   assert.deepEqual([T({ blink: [1, 1], jaw: 3 }).eye, T({ blink: [1, 1], jaw: 3 }).mouth], ['blink', 'talk-ah']);
-  assert.equal(T({ blink: [.3, .3] }).eye, 'half-closed');
+  assert.equal(T({ blink: [.3, .3] }).eye, 'half-closed'); assert.equal(T({ blink: [.3, .3] }, 'adult').eye, null);
   assert.equal(T({ jaw: 1.2 }).mouth, 'talk-eh'); assert.equal(T({ jaw: 1.2, wide: -1 }).mouth, 'talk-oh');
   assert.equal(T({ smile: 1 }).mouth, 'big-smile'); assert.equal(T({ smile: 1 }, 'adult').mouth, null);
   assert.equal(T({ glance: -1 }).eye, R.SIDE_GLANCES ? 'look-left' : null); assert.equal(T({ laugh: 1 }).mouth, 'laugh');
