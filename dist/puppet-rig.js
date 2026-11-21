@@ -106,11 +106,14 @@ const DOLL={
    sleeves). */
 /* Sleeves that cannot be lifted overhead convincingly from a flat picture (long sleeves, jackets,
    cardigans): these outfits get gentler arm emotes (see GENTLE). */
-const LONG_SLEEVES=new Set(['denim-jacket-skirt','black-flares-set','pink-velour-cargo','mint-cardigan-dress','star-pajamas']);
+const LONG_SLEEVES=new Set(['denim-jacket-skirt','black-flares-set','pink-velour-cargo','mint-cardigan-dress','star-pajamas',
+  'aqua-velour-tracksuit','hoodie-dress-leg-warmers','raincoat-set','bear-onesie','ballet-wrap-set']);
 /* How a garment's sleeves move with the arm (puppet.js): 'long' = the whole sleeve follows the arm;
    'puff' = short puffed or tee sleeves stay on the shoulder and the arm comes out from under them;
    anything else is sleeveless (a wide bodice is kept to the body, only what hugs the arm moves). */
-const SLEEVES={'hibiscus-flares':'puff','lilac-satin-bow-dress':'puff','lilac-cord-pinafore':'puff','denim-overalls':'puff'};
+const SLEEVES={'hibiscus-flares':'puff','lilac-satin-bow-dress':'puff','lilac-cord-pinafore':'puff','denim-overalls':'puff',
+  'crochet-cover-up':'puff','tennis-dress':'puff','baby-tee-cargo':'puff','butterfly-satin-skirt':'puff','denim-overall-dress':'puff',
+  'rash-guard-set':'puff','rainbow-tutu-tee':'puff','dino-romper':'puff','tulle-party-dress':'puff'};
 for(const id of LONG_SLEEVES)SLEEVES[id]='long';
 /* emote -> its gentle variant, used with LONG_SLEEVES */
 const GENTLE={wave:'waveLow',cheer:'wiggle',pose:'poseSoft'};
@@ -125,10 +128,18 @@ const ARM_SAFE={wave:'waveSafe',cheer:'wiggle',pose:'poseSafe'};
 /* the largest upper-arm rotation (degrees) an arm-safe emote may use */
 const ARM_SAFE_MAX=4;
 const SKIRT_TOP={'denim-jacket-skirt':{adult:415},'mint-cardigan-dress':{little:462}};
+/* SKIRT_END: below this doll-local y a skirt-kind outfit follows the legs again (leg warmers under a
+   short dress) */
+const SKIRT_END={'hoodie-dress-leg-warmers':{adult:600}};
 const OUTFIT_KIND={'hibiscus-flares':'trousers','black-flares-set':'trousers','pink-velour-cargo':'trousers',
   'lilac-satin-bow-dress':'skirt','denim-jacket-skirt':'skirt','green-hibiscus-sundress':'skirt',
   'yellow-dot-dress':'skirt','lilac-cord-pinafore':'skirt','pink-gingham-bow-dress':'skirt','mint-cardigan-dress':'skirt',
-  'denim-overalls':'trousers','star-pajamas':'trousers'};
+  'denim-overalls':'trousers','star-pajamas':'trousers',
+  'sarong-swimsuit':'skirt','tankini-board-shorts':'trousers','crochet-cover-up':'skirt','aqua-velour-tracksuit':'trousers',
+  'tennis-dress':'skirt','baby-tee-cargo':'trousers','sequin-halter-dress':'skirt','butterfly-satin-skirt':'skirt',
+  'puffer-vest-slip-dress':'skirt','plaid-knit-vest-set':'skirt','hoodie-dress-leg-warmers':'skirt','denim-overall-dress':'skirt',
+  'ruffle-swimsuit':'skirt','rash-guard-set':'trousers','beach-poncho':'skirt','rainbow-tutu-tee':'skirt',
+  'dino-romper':'trousers','raincoat-set':'trousers','tulle-party-dress':'skirt','bear-onesie':'trousers','ballet-wrap-set':'skirt'};
 /* Residents: one flat picture each (assets/scenes/<id>.png, 176 x 432), image px. Only the torso chain,
    breathing, sway, blink and the talking mouth. */
 const RESIDENTS={
@@ -652,10 +663,10 @@ const api={SIDE_GLANCES,warmMoment,TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGIN
   views,rig,residentRig,toCanvas,expressionFor,expressionTargets,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
   restPose,copyPose,addPose,mixPose,localMatrix,forward,mul,apply,
   idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,GAIT_FAST,gait,paceFor,
-  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,LONG_SLEEVES,RAISED_ARM_EMOTES,EMOTES,ARM_SAFE,ARM_SAFE_MAX,SLEEVES,sleevesOf:id=>SLEEVES[id]||'none',GENTLE,emoteFor,
+  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,SKIRT_END,LONG_SLEEVES,RAISED_ARM_EMOTES,EMOTES,ARM_SAFE,ARM_SAFE_MAX,SLEEVES,sleevesOf:id=>SLEEVES[id]||'none',GENTLE,emoteFor,
   /* the rig of a view as dressed in an outfit (its own skirt line, canvas px) */
-  dressedRig(doll,view,outfit){const rg=rig(doll,view),y=SKIRT_TOP[outfit]?.[doll];if(y===undefined)return rg;
-    const srcView=view==='right'?'left':view;return {...rg,skirtTop:y+ORIGINS[doll][srcView][1]}}};
+  dressedRig(doll,view,outfit){const rg=rig(doll,view),y=SKIRT_TOP[outfit]?.[doll],e=SKIRT_END[outfit]?.[doll];if(y===undefined&&e===undefined)return rg;
+    const oy=ORIGINS[doll][view==='right'?'left':view][1];return {...rg,...(y!==undefined?{skirtTop:y+oy}:{}),...(e!==undefined?{skirtEnd:e+oy}:{})}}};
 root.HibiscusPuppetRig=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

@@ -575,7 +575,8 @@ FORCE = "--force" in sys.argv
 
 
 def prep(iid, im):
-    return recolor(im, CONFIG[iid]["recolor"]) if CONFIG[iid].get("recolor") else im
+    c = CONFIG.get(iid) or SHOES[iid]
+    return recolor(im, c["recolor"]) if c.get("recolor") else im
 
 
 def ship(wear):
@@ -583,7 +584,8 @@ def ship(wear):
     (OUTDIR / "thumbs").mkdir(exist_ok=True)
     keep = set()
     for iid, w in wear.items():
-        src = CONFIG[iid]["src"]
+        conf = CONFIG.get(iid) or SHOES[iid]
+        src = conf["src"]
         for view, parts in w["files"].items():
             for part, (Ws, Hs) in parts.items():
                 if part == "slip":
@@ -593,7 +595,7 @@ def ship(wear):
                     premul_resize(slip_image(Image.open(path), CONFIG[iid]["slip"]), (Ws, Hs)).save(
                         OUTDIR / name, "WEBP", quality=80, method=6)
                     continue
-                path, _ = sprite_file(src, iid, view, None if part == "main" else part)
+                path = SRCMAP.get((iid, view, part)) or sprite_file(src, iid, view, None if part == "main" else part)[0]
                 name = f"{iid}-{view}" + ("" if part == "main" else "-" + part) + ".webp"
                 keep.add(name)
                 dst = OUTDIR / name
@@ -602,7 +604,7 @@ def ship(wear):
                 premul_resize(prep(iid, Image.open(path)), (Ws, Hs)).save(OUTDIR / name, "WEBP", quality=86, method=6)
                 keep.add(name)
         # card picture: the whole front sprite, fitted into 160 px
-        path, _ = sprite_file(src, iid, "front")
+        path, _ = sprite_file("p" if iid in SHOES else src, iid, "front")
         im = prep(iid, Image.open(path))
         f = 160 / max(im.size)
         premul_resize(im, (max(1, round(im.width * f)), max(1, round(im.height * f)))).save(
@@ -612,8 +614,172 @@ def ship(wear):
             p.unlink()
 
 
+# ------------------------------------------------------------------ shoes
+# Where the bare feet are (doll-local, measured on the base pictures): floor = lowest foot pixel; front and
+# back: the centre of each foot (viewer-left, viewer-right); side (left view, facing viewer-left): the toe
+# tip and heel x. The right view mirrors the left one (MIRROR).
+FEET = {"adult": {"floor": 866, "front": (137.5, 258.5), "back": (141, 254.5), "toe": 5, "heel": 134},
+        "little": {"floor": 856, "front": (135.5, 265.5), "back": (134, 267), "toe": 14, "heel": 157}}
+SRCMAP = {}  # (id, view, part) -> full-resolution source file, for shipping
+
+# id: src, k (doll px per sheet px, one drawing scale for all views), per view nudges dx/dy (doll px,
+# viewer-left shoe; the other is mirrored), and the fit extras merged into SHOE_FIT-style fields
+# (foot bed, trim, collar, keep / open / over polygons). `open`: the round 2 under/over layers.
+SHOES = {
+    "jelly-sandals": dict(src="r", k=.265),
+    "flower-flip-flops": dict(src="r", k=.265),
+    "wedge-sandals": dict(src="r", k=.265, lift=14),
+    "platform-boots": dict(src="p", k=.31),
+    "fuzzy-slippers": dict(src="p", k=.265),
+    "ribbon-ballet-flats": dict(src="p", k=.265),
+    "toddler-sandals": dict(src="r", k=.265),
+    "jelly-shoes": dict(src="r", k=.265),
+    "bunny-slippers": dict(src="p", k=.30),
+    "light-up-sneakers": dict(src="p", k=.295),
+    "cowboy-boots": dict(src="p", k=.30),
+    "ballet-slippers": dict(src="p", k=.295),
+}
+
+
+def alpha_box(path):
+    a = load_rgba(path)[..., 3] > 60
+    ys, xs = np.nonzero(a)
+    return int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1, a.shape[1], a.shape[0]
+
+
+def shoe_parts(iid, c, view):
+    """[(part name, file, sheet top-left)] of the sprites for this view: open shoes under + over
+    (per foot in front/back), closed shoes the pair parts or the side sprite."""
+    if c["src"] == "r":
+        e = MAN["r"][iid]["views"][view]
+        out = []
+        for layer in ("under", "over"):
+            le = e[layer]
+            bx, by = le["source"]["box"][:2]
+            if view in ("front", "back"):
+                for side in ("left", "right"):
+                    p = le["parts"][side]
+                    out.append((f"{layer}-{side}", R2 / p["file"], (bx + p["offset"][0], by + p["offset"][1])))
+            else:
+                out.append((layer, R2 / le["file"], (bx, by)))
+        return out
+    e = MAN["p"][iid]["views"][view]
+    if view in ("front", "back"):
+        return [(side, P2 / e["parts"][side]["file"], tuple(e["parts"][side]["offset"])) for side in ("left", "right")]
+    return [("main", P2 / e["file"], (0, 0))]
+
+
+FOOT_TOP = {"adult": {"front": 800, "back": 800, "side": 780}, "little": {"front": 790, "back": 790, "side": 770}}
+
+
+def foot_bed(doll, view, fit, P, k, c):
+    """The bare foot set on the open shoe's footbed (portrait.js fitFeet). Side views: the bed line is the
+    top edge of the under layer (the insole as drawn), sampled every 6 doll px, `bedDy` below it; front and
+    back: a level bed `lift` px above the floor (the sole's thickness where the toes rest)."""
+    F = FEET[doll]
+    if view in ("front", "back"):
+        y = F["floor"] - c.get("lift", 4)
+        return {"top": FOOT_TOP[doll][view], "bed": [[0, y], [400, y]]}
+    f = fit["near"]
+    a = load_rgba(P["under"][0])[..., 3] > 128
+    H, W = a.shape
+    pts = []
+    x = f["x"]
+    while x <= f["x"] + W * k:
+        col = int((x - f["x"]) / k)
+        if 0 <= col < W:
+            ys = np.nonzero(a[:, col])[0]
+            if len(ys):
+                pts.append([round(x, 1), round(f["y"] + ys[0] * k + c.get("bedDy", 1.5), 1)])
+        x += 6
+    heel = F["heel"] if view == "left" else MIRROR[doll] - F["heel"]
+    return {"top": FOOT_TOP[doll]["side"], "bed": pts, "ramp": 40, "cx": heel, "sx": c.get("sx", 1.0)}
+
+
+def build_shoe(iid, c, doll):
+    F = FEET[doll]
+    k = c["k"]
+    files, fits = {}, {}
+    for view in VIEWS:
+        parts = shoe_parts(iid, c, view)
+        files[view] = {}
+        for name, path, _ in parts:
+            w, h = Image.open(path).size
+            files[view][name] = [max(1, round(w * min(1.0, k))), max(1, round(h * min(1.0, k)))]
+            SRCMAP[(iid, view, name)] = path
+        vc = {**c.get("all", {}), **c.get(view, {})}
+        dx, dy = vc.get("dx", 0), vc.get("dy", 0)
+        P = {n: (p, o) for n, p, o in parts}
+
+        def rect(name, anchor_x, side_sign=1):
+            """placement {x,y,w} of a sprite: its sole's bottom on the floor (+dy), x so the sprite's
+            alpha box anchor (centre for front/back, toe tip for sides) lands on anchor_x (+dx)"""
+            path, _ = P[name]
+            x0, y0, x1, y1, W, H = alpha_box(path)
+            ref = (x0 + x1) / 2 if view in ("front", "back") else (x0 if side_sign > 0 else x1)
+            return {"x": round(anchor_x - ref * k + dx * side_sign, 1), "y": round(F["floor"] - y1 * k + dy, 1), "w": round(W * k, 1)}
+
+        def over_of(base, under_name, over_name):
+            (_, uo), (_, oo) = P[under_name], P[over_name]
+            return {"part": over_name, "x": round(base["x"] + (oo[0] - uo[0]) * k, 1), "y": round(base["y"] + (oo[1] - uo[1]) * k, 1),
+                    "w": round(Image.open(P[over_name][0]).size[0] * k, 1)}
+
+        fit = {}
+        if view in ("front", "back"):
+            for i, side in enumerate(("left", "right")):
+                sgn = 1 if i == 0 else -1
+                ax = F[view][i]
+                if c["src"] == "r":
+                    f = rect(f"under-{side}", ax, sgn)
+                    f["part"] = f"under-{side}"
+                    f["over"] = over_of(f, f"under-{side}", f"over-{side}")
+                else:
+                    f = rect(side, ax, sgn)
+                    f["part"] = side
+                fit[side] = f
+        else:
+            sgn = 1 if view == "left" else -1
+            toe = F["toe"] if view == "left" else MIRROR[doll] - F["toe"]
+            if c["src"] == "r":
+                f = rect("under", toe, sgn)
+                f["part"] = "under"
+                f["over"] = over_of(f, "under", "over")
+            else:
+                f = rect("main", toe, sgn)
+                f["part"] = "main"
+            fit["near"] = f
+        for key, v in vc.items():
+            if key in ("dx", "dy"):
+                continue
+            if key in ("left", "right", "near") and isinstance(v, dict):
+                fit[key].update(v)
+            else:
+                fit[key] = v
+        if c["src"] == "r" and "foot" not in vc:
+            fit["foot"] = foot_bed(doll, view, fit, P, k, c)
+        if view == "right":  # extras given for the left view, mirrored
+            lv = {**c.get("all", {}), **c.get("left", {})}
+            if "foot" in lv and "foot" not in c.get("right", {}):
+                ft = dict(lv["foot"])
+                ft["bed"] = [[MIRROR[doll] - x, y] for x, y in lv["foot"]["bed"]][::-1]
+                if "cx" in ft:
+                    ft["cx"] = MIRROR[doll] - ft["cx"]
+                fit["foot"] = ft
+            for key in ("trim", "collar"):
+                if key in lv and key not in c.get("right", {}):
+                    fit[key] = lv[key]
+            if "near" in lv and "near" not in c.get("right", {}):
+                fl = lambda polys: [[[1 - u, v] for u, v in p] for p in polys]
+                fit["near"].update({kk: fl(vv) for kk, vv in lv["near"].items() if kk in ("keep", "open", "over")})
+        fits[view] = fit
+    return {"cat": MAN[c["src"]][iid]["category"], "doll": doll, "s": round(min(1.0, k), 4), "files": files, "fit": fits}
+
+
 def main(argv):
     wear = build()
+    for iid, c in SHOES.items():
+        cat = MAN[c["src"]][iid]["category"]
+        wear[iid] = build_shoe(iid, c, cat.split("-")[1])
     write_block(wear)
     if "--ship" in argv:
         ship(wear)

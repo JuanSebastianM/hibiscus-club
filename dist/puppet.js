@@ -493,7 +493,7 @@ const HibiscusPuppet=(()=>{
         const cuffEnd=[0,1].map(a=>[lerp(px['wr'+a][0],px['hand'+a][0],.3),lerp(px['wr'+a][1],px['hand'+a][1],.3)]);
         const sleeveTo=[0,1].map(a=>{if(rg.side)return false;const m=[(px['el'+a][0]+px['wr'+a][0])/2,(px['el'+a][1]+px['wr'+a][1])/2];
           return d[(Math.round(m[1])*W+Math.round(m[0]))*4+3]>200});
-        for(let y=Math.ceil(rg.skirtTop);y<H;y++)for(let x=0;x<W;x++){
+        for(let y=Math.ceil(rg.skirtTop);y<Math.min(H,rg.skirtEnd??H);y++)for(let x=0;x<W;x++){
           const i=y*W+x,l=lb[i];
           if(l===L_TORSO||l===L_LEG0||l===L_LEG1)lb[i]=L_SKIRT;
           else if(!rg.side&&(l===L_ARM0||l===L_ARM1)){const a=l===L_ARM0?0:1;if(!sleeveTo[a]||y>cuffEnd[a][1]+6||(x-armAxisX(a,y))*(a?-1:1)>armR*.8)lb[i]=L_SKIRT}
