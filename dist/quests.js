@@ -17,7 +17,7 @@ const districts = [
   {id:'beach',resident:'Sol',icon:'sun',person:[.575,.76],object:[.775,.69],approach:[.565,.9],floor:.62,color:'#e3a04a',sparkle:'sand',findIcon:'star',
     floorLine:[[0,.7],[.26,.69],[.33,.63],[.5,.62],[.8,.655],[1,.69]],
     spots:[[.1,.8],[.2,.92],[.3,.74],[.38,.85],[.47,.68],[.47,.93],[.61,.66],[.9,.72],[.15,.72],[.27,.85]]},
-  {id:'park',resident:'Teo',icon:'kite',person:[.53,.87],object:[.79,.56],approach:[.71,.9],floor:.75,color:'#e27fa3',sparkle:'clover',findIcon:'bow',
+  {id:'park',resident:'Teo',icon:'kite',person:[.56,.87],personSize:30.5,object:[.79,.56],approach:[.71,.9],floor:.75,color:'#e27fa3',sparkle:'clover',findIcon:'bow',
     floorLine:[[0,.75],[.55,.75],[.62,.81],[1,.83]],xMin:.2,xMax:.9,
     spots:[[.24,.8],[.3,.93],[.37,.77],[.45,.86],[.52,.77],[.63,.93],[.76,.87],[.87,.91],[.4,.94],[.27,.86]]}
 ].map(d=>I18N.localize(d,'district.'+d.id,['name','role','spot','walkSpot','friend','new','greeting','topic','answer','objectLine','sparkleName','tokenName']));

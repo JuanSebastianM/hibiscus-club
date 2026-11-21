@@ -89,7 +89,7 @@ function lifeScene(){
     <div class="hud" id="hud">${hud()}</div>
     <div id="world" tabindex="0" role="group" aria-label="${t('life.world',{place:d.name})}" style="--scene:url('assets/scenes/${d.id}.jpg')">
       <div class="destination-ring" hidden></div>
-      <button class="world-person ${ps?'is-'+ps:''}" data-world-target="person" style="left:${d.person[0]*100}%;top:${d.person[1]*100}%;" aria-label="${escapeText(personLabel(ps))}"><img src="assets/scenes/${slug}.png" alt="" draggable="false"><span class="tag">${icon('heart',13)} ${d.resident}</span>${marker(ps)}</button>
+      <button class="world-person ${ps?'is-'+ps:''}" data-world-target="person" style="left:${d.person[0]*100}%;top:${d.person[1]*100}%;${d.personSize?`height:${d.personSize}%;`:""}" aria-label="${escapeText(personLabel(ps))}"><img src="assets/scenes/${slug}.png" alt="" draggable="false"><span class="tag">${icon('heart',13)} ${d.resident}</span>${marker(ps)}</button>
       <button class="world-object ${os?'is-'+os:''}" data-world-target="object" style="left:${d.object[0]*100}%;top:${d.object[1]*100}%" aria-label="${escapeText(objectLabel(os))}"><span class="tag">${icon(d.icon,15)}<span class="tag-text">${d.spot}</span></span>${marker(os)}</button>
       <div class="tokens">${tokens()}</div><div class="coach-slot"></div>
       <div class="walker" aria-hidden="true"><div class="walker-shadow"></div><div class="walker-body"><canvas class="walker-doll" width="${WALKER_CROP[2]}" height="${WALKER_CROP[3]}"></canvas></div><span class="walker-name">${escapeText(playerLabel())}</span></div>
