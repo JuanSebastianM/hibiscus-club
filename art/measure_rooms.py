@@ -28,10 +28,13 @@ the patios' balustrade lines, wall zones on the garden walls) are used as read, 
 overlay previews (--overlay) are how they were checked and corrected.
 
 Scale: the furniture manifest's defaultScale assumes 280 px per metre. A room's scale at
-the back wall is pxPerMetre / 280, where pxPerMetre comes from a yardstick in the picture:
-a door's height (2.05 m; French doors to the top of their leaves 2.1 m), a side door's
-height carried back to the back wall through the perspective, or, in rooms with neither,
-the ceiling height (2.8 m). The patios use their central arch (2.6 m to the crown).
+the back wall is pxPerMetre / 280 with pxPerMetre = the back wall's width in px / its width in
+metres (BACK_WALL_M: 7.2 m indoors, 7.5 m on the terraces). The paintings are wide-angle, so the
+yardsticks in them (a door's height, a side door carried back through the perspective, the
+ceiling, the patios' central arch) are drawn tall: sized by them, furniture crowded every room.
+They still bound the result: the scale is kept within 42 to 72 % of the yardstick's, and the
+door heights it implies are printed as a check (the overlay's 1.8 m figure stands well under
+every door).
 Nearer the viewer pieces grow with the floor: scale(y) = scale * (y - horizon) / (backY - horizon).
 
 Requires Pillow and numpy. Deterministic.
@@ -51,6 +54,7 @@ ROOMS_DIR = ROOT / "dist" / "assets" / "decor" / "rooms"
 DATA = ROOT / "dist" / "decor-data.js"
 W, H = 1536, 1152
 PX_PER_M = 280
+BACK_WALL_M = {"indoor": 7.2, "patio": 7.5}  # the back wall's width in metres (see measure())
 
 # Read by eye on the 50 px grid of each backdrop (room pixels). Keys:
 #   back: [y, xLeft, xRight]   floor line at the back wall and the two back corners (refined)
@@ -108,7 +112,7 @@ HINTS: dict[str, dict] = {
                     zones=[[352, 300, 872, 600], [1108, 300, 1190, 600], [250, 222, 1290, 300, "hang"]],
                     open=[[870, 330, 1110, 828, "arch"]], yard=["arch", 335, 2.6], light=-.06),
     "patio-2": dict(back=[795, 250, 1290], lines=[[[250, 800], [0, 892]], [[1290, 800], [1536, 892]]], front=955,
-                    zones=[[300, 300, 590, 640], [950, 300, 1240, 640], [250, 232, 1290, 300, "hang"]],
+                    zones=[[280, 300, 590, 640], [950, 300, 1258, 640], [250, 232, 1290, 300, "hang"]],
                     open=[[392, 348, 508, 612, "window"], [1032, 348, 1148, 612, "window"], [590, 296, 952, 795, "arch"],
                           [528, 184, 1008, 292, "awning"]],
                     yard=["arch", 300, 2.6], light=.05),
@@ -239,7 +243,19 @@ def measure(name: str, img: Image.Image) -> tuple[dict, dict]:
         top = s[4]
         ppm_there = (by - top) / 2.05
         ppm = ppm_there * (yb - vy) / (by - vy)
-    scale = ppm / PX_PER_M
+    # The paintings are wide-angle: their doors and ceilings are drawn tall for the room's width, and
+    # furniture sized by them crowds the room. The scale comes from the back wall's width instead
+    # (BACK_WALL_M: 7.2 m indoors, 7.5 m for the open terraces), and the door yardstick is kept as a
+    # check: the door heights this implies are printed.
+    width_m = BACK_WALL_M["patio" if patio else "indoor"]
+    # ...kept within 42 to 72 % of the yardstick's scale, so neither measure runs away
+    scale = min(max((xr - xl) / width_m / PX_PER_M, .42 * ppm / PX_PER_M), .72 * ppm / PX_PER_M)
+    dbg["yard_m"] = None
+    if y[0] in ("door", "arch"):
+        dbg["yard_m"] = (yb - y[1]) / (scale * PX_PER_M)
+    elif y[0] == "side":
+        dbg["yard_m"] = 2.05 * ppm / (scale * PX_PER_M)
+    dbg["yard_scale"] = ppm / PX_PER_M
     # wall zones and keep-clear floor areas
     if patio:
         zones = [z[:4] + ([z[4]] if len(z) > 4 else []) for z in h["zones"]]
@@ -345,7 +361,8 @@ def main() -> None:
         entries.append(e)
         f = geo["floor"]
         print(f"{name}: floor {f} vp {geo['vp']} scale {geo['scale']} (front x{geo['scale'] * (f[2][1] - geo['vp'][1]) / (f[0][1] - geo['vp'][1]):.2f})"
-              f" slopes {dbg['sl']:.3f} {dbg['sr']:.3f} {len(dbg.get('pts', []))} pts")
+              f" slopes {dbg['sl']:.3f} {dbg['sr']:.3f} {len(dbg.get('pts', []))} pts; by yardstick {dbg['yard_scale']:.3f}"
+              + (f", door/arch {dbg['yard_m']:.2f} m" if dbg['yard_m'] else ""))
         if args.overlay:
             overlay(img, geo, dbg, args.overlay / f"{name}.png", name)
     if not args.dry_run:

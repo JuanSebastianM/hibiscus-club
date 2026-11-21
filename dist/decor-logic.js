@@ -52,7 +52,7 @@ const DecorLogic=(()=>{
      back and at the front (pieces scale linearly with their floor y between the two, which is exact
      in one-point perspective), the wall zones and the openings on them, the floor kept clear in
      front of doors, and which way the light falls. The procedural room is one fixed geometry. */
-  const PROC={painted:false,back:ROOM.back,front:ROOM.frame.b,fl:ROOM.frame.l,fr:ROOM.frame.r,sB:1236/1356,sF:1476/1356,wallK:1,rugK:1,
+  const PROC={painted:false,back:ROOM.back,front:ROOM.frame.b,fl:ROOM.frame.l,fr:ROOM.frame.r,sB:1236/1356,sF:1476/1356,wallK:1,rugK:1,rugEdge:ROOM.frame.b-6,
     floor:FLOOR,rug:RUG,zones:[WALL],openings:[],clear:[],light:.04,skirt:SKIRT,xmin:-Infinity,xmax:Infinity,outdoor:false};
   const PROC_OUT={...PROC,zones:[WALL_OUT],outdoor:true};
   const geos=new Map();
@@ -67,10 +67,13 @@ const DecorLogic=(()=>{
     else{
       const [bl,br,fr,fl]=b.floor,yb=bl[1],front=fr[1],vy=b.vp[1];
       g={painted:true,id:b.id,back:{x0:bl[0],x1:br[0],y1:yb},front,fl:fl[0],fr:fr[0],vp:b.vp,
-        sB:b.scale,sF:b.scale*(front-vy)/(yb-vy),wallK:b.scale,
+        // (toward the viewer pieces grow with the floor, but no more than 1.5 times: the paintings are
+        // wide-angle, and full perspective growth makes front pieces look blown up)
+        sB:b.scale,sF:b.scale*Math.min(1.5,(front-vy)/(yb-vy)),wallK:b.scale,
         // rugs lie flatter on these floors, seen from lower down than the procedural room's
         rugK:clamp((front-yb)/468*1.15,.45,1),
-        floor:{y0:yb+4,y1:front-(front>=ROOM.H-2?10:6)},rug:{y0:yb+6,y1:front-6},
+        // a margin before the front edge, so nothing is cut off by the picture's bottom
+        floor:{y0:yb+4,y1:front-24},rug:{y0:yb+6,y1:front-30},rugEdge:front-30,
         zones:b.wall.map(z=>({x0:z[0],y0:z[1],x1:z[2],y1:z[3],hang:z[4]==='hang'})),
         openings:b.openings.map(o=>({x0:o[0],y0:o[1],x1:o[2],y1:o[3],kind:o[4]})),
         clear:b.clear.map(c=>({x0:c[0],y0:c[1],x1:c[2],y1:c[3]})),
@@ -137,21 +140,26 @@ const DecorLogic=(()=>{
     const x0=Number.isFinite(p.x)?p.x:ROOM.W/2,y0=Number.isFinite(p.y)?p.y:wallZone(g.id).y0,s0=p.s;
     const floorTop=g.back.y1-g.skirt-4;
     let best=null;
+    // covering an opening costs far more than moving; a decor window over a painted one is never chosen
+    // while any other place or size (down to the smallest) avoids it
+    const strict=DECOR.decorWindows.includes(p.id),wOver=strict?1e6:50;
     for(const z of g.zones){
       if(z.hang&&!hanger)continue;
       const zh=z.hang?floorTop-z.y0:z.y1-z.y0;
       const fit=Math.min(zh/(it.height*k0),(z.x1-z.x0)/(it.width*k0));
-      const s=s0>fit?Math.floor(fit*100)/100:s0;
-      const wd=it.width*k0*s,h=it.height*k0*s;
-      const lo={x:z.x0+ax*wd,y:z.y0+ay*h},hi={x:z.x1-(1-ax)*wd,y:z.hang?Math.min(z.y1+ay*h,floorTop-(1-ay)*h):z.y1-(1-ay)*h};
-      const fitIn=(x,y)=>({x:hi.x<lo.x?(z.x0+z.x1)/2-(.5-ax)*wd:clamp(x,lo.x,hi.x),y:hi.y<lo.y?lo.y:clamp(y,lo.y,hi.y)});
-      const overlap=c=>{const x=c.x-ax*wd,y=c.y-ay*h;let o=0;
-        for(const q of blocks){const ow=Math.min(x+wd,q.x1)-Math.max(x,q.x0),oh=Math.min(y+h,q.y1)-Math.max(y,q.y0);if(ow>0&&oh>0)o+=ow*oh}return o};
-      const cands=[fitIn(x0,y0)];
-      for(const q of blocks)cands.push(fitIn(q.x0-6-(1-ax)*wd,y0),fitIn(q.x1+6+ax*wd,y0),fitIn(x0,q.y0-6-(1-ay)*h),fitIn(x0,q.y1+6+ay*h));
-      for(const c of cands){
-        const cost=Math.hypot(c.x-x0,c.y-y0)+(s0-s)*4000+overlap(c)*50;
-        if(!best||cost<best.cost)best={cost,x:c.x,y:c.y,s};
+      const s1=s0>fit?Math.floor(fit*100)/100:s0;
+      for(const s of [s1,...[.85,.7,.55].map(f=>Math.round(s1*f*100)/100).filter(v=>v>=SCALE.min)]){
+        const wd=it.width*k0*s,h=it.height*k0*s;
+        const lo={x:z.x0+ax*wd,y:z.y0+ay*h},hi={x:z.x1-(1-ax)*wd,y:z.hang?Math.min(z.y1+ay*h,floorTop-(1-ay)*h):z.y1-(1-ay)*h};
+        const fitIn=(x,y)=>({x:hi.x<lo.x?(z.x0+z.x1)/2-(.5-ax)*wd:clamp(x,lo.x,hi.x),y:hi.y<lo.y?lo.y:clamp(y,lo.y,hi.y)});
+        const overlap=c=>{const x=c.x-ax*wd,y=c.y-ay*h;let o=0;
+          for(const q of blocks){const ow=Math.min(x+wd,q.x1)-Math.max(x,q.x0),oh=Math.min(y+h,q.y1)-Math.max(y,q.y0);if(ow>0&&oh>0)o+=ow*oh}return o};
+        const xs=[x0],ys=[y0];
+        for(const q of blocks){xs.push(q.x0-6-(1-ax)*wd,q.x1+6+ax*wd);ys.push(q.y0-6-(1-ay)*h,q.y1+6+ay*h)}
+        for(const cx of xs)for(const cy of ys){
+          const c=fitIn(cx,cy),cost=Math.hypot(c.x-x0,c.y-y0)+(s0-s)*4000+overlap(c)*wOver;
+          if(!best||cost<best.cost-1e-9)best={cost,x:c.x,y:c.y,s};
+        }
       }
     }
     if(best){p.x=best.x;p.y=best.y;p.s=best.s}
@@ -192,8 +200,8 @@ const DecorLogic=(()=>{
       // the whole rug lies on the floor: its far edge below the wall line, its near edge before the front edge
       const ay=it.anchor[1];let y=Number.isFinite(p.y)?p.y:g.rug.y0;
       // (a rug deeper than the floor is made smaller; its size changes with its depth, so iterate)
-      for(let i=0;i<4;i++){p.y=(yb+g.front)/2;const h=box(p,w).h;if(h<=g.front-yb-14)break;p.s=Math.max(SCALE.min,Math.floor(p.s*(g.front-yb-14)/h*100)/100)}
-      for(let i=0;i<30;i++){p.y=y;const h=box(p,w).h,n=clamp(y,yb+6+ay*h,Math.max(yb+6+ay*h,g.front-6-(1-ay)*h));if(Math.abs(n-y)<1e-4)break;y=n}
+      for(let i=0;i<4;i++){p.y=(yb+g.front)/2;const h=box(p,w).h;if(h<=g.rugEdge-yb-14)break;p.s=Math.max(SCALE.min,Math.floor(p.s*(g.rugEdge-yb-14)/h*100)/100)}
+      for(let i=0;i<30;i++){p.y=y;const h=box(p,w).h,n=clamp(y,yb+6+ay*h,Math.max(yb+6+ay*h,g.rugEdge-(1-ay)*h));if(Math.abs(n-y)<1e-4)break;y=n}
       p.y=y;const b=box(p,w),[l,r]=floorEdges(b.y+b.h*.06,w),inset=b.w*.04;
       const lo=l+4-(b.x+inset-p.x),hi=r-4-(b.r-inset-p.x);
       p.x=lo<=hi?clamp(Number.isFinite(p.x)?p.x:(lo+hi)/2,lo,hi):(l+r)/2;
@@ -526,7 +534,8 @@ const DecorLogic=(()=>{
     }
     /* wall: two or three pieces where nothing tall stands in front */
     const tall=kept.filter(p=>layer(p)===2&&p.y<yb+140*dk).map(p=>box(p,where));
-    const wallIds=shuffle(R.wall.filter(id=>ok(id)&&item(id).placement==='wall'),rnd).slice(0,2+(rnd()<.5?1:0));
+    const noWin=g.painted&&g.openings.length>0; // the painting has its own windows and doors
+    const wallIds=shuffle(R.wall.filter(id=>ok(id)&&item(id).placement==='wall'&&!(noWin&&DECOR.decorWindows.includes(id))),rnd).slice(0,2+(rnd()<.5?1:0));
     const wallBoxes=[];
     for(const id of wallIds){
       let placed=null;

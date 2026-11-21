@@ -319,7 +319,10 @@ test('painted rooms: eighteen backdrops, three per room, with sound measured geo
       const x = a[0] + (c[0] - a[0]) * (vy - a[1]) / (c[1] - a[1]);
       assert.ok(Math.abs(x - vx) < 3, `${tag}: side line misses the vanishing point by ${x - vx}`);
     }
-    assert.ok(b.scale > 0.5 && b.scale < 1.3, tag + ' scale ' + b.scale);
+    // wide-angle paintings: a 6 m back wall indoors (7.5 m on the terraces), so a room reads as a room
+    assert.ok(b.scale > 0.38 && b.scale < 0.7, tag + ' scale ' + b.scale);
+    const wallM = (br[0] - bl[0]) / (b.scale * 280);
+    assert.ok(wallM > 4.5 && wallM < 8, `${tag}: back wall ${wallM.toFixed(1)} m wide`);
     for (const z of b.wall) assert.ok(z[0] < z[2] && z[1] < z[3] && z[3] <= bl[1] && z[0] >= 0 && z[2] <= 1536, tag + ' wall zone');
     for (const o of b.openings) assert.ok(['window', 'door', 'arch', 'awning'].includes(o[4]) && o[0] < o[2] && o[1] < o[3], tag + ' opening');
     // a door at the back wall keeps the floor in front of it clear
@@ -347,10 +350,20 @@ test('painted rooms: every standing piece and rug stays on that room\'s floor, a
       for (const [cx, cy] of [[fp.l, fp.rear], [fp.r, fp.rear], [fp.l, fp.front], [fp.r, fp.front]])
         assert.ok(insideQuad(q, cx, cy), `${b.id} ${id}: rug corner ${cx},${cy} off the floor`);
     }
-    // further back is smaller, in proportion to this painting's floor
+    // further back is smaller, growing toward the viewer with this painting's floor but never blown up
     const back = L.constrain(piece('armchair', 768, yb + 5), b.id), front = L.constrain(piece('armchair', 768, 1140), b.id);
-    const want = (front.y - b.vp[1]) / (back.y - b.vp[1]);
-    assert.ok(Math.abs(L.scaleOf(front, b.id) / L.scaleOf(back, b.id) - want) < 0.01, b.id + ' perspective scale');
+    const k = L.scaleOf(front, b.id) / L.scaleOf(back, b.id);
+    assert.ok(k > 1.05 && k <= 1.5 + 1e-9, `${b.id}: front/back ${k}`);
+    // nothing reaches the picture's front edge: rugs end 30 px before it, standing pieces 24
+    for (const id of rugs) assert.ok(L.box(L.constrain(piece(id, 768, 2000), b.id), b.id).b <= q[2][1] - 29.9, `${b.id} ${id}: rug cut off`);
+    assert.ok(L.constrain(piece('armchair', 768, 2000), b.id).y <= q[2][1] - 23.9, b.id + ' front margin');
+    // sizes against the room: a bed a quarter to a third of the back wall, a bunk bed well under the door
+    const wallW = q[1][0] - q[0][0], at = id => L.box(L.constrain(piece(id, 768, 0), b.id), b.id);
+    if (b.room !== 'patio') {
+      assert.ok(at('single-bed').w / wallW < 0.36 && at('sofa').w / wallW < 0.37 && at('bathtub').w / wallW < 0.3, `${b.id}: furniture too wide for the room`);
+      const door = b.openings.find(o => o[4] === 'door');
+      if (door) assert.ok(at('bunk-bed').h < (yb - door[1]) * 0.7, `${b.id}: the bunk bed is not well under the door`);
+    }
   }
 });
 
@@ -365,6 +378,9 @@ test('painted rooms: wall pieces stay in the wall zones and off windows and door
         ? DECOR.hangers.includes(id) && bx.y >= z.y0 - 0.5 && bx.y <= z.y1 + 0.5 && bx.x >= z.x0 - 0.5 && bx.r <= z.x1 + 0.5 && bx.b <= g.back.y1
         : bx.x >= z.x0 - 0.5 && bx.r <= z.x1 + 0.5 && bx.y >= z.y0 - 0.5 && bx.b <= z.y1 + 0.5);
       assert.ok(inZone, `${tag}: outside the wall zones ${JSON.stringify(bx)}`);
+      // decor windows never cover a painted opening
+      if (['curtain-window', 'round-window'].includes(id)) for (const o of g.openings)
+        assert.ok(Math.min(bx.r, o.x1) <= Math.max(bx.x, o.x0) + 0.5 || Math.min(bx.b, o.y1) <= Math.max(bx.y, o.y0) + 0.5, `${tag}: a decor window over the painted ${o.kind}`);
       // where the wall has room beside the openings, the piece keeps off them
       const blocked = g.openings.filter(o => !(DECOR.overOpenings[id] || []).includes(o.kind));
       const overlap = blocked.reduce((s, o) => s + Math.max(0, Math.min(bx.r, o.x1) - Math.max(bx.x, o.x0)) * Math.max(0, Math.min(bx.b, o.y1) - Math.max(bx.y, o.y0)), 0);
@@ -433,6 +449,8 @@ test('painted rooms: Surprise me lays out every scheme tidily, big pieces at the
         assert.ok(Math.abs(before[0] - p.x) < 0.05 && Math.abs(before[1] - p.y) < 0.05, `${b.id} #${seed}: ${p.id} where it belongs`);
       }
       for (const p of out.filter(p => big.includes(p.id))) { total++; if (L.footprint(p, b.id).rear < L.geo(b.id).back.y1 + 30) atBack++ }
+      // no decor window where the painting has its own windows and doors
+      if (b.openings.length) assert.ok(!out.some(p => ['curtain-window', 'round-window'].includes(p.id)), `${b.id} #${seed}: a decor window`);
       // the doorway stays free, apart from a centrepiece that has nowhere else to go
       const blocking = out.filter(p => L.inClear(p, b.id) > 0.25);
       assert.ok(blocking.length <= 1, `${b.id} #${seed}: ${blocking.map(p => p.id)} in front of a door`);
