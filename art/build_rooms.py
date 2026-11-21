@@ -3,80 +3,58 @@
 Usage (from the repo root):
     python3 -I art/build_rooms.py [--grid DIR]
 
-Reads art/source/pack2/07-house-decorator/room-<room>-<1|2|3>.webp (opaque
-2388x1792 paintings) and writes
+Reads art/source/round2/rooms/room-<room>-<1|2|3>.webp (opaque paintings, drawn edge to edge
+with no mat: ten at 2386 x 1792, eight at 1151 x 864) and writes
     dist/assets/decor/rooms/<room>-<n>.webp        the backdrop, 1536 x 1152
     dist/assets/decor/rooms/thumbs/<room>-<n>.webp a 192 x 144 swatch
-The backdrop is the painting with its outer border or mat cropped away and
-trimmed to exactly 4:3 (the decorator's room is 1536 x 1152 room pixels), so
-geometry measured on the backdrop (art/measure_rooms.py) is in room pixels.
-With --grid DIR it also writes each backdrop with a labeled 50 px grid, for
-reading hints off by eye.
+The backdrop is the whole painting trimmed to exactly 4:3 (a row or two of ceiling, or a column
+or two of side wall, split evenly) and resized to the decorator's room, 1536 x 1152 room pixels,
+so geometry measured on the backdrop (art/measure_rooms.py) is in room pixels.
 
-Border detection: rows and columns are walked inward from each edge while
-they stay one flat colour (the mat); a few pixels more are taken for the
-soft inner edge of the mat. Rooms painted edge to edge (the patios and the
-playrooms) are listed in BLEED and are not cropped. If the cropped picture
-is wider than 4:3 its sides are trimmed evenly (side walls only); if it is
-taller, the top is trimmed (ceiling only).
+The large paintings are reduced with Lanczos. The small ones are enlarged 1.33 times: Lanczos
+(sharper than bicubic on the ink lines, without its ringing at this small factor), then a light
+unsharp mask so they hold up next to the large ones at the decorator's stage size.
 
-Deterministic and idempotent. Requires Pillow (with WebP) and numpy.
+With --grid DIR it also writes each backdrop with a labelled 50 px grid, for reading hints off
+by eye. Deterministic and idempotent. Requires Pillow (with WebP).
 """
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
-import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "art" / "source" / "pack2" / "07-house-decorator"
+SRC = ROOT / "art" / "source" / "round2" / "rooms"
 OUT = ROOT / "dist" / "assets" / "decor" / "rooms"
 ROOMS = ["bedroom", "kitchen", "living", "bathroom", "playroom", "patio"]
 W, H = 1536, 1152
 TW, TH = 192, 144
-BLEED = {"patio", "playroom"}   # painted edge to edge: no mat to crop
-EXTRA = 10                      # px (source) taken beyond the flat mat: its soft inner edge
 WEBP = dict(quality=80, method=6)
 WEBP_THUMB = dict(quality=74, method=6)
+# for the paintings smaller than the backdrop: radius in backdrop px, strength %, threshold
+SHARPEN = dict(radius=1.1, percent=55, threshold=2)
 
 
-def border(a: np.ndarray) -> tuple[int, int, int, int]:
-    """(left, top, right, bottom) widths of a flat-coloured mat around the painting."""
-    h, w, _ = a.shape
-
-    def run(lines):
-        ref = lines[0].mean(0)
-        for i, line in enumerate(lines):
-            if np.median(np.abs(line - ref).mean(1)) > 12 or line.std(0).mean() > 14:
-                return i
-        return len(lines)
-
-    top = run([a[i, w // 4:3 * w // 4] for i in range(300)])
-    bot = run([a[h - 1 - i, w // 4:3 * w // 4] for i in range(300)])
-    left = run([a[h // 4:3 * h // 4, i] for i in range(300)])
-    right = run([a[h // 4:3 * h // 4, w - 1 - i] for i in range(300)])
-    return left, top, right, bot
-
-
-def crop_box(name: str, img: Image.Image) -> tuple[int, int, int, int]:
+def crop_box(img: Image.Image) -> tuple[int, int, int, int]:
+    """The largest centred 4:3 box (the paintings are within a pixel or two of 4:3)."""
     w, h = img.size
-    if name.split("-")[0] in BLEED:
-        l = t = r = b = 0
-    else:
-        a = np.asarray(img.convert("RGB")).astype(float)
-        l, t, r, b = (v + EXTRA for v in border(a))
-    x0, y0, x1, y1 = l, t, w - r, h - b
-    cw, ch = x1 - x0, y1 - y0
-    if cw * 3 > ch * 4:          # too wide: trim the sides evenly
-        nw = round(ch * 4 / 3)
-        x0 += (cw - nw) // 2
-        x1 = x0 + nw
-    elif cw * 3 < ch * 4:        # too tall: trim the ceiling
-        nh = round(cw * 3 / 4)
-        y0 = y1 - nh
-    return x0, y0, x1, y1
+    if w * 3 > h * 4:
+        nw = round(h * 4 / 3)
+        x0 = (w - nw) // 2
+        return x0, 0, x0 + nw, h
+    nh = round(w * 3 / 4)
+    y0 = (h - nh) // 2
+    return 0, y0, w, y0 + nh
+
+
+def backdrop(src: Image.Image) -> Image.Image:
+    box = crop_box(src)
+    img = src.crop(box).resize((W, H), Image.LANCZOS)
+    if box[2] - box[0] < W:
+        img = img.filter(ImageFilter.UnsharpMask(**SHARPEN))
+    return img
 
 
 def grid(img: Image.Image, path: Path) -> None:
@@ -108,15 +86,15 @@ def main() -> None:
         for n in (1, 2, 3):
             name = f"{room}-{n}"
             src = Image.open(SRC / f"room-{name}.webp").convert("RGB")
-            box = crop_box(name, src)
-            img = src.crop(box).resize((W, H), Image.LANCZOS)
+            img = backdrop(src)
             out = OUT / f"{name}.webp"
             img.save(out, "WEBP", **WEBP)
             th = OUT / "thumbs" / f"{name}.webp"
             img.resize((TW, TH), Image.LANCZOS).save(th, "WEBP", **WEBP_THUMB)
             total += out.stat().st_size
             thumbs += th.stat().st_size
-            print(f"{name}: crop {box} -> {out.stat().st_size:,} B, thumb {th.stat().st_size:,} B")
+            up = " (enlarged, sharpened)" if src.size[0] < W else ""
+            print(f"{name}: {src.size[0]}x{src.size[1]} crop {crop_box(src)}{up} -> {out.stat().st_size:,} B, thumb {th.stat().st_size:,} B")
             if args.grid:
                 grid(img, args.grid / f"{name}.png")
     print(f"backdrops {total:,} B, thumbnails {thumbs:,} B")

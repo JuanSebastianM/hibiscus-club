@@ -27,14 +27,12 @@ The hints that cannot be found reliably by edges (window and door rectangles, ch
 the patios' balustrade lines, wall zones on the garden walls) are used as read, and the
 overlay previews (--overlay) are how they were checked and corrected.
 
-Scale: the furniture manifest's defaultScale assumes 280 px per metre. A room's scale at
-the back wall is pxPerMetre / 280 with pxPerMetre = the back wall's width in px / its width in
-metres (BACK_WALL_M: 5 m indoors, 5.8 m on the terraces). The paintings are wide-angle, so the
-yardsticks in them (a door's height, a side door carried back through the perspective, the
-ceiling, the patios' central arch) are drawn tall: sized by them, furniture crowded every room.
-They still bound the result: the scale is kept within 42 to 80 % of the yardstick's, and the
-door heights it implies are printed as a check (the overlay's 1.8 m figure stands well under
-every door).
+Scale: the furniture manifest's defaultScale assumes 280 px per metre. The paintings were drawn at
+human scale (a 2.5 m ceiling, 2.0 m doors), so a room's scale at the back wall is its yardstick's
+pixels per metre / 280: the door opening (2.0 m) where the back wall has a door, the patios'
+garden arch (2.0 m), and in the window rooms the ceiling line (2.5 m). The window sills were asked
+for at 0.9 m but are painted at about 0.6 m in every window room (the door rooms' doors and
+ceilings agree to within 3 %), so the sill is only measured and printed, as a check.
 Nearer the viewer pieces grow with the floor: scale(y) = scale * (y - horizon) / (backY - horizon).
 
 Requires Pillow and numpy. Deterministic.
@@ -54,73 +52,61 @@ ROOMS_DIR = ROOT / "dist" / "assets" / "decor" / "rooms"
 DATA = ROOT / "dist" / "decor-data.js"
 W, H = 1536, 1152
 PX_PER_M = 280
-BACK_WALL_M = {"indoor": 5.0, "patio": 5.8}  # the back wall's width in metres (see measure())
+YARD_M = {"door": 2.0, "arch": 2.0, "ceil": 2.5, "sill": 0.9}  # the requested heights
 
-# Read by eye on the 50 px grid of each backdrop (room pixels). Keys:
+# Read by eye on the 50 px grid of each backdrop (room pixels). All eighteen were drawn on one
+# shared layout: back wall x 300..1232 from the ceiling line (y ~250) to the floor (y ~902).
+# Keys:
 #   back: [y, xLeft, xRight]   floor line at the back wall and the two back corners (refined)
-#   ceil: y of the ceiling line (bottom of the crown moulding) on the back wall
+#   ceil: y of the ceiling line (bottom of the crown moulding, or the porch beam) on the back wall
 #   top/rail: the wall band for wall decor: below the crown/frieze, above the chair rail or tile cap
 #   skirt: skirting height in px at the back wall
-#   open: openings on the back wall [x0, y0, x1, y1, kind] (window | door | arch | awning)
-#   side: a door in the left side wall: [x of its far jamb, y of its sill there, x near jamb, y there, top y]
-#   yard: the yardstick: ['door', topY, m] (door at the back wall, bottom = floor line),
-#         ['side'] (the side door, 2.05 m), ['ceil', m], ['arch', topY, m]
-#   lines: patios only: the side floor lines as two points each [[x,y],[x,y]] (balustrade bases)
-#   front: y of the front floor edge when the floor does not run to the bottom of the picture
+#   open: openings on the back wall [x0, y0, x1, y1, kind] (window | door | arch), outer casing
+#   yard: the yardstick: ['door', y] (top of the door opening), ['arch', y] (top of the arch
+#         opening), ['ceil'] (the ceiling line); sill: y of the top of a window sill (printed only)
 #   zones: patios only: wall zones [x0, y0, x1, y1] or [x0, y0, x1, y1, 'hang'] (only hanging pieces)
 #   vx, vy: where to look for the vanishing point when the edges alone mislead (floor joints)
-#   light: which way contact shadows lean (+ right, - left), the sun in the painting
+#   light: which way contact shadows lean (+ right, - left), from the sunlight on the floor
 HINTS: dict[str, dict] = {
-    "bedroom-1": dict(back=[940, 250, 1285], ceil=214, top=232, rail=698, skirt=36,
-                      open=[[538, 262, 1002, 778, "window"]], yard=["ceil", 2.8], light=.05),
-    "bedroom-2": dict(back=[905, 300, 1235], ceil=238, top=255, rail=695, skirt=34,
-                      open=[[533, 266, 1002, 905, "door"]], yard=["door", 268, 2.4], light=-.04),
-    "bedroom-3": dict(back=[900, 297, 1247], ceil=192, top=262, rail=612, skirt=48,
-                      open=[[468, 270, 1058, 790, "window"]], yard=["ceil", 2.8], light=-.05),
-    "kitchen-1": dict(back=[898, 297, 1245], ceil=246, top=262, rail=668, skirt=30,
-                      open=[[546, 270, 992, 752, "window"]], side=[250, 945, 140, 1030, 282],
-                      yard=["side"], light=.05),
-    "kitchen-2": dict(back=[918, 250, 1280], ceil=198, top=278, rail=622, skirt=42,
-                      open=[[430, 274, 1102, 680, "window"]], yard=["ceil", 2.8], light=.0),
-    "kitchen-3": dict(back=[942, 230, 1300], ceil=208, top=222, rail=688, skirt=44,
-                      open=[[497, 236, 1040, 796, "window"]], yard=["ceil", 2.8], light=-.04),
-    "living-1": dict(back=[858, 283, 1250], ceil=246, top=262, rail=662, skirt=36,
-                     open=[[488, 276, 1047, 858, "door"]], yard=["door", 418, 2.1], light=-.05),
-    "living-2": dict(back=[918, 275, 1255], ceil=248, top=262, rail=700, skirt=40,
-                     open=[[428, 268, 1106, 918, "door"]], yard=["door", 430, 2.1], light=.05),
-    "living-3": dict(back=[898, 300, 1240], ceil=256, top=325, rail=690, skirt=40,
-                     open=[[444, 276, 1094, 898, "door"]], yard=["door", 440, 2.1], light=-.05),
-    "bathroom-1": dict(back=[905, 280, 1252], ceil=220, top=236, rail=602, skirt=36,
-                       open=[[568, 236, 968, 732, "window"]], side=[215, 965, 105, 1052, 300],
-                       yard=["side"], light=.05),
-    "bathroom-2": dict(back=[890, 305, 1228], ceil=237, top=252, rail=602, skirt=36,
-                       open=[[464, 284, 1066, 720, "window"]], side=[230, 968, 100, 1060, 262],
-                       yard=["side"], light=-.03),
-    "bathroom-3": dict(back=[925, 265, 1270], ceil=210, top=310, rail=612, skirt=34,
-                       open=[[553, 226, 985, 768, "window"]], side=[210, 985, 100, 1058, 300], vy=530,
-                       yard=["side"], light=.0),
-    "playroom-1": dict(back=[848, 350, 1185], ceil=196, top=282, rail=606, skirt=34,
-                       open=[[534, 248, 1000, 740, "window"]], side=[290, 905, 165, 995, 222],
-                       yard=["side"], light=.04),
-    "playroom-2": dict(back=[870, 348, 1195], ceil=255, top=330, rail=650, skirt=34,
-                       open=[[496, 340, 1042, 738, "window"]], side=[275, 930, 165, 1010, 275],
-                       yard=["side"], light=.0),
-    "playroom-3": dict(back=[852, 330, 1200], ceil=200, top=282, rail=620, skirt=36,
-                       open=[[526, 255, 1010, 748, "window"]], side=[265, 920, 125, 1000, 258],
-                       yard=["side"], light=-.03),
-    "patio-1": dict(back=[828, 250, 1290], lines=[[[250, 828], [0, 945]], [[1290, 828], [1536, 945]]],
-                    zones=[[352, 300, 872, 600], [1108, 300, 1190, 600], [250, 222, 1290, 300, "hang"]],
-                    open=[[870, 330, 1110, 828, "arch"]], yard=["arch", 335, 2.6], light=-.06),
-    "patio-2": dict(back=[795, 250, 1290], lines=[[[250, 800], [0, 892]], [[1290, 800], [1536, 892]]], front=955,
-                    zones=[[280, 300, 590, 640], [950, 300, 1258, 640], [250, 232, 1290, 300, "hang"]],
-                    open=[[392, 348, 508, 612, "window"], [1032, 348, 1148, 612, "window"], [590, 296, 952, 795, "arch"],
-                          [528, 184, 1008, 292, "awning"]],
-                    yard=["arch", 300, 2.6], light=.05),
-    "patio-3": dict(back=[798, 330, 1215], lines=[[[330, 800], [0, 935]], [[1215, 800], [1536, 945]]],
-                    zones=[[588, 470, 646, 770], [890, 470, 954, 770], [342, 470, 400, 770], [1142, 470, 1200, 770],
-                           [345, 262, 1200, 345, "hang"]],
-                    open=[[400, 345, 590, 798, "window"], [646, 330, 890, 798, "arch"], [954, 345, 1142, 798, "window"]],
-                    yard=["arch", 345, 2.6], light=.05),
+    "bedroom-1": dict(back=[902, 300, 1232], ceil=250, top=262, rail=688, skirt=30,
+                      open=[[396, 298, 766, 772, "window"]], yard=["ceil"], sill=750, light=.05),
+    "bedroom-2": dict(back=[902, 300, 1232], ceil=250, top=262, rail=688, skirt=30,
+                      open=[[912, 312, 1198, 770, "window"]], yard=["ceil"], sill=738, light=.05),
+    "bedroom-3": dict(back=[902, 300, 1232], ceil=250, top=300, rail=652, skirt=30,
+                      open=[[377, 357, 648, 902, "door"]], yard=["door", 385], light=-.05),
+    "kitchen-1": dict(back=[902, 300, 1232], ceil=250, top=262, rail=686, skirt=30,
+                      open=[[871, 312, 1173, 748, "window"]], yard=["ceil"], sill=712, light=.05),
+    "kitchen-2": dict(back=[902, 300, 1232], ceil=250, top=262, rail=686, skirt=30,
+                      open=[[366, 367, 634, 902, "door"]], yard=["door", 393], light=-.05),
+    "kitchen-3": dict(back=[902, 300, 1232], ceil=250, top=262, rail=686, skirt=30,
+                      open=[[876, 315, 1177, 775, "window"]], yard=["ceil"], sill=738, light=.05),
+    "living-1": dict(back=[902, 300, 1232], ceil=250, top=262, rail=692, skirt=30,
+                     open=[[855, 305, 1133, 775, "window"]], yard=["ceil"], sill=748, light=.05),
+    "living-2": dict(back=[902, 300, 1232], ceil=250, top=262, rail=686, skirt=30,
+                     open=[[385, 367, 632, 902, "door"]], yard=["door", 395], light=-.05),
+    "living-3": dict(back=[902, 300, 1232], ceil=250, top=262, rail=676, skirt=30,
+                     open=[[869, 320, 1170, 770, "window"]], yard=["ceil"], sill=732, light=.0),
+    "bathroom-1": dict(back=[902, 300, 1232], ceil=250, top=262, rail=686, skirt=30,
+                       open=[[371, 315, 682, 775, "window"]], yard=["ceil"], sill=738, light=-.05),
+    "bathroom-2": dict(back=[902, 300, 1232], ceil=250, top=262, rail=638, skirt=30,
+                       open=[[866, 320, 1168, 765, "window"]], yard=["ceil"], sill=730, light=.0),
+    "bathroom-3": dict(back=[902, 300, 1232], ceil=250, top=262, rail=622, skirt=30,
+                       open=[[375, 349, 654, 902, "door"]], yard=["door", 380], light=-.05),
+    "playroom-1": dict(back=[902, 300, 1232], ceil=250, top=262, rail=688, skirt=30,
+                       open=[[873, 316, 1171, 768, "window"]], yard=["ceil"], sill=735, light=.05),
+    "playroom-2": dict(back=[902, 300, 1232], ceil=250, top=262, rail=688, skirt=30,
+                       open=[[385, 350, 647, 902, "door"]], yard=["door", 377], light=-.05),
+    "playroom-3": dict(back=[902, 300, 1232], ceil=250, top=262, rail=688, skirt=30,
+                       open=[[866, 325, 1155, 770, "window"]], yard=["ceil"], sill=740, light=.05),
+    "patio-1": dict(back=[904, 300, 1236], ceil=None, skirt=0,
+                    zones=[[322, 290, 1212, 770], [300, 215, 1225, 262, "hang"]],
+                    open=[[370, 328, 690, 904, "arch"]], yard=["arch", 381], light=-.04),
+    "patio-2": dict(back=[902, 300, 1234], ceil=254, skirt=30,
+                    zones=[[318, 282, 1222, 770], [305, 228, 1230, 256, "hang"]],
+                    open=[[873, 333, 1158, 902, "arch"]], yard=["arch", 379], light=-.04),
+    "patio-3": dict(back=[902, 312, 1226], ceil=None, skirt=0,
+                    zones=[[262, 272, 1278, 780]],
+                    open=[[388, 352, 654, 902, "arch"]], yard=["arch", 355], light=-.04),
 }
 ORDER = [f"{r}-{n}" for r in ["bedroom", "kitchen", "living", "bathroom", "playroom", "patio"] for n in (1, 2, 3)]
 
@@ -207,11 +193,11 @@ def wall_colour(img: Image.Image, h: dict, yb: int, xl: int, xr: int) -> str:
 def measure(name: str, img: Image.Image) -> tuple[dict, dict]:
     h = HINTS[name]
     g = gray(img)
-    patio = "lines" in h
+    patio = "zones" in h
     yb, xl, xr = h["back"]
     opens = h.get("open", [])
     dbg = {}
-    if not patio:
+    if "lines" not in h:
         yb = refine_back_y(g, yb, xl, xr, opens)
         xl = refine_corner_x(g, xl, yb)
         xr = refine_corner_x(g, xr, yb)
@@ -231,31 +217,19 @@ def measure(name: str, img: Image.Image) -> tuple[dict, dict]:
     vx = xl + sl * d
     fl = (xl + sl * (front - yb), front)
     fr = (xr + sr * (front - yb), front)
-    # yardstick -> pixels per metre at the back wall
+    # yardstick -> pixels per metre at the back wall: the painted rooms are at human scale, so
+    # the furniture scale is simply the yardstick's
     y = h["yard"]
-    if y[0] == "door" or y[0] == "arch":
-        ppm = (yb - y[1]) / y[2]
-    elif y[0] == "ceil":
-        ppm = (yb - h["ceil"]) / y[1]
-    else:  # side door: its height where it stands, carried back through the perspective
-        s = h["side"]
-        bx, by = (s[0] + s[2]) / 2, (s[1] + s[3]) / 2
-        top = s[4]
-        ppm_there = (by - top) / 2.05
-        ppm = ppm_there * (yb - vy) / (by - vy)
-    # The paintings are wide-angle: their doors and ceilings are drawn tall for the room's width, and
-    # furniture sized by them crowds the room. The scale comes from the back wall's width instead
-    # (BACK_WALL_M: 5 m indoors, 5.8 m for the open terraces), and the door yardstick is kept as a
-    # check: the door heights this implies are printed.
-    width_m = BACK_WALL_M["patio" if patio else "indoor"]
-    # ...kept within 42 to 80 % of the yardstick's scale, so neither measure runs away
-    scale = min(max((xr - xl) / width_m / PX_PER_M, .42 * ppm / PX_PER_M), .8 * ppm / PX_PER_M)
-    dbg["yard_m"] = None
     if y[0] in ("door", "arch"):
-        dbg["yard_m"] = (yb - y[1]) / (scale * PX_PER_M)
-    elif y[0] == "side":
-        dbg["yard_m"] = 2.05 * ppm / (scale * PX_PER_M)
-    dbg["yard_scale"] = ppm / PX_PER_M
+        ppm = (yb - y[1]) / YARD_M[y[0]]
+    else:
+        ppm = (yb - h["ceil"]) / YARD_M["ceil"]
+    scale = ppm / PX_PER_M
+    # checks, printed: the door/arch, the ceiling and the window sill in metres at this scale
+    dbg["door_m"] = (yb - y[1]) / ppm if y[0] in ("door", "arch") else None
+    dbg["ceil_m"] = (yb - h["ceil"]) / ppm if h.get("ceil") else None
+    dbg["sill_m"] = (yb - h["sill"]) / ppm if h.get("sill") else None
+    dbg["wall_m"] = (xr - xl) / ppm
     # wall zones and keep-clear floor areas
     if patio:
         zones = [z[:4] + ([z[4]] if len(z) > 4 else []) for z in h["zones"]]
@@ -267,12 +241,9 @@ def measure(name: str, img: Image.Image) -> tuple[dict, dict]:
             # the floor in front of a doorway at the back wall, a third of the way forward: a walkway
             # at least 1.6 m wide through the middle of the (wide, French) doors; furniture may
             # stand in front of their outer leaves and casing
-            k = max(36, min(.27 * (o[2] - o[0]), (o[2] - o[0] - 1.6 * scale * PX_PER_M) / 2))
+            # (a single door: its whole width, casing included)
+            k = max(0, min(.27 * (o[2] - o[0]), (o[2] - o[0] - 1.6 * scale * PX_PER_M) / 2))
             clear.append([round(o[0] + k), yb, round(o[2] - k), round(yb + (front - yb) * .38)])
-    if "side" in h:
-        s = h["side"]
-        y0, y1 = min(s[1], s[3]) - 10, max(s[1], s[3]) + 30
-        clear.append([0, y0, round(max(s[0], s[2]) + 150), y1])
     geo = dict(
         floor=[[xl, yb], [xr, yb], [round(fr[0]), front], [round(fl[0]), front]],
         vp=[round(vx), round(vy)],
@@ -316,11 +287,11 @@ def overlay(img: Image.Image, geo: dict, dbg: dict, path: Path, name: str) -> No
     d.line([geo["floor"][0][0], yb - geo["skirt"], geo["floor"][1][0], yb - geo["skirt"]], fill=(160, 0, 160, 200), width=2)
     for x, y in dbg.get("pts", []):
         d.ellipse([x - 3, y - 3, x + 3, y + 3], fill=(255, 255, 0, 255))
-    # 1.8 m figure at the back wall and at the front: the yardstick in use
+    # 1.7 m figure (the Grown-up) at the back wall and at the front
     s = geo["scale"] * PX_PER_M
     for fx, fy in [((geo["floor"][0][0] + geo["floor"][1][0]) / 2 - 300, yb), (300, min(geo["floor"][2][1], H) - 40)]:
         k = min(1.5, (fy - vy) / (yb - vy))  # as the game: growth toward the viewer capped at 1.5
-        hh = 1.8 * s * k
+        hh = 1.7 * s * k
         d.rectangle([fx - 0.25 * s * k, fy - hh, fx + 0.25 * s * k, fy], outline=(255, 255, 255, 255), fill=(0, 0, 0, 70), width=3)
     d.text((10, 10), f"{name} scale {geo['scale']} vp {geo['vp']}", fill=(0, 0, 0, 255))
     Image.alpha_composite(o, lay).convert("RGB").save(path)
@@ -363,8 +334,8 @@ def main() -> None:
         entries.append(e)
         f = geo["floor"]
         print(f"{name}: floor {f} vp {geo['vp']} scale {geo['scale']} (front x{geo['scale'] * (f[2][1] - geo['vp'][1]) / (f[0][1] - geo['vp'][1]):.2f})"
-              f" slopes {dbg['sl']:.3f} {dbg['sr']:.3f} {len(dbg.get('pts', []))} pts; by yardstick {dbg['yard_scale']:.3f}"
-              + (f", door/arch {dbg['yard_m']:.2f} m" if dbg['yard_m'] else ""))
+              f" slopes {dbg['sl']:.3f} {dbg['sr']:.3f} {len(dbg.get('pts', []))} pts; back wall {dbg['wall_m']:.2f} m"
+              + "".join(f", {k} {dbg[k + '_m']:.2f} m" for k in ("door", "ceil", "sill") if dbg[k + "_m"]).replace("door", "arch" if geo.get("outdoor") else "door"))
         if args.overlay:
             overlay(img, geo, dbg, args.overlay / f"{name}.png", name)
     if not args.dry_run:
