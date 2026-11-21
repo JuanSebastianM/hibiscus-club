@@ -401,7 +401,7 @@ window.addEventListener('langchange',()=>{
   setPageTitle();
   if(isMakeoverRoute()&&document.querySelector('#stage')){navBar();relocalizeRoom();}
   else if(route==='house'&&typeof Decorator!=='undefined'&&Decorator.relocalize())navBar();
-  else draw();
+  else{holdEncounter();draw();} // an in-scene conversation is drawn again by relocalizeEncounter
   relocalizeBuyDialog();relocalizeEncounter();
   if(nameDialog.open)fillNameDialog();
   if(coach>=0)showCoach();
