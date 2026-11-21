@@ -166,19 +166,28 @@ const RESIDENTS={
    px drawn at `scale`, registered and colour-matched to the base doll's head and placed with their
    top-left at doll-local `at`; the alpha is the blend mask (only the region EXPRESSION_REGION names),
    and `lips` marks each cell's lips for the makeup pass. The side sheet serves the left view and,
-   mirrored, the right. Little Me's side sheet is drawn in three-quarter view and cannot sit on her
-   strict profile, so her side views keep the procedural face. Adding a sheet = its files + one entry. */
+   mirrored, the right (Little Me's side sheet was redrawn as a true profile for this). Adding a sheet =
+   its files + one entry. */
 /* Sideways glances (the drawn look-left / look-right eyes) read as side-eye on these faces, so they
    are off: idle and emotes never pick them while this is false. */
 const SIDE_GLANCES=false;
 const EXPRESSIONS=['neutral','soft-smile','big-smile','laugh','blink','half-closed','talk-eh','talk-oh','talk-ah','surprised','look-left','look-right'];
+/* The Grown-up's smiling talk heads (art/source/round2/talking-mouths, one row of six): her rest face smiles
+   with teeth, so she talks, blinks and laughs from that smile instead of from a closed mouth. Listed per view
+   as `smile` in EXPRESSION_ART with the cells that registered well (`names`); any other falls back to the
+   pack-2 shape in EXPRESSION_FALLBACK. */
+const SMILE_EXPRESSIONS=['smile-rest','smile-eh','smile-oh','smile-ah','smile-blink','smile-laugh'];
+const EXPRESSION_FALLBACK={'smile-rest':null,'smile-eh':'talk-eh','smile-oh':'talk-oh','smile-ah':'talk-ah','smile-blink':'blink','smile-laugh':'laugh'};
 const EXPRESSION_REGION={'neutral':'face','soft-smile':'face','big-smile':'face','laugh':'face','surprised':'face',
-  'blink':'eyes','half-closed':'eyes','look-left':'eyes','look-right':'eyes','talk-eh':'mouth','talk-oh':'mouth','talk-ah':'mouth'};
+  'blink':'eyes','half-closed':'eyes','look-left':'eyes','look-right':'eyes','talk-eh':'mouth','talk-oh':'mouth','talk-ah':'mouth',
+  'smile-rest':'mouth','smile-eh':'mouth','smile-oh':'mouth','smile-ah':'mouth','smile-blink':'eyes','smile-laugh':'face'};
 const EXPRESSION_ART={
-  adult:{front:{file:'assets/faces/faces-adult-front.webp',lips:'assets/faces/faces-adult-front-lips.webp',at:[156,56],cell:[104,100],scale:2},
-    side:{file:'assets/faces/faces-adult-side.webp',lips:'assets/faces/faces-adult-side-lips.webp',at:[12,54],cell:[86,100],scale:2}},
+  adult:{front:{file:'assets/faces/faces-adult-front.webp',lips:'assets/faces/faces-adult-front-lips.webp',at:[156,56],cell:[104,100],scale:2,
+      smile:{file:'assets/faces/faces-adult-front-smile.webp',lips:'assets/faces/faces-adult-front-smile-lips.webp',names:['smile-rest','smile-eh','smile-oh','smile-ah','smile-blink','smile-laugh']}},
+    side:{file:'assets/faces/faces-adult-side.webp',lips:'assets/faces/faces-adult-side-lips.webp',at:[12,54],cell:[86,100],scale:2,
+      smile:{file:'assets/faces/faces-adult-side-smile.webp',lips:'assets/faces/faces-adult-side-smile-lips.webp',names:['smile-rest','smile-eh','smile-oh','smile-ah','smile-blink','smile-laugh']}}},
   little:{front:{file:'assets/faces/faces-little-front.webp',lips:'assets/faces/faces-little-front-lips.webp',at:[140,94],cell:[134,116],scale:2},
-    side:null}
+    side:{file:'assets/faces/faces-little-side.webp',lips:'assets/faces/faces-little-side-lips.webp',at:[0,94],cell:[82,112],scale:2}}
 };
 /* The expression shown for a set of face parameters (one name; used for single-texture swaps). */
 function expressionFor(f){
@@ -199,17 +208,20 @@ function expressionFor(f){
    she talks: `eye` (blink, half closed, glances) and `mouth` (talking visemes chosen by how far the jaw
    is open, or a whole-face laugh, surprise or, for Little Me, smile). null = the live doll's own face
    (the rest pose). fade = cross-fade seconds for that channel. The Grown-up's own face already smiles,
-   so her smiles stay her own. */
+   so her smiles stay her own, and she talks, blinks and laughs with the smiling heads (smile-*): the
+   mouth goes smile, talk, smile without closing in between. */
 function expressionTargets(f,doll){
   const b=Math.max(...(f.blink||[0])),jm=f.jawMax||4,jf=(f.jaw||0)/jm;
   const g=SIDE_GLANCES?f.glance:0;
   // the Grown-up's drawn half-closed eyes read as a sideways, sleepy look: her blinks go straight to closed
-  const eye=b>(doll==='adult'?.35:.6)?'blink':b>.12&&doll!=='adult'?'half-closed':g<-.35?'look-left':g>.35?'look-right':null;
+  const adult=doll==='adult';
+  const eye=b>(adult?.35:.6)?(adult?'smile-blink':'blink'):b>.12&&!adult?'half-closed':g<-.35?'look-left':g>.35?'look-right':null;
   let mouth=null,full=false;
-  if(f.laugh>.3){mouth='laugh';full=true}
+  if(f.laugh>.3){mouth=adult?'smile-laugh':'laugh';full=true}
   else if(f.surprise>.3){mouth='surprised';full=true}
-  else if(jf>.18)mouth=jf>.55?'talk-ah':f.wide<-.3?'talk-oh':'talk-eh';
-  else if(doll==='little'&&f.smile>.35){mouth=f.smile>.75?'big-smile':'soft-smile';full=true}
+  else if(jf>.18)mouth=adult?(jf>.55?'smile-ah':f.wide<-.3?'smile-oh':'smile-eh'):jf>.55?'talk-ah':f.wide<-.3?'talk-oh':'talk-eh';
+  else if(adult&&jf>.05)mouth='smile-rest'; // between syllables: the drawn resting smile, so talking stays one drawing
+  else if(!adult&&f.smile>.35){mouth=f.smile>.75?'big-smile':'soft-smile';full=true}
   return {eye,mouth,eyeFade:.045,mouthFade:full?.16:.06};
 }
 /* ---------- measured data -> normalized canvas coordinates ---------- */
@@ -656,7 +668,7 @@ function faceDisplace(face,f,x,y,below){
   return [dx,dy];
 }
 
-const api={SIDE_GLANCES,warmMoment,TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIND,RESIDENTS,EXPRESSIONS,EXPRESSION_ART,EXPRESSION_REGION,GAIT,DURATION,
+const api={SIDE_GLANCES,SMILE_EXPRESSIONS,EXPRESSION_FALLBACK,warmMoment,TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIND,RESIDENTS,EXPRESSIONS,EXPRESSION_ART,EXPRESSION_REGION,GAIT,DURATION,
   views,rig,residentRig,toCanvas,expressionFor,expressionTargets,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
   restPose,copyPose,addPose,mixPose,localMatrix,forward,mul,apply,
   idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,GAIT_FAST,gait,paceFor,

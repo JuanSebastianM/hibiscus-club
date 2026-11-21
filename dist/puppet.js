@@ -542,7 +542,7 @@ const HibiscusPuppet=(()=>{
     // drawn expression heads (puppet-rig.js EXPRESSION_ART), when a sheet exists for this doll and view
     const expr=headPiece&&await expressionHeads(layers.doll,view,headPiece,layers.shot).catch(e=>{if(config.debug)console.warn(e);return null});
     if(expr){headPiece.expr=expr;overlaySrc=null}
-    return finishModel(rg,order,overlaySrc,{farOffset,look:layers.shot,doll:layers.doll,expr:!!expr});
+    return finishModel(rg,order,overlaySrc,{farOffset,look:layers.shot,doll:layers.doll,expr:!!expr,exprNames:expr?new Set(Object.keys(expr)):null});
   }
   /* Drawn heads (puppet-rig.js EXPRESSION_ART, built by art/build_faces.py): for each expression the
      bare base head gets the drawn cell blended in (its alpha is the region mask), then the game's own
@@ -555,14 +555,18 @@ const HibiscusPuppet=(()=>{
     const spec=R.EXPRESSION_ART[doll]?.[view==='front'?'front':'side'];
     if(!spec?.file||typeof applyFaceMakeup!=='function')return null;
     const srcView=view==='right'?'left':view,dv=dollView(doll,srcView);
-    const [sheet,lipsSheet,base]=await Promise.all([asset(spec.file),spec.lips?asset(spec.lips):null,spriteCanvas(dv.art)]);
+    const sm=spec.smile; // the Grown-up's smiling talk heads, when present (a failed load keeps the others)
+    const [sheet,lipsSheet,base,smileSheet,smileLips]=await Promise.all([asset(spec.file),spec.lips?asset(spec.lips):null,spriteCanvas(dv.art),
+      sm?asset(sm.file).catch(()=>null):null,sm?.lips?asset(sm.lips).catch(()=>null):null]);
     const [cw,ch]=spec.cell,k=spec.scale||1,[ax,ay]=spec.at,o=R.ORIGINS[doll][srcView];
     const face=shiftFace(dv.face||{},-ax,-ay),[bx,by]=piece.box,out={};
     // where the crop goes in the head piece (canvas px of this view)
     const right=view==='right',px=right?R.ORIGINS[doll].right[0]+R.MIRROR[doll]-(ax+cw):ax+o[0],py=ay+o[1];
-    R.EXPRESSIONS.forEach((name,n)=>{
+    const cells=R.EXPRESSIONS.map((name,n)=>[name,n,4,sheet,lipsSheet]);
+    if(smileSheet)R.SMILE_EXPRESSIONS.forEach((name,n)=>{if(sm.names.includes(name))cells.push([name,n,6,smileSheet,smileLips])});
+    cells.forEach(([name,n,cols,sheet,lipsSheet])=>{
       if(name==='neutral')return; // the rest pose is the live doll's own face
-      const sx=(n%4)*cw*k,sy=Math.floor(n/4)*ch*k;
+      const sx=(n%cols)*cw*k,sy=Math.floor(n/cols)*ch*k;
       const c=mk(cw,ch),g=g2(c);g.imageSmoothingQuality='high';
       g.drawImage(base,ax,ay,cw,ch,0,0,cw,ch);g.drawImage(sheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
       const im=g.getImageData(0,0,cw,ch);
@@ -570,7 +574,7 @@ const HibiscusPuppet=(()=>{
       let lipsMask=null;
       if(lipsSheet&&region!=='eyes'){const lc=mk(cw,ch),lg=g2(lc);lg.imageSmoothingQuality='high';lg.drawImage(lipsSheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
         const ld=lg.getImageData(0,0,cw,ch).data;lipsMask=new Float32Array(cw*ch);for(let i=0;i<lipsMask.length;i++)lipsMask[i]=ld[i*4]/255}
-      applyFaceMakeup(im.data,cw,ch,shot,face,{lipsMask,eyesClosed:name==='blink'?1:name==='half-closed'?.6:name==='laugh'?.7:0});
+      applyFaceMakeup(im.data,cw,ch,shot,face,{lipsMask,eyesClosed:name==='blink'||name==='smile-blink'?1:name==='half-closed'?.6:name==='laugh'||name==='smile-laugh'?.7:0});
       g.putImageData(im,0,0);
       // keep it only where the cell blends (its alpha), over the live head piece
       g.globalCompositeOperation='destination-in';g.drawImage(sheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
@@ -836,6 +840,9 @@ void main(){
     /* Drawn heads: per channel the current and the previous expression with cross-fade weights. */
     exprWeights(f){
       const tg=R.expressionTargets({...f,jawMax:this.rig.face?.jawMax},this.doll),now=this.t;
+      // a head this model does not have (a smiling cell left out by build_faces.py) falls back to its pack-2 shape
+      const has=this.model?.exprNames,pick=k=>!k||!has||has.has(k)?k:R.EXPRESSION_FALLBACK[k]??null;
+      tg.eye=pick(tg.eye);tg.mouth=pick(tg.mouth);
       const st=this.expr||(this.expr={eye:{cur:null,prev:null,at:-9},mouth:{cur:null,prev:null,at:-9}});
       const step=(c,key,fade)=>{if(key!==c.cur){c.prev=c.cur;c.cur=key;c.at=now;c.fade=fade}const u=clamp((now-c.at)/(c.fade||.05),0,1);return [c.cur,u,c.prev,1-u]};
       const [e0,we0,e1,we1]=step(st.eye,tg.eye,tg.eyeFade),[m0,wm0,m1,wm1]=step(st.mouth,tg.mouth,tg.mouthFade);
