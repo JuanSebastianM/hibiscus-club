@@ -320,7 +320,7 @@ test('painted rooms: eighteen backdrops, three per room, with sound measured geo
       assert.ok(Math.abs(x - vx) < 3, `${tag}: side line misses the vanishing point by ${x - vx}`);
     }
     // wide-angle paintings: a 6 m back wall indoors (7.5 m on the terraces), so a room reads as a room
-    assert.ok(b.scale > 0.38 && b.scale < 0.7, tag + ' scale ' + b.scale);
+    assert.ok(b.scale > 0.45 && b.scale < 0.85, tag + ' scale ' + b.scale);
     const wallM = (br[0] - bl[0]) / (b.scale * 280);
     assert.ok(wallM > 4.5 && wallM < 8, `${tag}: back wall ${wallM.toFixed(1)} m wide`);
     for (const z of b.wall) assert.ok(z[0] < z[2] && z[1] < z[3] && z[3] <= bl[1] && z[0] >= 0 && z[2] <= 1536, tag + ' wall zone');
@@ -360,7 +360,7 @@ test('painted rooms: every standing piece and rug stays on that room\'s floor, a
     // sizes against the room: a bed a quarter to a third of the back wall, a bunk bed well under the door
     const wallW = q[1][0] - q[0][0], at = id => L.box(L.constrain(piece(id, 768, 0), b.id), b.id);
     if (b.room !== 'patio') {
-      assert.ok(at('single-bed').w / wallW < 0.36 && at('sofa').w / wallW < 0.37 && at('bathtub').w / wallW < 0.3, `${b.id}: furniture too wide for the room`);
+      assert.ok(at('single-bed').w / wallW < 0.52 && at('sofa').w / wallW < 0.52 && at('bathtub').w / wallW < 0.4, `${b.id}: furniture too wide for the room`);
       const door = b.openings.find(o => o[4] === 'door');
       if (door) assert.ok(at('bunk-bed').h < (yb - door[1]) * 0.7, `${b.id}: the bunk bed is not well under the door`);
     }

@@ -148,7 +148,7 @@ const DecorLogic=(()=>{
       const zh=z.hang?floorTop-z.y0:z.y1-z.y0;
       const fit=Math.min(zh/(it.height*k0),(z.x1-z.x0)/(it.width*k0));
       const s1=s0>fit?Math.floor(fit*100)/100:s0;
-      for(const s of [s1,...[.85,.7,.55].map(f=>Math.round(s1*f*100)/100).filter(v=>v>=SCALE.min)]){
+      for(const s of [s1,...[.85,.7,.55].map(f=>Math.round(s1*f*100)/100).filter(v=>v>=SCALE.min),...(s1>SCALE.min?[SCALE.min]:[])]){
         const wd=it.width*k0*s,h=it.height*k0*s;
         const lo={x:z.x0+ax*wd,y:z.y0+ay*h},hi={x:z.x1-(1-ax)*wd,y:z.hang?Math.min(z.y1+ay*h,floorTop-(1-ay)*h):z.y1-(1-ay)*h};
         const fitIn=(x,y)=>({x:hi.x<lo.x?(z.x0+z.x1)/2-(.5-ax)*wd:clamp(x,lo.x,hi.x),y:hi.y<lo.y?lo.y:clamp(y,lo.y,hi.y)});
