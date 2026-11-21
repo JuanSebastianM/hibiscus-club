@@ -115,19 +115,31 @@ test('clips are deterministic per character, and two characters do not move in s
   assert.ok(closed / 120 / 120 < .05, 'eyes are open nearly all the time');
 });
 
-function footWorld(doll, view, phase) {
-  const rg = R.rig(doll, view), p = R.walkPose(phase, { seed: 1, doll, rig: rg }), W = R.forward(rg, p);
+function footWorld(doll, view, phase, pace = 0) {
+  const rg = R.rig(doll, view), p = R.walkPose(phase, { seed: 1, doll, rig: rg, pace }), W = R.forward(rg, p);
   return { rg, p, toe: R.apply(W[R.B.foot0], rg.px.toe0), ankle: R.apply(W[R.B.foot0], rg.px.an0), hips: R.apply(W[R.B.hips], rg.px.hips) };
 }
-test('side walk: the stance foot stays planted while the body travels (no sliding)', () => {
-  for (const doll of DOLLS) for (const view of ['left', 'right']) {
-    const C = R.cycleLength(doll, view), g = R.GAIT[doll], dir = R.rig(doll, view).dir;
+test('side walk: the stance foot stays planted while the body travels (no sliding), at every pace', () => {
+  for (const doll of DOLLS) for (const view of ['left', 'right']) for (const pace of [0, .5, 1]) {
+    const C = R.cycleLength(doll, view, pace), g = R.gait(doll, pace), dir = R.rig(doll, view).dir;
     // world x of the toe = local x + distance travelled (the body moves `dir` while the cycle runs)
     const xs = [], ys = [];
-    for (let ph = g.stance * .2; ph < g.stance * .7; ph += .01) { const f = footWorld(doll, view, ph); xs.push(f.toe[0] + dir * ph * C); ys.push(f.toe[1]) }
+    for (let ph = g.stance * .2; ph < g.stance * .7; ph += .01) { const f = footWorld(doll, view, ph, pace); xs.push(f.toe[0] + dir * ph * C); ys.push(f.toe[1]) }
     const slide = Math.max(...xs) - Math.min(...xs), lift = Math.max(...ys) - Math.min(...ys);
-    assert.ok(slide < 1.5, `${doll} ${view}: toe slides ${slide.toFixed(2)} px during stance`);
-    assert.ok(lift < 1.5, `${doll} ${view}: toe stays on the ground (${lift.toFixed(2)} px)`);
+    // under 2 doll px: about 0.4 screen px at the size she walks in the scenes
+    assert.ok(slide < 2, `${doll} ${view} pace ${pace}: toe slides ${slide.toFixed(2)} px during stance`);
+    assert.ok(lift < 1.5, `${doll} ${view} pace ${pace}: toe stays on the ground (${lift.toFixed(2)} px)`);
+  }
+});
+test('walking pace: short hops stroll, crossing a scene is brisk (Grown-up under 4 s, Little Me under 5 s)', () => {
+  // a walk-in place is about 1.5 times as wide as it is tall; the walker is .325 (Grown-up) or .225
+  // (Little Me) of its height for 970 doll px, so the full width is width / (size / 970) doll px
+  for (const [doll, size, limit] of [['adult', .325, 4], ['little', .225, 5]]) {
+    const width = 1.51 / (size / 970), pace = R.paceFor(doll, width), t = width / R.walkSpeed(doll, 'left', pace);
+    assert.ok(pace > .99 && t <= limit, `${doll} crosses in ${t.toFixed(2)} s`);
+    assert.equal(R.paceFor(doll, R.DOLL[doll].legLength), 0, 'a short hop strolls');
+    assert.ok(R.walkSpeed(doll, 'left', 0) < R.walkSpeed(doll, 'left', .5) && R.walkSpeed(doll, 'left', .5) < R.walkSpeed(doll, 'left', 1));
+    const g = R.gait(doll, 1); assert.ok(2 / g.cycle * 60 <= 340, 'cadence stays a walk');
   }
 });
 test('side walk: no hopping (hips move a couple of px), feet reach the ground, knees bend forward', () => {
@@ -135,7 +147,7 @@ test('side walk: no hopping (hips move a couple of px), feet reach the ground, k
     const ys = [], rg = R.rig(doll, view), ground = rg.px.root[1];
     let lowest = -1e9;
     for (let ph = 0; ph < 1; ph += .02) {
-      const f = footWorld(doll, view, ph);ys.push(f.hips[1]);
+      const f = footWorld(doll, view, ph, 1);ys.push(f.hips[1]);
       const W = R.forward(rg, f.p), knee = R.apply(W[R.B.shin0], rg.px.kn0), hip = R.apply(W[R.B.thigh0], rg.px.hip0), an = R.apply(W[R.B.foot0], rg.px.an0);
       // the knee is on the facing side of the hip-ankle line
       const cross = (an[0] - hip[0]) * (knee[1] - hip[1]) - (an[1] - hip[1]) * (knee[0] - hip[0]);

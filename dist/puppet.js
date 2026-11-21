@@ -769,7 +769,7 @@ void main(){
     walking(on){this.walk.on=!!on;if(on)this.walk.idle=0;kick()}
     /* travel in doll px (screen distance / display scale) advances the walk cycle exactly, so the
        stance foot stays planted */
-    advance(dist){if(this.kind!=='doll')return;this.walk.on=true;this.walk.idle=0;this.walk.phase+=Math.abs(dist)/R.cycleLength(this.doll,this.view);kick()}
+    advance(dist,pace=0){if(this.kind!=='doll')return;const w=this.walk;w.on=true;w.idle=0;w.pace=pace;w.phase+=Math.abs(dist)/R.cycleLength(this.doll,this.view,pace);kick()}
     setPaused(p){this.paused=!!p;kick()}
     shouldRun(){return this.active&&!this.dead&&!this.paused&&this.visible&&!document.hidden&&this.canvas.isConnected}
     fail(e){
@@ -802,10 +802,10 @@ void main(){
       const pose=R.idlePose(this.t,{...ctx,rig:this.rig});
       // walking weight: on while advances arrive, eases out after
       const w=this.walk;
-      if(this.t<this.strutUntil&&this.kind==='doll'){w.phase+=dt*R.walkSpeed(this.doll,this.view)/R.cycleLength(this.doll,this.view);w.on=true;w.idle=0}
+      if(this.t<this.strutUntil&&this.kind==='doll'){w.pace=0;w.phase+=dt*R.walkSpeed(this.doll,this.view)/R.cycleLength(this.doll,this.view);w.on=true;w.idle=0}
       w.idle+=dt;if(w.idle>.12)w.on=false;
       w.w=clamp(w.w+(w.on?dt/.18:-dt/.28),0,1);
-      if(w.w>0&&this.kind==='doll'){const wp=R.walkPose(w.phase,ctx);R.mixPose(pose,wp,smooth(0,1,w.w));pose.farAlpha=w.w}
+      if(w.w>0&&this.kind==='doll'){const wp=R.walkPose(w.phase,{...ctx,pace:w.pace||0});R.mixPose(pose,wp,smooth(0,1,w.w));pose.farAlpha=w.w}
       else if(!w.on)w.phase=Math.round(w.phase*2)/2; // settle on a double-support phase
       this.talkW=clamp(this.talkW+(this.t<this.talkUntil?dt/.15:-dt/.2),0,1);
       if(this.talkW>0)R.addPose(pose,R.talkPose(this.t,ctx),this.talkW);

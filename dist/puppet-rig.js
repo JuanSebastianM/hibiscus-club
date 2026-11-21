@@ -427,13 +427,27 @@ function emotePose(name,t,ctx){
   return {pose:p,done:t>=dur};
 }
 /* ---------- walking ---------- */
-/* Gait parameters per doll: stride D (foot travel during stance, doll px), stance fraction, lift. */
+/* Gait per doll: stride (foot travel during stance, in leg lengths), stance fraction, lift, hip drop and
+   bob (doll px), arm swing and lean (degrees), cycle (seconds per two steps). GAIT is the easy stroll of
+   a short hop; GAIT_FAST the brisk, slightly stylised walk of a long one (longer strides, quicker
+   steps; Little Me scampers). pace k in [0, 1] blends them (gait(doll, k)). */
 const GAIT={adult:{stride:.62,stance:.6,lift:.075,drop:7,bob:2.2,arm:15,fore:12,lean:2.5,cycle:.66},
   little:{stride:.5,stance:.58,lift:.08,drop:6,bob:2.4,arm:9,fore:8,lean:1.2,cycle:.48}};
+const GAIT_FAST={adult:{stride:.92,stance:.56,lift:.09,drop:7,bob:2.4,arm:24,fore:22,lean:4.5,cycle:.5},
+  little:{stride:.96,stance:.55,lift:.1,drop:6,bob:2.6,arm:16,fore:14,lean:3,cycle:.36}};
+function gait(doll,k=0){
+  const a=GAIT[doll],b=GAIT_FAST[doll];if(!k)return a;
+  const out={};for(const key in a)out[key]=lerp(a[key],b[key],clamp(k,0,1));
+  // the cycle follows the cadence (steps per second), not the period, so speed grows smoothly
+  out.cycle=1/lerp(1/a.cycle,1/b.cycle,clamp(k,0,1));
+  return out;
+}
 /* Doll px travelled per gait cycle (one step of each foot). */
-function cycleLength(doll,view){const g=GAIT[doll],L=DOLL[doll].legLength;const side=view==='left'||view==='right';return g.stride*L/g.stance*(side?1:.32)}
-/* Natural travel speed (doll px per second). */
-function walkSpeed(doll,view='left'){return cycleLength(doll,view)/GAIT[doll].cycle}
+function cycleLength(doll,view,k=0){const g=gait(doll,k),L=DOLL[doll].legLength;const side=view==='left'||view==='right';return g.stride*L/g.stance*(side?1:.32)}
+/* Travel speed (doll px per second) at pace k. */
+function walkSpeed(doll,view='left',k=0){return cycleLength(doll,view,k)/gait(doll,k).cycle}
+/* Pace for a walk of `dist` doll px: short hops stroll, long walks are brisk. */
+function paceFor(doll,dist){const L=DOLL[doll].legLength;return smooth(L*2,L*9,dist)}
 function solveIK(H,T,l1,l2,bend){
   let vx=T[0]-H[0],vy=T[1]-H[1],d=Math.hypot(vx,vy);
   const dc=clamp(d,Math.abs(l1-l2)+1e-3,(l1+l2)*.9995);
@@ -456,7 +470,7 @@ function footPath(q,g,D,L){
 /* walkPose(phase, ctx) -> pose. phase in cycles (grows with distance travelled / cycleLength).
    ctx.rig is the view's rig; front view = coming toward the camera, back view = going away. */
 function walkPose(phase,ctx){
-  const rg=ctx.rig,doll=ctx.doll,g=GAIT[doll],L=rg.legLength,p=restPose(),kid=doll==='little';
+  const rg=ctx.rig,doll=ctx.doll,k=ctx.pace||0,g=gait(doll,k),L=rg.legLength,p=restPose(),kid=doll==='little';
   const ph=((phase%1)+1)%1,D=g.stride*L;
   if(rg.side){
     const d=rg.dir;
@@ -477,11 +491,14 @@ function walkPose(phase,ctx){
       const toe=[T0[0]+d*fp.fx,T0[1]+fp.fy],rot=d*fp.rot; // screen rotation of the foot (toes down > 0)
       if(fp.rot>0){const c=Math.cos(rot),s=Math.sin(rot),vx=A[0]-toe[0],vy=A[1]-toe[1];A=[toe[0]+c*vx-s*vy,toe[1]+s*vx+c*vy]}
       else{const heel=[A0[0]-d*10+d*fp.fx,rg.px.root[1]-4+fp.fy],c=Math.cos(rot),s=Math.sin(rot),vx=A[0]-heel[0],vy=A[1]-heel[1];A=[heel[0]+c*vx-s*vy,heel[1]+s*vx+c*vy]}
-      const ik=solveIK(H,A,l1,l2,-d);
+      // long strides: the leg may stretch a little (up to 10%) rather than the hips dropping (no crouch, no hop)
+      const st=clamp(Math.hypot(A[0]-H[0],A[1]-H[1])/((l1+l2)*.99),1,1.1);
+      const ik=solveIK(H,A,l1*st,l2*st,-d);
       const restA1=Math.atan2(K0[1]-rg.px['hip'+i][1],K0[0]-rg.px['hip'+i][0]),restA2=Math.atan2(A0[1]-K0[1],A0[0]-K0[0]);
       const thigh=bone(p,'thigh'+i),shin=bone(p,'shin'+i),foot=bone(p,'foot'+i);
       const hipRot=hips.r+bone(p,'root').r;
       thigh.r=ik.a1-restA1-hipRot;shin.r=(ik.a2-restA2)-(ik.a1-restA1);foot.r=rot-(ik.a2-restA2);
+      if(st>1){thigh.sy=st;foot.sy=1/st}
       legs.push(fp);
     }
     // arms swing opposite to the legs; the far arm mirrors the near one
@@ -498,7 +515,7 @@ function walkPose(phase,ctx){
     return p;
   }
   // front (toward the camera) / back (away): the legs pitch in depth, seen as foreshortening
-  const toward=rg.view!=='back',stanceTravel=cycleLength(doll,rg.view)*g.stance;
+  const toward=rg.view!=='back',stanceTravel=cycleLength(doll,rg.view,k)*g.stance;
   const hips=bone(p,'hips');
   hips.y=g.drop*.6+g.bob*.8*Math.cos(TAU*2*ph);
   const sway=Math.sin(TAU*ph);
@@ -578,7 +595,7 @@ function faceDisplace(face,f,x,y,below){
 const api={TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIND,RESIDENTS,EXPRESSIONS,EXPRESSION_ART,EXPRESSION_REGION,GAIT,DURATION,
   views,rig,residentRig,toCanvas,expressionFor,expressionTargets,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
   restPose,copyPose,addPose,mixPose,localMatrix,forward,mul,apply,
-  idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,
+  idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,GAIT_FAST,gait,paceFor,
   mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,LONG_SLEEVES,SLEEVES,sleevesOf:id=>SLEEVES[id]||'none',GENTLE,emoteFor,
   /* the rig of a view as dressed in an outfit (its own skirt line, canvas px) */
   dressedRig(doll,view,outfit){const rg=rig(doll,view),y=SKIRT_TOP[outfit]?.[doll];if(y===undefined)return rg;

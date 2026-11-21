@@ -221,9 +221,12 @@ function walkTo(x,y,arrive,status){
   // walks, front or back view when she walks toward or away from the camera
   const pup=w.puppet?.active?w.puppet:null,sx=dx*w.width,sy=dy*w.height;
   const view=pup?Math.abs(sy)>Math.abs(sx)*1.25?(sy>0?'front':'back'):(side<0?'left':'right'):null;
+  // a short hop strolls, a long walk is brisk (pace 0..1, puppet-rig.js paceFor)
+  let pace=0;
   if(pup){
-    const k=walkerScale((fromY+y)/2),R=HibiscusPuppetRig;
-    duration=1000*(Math.abs(sx)/k/R.walkSpeed(state.doll,'left')+Math.abs(sy)/k/R.walkSpeed(state.doll,'front'));
+    const k=walkerScale((fromY+y)/2),R=HibiscusPuppetRig,ax=Math.abs(sx)/k,ay=Math.abs(sy)/k;
+    pace=R.paceFor(state.doll,Math.hypot(ax,ay));
+    duration=1000*(ax/R.walkSpeed(state.doll,'left',pace)+ay/R.walkSpeed(state.doll,'front',pace));
   }
   w.ring.style.left=(x*100)+'%';w.ring.style.top=(y*100)+'%';w.ring.hidden=false;
   setWorldStatus(status||t('life.walking'));
@@ -232,7 +235,7 @@ function walkTo(x,y,arrive,status){
     const progress=duration<16||w.reduced.matches?1:Math.min(1,(time-start)/duration);
     const ox=p.x,oy=p.y;
     p.x=fromX+dx*progress;p.y=fromY+dy*progress;
-    if(pup&&!pup.dead){const along=view==='front'||view==='back'?(p.y-oy)*w.height:(p.x-ox)*w.width;pup.advance(Math.abs(along)/walkerScale(p.y))}
+    if(pup&&!pup.dead){const along=view==='front'||view==='back'?(p.y-oy)*w.height:(p.x-ox)*w.width;pup.advance(Math.abs(along)/walkerScale(p.y),pace)}
     if(progress<1){
       positionWalker(true,side,view);
       w.frame=requestAnimationFrame(move);
