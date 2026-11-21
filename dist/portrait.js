@@ -311,6 +311,16 @@ function shoeLayers(doll,view,id,tintId){
     const [back,bg]=dollLayer(doll,view),[front,fg]=dollLayer(doll,view),[mask,mg]=dollLayer(doll,view);
     const place=(g,src,f)=>{const w=f.w,h=f.h??src.height*w/src.width;g.translate(f.x,f.y);if(f.rot)g.rotate(f.rot*Math.PI/180);return [w,h]};
     const scaled=(poly,w,h)=>poly.map(([u,v])=>[u*w,v*h]);
+    // an open shoe drawn in two layers (f.over = {x,y,w,h,rot} of its `over` sprite part): the part
+    // under the foot (sole, insole) whole into `back`, the part over it (straps, uppers) whole into
+    // `front`, so the foot lies between them; both count for the mask
+    const layered=(under,over,f)=>{
+      for(const [g,src,q] of [[bg,under,f],[fg,over,f.over],[mg,under,f],[mg,over,f.over]]){
+        g.save();const [w,h]=place(g,src,q);g.drawImage(src,0,0,w,h);
+        if(g===mg){g.fillStyle='#000';for(const p of q.keep||[]){pathPoly(g,scaled(p,w,h));g.fill()}}
+        g.restore();
+      }
+    };
     // one shoe sprite: whole into `back`, its over-the-foot parts into `front`
     const shoe=(src,f)=>{
       bg.save();const [w,h]=place(bg,src,f);bg.drawImage(src,0,0,w,h);bg.restore();
@@ -329,6 +339,15 @@ function shoeLayers(doll,view,id,tintId){
       }
       fg.save();fg.setTransform(1,0,0,1,0,0);fg.drawImage(t,0,0);fg.restore();
     };
+    if(fit.near?.over){ // open shoe, side view
+      layered(await itemSprite(item,view,fit.near.part,tintId),await itemSprite(item,view,fit.near.over.part,tintId),fit.near);
+      return {back,front,mask};
+    }
+    if(fit.left?.over||fit.right?.over){ // open shoes, front and back views
+      for(const side of ['left','right']){const f=fit[side];if(!f)continue;
+        layered(await itemSprite(item,view,f.part,tintId),await itemSprite(item,view,f.over.part,tintId),f)}
+      return {back,front,mask};
+    }
     if(fit.near){
       const src=await itemSprite(item,view,'main',tintId);
       if(fit.far){

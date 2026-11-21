@@ -79,7 +79,9 @@ CONFIG = {
     # id: src (p = pack2, r = round2), k, top, and per view / piece options
     "sarong-swimsuit": dict(src="p", k=.70, top=166),
     "tankini-board-shorts": dict(src="p", k=.71, top=170),
-    "crochet-cover-up": dict(src="p", k=.69, top=175, armY=282, slip=dict(color="#f3b9a6", **{"from": .12})),
+    "crochet-cover-up": dict(src="p", k=.69, top=175, armY=282,
+                             # the mannequin seen through the mesh becomes a coral swimsuit
+                             recolor=dict(hue=(340, 32), minSat=.17, to=352, sat=1.6)),
     "aqua-velour-tracksuit": dict(src="r", k=1.2, top=142, armY=465, sideHug=[hugf(176, 845, 2)]),
     "tennis-dress": dict(src="p", k=.77, top=134, armY=300),
     "baby-tee-cargo": dict(src="p", k=.92, top=166, armY=296, pieces=[dict(part="capris"), dict(part="top")]),
@@ -258,7 +260,9 @@ def gen_piece(iid, doll, view, cfg, src):
     body = body_spans(doll, view)
     hug = cfg.get("hug", [])
     rows = sorted(set(list(range(0, H, STEP)) + [H - 1]))
-    src_sp = smooth([gs[y] for y in rows])
+    # the garment's own spans are not smoothed: at a curved hem they narrow fast, and averaging them
+    # with the rows above would stretch the hem out sideways
+    src_sp = [gs[y] for y in rows]
     tgt = []
     for sy in rows:
         y = dolly(sy)
@@ -524,6 +528,33 @@ def premul_resize(im, size):
     return Image.fromarray(np.dstack([np.clip(rgb, 0, 255), alpha]).round().astype(np.uint8), "RGBA")
 
 
+def recolor(im, opt):
+    """Hue-shift the pixels of one hue band (e.g. the mannequin's skin seen through a crochet mesh) to
+    `to` degrees, saturation times `sat`: what shows through the holes reads as a swimsuit."""
+    a = np.array(im.convert("RGBA")).astype(np.float32) / 255
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    mx, mn = a[..., :3].max(-1), a[..., :3].min(-1)
+    d = np.maximum(mx - mn, 1e-6)
+    h = np.where(mx == r, ((g - b) / d) % 6, np.where(mx == g, (b - r) / d + 2, (r - g) / d + 4)) * 60
+    s = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0)
+    lo, hi = opt["hue"]
+    inband = ((h - lo) % 360) <= ((hi - lo) % 360)
+    w = np.clip((s - opt.get("minSat", .18)) / .08, 0, 1) * inband
+    nh = np.full_like(h, opt["to"]) / 60
+    ns = np.clip(s * opt.get("sat", 1.0), 0, 1)
+    v = mx
+    c = v * ns
+    x = c * (1 - abs(nh % 2 - 1))
+    z = np.zeros_like(c)
+    i = nh.astype(int) % 6
+    rgb = np.select([i[..., None] == j for j in range(6)],
+                    [np.stack(t, -1) for t in ((c, x, z), (x, c, z), (z, c, x), (z, x, c), (x, z, c), (c, z, x))])
+    rgb = rgb + (v - c)[..., None]
+    out = a.copy()
+    out[..., :3] = a[..., :3] * (1 - w[..., None]) + rgb * w[..., None]
+    return Image.fromarray((out * 255).round().astype(np.uint8), "RGBA")
+
+
 def slip_image(im, opt):
     """A plain lining in the garment's own outline (holes of the lace closed, `inset` px inside its edge,
     only from sprite row `from` down), softly shaded, for see-through garments."""
@@ -538,6 +569,13 @@ def slip_image(im, opt):
     shade = (.8 + .2 * soft)[..., None]
     rgb = np.clip(col * shade, 0, 255)
     return Image.fromarray(np.dstack([rgb, m]).astype(np.uint8), "RGBA")
+
+
+FORCE = "--force" in sys.argv
+
+
+def prep(iid, im):
+    return recolor(im, CONFIG[iid]["recolor"]) if CONFIG[iid].get("recolor") else im
 
 
 def ship(wear):
@@ -559,13 +597,13 @@ def ship(wear):
                 name = f"{iid}-{view}" + ("" if part == "main" else "-" + part) + ".webp"
                 keep.add(name)
                 dst = OUTDIR / name
-                if dst.exists() and dst.stat().st_mtime > path.stat().st_mtime and Image.open(dst).size == (Ws, Hs):
-                    continue  # up to date
-                premul_resize(Image.open(path), (Ws, Hs)).save(OUTDIR / name, "WEBP", quality=86, method=6)
+                if not FORCE and dst.exists() and dst.stat().st_mtime > path.stat().st_mtime and Image.open(dst).size == (Ws, Hs):
+                    continue  # up to date (--force redoes it, e.g. after a recolour changed)
+                premul_resize(prep(iid, Image.open(path)), (Ws, Hs)).save(OUTDIR / name, "WEBP", quality=86, method=6)
                 keep.add(name)
         # card picture: the whole front sprite, fitted into 160 px
         path, _ = sprite_file(src, iid, "front")
-        im = Image.open(path)
+        im = prep(iid, Image.open(path))
         f = 160 / max(im.size)
         premul_resize(im, (max(1, round(im.width * f)), max(1, round(im.height * f)))).save(
             OUTDIR / "thumbs" / f"{iid}.webp", "WEBP", quality=88, method=6)
