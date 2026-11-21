@@ -67,8 +67,9 @@ const DecorLogic=(()=>{
     else{
       const [bl,br,fr,fl]=b.floor,yb=bl[1],front=fr[1],vy=b.vp[1];
       g={painted:true,id:b.id,back:{x0:bl[0],x1:br[0],y1:yb},front,fl:fl[0],fr:fr[0],vp:b.vp,
-        // (toward the viewer pieces grow with the floor, but no more than 1.5 times: the paintings are
-        // wide-angle, and full perspective growth makes front pieces look blown up)
+        // (toward the viewer pieces grow with the floor, but no more than 1.5 times: the human-scale
+        // paintings grow about 1.55 times to their front edge, and a piece right at the edge would
+        // otherwise loom over the room)
         sB:b.scale,sF:b.scale*Math.min(1.5,(front-vy)/(yb-vy)),wallK:b.scale,
         // rugs lie flatter on these floors, seen from lower down than the procedural room's
         rugK:clamp((front-yb)/468*1.15,.45,1),
@@ -520,7 +521,7 @@ const DecorLogic=(()=>{
       if(slot.face&&it.mirror)f=(flipMid?-slot.face:slot.face)<0; // seats turn toward the middle (art faces right)
       out.push(constrain(mk(id,l+(u+shift)*(r-l),y+(rnd()-.5)*16*dk,{f}),where));
     }
-    /* front corners: one or two small pieces (the other corner when one is in front of a side door) */
+    /* front corners: one or two small pieces, up to four in a painted room (the other corner when one is in front of a side door) */
     // (a painted room, with its furniture at true size, has room for a third, in the middle)
     // (a painted room whose back wall holds little, beside a door, gets a fourth, so it still looks lived in)
     let nf=g.painted?(rnd()<.6?3:2):rnd()<.6?2:1;
