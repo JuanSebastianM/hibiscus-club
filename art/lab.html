@@ -37,6 +37,8 @@ const q=new URLSearchParams(location.search);
  CATALOG.items[it.id]=it;CATALOG.itemList.push(it);}
 /* noscalp=1: hair styles without the scalp shown through partings (portrait.js scalpShow), to compare against the sprite alone. */
 if(q.get('noscalp'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])it.fit[d][v].scalp=false;
+/* nounder=1: covered-ear styles without the hair behind the head (portrait.js underHair). */
+if(q.get('nounder'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)if(it.fit[d].front)delete it.fit[d].front.under;
 /* noopen=1: the styles without openFace (portrait.js), to see what the art alone covers. */
 if(q.get('noopen'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)if(it.fit[d].front)delete it.fit[d].front.open;
 if(q.get('noshade'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])it.fit[d][v].shade=false;
@@ -216,8 +218,17 @@ Object.assign(sheets,{
         const rd=rg.getImageData(0,0,m.width,m.height).data;
         let n=0,cov=0,en=0,ec=0;
         for(let i=3;i<rd.length;i+=4)if(rd[i]>128){n++;const c=md[i]>128;if(c)cov++;const y=((i>>2)/m.width|0)-oy;if(y>=eyeBand[d][0]&&y<=eyeBand[d][1]){en++;if(c)ec++}}
-        res.push({doll:d,hair:it.id,open:1-cov/n,eyes:1-ec/en});
-        if(q.get('tiles')!=='0')await tile(`${it.id} open ${(100*(1-cov/n)).toFixed(1)}% eyes ${(100*(1-ec/en)).toFixed(1)}%`,L(d,{hair:it.id,clip:'none',earrings:'none',necklace:'none',...extra}),
+        // halo: rows from the temple to the jaw, each side: background between her silhouette and the
+        // hair lying within a few px outside it (a pale band, not a genuine open gap); px per row and side
+        const all=makeCanvas(m.width,m.height),alg=all.getContext('2d');layers.layers.forEach(l=>alg.drawImage(l.canvas,0,0));
+        const ad=alg.getImageData(0,0,m.width,m.height).data,W=m.width,UR={adult:[70,150],little:[110,200]}[d];
+        const bodyA=layers.layers.find(l=>l.kind==='body').canvas.getContext('2d').getImageData(0,0,W,m.height).data;
+        let gapPx=0,rowsN=0;
+        for(let y=UR[0];y<=UR[1];y++){const Y=Math.round(y+oy);let l=-1,r=-1;for(let x=0;x<W;x++)if(bodyA[(Y*W+x)*4+3]>128){if(l<0)l=x;r=x}
+          if(l<0)continue;rowsN++;
+          for(const [s0,dir] of [[l-1,-1],[r+1,1]]){let k=0;while(k<10&&ad[(Y*W+s0+dir*k)*4+3]<128)k++;if(k>0&&k<10)gapPx+=k}}
+        res.push({doll:d,hair:it.id,open:1-cov/n,eyes:1-ec/en,halo:gapPx/(2*rowsN),earsCovered:!!it.fit[d].front.earsUnder});
+        if(q.get('tiles')!=='0')await tile(`${it.id} open ${(100*(1-cov/n)).toFixed(1)}% eyes ${(100*(1-ec/en)).toFixed(1)}% halo ${res[res.length-1].halo.toFixed(2)}px`,L(d,{hair:it.id,clip:'none',earrings:'none',necklace:'none',...extra}),
           {zoom:d==='adult'?[110,-30,180,230]:[90,-20,230,270],scale:Number(q.get('scale')||1.4),overlay:q.get('outline')?(g,sc)=>{g.strokeStyle='rgba(0,140,255,.8)';g.lineWidth=1/sc;g.beginPath();rows.forEach(([y,l])=>g.lineTo(l,y));[...rows].reverse().forEach(([y,,r])=>g.lineTo(r,y));g.closePath();g.stroke()}:null});
       }}},
   async portraits(){heading('paintPortrait per view');for(const d of dolls)for(const v of CATALOG.views){const c=document.createElement('canvas');await paintPortrait(c,L(d,{backdrop:Number(q.get('bd')||0),...extra}),q.get('postcard')==='1',v);c.style.width=(c.width*scale)+'px';const f=document.createElement('figure');const cap=document.createElement('figcaption');cap.textContent=d+' '+v;f.append(c,cap);section.append(f)}}
