@@ -98,11 +98,14 @@ function tintCanvas(src,t){
   }
   g.putImageData(im,0,0);return c;
 }
-/* Hair colour: luminance gradient map so dark hair can become light shades with highlights. */
-function hairColorCanvas(src,color){
+/* Hair colour: luminance gradient map so dark hair can become light shades with highlights. Every
+   colour, the default espresso included, is a gradient map stretched over the style's luminance
+   range (`range` = [lo, hi], catalog item.lum, the same for all four views of a style), so a colour
+   lands the same on every style and view whatever brown the sprite was painted in. */
+function hairColorCanvas(src,color,range){
   if(!color||!color.stops)return src;
   const c=makeCanvas(src.width,src.height),g=ctx2d(c);g.drawImage(src,0,0);
-  const im=g.getImageData(0,0,c.width,c.height),d=im.data,lut=hairLut(d,color);
+  const im=g.getImageData(0,0,c.width,c.height),d=im.data,lut=hairLut(d,color,range);
   for(let i=0;i<d.length;i+=4){
     if(!d[i+3])continue;
     const v=Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2]);
@@ -110,12 +113,18 @@ function hairColorCanvas(src,color){
   }
   g.putImageData(im,0,0);return c;
 }
-/* The gradient-map lookup (luminance -> rgb) for a hair colour, stretched over the sprite pixels d. */
-function hairLut(d,color){
-  const hist=new Uint32Array(256);let n=0;
-  for(let i=0;i<d.length;i+=4)if(d[i+3]>200){hist[Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2])]++;n++}
-  const pct=p=>{let acc=0;for(let v=0;v<256;v++){acc+=hist[v];if(acc>=n*p)return v}return 255};
-  const lo=pct(.02),hi=Math.max(lo+1,pct(.995));
+/* The gradient-map lookup (luminance -> rgb) for a hair colour, stretched over `range` or else over
+   the sprite pixels d. */
+function hairLut(d,color,range){
+  let lo,hi;
+  if(range)[lo,hi]=range;
+  else{
+    const hist=new Uint32Array(256);let n=0;
+    for(let i=0;i<d.length;i+=4)if(d[i+3]>200){hist[Math.round(.299*d[i]+.587*d[i+1]+.114*d[i+2])]++;n++}
+    const pct=p=>{let acc=0;for(let v=0;v<256;v++){acc+=hist[v];if(acc>=n*p)return v}return 255};
+    lo=pct(.02);hi=pct(.995);
+  }
+  hi=Math.max(lo+1,hi);
   const stops=color.stops.map(([t,hex])=>[t,hexRgb(hex)]);
   const lut=new Uint8ClampedArray(256*3);
   for(let v=0;v<256;v++){
@@ -133,45 +142,12 @@ function itemSprite(item,view,part,tintId,hairColorId){
   if(!src)return Promise.reject(new Error('No '+view+' '+part+' art for '+item.id));
   const tint=(item.tints||[]).find(t=>t.id===tintId);
   const hair=hairColorId?CATALOG.hairColors.find(h=>h.id===hairColorId):null;
-  // side/back hair art is a lighter, warmer drawing: match it to the front sprite first
-  const match=item.category==='hair'&&view!=='front'&&item.art.front?.main;
-  const key=['spr',src,tint&&tint.id!=='original'?tint.id:'',hair?.stops?hair.id:'',match?'m':''].join('|');
+  const key=['spr',src,tint&&tint.id!=='original'?tint.id:'',hair?.stops?hair.id:''].join('|');
   return memo(dollCaches.sprite,key,async()=>{
     let c=await spriteCanvas(src);
-    if(match)c=await hairMatched(src,c,match);
     if(tint)c=tintCanvas(c,tint);
-    if(hair)c=hairColorCanvas(c,hair);
+    if(hair)c=hairColorCanvas(c,hair,item.lum);
     return c;
-  });
-}
-/* Luminance histogram match + colour-by-luminance transfer from the front hair sprite, so a side or
-   back drawing has the front's tones (default espresso) and every gradient-map colour lands the same. */
-function hairProfile(c){
-  const d=ctx2d(c).getImageData(0,0,c.width,c.height).data;
-  const hist=new Float64Array(256),sum=new Float64Array(256*3);let n=0;
-  for(let i=0;i<d.length;i+=4){if(d[i+3]<200)continue;const v=Math.round(luma(d[i],d[i+1],d[i+2]));hist[v]++;sum[v*3]+=d[i];sum[v*3+1]+=d[i+1];sum[v*3+2]+=d[i+2];n++}
-  const cdf=new Float64Array(256);let acc=0;for(let v=0;v<256;v++){acc+=hist[v];cdf[v]=acc/(n||1)}
-  // mean colour per luminance bin, interpolated across sparse bins
-  const col=new Float32Array(256*3),known=[];for(let v=0;v<256;v++)if(hist[v]>=3)known.push(v);
-  let k=0;
-  for(let v=0;v<256;v++){
-    while(k<known.length-1&&known[k+1]<=v)k++;
-    if(!known.length){col[v*3]=col[v*3+1]=col[v*3+2]=v;continue}
-    const a=known[k]>v?known[k]:known[k],b=known[k]>=v||k===known.length-1?known[k]:known[k+1];
-    const t=b===a?0:(v-a)/(b-a);
-    for(let j=0;j<3;j++){const ca=sum[a*3+j]/hist[a],cb=sum[b*3+j]/hist[b];col[v*3+j]=ca+(cb-ca)*t}
-  }
-  return {cdf,col};
-}
-function hairMatched(src,c,frontSrc){
-  return memo(dollCaches.sprite,'match|'+src,async()=>{
-    const ref=hairProfile(await spriteCanvas(frontSrc)),own=hairProfile(c);
-    const lut=new Uint8Array(256);
-    for(let v=0,r=0;v<256;v++){while(r<255&&ref.cdf[r]<own.cdf[v])r++;lut[v]=r}
-    const out=makeCanvas(c.width,c.height),g=ctx2d(out);g.drawImage(c,0,0);
-    const im=g.getImageData(0,0,out.width,out.height),d=im.data;
-    for(let i=0;i<d.length;i+=4){if(!d[i+3])continue;const v=lut[Math.round(luma(d[i],d[i+1],d[i+2]))];d[i]=ref.col[v*3];d[i+1]=ref.col[v*3+1];d[i+2]=ref.col[v*3+2]}
-    g.putImageData(im,0,0);return out;
   });
 }
 
@@ -372,130 +348,191 @@ function shoeLayers(doll,view,id,tintId){
     return {back,front,mask};
   });
 }
-/* Hair: {back, front}. fit.front shapes = doll-local regions drawn again in front of the body (the
-   rest is behind); fit.backFill = a squeezed shaded copy behind the neck; fit.cut = sprite polys
-   removed; fit.cutDoll = doll-local shapes removed (keeps the profile face clear). */
-/* Scalp underlayer: hair-textured coverage of the skull above the doll's natural hairline (the doll
-   view's .scalp polygon, or fit.scalp.region), drawn under the hair sprite so that wherever a style's
-   face window is larger than the real face the gap reads as hair, not bare scalp. It is painted in
-   luminance with strands combed toward the style's fit.scalp.to points (with fit.scalp.part = x the
-   head is split there between the first and the last point; otherwise each strand heads for the
-   nearest point), then coloured through the style sprite's own palette and hair-colour gradient map,
-   so it matches the sprite in every hair colour. The hairline contour is jittered, and in a band a
-   few px wide inside it the coverage comes from the strands alone (combed away from the face), so the
-   edge reads as a natural hairline rather than a painted cap. Seeded: the same on every render. */
-function scalpLayer(doll,view,item,fit,colorId){
-  const dv=dollView(doll,view),spec=fit.scalp,region=spec?.region||dv.scalp;
-  if(!spec||!region)return Promise.resolve(null);
-  return memo(dollCaches.layer,['scalp',doll,view,item.id,colorId].join('|'),async()=>{
-    const poly=jitterPoly(region,spec.jitter??2);
-    const [base,raw]=await Promise.all([spriteCanvas(dv.art),itemSprite(item,view,'main')]);
-    const hair=colorId?CATALOG.hairColors.find(h=>h.id===colorId):null;
-    const rd=ctx2d(raw).getImageData(0,0,raw.width,raw.height).data,prof=hairProfile(raw);
-    const lut=hair?.stops?hairLut(rd,hair):null;
-    const lum=p=>{for(let v=0;v<256;v++)if(prof.cdf[v]>=p)return v;return 255};
-    const W=base.width,H=Math.min(base.height,Math.ceil(Math.max(...region.map(p=>p[1])))+8);
-    let seed=spec.seed||1234567;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
-    const to=spec.to,target=(x,y)=>{
-      if(spec.part!==undefined)return x<spec.part?to[0]:to[to.length-1];
-      let best=to[0],bd=Infinity;for(const t of to){const dd=Math.hypot(t[0]-x,t[1]-y);if(dd<bd){bd=dd;best=t}}return best;
-    };
-    // soft: the region (lightly feathered) inside the doll's silhouette; core: the same region well
-    // inside its edge. In the band between them the coverage comes from the strands alone, so the
-    // hairline is made of hairs combed away from the face rather than a painted edge.
-    const regionMask=(blur,clip)=>{const c=makeCanvas(W,H),cg=ctx2d(c);cg.fillStyle='#000';cg.shadowColor='#000';cg.shadowBlur=blur;cg.shadowOffsetX=W*2;cg.translate(-W*2,0);
-      pathPoly(cg,poly);cg.fill();cg.setTransform(1,0,0,1,0,0);cg.shadowColor='transparent';if(clip){cg.globalCompositeOperation='destination-in';cg.drawImage(base,0,0)}return cg.getImageData(0,0,W,H).data};
-    const md=regionMask((spec.feather??1.6)*2,true),cd=regionMask((spec.edge??5)*2),nd=regionMask(18);
-    // near the hairline the hair is combed straight back from the face (up the gradient of nd)
-    const ndA=(x,y)=>{x=Math.min(W-1,Math.max(0,x|0));y=Math.min(H-1,Math.max(0,y|0));return nd[(y*W+x)*4+3]/255};
-    let x0=W,x1=0,y0=H,y1=0,cx=0,cy=0,area=0;
-    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const a=md[(y*W+x)*4+3];if(a<8)continue;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);cx+=x;cy+=y;area++}
-    if(!area)return null;
-    cx/=area;cy/=area;
-    // luminance texture: dark base, combed strands (also drawn into a coverage canvas), sheen, rim
-    const t=makeCanvas(W,H),tg=ctx2d(t),cov=makeCanvas(W,H),vg=ctx2d(cov),gray=(v,a)=>`rgba(${v},${v},${v},${a})`;
-    tg.fillStyle=gray(lum(.3),1);tg.fillRect(0,0,W,H);tg.lineCap=vg.lineCap='round';
-    const sheenY=spec.sheenY??(y0+(y1-y0)*.32),sheenR=(y1-y0)*.2,lo=lum(.06),mid=lum(.55),hi=lum(.97);
-    const n=Math.round(area/(spec.density??4));
-    for(let i=0,tries=0;i<n&&tries<n*20;tries++){
-      const x=x0+rnd()*(x1-x0+1),y=y0+rnd()*(y1-y0+1);
-      if(md[((y|0)*W+(x|0))*4+3]<8)continue;i++;
-      const [tx,ty]=target(x,y);let dx=tx-x,dy=ty-y;const dist=Math.hypot(dx,dy)||1;dx/=dist;dy/=dist;
-      const e=Math.min(1,Math.max(0,(.97-ndA(x,y))/.42));
-      if(e>0){let gx=ndA(x+3,y)-ndA(x-3,y),gy=ndA(x,y+3)-ndA(x,y-3);const gl=Math.hypot(gx,gy);
-        if(gl>1e-4){gx/=gl;gy/=gl;dx=dx*(1-e*.6)+gx*e;dy=dy*(1-e*.6)+gy*e;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l}}
-      const L=Math.min(dist+6,(spec.strand??24)*(.6+rnd()*.8)*(1-.45*e)),a=e>.3?rnd()*.15:rnd()*.5,bend=(rnd()-.5)*L*.12;
-      const sx=x-dx*L*a,sy=y-dy*L*a,ex=x+dx*L*(1-a),ey=y+dy*L*(1-a);
-      const sh=Math.exp(-(((y-sheenY)/sheenR)**2));
-      let v=lo+(mid-lo)*rnd();if(rnd()<sh*.55)v=mid+(hi-mid)*(.35+rnd()*.65);
-      const al=(.3+rnd()*.4)*(1-.35*e),lw=e>.3?.4+rnd()*.6:.6+rnd()*1.3;
-      for(const [g,col] of [[tg,gray(Math.round(v),al)],[vg,`rgba(0,0,0,${al})`]]){
-        g.strokeStyle=col;g.lineWidth=lw;g.beginPath();g.moveTo(sx,sy);g.quadraticCurveTo((sx+ex)/2-dy*bend,(sy+ey)/2+dx*bend,ex,ey);g.stroke();
-      }
-    }
-    const rim=Math.max(x1-x0,y1-y0)*.62,gr=tg.createRadialGradient(cx,cy-(y1-y0)*.15,rim*.4,cx,cy,rim);
-    gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,`rgba(0,0,0,${spec.rim??.28})`);tg.fillStyle=gr;tg.fillRect(0,0,W,H);
-    // colour through the sprite's palette (and the hair colour's gradient map), alpha from the masks
-    const vd=vg.getImageData(0,0,W,H).data;
-    const out=makeCanvas(W,H),og=ctx2d(out),im=tg.getImageData(0,0,W,H),d=im.data;
-    for(let i=0;i<d.length;i+=4){
-      const a=md[i+3];if(!a){d[i+3]=0;continue}
-      const c=cd[i+3]/255,core=Math.min(1,Math.max(0,(c-.72)/.24)),ramp=Math.min(1,Math.max(0,(c-.3)/.6)),strands=Math.min(1,vd[i+3]/255*1.1);
-      const v=d[i];
-      if(lut){d[i]=lut[v*3];d[i+1]=lut[v*3+1];d[i+2]=lut[v*3+2]}
-      else{d[i]=prof.col[v*3];d[i+1]=prof.col[v*3+1];d[i+2]=prof.col[v*3+2]}
-      d[i+3]=a*(core+(1-core)*strands*ramp*ramp);
-    }
-    og.putImageData(im,0,0);
-    return out;
-  });
-}
-/* A polygon resampled every ~3px with its points pushed along the normal by a smooth deterministic
-   noise of amplitude amp (px): an irregular, natural hairline contour. */
-function jitterPoly(pts,amp){
-  if(!amp)return pts;
-  const out=[];
-  for(let i=0;i<pts.length;i++){
-    const [ax,ay]=pts[i],[bx,by]=pts[(i+1)%pts.length],len=Math.hypot(bx-ax,by-ay),nx=(ay-by)/(len||1),ny=(bx-ax)/(len||1);
-    for(let s=0;s<len;s+=3){const x=ax+(bx-ax)*s/len,y=ay+(by-ay)*s/len,k=amp*(Math.sin(x*.71+y*.37)*.55+Math.sin(x*.23-y*1.13+1.7)*.45);out.push([x+nx*k,y+ny*k])}
-  }
-  return out;
-}
+/* Hair: {back, front, shade}. The sprites are painted on these very heads (art/fit_hair_pack2.py
+   registers each one from its worn proof), so a style is drawn as it is, at its fit {x,y,w,h,rot}.
+   fit.front shapes = doll-local regions drawn again in front of the body (the whole style is then
+   also drawn behind it: lengths behind the shoulders and arms); fit.behind = the reverse, doll-local
+   shapes where the style passes behind the body (e.g. the near arm in a side view, feathered);
+   fit.cut = sprite polys removed; fit.scalpFill = doll-local shapes for scalpShow's force;
+   fit.cutDoll = doll-local shapes removed; fit.soften = feathered hairline over skin (opt-in, see
+   softenHairline); fit.shade = contact shadow (opt-in, see hairShade); fit.scalp=false turns off
+   the scalp shown through partings (scalpShow); fit.open = the face kept clear (openFace);
+   fit.under = hair behind the head where the style covers the ears (underHair). */
 function hairLayers(doll,view,id,colorId){
   const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
   if(!fit)return Promise.reject(new Error('Hair '+id+' does not fit '+doll+' '+view));
   return memo(dollCaches.layer,['hair',doll,view,id,colorId].join('|'),async()=>{
     let src=await itemSprite(item,view,'main',null,colorId);
     if(fit.cut)src=maskSprite(src,{cut:fit.cut});
-    const scalp=await scalpLayer(doll,view,item,fit,colorId);
-    const [full,g]=dollLayer(doll,view);if(scalp)g.drawImage(scalp,0,0);drawFitted(g,src,fit);
+    const [full,g]=dollLayer(doll,view);drawFitted(g,src,fit);
+    if(fit.open)openFace(full,dollView(doll,view).origin,fit.open);
+    if(fit.scalp!==false){const dv=dollView(doll,view);let force=null;
+      if(fit.scalpFill){force=makeCanvas(full.width,full.height);const fg=ctx2d(force);fg.translate(...dv.origin);fg.fillStyle='#000';fg.beginPath();fit.scalpFill.forEach(sh=>shapePathInto(fg,sh));fg.fill()}
+      scalpShow(full,await spriteCanvas(dv.art),dv.origin,CATALOG.dolls[doll].skin,force)}
     if(fit.cutDoll)eraseShapes(doll,view,full,fit.cutDoll);
-    const dv=dollView(doll,view);
-    softenHairline(full,await spriteCanvas(dv.art),dv.origin,fit.soften);
-    const done=r=>({...r,shade:hairShade(r.front,fit.shade)});
-    let back=null;
-    if(fit.backFill||fit.front){
-      const [b,bg]=dollLayer(doll,view);back=b;
-      if(fit.backFill){ // a squeezed, shaded copy behind the neck and shoulders: the hair at the back
-        // plus a narrower copy (inner, default .55 of sx) right behind the neck, so no background shows
-        // between the jaw, the neck and the face window of the style
-        const f=fit.backFill,cx=fit.x+fit.w/2;
-        for(const sx of [(f.sx||.6)*(f.inner??.55),f.sx||.6]){
-          bg.save();bg.translate(cx,fit.y+(f.dy||0));bg.scale(sx,f.sy||1);bg.translate(-cx,-fit.y);drawFitted(bg,src,fit);bg.restore();
-        }
-        bg.save();bg.setTransform(1,0,0,1,0,0);bg.globalCompositeOperation='source-atop';bg.fillStyle=`rgba(25,10,18,${f.shade??.32})`;bg.fillRect(0,0,b.width,b.height);bg.restore();
-      }
-      if(fit.front){bg.save();bg.setTransform(1,0,0,1,0,0);bg.drawImage(full,0,0);bg.restore();}
+    if(fit.soften){const dv=dollView(doll,view);softenHairline(full,await spriteCanvas(dv.art),dv.origin,fit.soften)}
+    const under=fit.under?underHair(full,await spriteCanvas(dollView(doll,view).art),dollView(doll,view).origin,fit.under):null;
+    const done=r=>{if(under){const b=r.back||makeCanvas(full.width,full.height),bg=b.getContext('2d');
+      if(r.back){const c=makeCanvas(full.width,full.height),cg=c.getContext('2d');cg.drawImage(under,0,0);cg.drawImage(b,0,0);r={...r,back:c}}else{bg.drawImage(under,0,0);r={...r,back:b}}}
+      return {...r,shade:hairShade(r.front,fit.shade)}};
+    if(fit.behind){ // the style is in front of the body except inside these shapes (e.g. the near arm)
+      const [front,fg]=dollLayer(doll,view);fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);
+      eraseShapes(doll,view,front,fit.behind);
+      return done({back:full,front});
     }
-    if(!fit.front)return done({back,front:full});
+    if(!fit.front)return done({back:null,front:full});
     // Only the given doll-local regions of the style are drawn again in front of the body (a shape's
     // feather softens where the hair passes behind, e.g. behind the arms in the front view).
-    if(fit.front.some(s=>s.feather)){const [ox,oy]=dollView(doll,view).origin;return done({back,front:softClip(full,ox,oy,fit.front)})}
+    if(fit.front.some(s=>s.feather)){const [ox,oy]=dollView(doll,view).origin;return done({back:full,front:softClip(full,ox,oy,fit.front)})}
     const [front,fg]=dollLayer(doll,view);
     fg.save();fg.beginPath();fit.front.forEach(s=>shapePathInto(fg,s));fg.clip();
     fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);fg.restore();
-    return done({back,front});
+    return done({back:full,front});
   });
+}
+/* Hair behind the head (styles that cover the ears, front view). Between her cheek, ear, jaw and neck
+   and the inner edge of the hair hanging beside them the art shows nothing, so the backdrop would read as
+   a pale band. In rows y0..y1 (doll-local), on each side where the hair's inner edge is no more than
+   `gap` px outside her silhouette, a darker copy of that hair's own colour fills from the hair edge in to
+   her centre line; it is drawn behind the body, so only the strip between skin and hair shows, as the
+   shadowed hair at the back of her head and neck. Rows are smoothed so the fill follows the hair. */
+function underHair(full,base,[ox,oy],{y0,y1,gap=24,dark=.55}){
+  const W=full.width,H=full.height,d=ctx2d(full).getImageData(0,0,W,H).data;
+  const BW=base.width,bd=ctx2d(base).getImageData(0,0,BW,base.height).data,X0=Math.round(ox),Y0=Math.round(oy);
+  const body=(x,Y)=>{const bx=x-X0,by=Y-Y0;return bx>=0&&by>=0&&bx<BW&&by<base.height?bd[(by*BW+bx)*4+3]>100:false};
+  const A=Math.max(0,Math.round(y0+oy)),B=Math.min(H-1,Math.round(y1+oy)),n=B-A+1;if(n<=0)return null;
+  const side=[0,1].map(()=>({edge:new Float32Array(n).fill(NaN),col:new Float32Array(n*3)}));
+  for(let j=0;j<n;j++){
+    const Y=A+j;let l=-1,r=-1;
+    for(let x=0;x<W;x++)if(body(x,Y)){if(l<0)l=x;r=x}
+    if(l<0)continue;const cx=(l+r)/2;
+    for(const [s,start,dir] of [[0,l-1,-1],[1,r+1,1]]){
+      let x=start;while(Math.abs(x-start)<=gap&&x>=0&&x<W&&d[(Y*W+x)*4+3]<128)x+=dir;
+      if(Math.abs(x-start)>gap||x<0||x>=W)continue;
+      let n2=0,c=[0,0,0];for(let k=1;k<=8;k++){const q=(Y*W+x+dir*k)*4;if(x+dir*k<0||x+dir*k>=W||d[q+3]<200)continue;c[0]+=d[q];c[1]+=d[q+1];c[2]+=d[q+2];n2++}
+      if(!n2)continue;
+      side[s].edge[j]=x;for(let k=0;k<3;k++)side[s].col[j*3+k]=c[k]/n2;
+      side[s].cx=cx;
+    }
+  }
+  const out=makeCanvas(W,H),g=out.getContext('2d'),im=g.createImageData(W,H),o=im.data;let any=false;
+  for(const [s,S] of side.entries()){
+    for(let j=0;j<n;j++){
+      // a row without a measured edge between rows with one (a gap between curls) is filled from them
+      if(isNaN(S.edge[j])){let up=-1,dn=-1;for(let k=1;k<=16;k++){if(up<0&&j-k>=0&&!isNaN(S.edge[j-k]))up=j-k;if(dn<0&&j+k<n&&!isNaN(S.edge[j+k]))dn=j+k}
+        if(up<0||dn<0)continue}
+      // smoothed edge and colour over the rows around j that have hair
+      let e=0,w=0,c=[0,0,0];for(let k=-16;k<=16;k++){const q=j+k;if(q<0||q>=n||isNaN(S.edge[q]))continue;const ww=Math.max(.05,6-Math.abs(k));e+=S.edge[q]*ww;for(let m=0;m<3;m++)c[m]+=S.col[q*3+m]*ww;w+=ww}
+      e/=w;const raw=isNaN(S.edge[j])?e:S.edge[j],dir=s?1:-1,Y=A+j,cx=Math.round(S.cx??W/2);
+      // reach at least the row's own hair edge (no gap), tucked 2 px under it
+      const x1=Math.round(s?Math.max(raw,e):Math.min(raw,e))+dir*2;
+      const [xa,xb]=s?[cx,x1]:[x1,cx];
+      for(let x=Math.max(0,xa);x<=Math.min(W-1,xb);x++){
+        // texture: the row's own hair mirrored inward from its edge (12 px period), darkened
+        const k=Math.abs(x-raw)%24,xs=Math.round(raw)+dir*(k<12?k:24-k),q=(Y*W+x)*4,qs=(Y*W+xs)*4;
+        const ok=xs>=0&&xs<W&&d[qs+3]>200;
+        for(let m=0;m<3;m++)o[q+m]=(ok?d[qs+m]*.7+c[m]/w*.3:c[m]/w)*dark;o[q+3]=255;any=true;
+      }
+    }
+  }
+  if(!any)return null;
+  g.putImageData(im,0,0);return out;
+}
+/* Keep the face open. The styles were painted on heads a little narrower than hers, so the inner edges
+   of the front curtains would cover her outer eye corners, cheeks and jaw. open = {rows:[[y, xl, xr],
+   ...]} (doll-local; between rows linear): in each row of the face, where the window between the
+   curtains is open at the face's centre (a fringe across the centre is left alone), the inner edge of
+   the hair on each side is moved out to xl / xr. The hair between that edge and `band` px outside it is
+   gently compressed toward the outside (tucked behind the cheek); the outer silhouette, the parting
+   and everything above the first row and below the last stay where they are. The per-row amounts are
+   smoothed along the face (and faded in over `ramp` px above and below), so curls stay curls. */
+function openFace(full,[ox,oy],{rows,ramp=10,band=26}){
+  const W=full.width,H=full.height,g=full.getContext('2d'),im=g.getImageData(0,0,W,H),d=im.data;
+  const y0=rows[0][0],y1=rows[rows.length-1][0];
+  const at=y=>{y=Math.min(y1,Math.max(y0,y));let k=0;while(k<rows.length-2&&y>rows[k+1][0])k++;const [a,l0,r0]=rows[k],[b,l1,r1]=rows[k+1],u=(y-a)/(b-a||1);return [l0+(l1-l0)*u,r0+(r1-r0)*u]};
+  const Y0=Math.max(0,Math.floor(y0-ramp+oy)),Y1=Math.min(H-1,Math.ceil(y1+ramp+oy)),n=Y1-Y0+1;
+  if(n<=0)return;
+  const A=[new Float32Array(n),new Float32Array(n)],T=[new Float32Array(n),new Float32Array(n)],C=new Float32Array(n),closed=new Uint8Array(n);
+  const al=(x,Y)=>x<0||x>=W?0:d[(Y*W+x)*4+3]/255;
+  for(let j=0;j<n;j++){
+    const Y=Y0+j,[l,r]=at(Y-oy),L=l+ox,Rr=r+ox,cx=(L+Rr)/2;T[0][j]=L;T[1][j]=Rr;C[j]=cx;
+    if(al(Math.round(cx),Y)>.3||al(Math.round(cx)-6,Y)>.3||al(Math.round(cx)+6,Y)>.3){closed[j]=1;continue} // a fringe: left as drawn
+    let x=Math.round(cx);while(x>L-band&&al(x,Y)<.5)x--;A[0][j]=Math.max(0,x+1-L);
+    x=Math.round(cx);while(x<Rr+band&&al(x,Y)<.5)x++;A[1][j]=Math.max(0,Rr-x);
+  }
+  for(const a of A){ // max over +-4 rows, then a soft blur over +-7, faded in/out at the ends
+    const m=a.map((_,j)=>{let v=0;for(let k=Math.max(0,j-4);k<=Math.min(n-1,j+4);k++)v=Math.max(v,a[k]);return v});
+    for(let j=0;j<n;j++){let s=0,ws=0;for(let k=-7;k<=7;k++){const q=j+k;if(q<0||q>=n)continue;const w=1-Math.abs(k)/8;s+=m[q]*w;ws+=w}
+      const y=Y0+j-oy,fade=Math.min(1,Math.max(0,Math.min(y-(y0-ramp),(y1+ramp)-y)/ramp));a[j]=s/ws*fade*fade*(3-2*fade)}
+  }
+  // rows of (and next to) a fringe stay as drawn: fade in over 8 rows away from the nearest closed row
+  let last=-1e9;const near=new Float32Array(n).fill(1e9);
+  for(let j=0;j<n;j++){if(closed[j])last=j;near[j]=j-last}
+  last=1e9;for(let j=n-1;j>=0;j--){if(closed[j])last=j;near[j]=Math.min(near[j],last-j)}
+  for(let j=0;j<n;j++){const k=Math.min(1,Math.max(0,(near[j]-2)/8));A[0][j]*=k;A[1][j]*=k}
+  const src=new Float32Array(W*4); // one premultiplied source row
+  for(let j=0;j<n;j++){
+    const aL=A[0][j],aR=A[1][j];if(aL<.05&&aR<.05)continue;
+    const Y=Y0+j,cx=C[j],row=Y*W*4;
+    for(let x=0;x<W;x++){const i=row+x*4,a=d[i+3]/255;src[x*4]=d[i]*a;src[x*4+1]=d[i+1]*a;src[x*4+2]=d[i+2]*a;src[x*4+3]=d[i+3]}
+    // output x -> source x (monotonic): left side then right side (mirrored)
+    const map=(x,a,T0,dir)=>{ // dir -1: left curtain (hair at x < T0), +1: right
+      // u: distance from T0 into the hair (> 0) or toward the face's centre (< 0); the source edge is at -a
+      const u=(x-T0)*dir,B=Math.max(band,a*2.5),D=Math.abs(cx-T0);
+      if(u>=B||D<=a+1)return x;
+      const us=u>=0?-a+u*(B+a)/B:-a+u*(D-a)/D;
+      return T0+dir*us;
+    };
+    for(let x=0;x<W;x++){
+      let xs=x;
+      if(x<cx&&aL>=.05)xs=map(x,aL,T[0][j],-1);
+      else if(x>=cx&&aR>=.05)xs=map(x,aR,T[1][j],1);
+      if(xs===x)continue;
+      const x0=Math.floor(xs),f=xs-x0,o=row+x*4;
+      const s0=x0>=0&&x0<W?x0*4:-1,s1=x0+1>=0&&x0+1<W?(x0+1)*4:-1;
+      const p=k=>(s0<0?0:src[s0+k]*(1-f))+(s1<0?0:src[s1+k]*f);
+      const a=p(3);if(a<.5){d[o+3]=0;continue}
+      const inv=255/a;d[o]=p(0)*inv;d[o+1]=p(1)*inv;d[o+2]=p(2)*inv;d[o+3]=a;
+    }
+  }
+  g.putImageData(im,0,0);
+}
+/* Scalp through the hair: partings and sheer hairlines are painted semi-transparent, over the
+   painted head's scalp. Where her own head is a little smaller than the one the style was painted
+   on, that scalp is missing and the backdrop would show through a parting. So inside the hair's
+   closed silhouette (holes and partings narrower than ~2r px, not the face window or the outer
+   edge), and only off her own picture, the hair is composited over her skin tone, slightly shaded.
+   force = optional canvas: inside its shapes (fit.scalpFill, doll-local) this is done whatever the
+   hair's shape there, for sheer hairlines painted over a forehead that is not quite where hers is. */
+function scalpShow(full,base,[ox,oy],skin,force,r=4){
+  const W=full.width,H=full.height,g=full.getContext('2d'),im=g.getImageData(0,0,W,H),d=im.data;
+  const BW=base.width,BH=base.height,bd=ctx2d(base).getImageData(0,0,BW,BH).data,X0=Math.round(ox),Y0=Math.round(oy);
+  const blur=(src,rad)=>{const t=new Float32Array(W*H),o=new Float32Array(W*H),k=2*rad+1;
+    for(let y=0;y<H;y++){let s=0;const row=y*W;for(let x=-rad;x<=rad;x++)s+=src[row+Math.min(W-1,Math.max(0,x))];
+      for(let x=0;x<W;x++){t[row+x]=s/k;s+=src[row+Math.min(W-1,x+rad+1)]-src[row+Math.max(0,x-rad)]}}
+    for(let x=0;x<W;x++){let s=0;for(let y=-rad;y<=rad;y++)s+=t[Math.min(H-1,Math.max(0,y))*W+x];
+      for(let y=0;y<H;y++){o[y*W+x]=s/k;s+=t[Math.min(H-1,y+rad+1)*W+x]-t[Math.max(0,y-rad)*W+x]}}
+    return o};
+  const m=new Float32Array(W*H);let any=false;
+  for(let i=0;i<W*H;i++)if(d[i*4+3]>128){m[i]=1;any=true}
+  if(!any)return;
+  const dil=blur(m,r),dm=new Float32Array(W*H);for(let i=0;i<W*H;i++)dm[i]=dil[i]>.02?1:0;
+  const ero=blur(dm,r);
+  // never next to empty pixels: the outer edge (and its outline) stays as painted
+  const empty=new Float32Array(W*H);for(let i=0;i<W*H;i++)if(d[i*4+3]<6)empty[i]=1;
+  const nearEmpty=blur(empty,2);
+  const sk=skin.map(c=>c*.82),fd=force&&ctx2d(force).getImageData(0,0,W,H).data;let changed=false;
+  for(let i=0;i<W*H;i++){
+    const a=d[i*4+3]/255;if(a>.98)continue;
+    if(!(fd&&fd[i*4+3]>128)&&(ero[i]<.98||nearEmpty[i]>0))continue;
+    const x=i%W,y=(i/W)|0,bx=x-X0,by=y-Y0;
+    const body=bx>=0&&by>=0&&bx<BW&&by<BH?bd[(by*BW+bx)*4+3]/255:0;
+    const forced=fd&&fd[i*4+3]>128,f=forced?1:1-body;if(f<=0)continue; // forced: fully, her own edge is antialiased there
+    const na=a+(1-a)*f;
+    for(let j=0;j<3;j++)d[i*4+j]=(d[i*4+j]*a+sk[j]*(1-a)*f)/na;
+    d[i*4+3]=na*255;changed=true;
+  }
+  if(changed)g.putImageData(im,0,0);
 }
 /* Where the hair sprite ends over skin (the hairline round the face, sideburns, nape, a fringe) its
    cut-out edge is softened: alpha is multiplied by a ramp of the locally blurred alpha, so the edge
@@ -525,10 +562,11 @@ function softenHairline(full,base,[ox,oy],opts={}){
 }
 /* Contact shadow of the hair: a soft, slightly lowered blur of the front hair layer, outside the hair
    itself, drawn source-atop over the body and outfit (portrait composeDoll), so the hair sits on the
-   forehead, temples, neck and shoulders instead of floating above them. opts = fit.shade:
-   {blur, dy, alpha} or false. */
-function hairShade(front,opts={}){
-  if(opts===false)return null;
+   forehead, temples, neck and shoulders instead of floating above them. Opt-in (the styles painted on
+   the head carry their own shading, so none uses it now): opts = fit.shade
+   {blur, dy, alpha}. */
+function hairShade(front,opts){
+  if(!opts)return null;
   const W=front.width,H=front.height,c=makeCanvas(W,H),g=c.getContext('2d');
   g.shadowColor=`rgba(58,26,20,${opts.alpha??.34})`;g.shadowBlur=(opts.blur??4)*2;g.shadowOffsetX=W;g.shadowOffsetY=opts.dy??1.5;
   g.drawImage(front,-W,0);
@@ -711,6 +749,37 @@ function coverBodysuit(d,w,h,shapes,info){
   }
 }
 function bodyKey(shot,view){return [shot.doll,view,shot.outfit,shot.lips,shot.blush,shot.shadow,shot.nails,shot.shoes].join('|')}
+/* Eyeshadow, blush and lipstick on pixels d (w x h) whose coordinates match `face` (the doll view's
+   landmarks, see shiftFace). puppet.js runs it again on drawn expression heads: opts.lipsMask (Float32
+   per pixel) replaces the lips polygon there, opts.eyesClosed (0..1) puts the shadow on the closed lid. */
+function applyFaceMakeup(d,w,h,shot,face,opts={}){
+  const opt=(list,id)=>CATALOG.makeup[list].find(o=>o.id===id);
+  const shadow=opt('shadow',shot.shadow);
+  if(shadow?.color&&face.lids){
+    const m=shapeMask(w,h,face.lids,face.lidBlur||0),open=1-(opts.eyesClosed||0);
+    if(face.eyes){const e=shapeMask(w,h,face.eyes.map(p=>({poly:p})),.6);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-e[i]*1.2*open)}
+    applyColor(d,m,hexRgb(shadow.color),shadow.strength||.5,'color',{ref:150,contrast:1,skipDark:60});
+    if(shadow.shimmer)applyColor(d,m,hexRgb(shadow.shimmer),.22,'screen');
+  }
+  const blush=opt('blush',shot.blush);
+  if(blush?.color&&face.cheeks)applyColor(d,shapeMask(w,h,face.cheeks.map(([x,y,rx,ry])=>({gradient:[x,y,rx,ry,1]}))),hexRgb(blush.color),blush.strength||.4,'multiply');
+  const lips=opt('lips',shot.lips);
+  if(lips?.color&&(face.lips||opts.lipsMask)){
+    let m;
+    if(opts.lipsMask)m=opts.lipsMask;
+    else{
+      m=shapeMask(w,h,[{poly:face.lips}],face.lipBlur||1.2);
+      if(face.mouth){const inner=shapeMask(w,h,[{poly:face.mouth}],.8);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-inner[i])}
+    }
+    applyColor(d,m,hexRgb(lips.color),lips.strength||.8,'color',{ref:face.lipRef||130,contrast:lips.contrast||1.1,gloss:lips.gloss,skipBright:.3,lift:lips.lift||1});
+  }
+}
+/* A view's face landmarks moved by (dx, dy), for makeup on a crop of the base picture. */
+function shiftFace(face,dx,dy){
+  const P=p=>p.map(([x,y])=>[x+dx,y+dy]);
+  return {...face,lids:face.lids&&face.lids.map(g=>({...g,gradient:[g.gradient[0]+dx,g.gradient[1]+dy,...g.gradient.slice(2)]})),
+    eyes:face.eyes&&face.eyes.map(P),cheeks:face.cheeks&&face.cheeks.map(([x,y,...r])=>[x+dx,y+dy,...r]),lips:face.lips&&P(face.lips),mouth:face.mouth&&P(face.mouth)};
+}
 function bodyLayer(shot,view){
   const doll=shot.doll,info=CATALOG.dolls[doll];
   return memo(dollCaches.body,bodyKey(shot,view),async()=>{
@@ -719,23 +788,8 @@ function bodyLayer(shot,view){
     const im=g.getImageData(0,0,w,h),d=im.data;
     const outfitFit=catalogItem(shot.outfit)?.fit?.[doll]?.[view];
     if(outfitFit?.skin?.length)coverBodysuit(d,w,h,outfitFit.skin,info);
-    const face=dv.face||{};
+    applyFaceMakeup(d,w,h,shot,dv.face||{});
     const opt=(list,id)=>CATALOG.makeup[list].find(o=>o.id===id);
-    const shadow=opt('shadow',shot.shadow);
-    if(shadow?.color&&face.lids){
-      const m=shapeMask(w,h,face.lids,face.lidBlur||0);
-      if(face.eyes){const e=shapeMask(w,h,face.eyes.map(p=>({poly:p})),.6);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-e[i]*1.2)}
-      applyColor(d,m,hexRgb(shadow.color),shadow.strength||.5,'color',{ref:150,contrast:1,skipDark:60});
-      if(shadow.shimmer)applyColor(d,m,hexRgb(shadow.shimmer),.22,'screen');
-    }
-    const blush=opt('blush',shot.blush);
-    if(blush?.color&&face.cheeks)applyColor(d,shapeMask(w,h,face.cheeks.map(([x,y,rx,ry])=>({gradient:[x,y,rx,ry,1]}))),hexRgb(blush.color),blush.strength||.4,'multiply');
-    const lips=opt('lips',shot.lips);
-    if(lips?.color&&face.lips){
-      const m=shapeMask(w,h,[{poly:face.lips}],face.lipBlur||1.2);
-      if(face.mouth){const inner=shapeMask(w,h,[{poly:face.mouth}],.8);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-inner[i])}
-      applyColor(d,m,hexRgb(lips.color),lips.strength||.8,'color',{ref:face.lipRef||130,contrast:lips.contrast||1.1,gloss:lips.gloss,skipBright:.3,lift:lips.lift||1});
-    }
     const nails=opt('nails',shot.nails);
     if(nails?.color&&dv.nails){
       const shoe=catalogItem(shot.shoes),toes=!shoe||shoe.openToe;
@@ -799,53 +853,109 @@ function lookKey(shot,view='front'){
    (side views), sleeves over the arm, necklace, earrings under hair, hair front, earrings, clip. */
 function composeDoll(raw,view='front'){
   if(!CATALOG.views.includes(view))view='front';
-  const shot={...readLook(raw,raw.doll==='little'?'little':'adult'),doll:raw.doll==='little'?'little':'adult'};
+  const shot=normalShot(raw);
   return memo(dollCaches.doll,lookKey(shot,view),async()=>{
-    const doll=shot.doll,dv=dollView(doll,view),[ox,oy]=dv.origin;
-    const hairFit=catalogItem(shot.hair).fit[doll][view];
-    const earItem=catalogItem(shot.earrings),clipItem=catalogItem(shot.clip);
-    const [body,outfit,shoes,hair,necklace,earrings,clipLayer]=await Promise.all([
-      bodyLayer(shot,view),outfitLayer(doll,view,shot.outfit,shot.outfitTint),
-      shot.shoes==='none'?null:shoeLayers(doll,view,shot.shoes,shot.shoesTint),
-      hairLayers(doll,view,shot.hair,shot.hairColor),
-      shot.necklace==='none'?null:spriteItemLayer(doll,view,shot.necklace),
-      !earItem||earItem.stud?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint),
-      !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
-    ]);
-    const arm=sideView(view)?await armLayer(shot,view,body):null;
-    const bodyPic=shoes?fitFeet(body,shoes,catalogItem(shot.shoes).fit[doll][view],dv,doll):body;
+    const {ops}=await dollOps(shot,view);
     const c=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),g=c.getContext('2d');
     g.imageSmoothingQuality='high';
-    const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
-    const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
-    const drawProc=()=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
-    const stud=earItem?.stud&&dv.face?.lobes?earItem.stud:null;
-    const drawStuds=()=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,view==='back'?'clutch':stud,x,y+dv.face.unit*(view==='back'?.02:.06),dv.face.unit*(view==='back'?.09:.15));g.restore()};
-    // back view: earrings sit under the hair, so only show where the style leaves the ears free
-    const earsUnder=!!hairFit.earsUnder||view==='back';
-    if(clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
-    if(hair.back)g.drawImage(hair.back,0,0);
-    if(outfit.back)g.drawImage(outfit.back,0,0);
-    if(shoes)g.drawImage(shoes.back,0,0);
-    g.drawImage(bodyPic,ox,oy);
-    g.save();g.translate(ox,oy);drawGem(g,shot,view);g.restore();
-    const outfitFit=catalogItem(shot.outfit).fit[doll][view];
-    if(shoes&&!outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
-    g.drawImage(outfit.front,0,0);
-    if(shoes&&outfitFit.shoesOver)g.drawImage(shoes.front,0,0);
-    if(arm&&outfitFit.arm!=='hidden'){
-      if(outfitFit.armClip?.some(s=>s.feather))g.drawImage(softClip(arm,ox,oy,outfitFit.armClip),0,0);
-      else if(outfitFit.armClip){g.save();g.translate(ox,oy);g.beginPath();outfitFit.armClip.forEach(s=>shapePathInto(g,s));g.setTransform(1,0,0,1,0,0);g.clip();g.drawImage(arm,0,0);g.restore()}
-      else g.drawImage(arm,0,0);
-    }
-    if(outfit.over)g.drawImage(outfit.over,0,0);
-    if(necklace)g.drawImage(necklace,0,0);
-    if(earsUnder){if(earrings)g.drawImage(earrings,0,0);if(stud)drawStuds()}
-    if(hair.shade){g.save();g.globalCompositeOperation='source-atop';g.drawImage(hair.shade,0,0);g.restore()}
-    g.drawImage(hair.front,0,0);
-    if(!earsUnder){if(earrings)g.drawImage(earrings,0,0);if(stud)drawStuds()}
-    if(!clipBehind){if(clipLayer)g.drawImage(clipLayer,0,0);if(proc)drawProc()}
+    for(const op of ops)op.draw(g);
     return c;
+  });
+}
+function normalShot(raw){const doll=raw.doll==='little'?'little':'adult';return {...readLook(raw,doll),doll}}
+/* The dressed doll as an ordered list of draw operations; composeDoll() runs them in order on one
+   canvas, composeDollLayers() runs each on its own canvas. op = {kind, draw(g), layer?} where `layer`
+   (when set) is a DOLL_CANVAS sized canvas the op draws unchanged at 0,0. Kinds: clipBehind, hairBack,
+   outfitBack, shoesBack, body, gem, shoesFront, outfit, arm, over, necklace, earrings, studs, shade
+   (hair contact shadow, drawn source-atop), hairFront, clip, charm. */
+async function dollOps(shot,view){
+  const doll=shot.doll,dv=dollView(doll,view),[ox,oy]=dv.origin;
+  const hairFit=catalogItem(shot.hair).fit[doll][view];
+  const earItem=catalogItem(shot.earrings),clipItem=catalogItem(shot.clip);
+  const [body,outfit,shoes,hair,necklace,earrings,clipLayer]=await Promise.all([
+    bodyLayer(shot,view),outfitLayer(doll,view,shot.outfit,shot.outfitTint),
+    shot.shoes==='none'?null:shoeLayers(doll,view,shot.shoes,shot.shoesTint),
+    hairLayers(doll,view,shot.hair,shot.hairColor),
+    shot.necklace==='none'?null:spriteItemLayer(doll,view,shot.necklace),
+    !earItem||earItem.stud||(hairFit.earsUnder&&view==='front')?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint), // ears covered (front): no earrings at all
+    !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
+  ]);
+  const arm=sideView(view)?await armLayer(shot,view,body):null;
+  const bodyPic=shoes?fitFeet(body,shoes,catalogItem(shot.shoes).fit[doll][view],dv,doll):body;
+  const ops=[],put=(kind,layer)=>ops.push({kind,layer,draw:g=>g.drawImage(layer,0,0)});
+  const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
+  const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
+  const drawProc=g=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
+  const stud=earItem?.stud&&dv.face?.lobes&&!(hairFit.earsUnder&&view==='front')?earItem.stud:null;
+  const drawStuds=g=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,view==='back'?'clutch':stud,x,y+dv.face.unit*(view==='back'?.02:.06),dv.face.unit*(view==='back'?.09:.15));g.restore()};
+  // back view: earrings sit under the hair, so only show where the style leaves the ears free
+  const earsUnder=!!hairFit.earsUnder||view==='back';
+  const clips=kind=>{if(clipLayer)put(kind,clipLayer);if(proc)ops.push({kind:'charm',behind:kind==='clipBehind',draw:drawProc})};
+  if(clipBehind)clips('clipBehind');
+  if(hair.back)put('hairBack',hair.back);
+  if(outfit.back)put('outfitBack',outfit.back);
+  if(shoes)put('shoesBack',shoes.back);
+  ops.push({kind:'body',draw:g=>g.drawImage(bodyPic,ox,oy)});
+  ops.push({kind:'gem',draw:g=>{g.save();g.translate(ox,oy);drawGem(g,shot,view);g.restore()}});
+  const outfitFit=catalogItem(shot.outfit).fit[doll][view];
+  if(shoes&&!outfitFit.shoesOver)put('shoesFront',shoes.front);
+  put('outfit',outfit.front);
+  if(shoes&&outfitFit.shoesOver)put('shoesFront',shoes.front);
+  if(arm&&outfitFit.arm!=='hidden'){
+    if(outfitFit.armClip?.some(s=>s.feather))put('arm',softClip(arm,ox,oy,outfitFit.armClip));
+    else if(outfitFit.armClip)ops.push({kind:'arm',draw:g=>{g.save();g.translate(ox,oy);g.beginPath();outfitFit.armClip.forEach(s=>shapePathInto(g,s));g.setTransform(1,0,0,1,0,0);g.clip();g.drawImage(arm,0,0);g.restore()}});
+    else put('arm',arm);
+  }
+  if(outfit.over)put('over',outfit.over);
+  if(necklace)put('necklace',necklace);
+  const ears=()=>{if(earrings)put('earrings',earrings);if(stud)ops.push({kind:'studs',draw:drawStuds})};
+  if(earsUnder)ears();
+  if(hair.shade)ops.push({kind:'shade',draw:g=>{g.save();g.globalCompositeOperation='source-atop';g.drawImage(hair.shade,0,0);g.restore()}});
+  put('hairFront',hair.front);
+  if(!earsUnder)ears();
+  if(!clipBehind)clips('clip');
+  return {ops,doll,view,origin:[ox,oy],shoes};
+}
+/* The same dressed doll as separate aligned layers (puppet.js): resolves to {doll, view, origin, layers}
+   with layers = [{kind, canvas}] in drawing order, every canvas DOLL_CANVAS sized and in the same
+   coordinates, so drawing them in order with source-over gives composeDoll's picture (the hair
+   contact shadow is returned already clipped to what is under it). Side views also give the far shoe
+   alone (farShoe) and the near shoe alone (nearShoe), so the two feet can move apart. Nothing here is
+   cached: the caller keeps what it needs. Canvases that are shared renderer cache entries are
+   read-only. */
+async function composeDollLayers(raw,view='front'){
+  if(!CATALOG.views.includes(view))view='front';
+  const shot=normalShot(raw);
+  const {ops,doll,origin,shoes}=await dollOps(shot,view);
+  const acc=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),ag=acc.getContext('2d');ag.imageSmoothingQuality='high';
+  const layers=[];
+  for(const op of ops){
+    let canvas=op.layer;
+    if(op.kind==='shade'){ // source-atop: keep only what lies over the layers drawn so far
+      canvas=makeCanvas(acc.width,acc.height);const g=canvas.getContext('2d');
+      op.draw(g);g.globalCompositeOperation='destination-in';g.drawImage(acc,0,0);
+    }else if(!canvas){canvas=makeCanvas(acc.width,acc.height);const g=canvas.getContext('2d');g.imageSmoothingQuality='high';op.draw(g)}
+    layers.push({kind:op.kind,canvas,behind:!!op.behind});
+    op.draw(ag);
+  }
+  const out={doll,view,origin,layers,shot};
+  if(shoes&&sideView(view)){const parts=await shoeSideParts(doll,view,shot.shoes,shot.shoesTint);if(parts){out.farShoe=parts.far;out.nearShoe=parts.near}}
+  return out;
+}
+/* Side views: the near shoe's back layer without the far shoe, and the far shoe alone (see shoeLayers). */
+const shoeSideCache=lruCache(4);
+function shoeSideParts(doll,view,id,tintId){
+  const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
+  if(!fit?.near||!fit.far)return Promise.resolve(null);
+  return memo(shoeSideCache,[doll,view,id,tintId].join('|'),async()=>{
+    const src=await itemSprite(item,view,'main',tintId),o=dollView(doll,view).origin;
+    const draw=(f,shade)=>{
+      const t=makeCanvas(DOLL_CANVAS.width,DOLL_CANVAS.height),tg=t.getContext('2d');tg.imageSmoothingQuality='high';tg.translate(...o);
+      const w=f.w,h=f.h??src.height*w/src.width;tg.translate(f.x,f.y);if(f.rot)tg.rotate(f.rot*Math.PI/180);tg.drawImage(src,0,0,w,h);
+      if(shade!==undefined){tg.setTransform(1,0,0,1,0,0);tg.globalCompositeOperation='source-atop';tg.fillStyle=`rgba(30,12,30,${shade})`;tg.fillRect(0,0,t.width,t.height)}
+      return t;
+    };
+    return {near:draw(fit.near),far:draw({...fit.near,x:fit.near.x+(fit.far.dx||0),y:fit.near.y+(fit.far.dy||0)},fit.far.shade??.3),farOffset:[fit.far.dx||0,fit.far.dy||0]};
   });
 }
 /* Keep only the parts of a layer inside doll-local shapes; a shape's `feather` (px) softens its edge
@@ -979,12 +1089,43 @@ function drawPedestal(c,cx,top,rx){
 }
 /* Display scale (portrait px per doll px at a 480 x 720 frame) and frame position. */
 const portraitLayout={adult:{scale:.71,foot:.925},little:{scale:.6,foot:.915}};
+/* Where paintPortrait puts things: canvas size, picture rect and the doll's DOLL_CANVAS rect. */
+function portraitGeometry(shot,postcard=false){
+  const w=postcard?640:480,h=postcard?860:720;
+  const x=postcard?70:0,y=postcard?21:0,width=postcard?500:w,height=postcard?750:h;
+  const lay=portraitLayout[shot.doll]||portraitLayout.adult;
+  const k=lay.scale*width/480,footY=y+height*lay.foot;
+  return {w,h,x,y,width,height,k,footY,doll:[x+width/2-DOLL_CANVAS.width/2*k,footY-DOLL_CANVAS.baseline*k,DOLL_CANVAS.width*k,DOLL_CANVAS.height*k]};
+}
 async function paintPortrait(canvas, shot, postcard=false, view='front') {
   const scenic=shot.backdrop>0,scene=scenic?districts[shot.backdrop-1]:null;
   const [doll,background]=await Promise.all([composeDoll(shot,view),scenic?asset('assets/scenes/'+scene.id+'.jpg'):null]);
-  const w=canvas.width=postcard?640:480,h=canvas.height=postcard?860:720;
+  const geo=portraitGeometry(shot,postcard);
+  canvas.width=geo.w;canvas.height=geo.h;
   const c=canvas.getContext('2d');
-  const x=postcard?70:0,y=postcard?21:0,width=postcard?500:w,height=postcard?750:h;
+  portraitBackground(c,shot,postcard,geo,background);
+  const {x,y,width,height}=geo;
+  c.save();c.beginPath();c.rect(x,y,width,height);c.clip();
+  c.imageSmoothingQuality='high';
+  c.drawImage(doll,...geo.doll);
+  c.restore();
+  portraitExtras(c,shot,postcard,geo);
+}
+/* The portrait without the doll, as two canvases around it (puppet.js draws a moving doll between
+   them): back = frame, scenery or studio backdrop; front = the postcard's sticker and caption (null
+   for a plain portrait). Resolves to {back, front, geo}. */
+async function paintPortraitParts(shot,postcard=false){
+  const scenic=shot.backdrop>0,scene=scenic?districts[shot.backdrop-1]:null;
+  const background=scenic?await asset('assets/scenes/'+scene.id+'.jpg'):null;
+  const geo=portraitGeometry(shot,postcard);
+  const back=makeCanvas(geo.w,geo.h);portraitBackground(back.getContext('2d'),shot,postcard,geo,background);
+  let front=null;
+  if(postcard){front=makeCanvas(geo.w,geo.h);portraitExtras(front.getContext('2d'),shot,postcard,geo)}
+  return {back,front,geo};
+}
+function portraitBackground(c,shot,postcard,geo,background){
+  const scenic=shot.backdrop>0;
+  const {w,h,x,y,width,height,k,footY}=geo;
   if(postcard){
     const colors=frameColors[shot.frame]||frameColors[0];
     c.fillStyle=colors[0];c.fillRect(0,0,w,h);c.fillStyle=colors[1];
@@ -994,8 +1135,6 @@ async function paintPortrait(canvas, shot, postcard=false, view='front') {
     }
     c.fillStyle='#fffefa';c.fillRect(x-9,y-9,width+18,h-y-19);
   }
-  const lay=portraitLayout[shot.doll]||portraitLayout.adult;
-  const k=lay.scale*width/480,footY=y+height*lay.foot;
   if(scenic){
     const cropWidth=background.height*width/height;
     const cropX=(background.width-cropWidth)*(shot.backdrop===3?.74:.52);
@@ -1007,10 +1146,9 @@ async function paintPortrait(canvas, shot, postcard=false, view='front') {
     drawPedestal(c,x+width/2,footY+k*10,k*190);
     c.fillStyle='rgba(110,50,105,.28)';c.beginPath();c.ellipse(x+width/2,footY+k*8,k*110,k*16,0,0,Math.PI*2);c.fill();
   }
-  c.save();c.beginPath();c.rect(x,y,width,height);c.clip();
-  c.imageSmoothingQuality='high';
-  c.drawImage(doll,x+width/2-DOLL_CANVAS.width/2*k,footY-DOLL_CANVAS.baseline*k,DOLL_CANVAS.width*k,DOLL_CANVAS.height*k);
-  c.restore();
+}
+function portraitExtras(c,shot,postcard,geo){
+  const {w,x,y,width,height}=geo;
   if(postcard){
     drawCharm(c,shot.sticker,x+width-16,y+height-30,60);
     // The caption is drawn in the current language; longer names shrink to fit the card.

@@ -14,6 +14,8 @@ const Shop=(()=>{
     'item:lilac-satin-bow-dress':20,'item:star-pajamas':25,
     // shoes, hair, jewelry, hair accessories
     'item:lilac-mary-jane-heels':12,'item:half-up-curls':15,
+    // hair: at most two styles per character cost stars (see the wardrobe test)
+    'item:space-buns':15,'item:short-braids':12,'item:top-ponytail':12,
     'item:butterfly-necklace':12,'tint:gold-hoops:rose-gold':6,'item:butterfly-clip':10,
     // fantasy hair colours
     'hair-color:bubblegum':20,'hair-color:lilac':20,
@@ -184,7 +186,7 @@ const Shop=(()=>{
       let c=fitInto(await asset(src),T,it.category==='hair'?.04:.08);
       const tint=(it.tints||[]).find(t=>t.id===tintId);
       if(tint&&tint.id!=='original')c=tintCanvas(c,tint);
-      if(hairColorId){const hc=CATALOG.hairColors.find(h=>h.id===hairColorId);if(hc?.stops)c=hairColorCanvas(c,hc)}
+      if(hairColorId){const hc=CATALOG.hairColors.find(h=>h.id===hairColorId);if(hc?.stops)c=hairColorCanvas(c,hc,it.lum)}
       return c;
     });
   }
@@ -215,17 +217,18 @@ const Shop=(()=>{
     });
   }
   /* Style challenges (`briefs` in game.js, which loads after this file) must stay achievable by both
-     characters with free options. A brief that names one hairstyle for both, now that Little Me has
-     her own kid styles, gets a per-character need instead: her counterpart from KID_HAIR, else her
-     default style. Done once the page's scripts have run; an open challenge card is redrawn. */
-  const KID_HAIR={'side-ponytail':'curly-buns','long-waves':'curly-bob','half-up-curls':'ringlet-pigtails'};
+     characters with free options. A brief that names one hairstyle for both, now that each doll has
+     her own styles, gets a per-character need instead: her counterpart from COUNTERPART_HAIR, else
+     her default style. Done once the page's scripts have run; an open challenge card is redrawn. */
+  const COUNTERPART_HAIR={little:{'side-ponytail':'curly-buns','long-waves':'curly-bob','half-up-curls':'ringlet-pigtails','flip-bob':'chin-bob-bangs','long-braids':'short-braids','space-buns':'curly-buns'},
+    adult:{'curly-bob':'flip-bob','curly-buns':'space-buns','ringlet-pigtails':'long-braids','chin-bob-bangs':'flip-bob','short-braids':'long-braids','wavy-crop':'long-waves'}};
   function fitBriefs(){
     if(typeof briefs==='undefined'||!Array.isArray(briefs))return;
     let changed=false;
     for(const b of briefs){
       const h=b.need?.hair;if(typeof h!=='string')continue;
-      const per={};
-      for(const doll of ['adult','little'])per[doll]=catalogOptions('hair',doll).some(i=>i.id===h)?h:(doll==='little'&&KID_HAIR[h]&&catalogOptions('hair',doll).some(i=>i.id===KID_HAIR[h])?KID_HAIR[h]:defaultLook(doll).hair);
+      const per={},wears=(doll,id)=>catalogOptions('hair',doll).some(i=>i.id===id)&&!price('item:'+id);
+      for(const doll of ['adult','little']){const c=COUNTERPART_HAIR[doll][h];per[doll]=wears(doll,h)?h:c&&wears(doll,c)?c:defaultLook(doll).hair}
       if(per.adult!==h||per.little!==h){b.need.hair=per;changed=true}
     }
     if(changed&&typeof challenge==='function')try{document.querySelectorAll('aside.challenge').forEach(el=>{el.outerHTML=challenge()})}catch{}
