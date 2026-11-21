@@ -60,6 +60,24 @@ HEAD = {"adult": {"front": (120, -10, 280, 158), "back": (120, -10, 280, 158),
         "little": {"front": (95, -10, 310, 215), "back": (95, -10, 310, 215),
                    "left": (-5, -10, 208, 215), "right": (-5, -10, 209, 215)}}
 HAIR_SUPERSAMPLE = 1.0    # shipped sprite px per doll px (the base dolls are drawn 1:1)
+# Styles redrawn in round 2 (art/source/round2/hairstyles/hair-fix-a, sliced by art/slice_round2_hair.py):
+# same ids, sprites from art/sprites/round2/hair and proofs from art/proofs/round2.
+ROUND2 = {"side-ponytail", "crimped-twists", "curly-bob"}
+ROUND2_PROOFS = ROOT / "art" / "proofs" / "round2"
+
+
+def sprite_path(item, view):
+    return (ROOT / "art" / "sprites" / "round2" if item in ROUND2 else PACK) / "hair" / f"{item}-{view}.webp"
+
+
+def load_manifest():
+    """The pack2 proof manifest with the round 2 styles' entries swapped in (their proof paths made
+    relative to the pack2 proof folder)."""
+    manifest = json.loads((PROOFS / "manifest.json").read_text())
+    r2 = json.loads((ROUND2_PROOFS / "manifest.json").read_text())["items"]
+    for item in ROUND2:
+        manifest["items"][item] = {v: dict(e, proof="../round2/" + e["proof"]) for v, e in r2[item].items()}
+    return manifest
 
 
 # ------------------------------------------------------------------ image helpers
@@ -210,7 +228,7 @@ def register(item, view, manifest, verbose=False, scales=None, ty_prior=None, ty
     doll = doll_of(item)
     e = proof_entry(manifest, item, view)
     proof = load(PROOFS / e["proof"])
-    sprite = load(PACK / "hair" / f"{item}-{view}.webp")
+    sprite = load(sprite_path(item, view))
     flagged = bool(e.get("flags"))
     hm = hair_mask(proof, sprite, e["offset"], flagged)
     base = load(DOLLS / f"{doll}-{view}.webp")
@@ -389,7 +407,7 @@ def main():
     ap.add_argument("--ship", action="store_true")
     ap.add_argument("--refit", action="store_true", help="reuse the saved registration, only rewrite the fits")
     args = ap.parse_args()
-    manifest = json.loads((PROOFS / "manifest.json").read_text())
+    manifest = load_manifest()
     regpath = PROOFS / "hair-registration.json"
     old = json.loads(regpath.read_text()) if regpath.exists() else {"items": {}}
     items = old.get("items", {})
@@ -397,7 +415,7 @@ def main():
     if args.refit:
         for item in ids:
             for view, r in items[item].items():
-                sprite = load(PACK / "hair" / f"{item}-{view}.webp")
+                sprite = load(sprite_path(item, view))
                 r["fit"] = sprite_fit(r, proof_entry(manifest, item, view), sprite)
         ids = []
     for item in ids:
@@ -469,7 +487,7 @@ def write_js(items):
     for item in ids:
         vals = []
         for view in VIEWS:
-            a = load(PACK / "hair" / f"{item}-{view}.webp").reshape(-1, 4)
+            a = load(sprite_path(item, view)).reshape(-1, 4)
             a = a[a[:, 3] > 200 / 255]
             vals.append((.299 * a[:, 0] + .587 * a[:, 1] + .114 * a[:, 2]) * 255)
         v = np.concatenate(vals)
@@ -484,7 +502,7 @@ def ship(items):
     SHIP.mkdir(parents=True, exist_ok=True)
     for item, views in items.items():
         for view, r in views.items():
-            src = PACK / "hair" / f"{item}-{view}.webp"
+            src = sprite_path(item, view)
             im = load(src)
             k = min(1.0, r["s"] * HAIR_SUPERSAMPLE)
             out, _ = resize(im, k)

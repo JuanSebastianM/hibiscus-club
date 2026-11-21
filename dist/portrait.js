@@ -388,6 +388,7 @@ function hairLayers(doll,view,id,colorId){
     if(fit.scalp!==false){const dv=dollView(doll,view);let force=null;
       if(fit.scalpFill){force=makeCanvas(full.width,full.height);const fg=ctx2d(force);fg.translate(...dv.origin);fg.fillStyle='#000';fg.beginPath();fit.scalpFill.forEach(sh=>shapePathInto(fg,sh));fg.fill()}
       scalpShow(full,await spriteCanvas(dv.art),dv.origin,CATALOG.dolls[doll].skin,force)}
+    if(fit.holeFill)holeFill(full,dollView(doll,view).origin,fit.holeFill);
     if(fit.cutDoll)eraseShapes(doll,view,full,fit.cutDoll);
     if(fit.soften){const dv=dollView(doll,view);softenHairline(full,await spriteCanvas(dv.art),dv.origin,fit.soften)}
     const under=fit.under?underHair(full,await spriteCanvas(dollView(doll,view).art),dollView(doll,view).origin,fit.under):null;
@@ -408,6 +409,20 @@ function hairLayers(doll,view,id,colorId){
     fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);fg.restore();
     return done({back:full,front});
   });
+}
+/* fit.holeFill: doll-local shapes inside which the hair's see-through pixels are backed with its own
+   colour, shadowed (a gap the style leaves at the temple, off her head, reads as hair behind it rather
+   than as a hole). The colour is the mean of the opaque hair round the shapes. */
+function holeFill(full,[ox,oy],shapes){
+  const W=full.width,H=full.height,g=full.getContext('2d'),im=g.getImageData(0,0,W,H),d=im.data;
+  const m=makeCanvas(W,H),mg=ctx2d(m);mg.translate(ox,oy);mg.fillStyle='#000';mg.beginPath();shapes.forEach(s=>shapePathInto(mg,s));mg.fill();
+  const md=mg.getImageData(0,0,W,H).data;
+  let n=0;const c=[0,0,0];
+  for(let i=0;i<W*H;i++){if(!md[i*4+3])continue;for(let k=-6;k<=6;k+=3){const q=(i+k)*4;if(d[q+3]>240){c[0]+=d[q];c[1]+=d[q+1];c[2]+=d[q+2];n++}}}
+  if(!n)return;
+  for(let i=0;i<W*H;i++){const w=md[i*4+3]/255;if(!w)continue;const q=i*4,a=d[q+3]/255;if(a>.99)continue;
+    const na=a+(1-a)*w;for(let k=0;k<3;k++)d[q+k]=(d[q+k]*a+c[k]/n*.68*(1-a)*w)/na;d[q+3]=na*255}
+  g.putImageData(im,0,0);
 }
 /* Hair behind the head (styles that cover the ears, front view). Between her cheek, ear, jaw and neck
    and the inner edge of the hair hanging beside them the art shows nothing, so the backdrop would read as

@@ -55,11 +55,11 @@ function poseFor(rig,anim,t,doll,seed=7,outfit){
   if(anim==='blink'){p.face.blink=[t,t];return p}
   if(anim==='jaw'){p.face.jaw=t*(rig.face?.jawMax||3);return p}
   if(anim==='smileface'){p.face.smile=t;p.face.squint=t*.6;return p}
-  const e=R.emotePose(anim,t,ctx);R.addPose(p,e.pose,1);
+  const e=R.emotePose(anim,t,ctx);R.addPose(p,e.pose,1);if(e.pose.raise)p.raise=e.pose.raise;
   return p;
 }
-async function frame({doll='adult',look=0,view='front',anim='idle',t=0,crop=null,scale=.6,bg='#cfe6d4',resident=null,pose=null}={}){
-  const opts=resident?{resident}:{shot:lookOf(doll,look),view};
+async function frame({doll='adult',look=0,view='front',anim='idle',t=0,crop=null,scale=.6,bg='#cfe6d4',resident=null,pose=null,shot=null}={}){
+  const opts=resident?{resident}:{shot:shot?{...shot,doll}:lookOf(doll,look),view};
   const cr=crop||(resident?[0,0,176,432]:[0,0,600,1060]);
   const c=document.createElement('canvas');c.width=Math.round(cr[2]*scale);c.height=Math.round(cr[3]*scale);
   const back=document.createElement('canvas');back.width=c.width;back.height=c.height;const bg2=back.getContext('2d');bg2.fillStyle=bg;bg2.fillRect(0,0,c.width,c.height);

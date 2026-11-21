@@ -180,9 +180,32 @@ test('emotes end, and a wave lifts the arm', () => {
     const end = R.emotePose(name, R.DURATION[name], ctx).pose;
     assert.ok(end.bones.every(b => Math.abs(b.r) < 1e-6), `${name} returns to rest`);
   }
-  // the full wave (kept for when RAISED_ARM_EMOTES comes back) lifts the hand above the shoulder
-  const wave = R.emotePose('wave', 1, ctx).pose, W = R.forward(rg, wave);
-  assert.ok(R.apply(W[R.B.hand1], rg.px.hand1)[1] < rg.px.sh1[1], 'the waving hand is above the shoulder');
+  // the raised-arm emotes cross-fade the posed arm in and out: none at the start and the end, full between
+  for (const [name, pose, arms] of [['wave', 'wave', [1, 0]], ['cheer', 'cheer', [1, 1]], ['pose', 'hip', [1, 0]]]) {
+    const at = t => R.emotePose(name, t, ctx).pose.raise;
+    assert.equal(at(0).pose, pose, name);
+    assert.deepEqual(at(0).w, [0, 0], `${name} starts on the standing arm`);
+    assert.deepEqual(at(R.DURATION[name] - .01).w, [0, 0], `${name} ends on the standing arm`);
+    assert.deepEqual(at(R.DURATION[name] / 2).w, arms, `${name} shows the posed arm(s)`);
+    // the posed hand is above the shoulder for the wave and the cheer, at the hip for the pose
+    const art = R.POSE_ARMS.adult[pose].arms[0];
+    if (pose === 'hip') assert.ok(art.hand[1] > art.el[1] && art.hand[0] > art.el[0], 'the hand comes back in to the hip');
+    else assert.ok(art.hand[1] < art.sh[1] - 40, `${name}: the hand is above the shoulder`);
+  }
+});
+test('raised-arm art: every pose of both dolls is on disk, registered on the doll, with its joints in order', () => {
+  for (const doll of DOLLS) for (const pose of Object.values(R.RAISED)) {
+    const s = R.POSE_ARMS[doll][pose];
+    assert.ok(s, `${doll} ${pose}`);
+    assert.ok(existsSync(new URL(s.file, dist)), s.file);
+    for (const [k, j] of Object.entries(s.arms)) {
+      for (const p of Object.values(j)) {
+        assert.ok(p[0] >= s.at[0] - 20 && p[0] <= s.at[0] + s.size[0] + 20 && p[1] >= s.at[1] - 20 && p[1] <= s.at[1] + s.size[1] + 20, `${doll} ${pose} joint inside its picture`);
+      }
+      // the arm is on its own side of the doll (0: the viewer's left)
+      assert.ok(+k === 0 ? j.sh[0] < 199 : j.sh[0] > 199, `${doll} ${pose} arm ${k} side`);
+    }
+  }
 });
 test('face displacement: the jaw opens only below the mouth line, tapering to the corners', () => {
   for (const doll of DOLLS) for (const view of ['front', 'left']) {
@@ -289,19 +312,24 @@ test('no side-eye: while SIDE_GLANCES is off, idle and emotes never pick a glanc
     }
   }
 });
-test('arm-safe emotes: while RAISED_ARM_EMOTES is off, no emote lifts an upper arm away from the body', () => {
+test('arm-safe emotes: raised arms only in the front view on bare or short sleeves; everywhere else no emote lifts an upper arm', () => {
   const CATALOG = loadCatalog();
-  assert.equal(R.RAISED_ARM_EMOTES, false);
+  assert.equal(R.RAISED_ARM_EMOTES, true);
   const outfits = CATALOG.itemList.filter(i => i.category === 'outfit');
   for (const it of outfits) assert.ok(['long', 'puff', 'none'].includes(R.sleevesOf(it.id)), it.id);
+  for (const id of R.RAISED_FALLBACK) assert.ok(outfits.some(o => o.id === id), `fallback ${id} is an outfit`);
   for (const doll of DOLLS) for (const view of VIEWS) {
     const rg = R.rig(doll, view), ctx = { seed: 1, doll, rig: rg };
     for (const it of outfits.filter(o => o.dolls.includes(doll))) for (const name of R.EMOTES) {
       const played = R.emoteFor(name, it.id, view);
-      if (R.ARM_SAFE[name]) assert.equal(played, R.ARM_SAFE[name], `${it.id} ${view} ${name}`);
+      const raised = view === 'front' && R.sleevesOf(it.id) !== 'long' && !R.RAISED_FALLBACK.has(it.id);
+      if (R.ARM_SAFE[name]) assert.equal(played, raised ? name : R.ARM_SAFE[name], `${it.id} ${view} ${name}`);
+      // a raised-arm emote replaces the standing arm (which only starts outward as it fades); the others
+      // keep it against the body
+      const max = R.RAISED[played] ? 14 : R.ARM_SAFE_MAX;
       for (let t = 0; t <= R.DURATION[played]; t += .05) {
         const pose = R.emotePose(played, t, ctx).pose;
-        for (const b of ['arm0', 'arm1']) assert.ok(Math.abs(pose.bones[R.B[b]].r) <= R.ARM_SAFE_MAX * R.DEG + 1e-9, `${doll} ${view} ${it.id} ${played} ${b} at ${t.toFixed(2)}: ${(pose.bones[R.B[b]].r / R.DEG).toFixed(1)} deg`);
+        for (const b of ['arm0', 'arm1']) assert.ok(Math.abs(pose.bones[R.B[b]].r) <= max * R.DEG + 1e-9, `${doll} ${view} ${it.id} ${played} ${b} at ${t.toFixed(2)}: ${(pose.bones[R.B[b]].r / R.DEG).toFixed(1)} deg`);
       }
     }
     // the hands stay below the shoulders in every arm-safe emote
