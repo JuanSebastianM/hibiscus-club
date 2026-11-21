@@ -453,13 +453,18 @@ const DecorLogic=(()=>{
       return x;
     };
     // the back wall's floor, less what lies in front of a door at the back wall
+    const cut=(segs,a,b)=>{const next=[];for(const [s0,s1] of segs){if(b<=s0||a>=s1){next.push([s0,s1]);continue}if(a>s0)next.push([s0,a]);if(b<s1)next.push([b,s1])}return next};
     let segs=[[l0+20,r0-20]];
-    for(const c of g.clear.filter(c=>c.y0<=yb+6)){
-      const a=c.x0-10,b=c.x1+10,next=[];
-      for(const [s0,s1] of segs){if(b<=s0||a>=s1){next.push([s0,s1]);continue}if(a>s0)next.push([s0,a]);if(b<s1)next.push([b,s1])}
-      segs=next;
-    }
+    for(const c of g.clear.filter(c=>c.y0<=yb+6))segs=cut(segs,c.x0-10,c.x1+10);
     let rows=order.map(c=>c.map(e=>({...e,w:widthOf(e.id)})));
+    // in a painted room the furniture also stands beside a window (overlapping its frame a little)
+    // rather than in front of it, when the room's centrepiece still fits beside one
+    if(g.painted){
+      let soft=segs;
+      for(const o of g.openings.filter(o=>o.kind==='window'&&o.y1>yb-260)){const k=(o.x1-o.x0)*.22;soft=cut(soft,o.x0+k,o.x1-k)}
+      const need=rows[0]?rows[0].reduce((s,e)=>s+e.w,0)+30:0;
+      if(soft.length>segs.length&&soft.some(([a,b])=>b-a>=need))segs=soft;
+    }
     if(segs.length===1){
       const avail=segs[0][1]-segs[0][0];
       const total=()=>rows.flat().reduce((s,e)=>s+e.w,0)+rows.length*30;

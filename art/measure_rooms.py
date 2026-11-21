@@ -264,9 +264,11 @@ def measure(name: str, img: Image.Image) -> tuple[dict, dict]:
     clear = []
     for o in opens:
         if o[4] in ("door", "arch") and o[3] >= yb - 4:
-            # the floor in front of a doorway at the back wall, a third of the way forward
-            # the doorway itself (its casing may be overlapped a little)
-            clear.append([o[0] + 36, yb, o[2] - 36, round(yb + (front - yb) * .38)])
+            # the floor in front of a doorway at the back wall, a third of the way forward: a walkway
+            # at least 1.6 m wide through the middle of the (wide, French) doors; furniture may
+            # stand in front of their outer leaves and casing
+            k = max(36, min(.27 * (o[2] - o[0]), (o[2] - o[0] - 1.6 * scale * PX_PER_M) / 2))
+            clear.append([round(o[0] + k), yb, round(o[2] - k), round(yb + (front - yb) * .38)])
     if "side" in h:
         s = h["side"]
         y0, y1 = min(s[1], s[3]) - 10, max(s[1], s[3]) + 30
