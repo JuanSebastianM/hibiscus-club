@@ -26,7 +26,8 @@ const LOOKS={
 };
 const lookOf=(doll,i)=>({...LOOKS[doll][i%LOOKS[doll].length],doll});
 /* The pose of an animation at time t (seconds). walk: t in seconds at the natural speed. */
-function poseFor(rig,anim,t,doll,seed=7){
+function poseFor(rig,anim,t,doll,seed=7,outfit){
+  anim=R.emoteFor(anim,outfit,rig.view);
   const ctx={seed,doll,rig,energy:1};
   if(anim==='rest')return R.restPose();
   const p=R.idlePose(t,ctx);
@@ -44,7 +45,7 @@ async function frame({doll='adult',look=0,view='front',anim='idle',t=0,crop=null
   const cr=crop||(resident?[0,0,176,432]:[0,0,600,1060]);
   const c=document.createElement('canvas');c.width=Math.round(cr[2]*scale);c.height=Math.round(cr[3]*scale);
   const back=document.createElement('canvas');back.width=c.width;back.height=c.height;const bg2=back.getContext('2d');bg2.fillStyle=bg;bg2.fillRect(0,0,c.width,c.height);
-  await HibiscusPuppet.debugRender(c,{...opts,view},rig=>pose?pose(rig):poseFor(rig,anim,t,resident?'resident':doll),{crop:cr,dest:[0,0,c.width,c.height],back});
+  await HibiscusPuppet.debugRender(c,{...opts,view},rig=>pose?pose(rig):poseFor(rig,anim,t,resident?'resident':doll,7,opts.shot?.outfit),{crop:cr,dest:[0,0,c.width,c.height],back});
   return c;
 }
 /* The still picture at the same framing. */

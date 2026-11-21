@@ -79,7 +79,9 @@ const HibiscusPuppet=(()=>{
     if(x<=P[1][0]){const [a,b]=[P[0],P[1]];return x<a[0]?a[1]:a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0])}
     const [a,b]=[P[1],P[2]];return x>b[0]?b[1]:a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);
   }
-  async function baseLabels(rg,dv){
+  /* ball: arms are ball joints (bare arms, puffed sleeves); otherwise (long sleeves) the whole shoulder
+     beyond the cut line belongs to the arm and bends smoothly. */
+  async function baseLabels(rg,dv,ball=true){
     const img=await spriteCanvas(dv.art),[ox,oy]=dv.origin,bw=img.width,bh=img.height;
     const bd=pixelsOf(img).data;
     const lab=new Uint8Array(W*H);
@@ -122,7 +124,7 @@ const HibiscusPuppet=(()=>{
         const [top,pit]=rg.armCut[a],sgn=a?1:-1,J=px['sh'+a];
         if(y>px['hand'+a][1]+14)continue;
         let edge;
-        if(y<pit[1]){if(Math.hypot(x-J[0],y-J[1])>capR)continue;edge=y<top[1]?top[0]:top[0]+(pit[0]-top[0])*(y-top[1])/(pit[1]-top[1])}
+        if(y<pit[1]){if(ball?Math.hypot(x-J[0],y-J[1])>capR:y<top[1]-30)continue;edge=y<top[1]?top[0]:top[0]+(pit[0]-top[0])*(y-top[1])/(pit[1]-top[1])}
         else edge=gap[a][y];
         if(sgn<0?x<edge:x>edge){l=a?L_ARM1:L_ARM0;break}
       }
@@ -230,7 +232,7 @@ const HibiscusPuppet=(()=>{
     fr[B.neck]=smooth(p.neck[1]+(rg.resident?5:10),p.neck[1]-(rg.resident?5:10),y);
     fr[B.head]=smooth(p.head[1]+(rg.resident?4:10),p.head[1]-(rg.resident?4:8),y);
   }
-  function chainFor(rg,kind,x,y,limb){
+  function chainFor(rg,kind,x,y,limb,fan=false){
     const fr=new Float32Array(NB),p=rg.px,P=[x,y];
     torsoFr(rg,y,fr);
     if(kind==='hair'||kind==='headItem'){
@@ -241,7 +243,10 @@ const HibiscusPuppet=(()=>{
     }else if(kind==='arm'){
       const i=limb,sh=p['sh'+i],el=p['el'+i],wr=p['wr'+i],u1=unit(sh,el),u2=unit(el,wr);
       let f;
-      f=1; // rigid about the shoulder (a ball joint): the torso keeps its own shoulder underneath
+      // bare arms and puffed sleeves: rigid about the shoulder (a ball joint; the torso keeps its own
+      // shoulder underneath); long sleeves: the shoulder bends smoothly away from the cut line
+      if(rg.side||!fan)f=1;
+      else{const [top,pit]=rg.armCut[i],n=unit(top,pit);f=smooth(3,24,Math.abs((x-top[0])*n[1]-(y-top[1])*n[0]))}
       for(const b of [B.spine,B.chest])fr[b]=lerp(fr[b],1,f);
       fr[B.neck]*=1-f;fr[B.head]*=1-f;
       fr[B['arm'+i]]=f;fr[B['fore'+i]]=smooth(-10,10,dot(P,el,u1));fr[B['hand'+i]]=smooth(-6,6,dot(P,wr,u2));
@@ -397,7 +402,8 @@ const HibiscusPuppet=(()=>{
   async function buildDollModel(shot,view){
     const layers=await composeDollLayers(shot,view);await later();
     const rg=R.dressedRig(layers.doll,view,layers.shot.outfit),dv=dollView(layers.doll,view);
-    const {lab,armMask}=await baseLabels(rg,dv);await later();
+    const fan=R.sleevesOf(layers.shot.outfit)==='long';
+    const {lab,armMask}=await baseLabels(rg,dv,!fan);await later();
     const kindOutfit=R.outfitKind(layers.shot.outfit),outfitFit=catalogItem(layers.shot.outfit)?.fit?.[layers.doll]?.[view]||{};
     const armIdx=layers.layers.findIndex(l=>l.kind==='arm');
     const groups={hairB:[],far:[],torso:[],legs:[],skirt:[],arms:[],hairF:[]};
@@ -440,12 +446,15 @@ const HibiscusPuppet=(()=>{
       }
       // front/back: a garment wider than the bare arm crosses the arm/body line measured on the bald
       // doll; below the armpit only what lies within a sleeve's reach of the arm bones goes with the arm
-      if(!rg.side&&L.kind!=='body'){
-        for(let y=Math.floor(Math.min(rg.armCut[0][1][1],rg.armCut[1][1][1]));y<H;y++)for(let x=ex[0];x<=ex[2];x++){
+      const sleeves=R.sleevesOf(layers.shot.outfit);
+      if(!rg.side&&L.kind!=='body'&&sleeves!=='long'){
+        for(let y=ex[1];y<H;y++)for(let x=ex[0];x<=ex[2];x++){
           const i=y*W+x,l=lb[i];if(l!==L_ARM0&&l!==L_ARM1)continue;
-          const a=l===L_ARM0?0:1;if(y<rg.armCut[a][1][1])continue;
-          // outward of the arm's axis everything is sleeve; toward the body only a sleeve's half-width
-          if((x-armAxisX(a,y))*(a?-1:1)>sleeveR)lb[i]=y>hipLineY(rg,x)?(x<px.root[0]?L_LEG0:L_LEG1):L_TORSO;
+          const a=l===L_ARM0?0:1;
+          if(y<rg.armCut[a][1][1]){if(sleeves==='puff')lb[i]=L_TORSO;continue}
+          // outward of the arm's axis everything is sleeve; toward the body only a sleeve's half-width;
+          // puffed sleeves stay on the shoulder down to the elbow (the arm comes out from under them)
+          if((x-armAxisX(a,y))*(a?-1:1)>sleeveR||(sleeves==='puff'&&y<px['el'+a][1]-6))lb[i]=y>hipLineY(rg,x)?(x<px.root[0]?L_LEG0:L_LEG1):L_TORSO;
         }
       }
       if(rg.side&&li>armIdx&&L.kind==='over')for(let i=0;i<lb.length;i++)if(overArm[i])lb[i]=L_ARM0;
@@ -467,9 +476,9 @@ const HibiscusPuppet=(()=>{
         // opens a hole at the hip (at rest the leg piece covers it exactly)
         // front/back: the torso keeps the shoulder disc under each arm, so a raised arm never opens a gap
         const member=P!==L_TORSO?i=>lb[i]===P:rg.side?i=>lb[i]===P||(lb[i]===L_LEG0&&Math.floor(i/W)<hipBand[i%W])
-          :i=>lb[i]===P||((lb[i]===L_ARM0||lb[i]===L_ARM1)&&Math.floor(i/W)<shoulderBelow);
+          :fan?i=>lb[i]===P:i=>lb[i]===P||((lb[i]===L_ARM0||lb[i]===L_ARM1)&&Math.floor(i/W)<shoulderBelow);
         const kind=P===L_ARM0||P===L_ARM1?'arm':P===L_LEG0||P===L_LEG1?'leg':P===L_SKIRT?'skirt':'torso';
-        const pc=makePiece(d,ex,member,{kind,limb:P===L_ARM1||P===L_LEG1?1:0,layer:L.kind,grid:P===L_HEAD?config.headGrid:config.grid,face:P===L_HEAD&&!!rg.face});
+        const pc=makePiece(d,ex,member,{kind,limb:P===L_ARM1||P===L_LEG1?1:0,fan:fan&&kind==='arm',layer:L.kind,grid:P===L_HEAD?config.headGrid:config.grid,face:P===L_HEAD&&!!rg.face});
         if(!pc)continue;
         groups[GROUP_OF[P]].push(pc);
         if(P===L_HEAD&&rg.face){overlaySrc=canvas;headPiece=pc;groups.torso.push({overlay:true})}
@@ -581,7 +590,7 @@ const HibiscusPuppet=(()=>{
     for(let v=0;v<n;v++){
       const x=m.pos[v*2],y=m.pos[v*2+1];
       uv[v*2]=(x-bx)/bw;uv[v*2+1]=(y-by)/bh;
-      pack(chainFor(rg,pc.kind,x,y,pc.limb||0),bones,frs,v);
+      pack(chainFor(rg,pc.kind,x,y,pc.limb||0,!!pc.fan),bones,frs,v);
       if(face){
         const below=m.below[v]===1;
         ['jaw','smile','wide','squint'].forEach((k,j)=>{const [dx,dy]=R.faceDisplace(rg.face,{[k]:1},x,y,below);face[v*8+j*2]=dx;face[v*8+j*2+1]=dy});
@@ -800,7 +809,7 @@ void main(){
       else if(!w.on)w.phase=Math.round(w.phase*2)/2; // settle on a double-support phase
       this.talkW=clamp(this.talkW+(this.t<this.talkUntil?dt/.15:-dt/.2),0,1);
       if(this.talkW>0)R.addPose(pose,R.talkPose(this.t,ctx),this.talkW);
-      if(this.emoteQ){const e=this.emoteQ;e.t+=dt;const r=R.emotePose(e.name,e.t,ctx);R.addPose(pose,r.pose,1);if(r.done)this.emoteQ=null}
+      if(this.emoteQ){const e=this.emoteQ;e.t+=dt;const r=R.emotePose(R.emoteFor(e.name,this.opts.shot?.outfit,this.view),e.t,ctx);R.addPose(pose,r.pose,1);if(r.done)this.emoteQ=null}
       // follow-through: hair lags the head, the skirt lags the hips
       const head=pose.bones[B.head],hips=pose.bones[B.hips];
       const hv=(hips.x-this.prevHipsX)/Math.max(dt,1e-3);this.prevHipsX=hips.x;

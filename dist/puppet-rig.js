@@ -104,6 +104,16 @@ const DOLL={
    never tears. SKIRT_TOP moves the skirt line (doll-local y, every view) for outfits whose top hangs
    below the usual waist (a jacket or cardigan over the skirt: its hem must not sway apart from its
    sleeves). */
+/* Sleeves that cannot be lifted overhead convincingly from a flat picture (long sleeves, jackets,
+   cardigans): these outfits get gentler arm emotes (see GENTLE). */
+const LONG_SLEEVES=new Set(['denim-jacket-skirt','black-flares-set','pink-velour-cargo','mint-cardigan-dress','star-pajamas']);
+/* How a garment's sleeves move with the arm (puppet.js): 'long' = the whole sleeve follows the arm;
+   'puff' = short puffed or tee sleeves stay on the shoulder and the arm comes out from under them;
+   anything else is sleeveless (a wide bodice is kept to the body, only what hugs the arm moves). */
+const SLEEVES={'hibiscus-flares':'puff','lilac-satin-bow-dress':'puff','lilac-cord-pinafore':'puff','denim-overalls':'puff'};
+for(const id of LONG_SLEEVES)SLEEVES[id]='long';
+/* emote -> its gentle variant, used with LONG_SLEEVES */
+const GENTLE={wave:'waveLow',cheer:'wiggle',pose:'poseSoft'};
 const SKIRT_TOP={'denim-jacket-skirt':{adult:415},'mint-cardigan-dress':{little:462}};
 const OUTFIT_KIND={'hibiscus-flares':'trousers','black-flares-set':'trousers','pink-velour-cargo':'trousers',
   'lilac-satin-bow-dress':'skirt','denim-jacket-skirt':'skirt','green-hibiscus-sundress':'skirt',
@@ -336,7 +346,13 @@ function talkPose(t,ctx){
   return p;
 }
 /* Emotes: one-shot clips. emotePose(name, t, ctx) -> {pose, done}. DURATION in seconds. */
-const DURATION={smile:1.8,laugh:1.9,wave:2.2,cheer:1.9,sway:1.7,shy:2.2,pose:1.5,nod:1};
+const DURATION={smile:1.8,laugh:1.9,wave:2.2,cheer:1.9,sway:1.7,shy:2.2,pose:1.5,nod:1,waveLow:2.2,wiggle:1.9,poseSoft:1.5};
+/* The emote actually played: long sleeves always use the gentle variants; puffed sleeves in profile too
+   (the near arm is only drawn below their hem there, so it cannot rise out from under them). */
+function emoteFor(name,outfit,view){
+  const sl=SLEEVES[outfit]||'none',side=view==='left'||view==='right';
+  return GENTLE[name]&&(sl==='long'||(sl==='puff'&&side))?GENTLE[name]:name;
+}
 function envelope(t,dur,a=.25,b=.4){return smooth(0,a,t)*(1-smooth(dur-b,dur,t))}
 function emotePose(name,t,ctx){
   const p=restPose(),kid=ctx.doll==='little',rg=ctx.rig||{},side=rg.side,dir=rg.dir||0,f=p.face;
@@ -352,13 +368,15 @@ function emotePose(name,t,ctx){
     }
     case 'wave':{
       const i=side?0:1,o=out(i),w=Math.sin(t*TAU*2.6)*e;
-      bone(p,'arm'+i).r=o*(kid?95:112)*DEG*e;bone(p,'fore'+i).r=o*(kid?55:48)*DEG*e+o*w*16*DEG;bone(p,'hand'+i).r=o*w*10*DEG;
+      // profile: the arm goes up above the shoulder, the hand waves above the head, clear of the face
+      bone(p,'arm'+i).r=o*(side?152:kid?95:112)*DEG*e;bone(p,'fore'+i).r=o*(side?12:kid?55:48)*DEG*e+o*w*(side?12:16)*DEG;bone(p,'hand'+i).r=o*w*10*DEG;
       f.smile=.8*e;f.squint=.4*e;bone(p,'head').r=(side?0:(i?1:-1)*2.5)*DEG*e;
       break;
     }
     case 'cheer':{
       const b=Math.abs(Math.sin(t*TAU*2.2)),wig=Math.sin(t*TAU*4.4);
-      for(const i of side?[0,1]:[0,1]){const o=out(i);bone(p,'arm'+i).r=o*(kid?132:146)*DEG*e+o*wig*5*DEG*e;bone(p,'fore'+i).r=o*(kid?20:14)*DEG*e}
+      // profile: the near arm goes straight up behind the face, never across it
+      for(const i of [0,1]){const o=out(i);bone(p,'arm'+i).r=o*(side?170:kid?132:146)*DEG*e+o*wig*5*DEG*e;bone(p,'fore'+i).r=o*(side?4:kid?20:14)*DEG*e}
       f.smile=e;f.jaw=(rg.face?.jawMax||3)*.65*e;f.squint=.8*e;f.laugh=e*.6;p.farAlpha=side?e:0;
       bone(p,'root').y=-b*(kid?7:9)*e;bone(p,'head').r=(side?dir*-4:0)*DEG*e;
       break;
@@ -385,6 +403,26 @@ function emotePose(name,t,ctx){
       break;
     }
     case 'nod':bone(p,'head').r=Math.sin(t*TAU*2)*3*DEG*e;f.smile=.4*e;break;
+    // gentle variants (long sleeves): arms stay low, the face and a bounce carry the feeling
+    case 'waveLow':{ // the arm lifted a little, the hand waving
+      const i=side?0:1,o=out(i),w=Math.sin(t*TAU*2.6)*e;
+      bone(p,'arm'+i).r=o*(side?30:35)*DEG*e;bone(p,'fore'+i).r=o*(side?18:14)*DEG*e+o*w*6*DEG;bone(p,'hand'+i).r=o*(10+w*20)*DEG*e;
+      f.smile=.8*e;f.squint=.4*e;bone(p,'head').r=(side?0:(i?1:-1)*3)*DEG*e;
+      break;
+    }
+    case 'wiggle':{ // a happy bounce: elbows in, hands up a little, shoulders and head bob, big smile
+      const b=Math.abs(Math.sin(t*TAU*2.2)),sw=Math.sin(t*TAU*1.1);
+      for(const i of [0,1]){const o=out(i);bone(p,'arm'+i).r=o*(side?-6:9)*DEG*e;bone(p,'fore'+i).r=o*(side?24:-22)*DEG*e}
+      bone(p,'root').y=-b*(kid?6:7)*e;bone(p,'chest').y=-b*1.5*e;bone(p,'head').r=(side?dir*-3:sw*4)*DEG*e;bone(p,'hips').x=(side?0:sw*4)*e;
+      f.smile=e;f.jaw=(rg.face?.jawMax||3)*.6*e;f.laugh=.8*e;f.squint=.8*e;
+      break;
+    }
+    case 'poseSoft':{ // runway pose without the bent elbow: weight on one hip, head tilt, arm a little out
+      bone(p,'hips').x=7*e;bone(p,'hips').r=-1.8*DEG*e;bone(p,'chest').r=1.6*DEG*e;bone(p,'head').r=-3.5*DEG*e;
+      if(!side){bone(p,'arm1').r=-8*DEG*e;bone(p,'arm0').r=3*DEG*e}
+      f.smile=e;f.squint=.5*e;
+      break;
+    }
   }
   return {pose:p,done:t>=dur};
 }
@@ -541,7 +579,7 @@ const api={TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIN
   views,rig,residentRig,toCanvas,expressionFor,expressionTargets,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
   restPose,copyPose,addPose,mixPose,localMatrix,forward,mul,apply,
   idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,
-  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,
+  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,LONG_SLEEVES,SLEEVES,sleevesOf:id=>SLEEVES[id]||'none',GENTLE,emoteFor,
   /* the rig of a view as dressed in an outfit (its own skirt line, canvas px) */
   dressedRig(doll,view,outfit){const rg=rig(doll,view),y=SKIRT_TOP[outfit]?.[doll];if(y===undefined)return rg;
     const srcView=view==='right'?'left':view;return {...rg,skirtTop:y+ORIGINS[doll][srcView][1]}}};

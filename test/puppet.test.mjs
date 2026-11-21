@@ -208,6 +208,33 @@ test('expression art: every doll and view names a sheet slot, and the face picks
   assert.equal(R.expressionFor({ ...base, smile: .9 }), 'big-smile');
   for (const k of ['laugh', 'surprise']) assert.ok(R.EXPRESSIONS.includes(R.expressionFor({ ...base, [k]: 1 })));
 });
+test('gentle emotes: long sleeves never lift overhead; puffed sleeves only in profile; every outfit has a sleeve class', () => {
+  const CATALOG = loadCatalog();
+  for (const it of CATALOG.itemList.filter(i => i.category === 'outfit')) {
+    const sl = R.sleevesOf(it.id);
+    assert.ok(['long', 'puff', 'none'].includes(sl), it.id);
+    for (const view of ['front', 'left']) for (const name of ['wave', 'cheer', 'pose']) {
+      const played = R.emoteFor(name, it.id, view);
+      if (sl === 'long' || (sl === 'puff' && view === 'left')) assert.equal(played, R.GENTLE[name], `${it.id} ${view} ${name}`);
+      else assert.equal(played, name);
+    }
+  }
+  // the gentle variants keep the hands below the shoulders and end at rest
+  for (const doll of DOLLS) for (const v of Object.values(R.GENTLE)) {
+    const rg = R.rig(doll, 'front'), ctx = { seed: 1, doll, rig: rg };
+    for (let t = 0; t < R.DURATION[v]; t += .1) {
+      const W = R.forward(rg, R.emotePose(v, t, ctx).pose);
+      for (const i of [0, 1]) assert.ok(R.apply(W[R.B['hand' + i]], rg.px['hand' + i])[1] > rg.px['sh' + i][1], `${doll} ${v} hand ${i} low`);
+    }
+    assert.ok(R.emotePose(v, R.DURATION[v], ctx).pose.bones.every(b => Math.abs(b.r) < 1e-6));
+  }
+  // profile cheers and waves keep the near hand off the face (behind the face's front)
+  for (const doll of DOLLS) for (const name of ['cheer', 'wave']) {
+    const rg = R.rig(doll, 'left'), W = R.forward(rg, R.emotePose(name, 1, { seed: 1, doll, rig: rg }).pose);
+    const hand = R.apply(W[R.B.hand0], rg.px.hand0), noseX = Math.min(...rg.face.mouth.map(p => p[0]));
+    assert.ok(hand[1] < rg.face.eyes[0][0][1] - 20 || hand[0] > noseX + 45, `${doll} profile ${name}: hand clear of the face`);
+  }
+});
 test('residents have every torso joint and a face', () => {
   for (const id of Object.keys(R.RESIDENTS)) {
     const rg = R.residentRig(id);
