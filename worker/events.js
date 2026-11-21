@@ -12,7 +12,7 @@
 const ROOMS = ['map', 'wardrobe', 'salon', 'booth', 'scrapbook', 'arcade', 'garden', 'runway', 'life', 'house'];
 const HOUSE_ROOMS = ['bedroom', 'kitchen', 'living', 'bathroom', 'playroom', 'patio'];
 const DECOR_CATEGORIES = [...HOUSE_ROOMS, 'walls', 'floor']; // where a placed Dream House piece comes from
-const DISTRICTS = ['boardwalk', 'market', 'pavilion', 'beach', 'park'];
+const DISTRICTS = ['boardwalk', 'market', 'pavilion', 'beach', 'park', 'icecream', 'treehouse'];
 const CATEGORIES = ['outfit', 'shoes', 'jewelry', 'hair', 'hair-color', 'makeup', 'nails', 'accessory'];
 const GAMES = ['memory', 'bouquet', 'runway'];
 
@@ -31,7 +31,7 @@ export const SCHEMA = {
     'game-start': GAMES,
     'game-done': GAMES,
     'chat': DISTRICTS,          // walked up to a resident and started a conversation
-    'errand': ['story-1', 'story-2', 'story-3', 'story-4', 'story-5', 'story-6'], // a story finished (each character has her own six)
+    'errand': ['story-1', 'story-2', 'story-3', 'story-4', 'story-5', 'story-6', 'story-7', 'story-8'], // a story finished (each character has her own eight)
     'photo': ['studio', ...DISTRICTS, 'house'], // postcard taken in the booth, detail = scenery; house = a Dream House room photo
     'daily': ['deliver', 'find', 'greet', 'compliment', 'tidy'], // a daily errand finished, detail = its template
     'findable': DISTRICTS,      // a hidden treasure picked up, detail = where

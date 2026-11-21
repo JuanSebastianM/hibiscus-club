@@ -618,6 +618,6 @@ function readLook(raw,doll){
   out.hairColor=CATALOG.hairColors.some(h=>h.id===v.hairColor)?v.hairColor:def.hairColor;
   for(const field of ['lips','blush','shadow','gem','nails'])
     out[field]=makeupOptions(field,doll).some(o=>o.id===v[field])?v[field]:(makeupOptions(field,doll).some(o=>o.id===def[field])?def[field]:'none');
-  out.frame=int(v.frame,3);out.sticker=int(v.sticker,3);out.backdrop=int(v.backdrop,3);
+  out.frame=int(v.frame,3);out.sticker=int(v.sticker,3);out.backdrop=int(v.backdrop,7); // the studio or one of the seven walk-in places (quests.js districts)
   return out;
 }

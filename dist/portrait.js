@@ -1137,7 +1137,7 @@ function portraitBackground(c,shot,postcard,geo,background){
   }
   if(scenic){
     const cropWidth=background.height*width/height;
-    const cropX=(background.width-cropWidth)*(shot.backdrop===3?.74:.52);
+    const cropX=(background.width-cropWidth)*(districts[shot.backdrop-1]?.postcard??.52); // each place's own crop (quests.js)
     c.drawImage(background,cropX,0,cropWidth,background.height,x,y,width,height);
     c.fillStyle='rgba(70,42,58,.24)';c.beginPath();
     c.ellipse(x+width/2,footY+k*6,k*120,k*20,0,0,Math.PI*2);c.fill();

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Living scenes lab</title>
 <!-- Living-scenes lab. Serve the repo root (e.g. python3 -m http.server 4205) and open /art/scenes-lab.html
-     Params: scene=island,boardwalk,market,pavilion,beach,park (default all) · size=desktop|phone|both (default both)
+     Params: scene=island,boardwalk,market,pavilion,beach,park,icecream,treehouse (default all) · size=desktop|phone|both (default both)
      debug=1 (fx mask: R water, G flow, B lights, white stars) | 2 (motion: R/G |vector|, B speed) | 3 (aux: R wind, G foam, B parallax, grey dapple)
      still=1 (WebGL with every effect at zero: framing check) · nofx=1 (plain CSS backgrounds only) · soft=1 (allow software WebGL)
      quality=auto|high · pins=0 (hide fake overlays). window.lab exposes the handles for scripted tests. -->
@@ -47,7 +47,7 @@ figcaption{font-size:12px;color:#7d5b72;margin-top:4px}
 <script src="../dist/scene-fx.js"></script>
 <script>
 const q=new URLSearchParams(location.search);
-const want=(q.get('scene')||'island,boardwalk,market,pavilion,beach,park').split(',');
+const want=(q.get('scene')||'island,boardwalk,market,pavilion,beach,park,icecream,treehouse').split(',');
 const sizes=q.get('size')==='desktop'?['desktop']:q.get('size')==='phone'?['phone']:['desktop','phone'];
 HibiscusScenes.config.debug=+(q.get('debug')||0);
 if(q.get('soft')==='1')HibiscusScenes.config.allowSoftwareGL=true;
@@ -59,9 +59,11 @@ const pins={
   market:[['Rosa','#8ebd89',57,73],['Flower stall','#8ebd89',82,54]],
   pavilion:[['Kit','#aa92c9',58,70],['Stage lamp','#aa92c9',28,48]],
   beach:[['Sol','#e3a04a',57.5,76],['Sandcastle kit','#e3a04a',77.5,69]],
-  park:[['Teo','#e27fa3',53,87],['Kite stand','#e27fa3',79,56]]
+  park:[['Teo','#e27fa3',53,87],['Kite stand','#e27fa3',79,56]],
+  icecream:[['Gigi','#ef8f7a',60,79],['Ice-cream cart','#ef8f7a',85.5,62]],
+  treehouse:[['Nina','#5f9e5a',64,87],['Treasure chest','#5f9e5a',23.5,65.5]]
 };
-const start={island:[.5,.62],boardwalk:[.43,.86],market:[.43,.86],pavilion:[.43,.86],beach:[.43,.86],park:[.43,.86]};
+const start={island:[.5,.62],boardwalk:[.43,.86],market:[.43,.86],pavilion:[.43,.86],beach:[.43,.86],park:[.43,.86],icecream:[.43,.86],treehouse:[.43,.9]};
 const lab=window.lab={stages:[],handles:[]};
 const out=document.querySelector('#out');
 for(const id of want){
