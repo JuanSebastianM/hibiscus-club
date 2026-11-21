@@ -1,6 +1,7 @@
 // Run with `node --test` from the repository root. Faces stay open: for every hairstyle on its doll
 // (front view, as composeDollLayers draws it), the hair in front of the face leaves the face region
-// (CATALOG.faceOpen: brows, outer eye corners, cheekbones, jaw, chin) uncovered, and the eyes fully.
+// (CATALOG.faceOpen: brows, outer eye corners, cheekbones, jaw, chin) uncovered, and the eyes fully;
+// and no background shows between her cheek, ear and jaw and the hair of a style that covers the ears.
 // Renders art/lab.html?sheet=faceopen in headless Chromium; skipped where Playwright is not installed.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -37,6 +38,10 @@ test('every hairstyle leaves her face open in the front view', { skip: !chromium
     for (const r of rows) {
       assert.ok(r.open >= OPEN_FLOOR, `${r.doll} ${r.hair}: ${(r.open * 100).toFixed(1)}% of the face uncovered`);
       assert.ok(r.eyes >= EYES_FLOOR, `${r.doll} ${r.hair}: ${(r.eyes * 100).toFixed(1)}% of the eyes uncovered`);
+      // no pale band between cheek/ear/jaw and hair: where the style covers the ears the hair meets her
+      // skin (at most a stray px); where the ears show, only loose strands may hang clear of the face
+      const maxHalo = r.earsCovered ? 0.05 : 2.5;
+      assert.ok(r.halo <= maxHalo, `${r.doll} ${r.hair}: ${r.halo.toFixed(2)} px of background between face and hair per row`);
     }
   } finally { await browser.close(); server.close() }
 });

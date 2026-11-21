@@ -356,7 +356,8 @@ function shoeLayers(doll,view,id,tintId){
    fit.cut = sprite polys removed; fit.scalpFill = doll-local shapes for scalpShow's force;
    fit.cutDoll = doll-local shapes removed; fit.soften = feathered hairline over skin (opt-in, see
    softenHairline); fit.shade = contact shadow (opt-in, see hairShade); fit.scalp=false turns off
-   the scalp shown through partings (scalpShow); fit.open = the face kept clear (openFace). */
+   the scalp shown through partings (scalpShow); fit.open = the face kept clear (openFace);
+   fit.under = hair behind the head where the style covers the ears (underHair). */
 function hairLayers(doll,view,id,colorId){
   const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
   if(!fit)return Promise.reject(new Error('Hair '+id+' does not fit '+doll+' '+view));
@@ -370,7 +371,10 @@ function hairLayers(doll,view,id,colorId){
       scalpShow(full,await spriteCanvas(dv.art),dv.origin,CATALOG.dolls[doll].skin,force)}
     if(fit.cutDoll)eraseShapes(doll,view,full,fit.cutDoll);
     if(fit.soften){const dv=dollView(doll,view);softenHairline(full,await spriteCanvas(dv.art),dv.origin,fit.soften)}
-    const done=r=>({...r,shade:hairShade(r.front,fit.shade)});
+    const under=fit.under?underHair(full,await spriteCanvas(dollView(doll,view).art),dollView(doll,view).origin,fit.under):null;
+    const done=r=>{if(under){const b=r.back||makeCanvas(full.width,full.height),bg=b.getContext('2d');
+      if(r.back){const c=makeCanvas(full.width,full.height),cg=c.getContext('2d');cg.drawImage(under,0,0);cg.drawImage(b,0,0);r={...r,back:c}}else{bg.drawImage(under,0,0);r={...r,back:b}}}
+      return {...r,shade:hairShade(r.front,fit.shade)}};
     if(fit.behind){ // the style is in front of the body except inside these shapes (e.g. the near arm)
       const [front,fg]=dollLayer(doll,view);fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);
       eraseShapes(doll,view,front,fit.behind);
@@ -385,6 +389,54 @@ function hairLayers(doll,view,id,colorId){
     fg.setTransform(1,0,0,1,0,0);fg.drawImage(full,0,0);fg.restore();
     return done({back:full,front});
   });
+}
+/* Hair behind the head (styles that cover the ears, front view). Between her cheek, ear, jaw and neck
+   and the inner edge of the hair hanging beside them the art shows nothing, so the backdrop would read as
+   a pale band. In rows y0..y1 (doll-local), on each side where the hair's inner edge is no more than
+   `gap` px outside her silhouette, a darker copy of that hair's own colour fills from the hair edge in to
+   her centre line; it is drawn behind the body, so only the strip between skin and hair shows, as the
+   shadowed hair at the back of her head and neck. Rows are smoothed so the fill follows the hair. */
+function underHair(full,base,[ox,oy],{y0,y1,gap=24,dark=.55}){
+  const W=full.width,H=full.height,d=ctx2d(full).getImageData(0,0,W,H).data;
+  const BW=base.width,bd=ctx2d(base).getImageData(0,0,BW,base.height).data,X0=Math.round(ox),Y0=Math.round(oy);
+  const body=(x,Y)=>{const bx=x-X0,by=Y-Y0;return bx>=0&&by>=0&&bx<BW&&by<base.height?bd[(by*BW+bx)*4+3]>100:false};
+  const A=Math.max(0,Math.round(y0+oy)),B=Math.min(H-1,Math.round(y1+oy)),n=B-A+1;if(n<=0)return null;
+  const side=[0,1].map(()=>({edge:new Float32Array(n).fill(NaN),col:new Float32Array(n*3)}));
+  for(let j=0;j<n;j++){
+    const Y=A+j;let l=-1,r=-1;
+    for(let x=0;x<W;x++)if(body(x,Y)){if(l<0)l=x;r=x}
+    if(l<0)continue;const cx=(l+r)/2;
+    for(const [s,start,dir] of [[0,l-1,-1],[1,r+1,1]]){
+      let x=start;while(Math.abs(x-start)<=gap&&x>=0&&x<W&&d[(Y*W+x)*4+3]<128)x+=dir;
+      if(Math.abs(x-start)>gap||x<0||x>=W)continue;
+      let n2=0,c=[0,0,0];for(let k=1;k<=8;k++){const q=(Y*W+x+dir*k)*4;if(x+dir*k<0||x+dir*k>=W||d[q+3]<200)continue;c[0]+=d[q];c[1]+=d[q+1];c[2]+=d[q+2];n2++}
+      if(!n2)continue;
+      side[s].edge[j]=x;for(let k=0;k<3;k++)side[s].col[j*3+k]=c[k]/n2;
+      side[s].cx=cx;
+    }
+  }
+  const out=makeCanvas(W,H),g=out.getContext('2d'),im=g.createImageData(W,H),o=im.data;let any=false;
+  for(const [s,S] of side.entries()){
+    for(let j=0;j<n;j++){
+      // a row without a measured edge between rows with one (a gap between curls) is filled from them
+      if(isNaN(S.edge[j])){let up=-1,dn=-1;for(let k=1;k<=16;k++){if(up<0&&j-k>=0&&!isNaN(S.edge[j-k]))up=j-k;if(dn<0&&j+k<n&&!isNaN(S.edge[j+k]))dn=j+k}
+        if(up<0||dn<0)continue}
+      // smoothed edge and colour over the rows around j that have hair
+      let e=0,w=0,c=[0,0,0];for(let k=-16;k<=16;k++){const q=j+k;if(q<0||q>=n||isNaN(S.edge[q]))continue;const ww=Math.max(.05,6-Math.abs(k));e+=S.edge[q]*ww;for(let m=0;m<3;m++)c[m]+=S.col[q*3+m]*ww;w+=ww}
+      e/=w;const raw=isNaN(S.edge[j])?e:S.edge[j],dir=s?1:-1,Y=A+j,cx=Math.round(S.cx??W/2);
+      // reach at least the row's own hair edge (no gap), tucked 2 px under it
+      const x1=Math.round(s?Math.max(raw,e):Math.min(raw,e))+dir*2;
+      const [xa,xb]=s?[cx,x1]:[x1,cx];
+      for(let x=Math.max(0,xa);x<=Math.min(W-1,xb);x++){
+        // texture: the row's own hair mirrored inward from its edge (12 px period), darkened
+        const k=Math.abs(x-raw)%24,xs=Math.round(raw)+dir*(k<12?k:24-k),q=(Y*W+x)*4,qs=(Y*W+xs)*4;
+        const ok=xs>=0&&xs<W&&d[qs+3]>200;
+        for(let m=0;m<3;m++)o[q+m]=(ok?d[qs+m]*.7+c[m]/w*.3:c[m]/w)*dark;o[q+3]=255;any=true;
+      }
+    }
+  }
+  if(!any)return null;
+  g.putImageData(im,0,0);return out;
 }
 /* Keep the face open. The styles were painted on heads a little narrower than hers, so the inner edges
    of the front curtains would cover her outer eye corners, cheeks and jaw. open = {rows:[[y, xl, xr],
@@ -825,7 +877,7 @@ async function dollOps(shot,view){
     shot.shoes==='none'?null:shoeLayers(doll,view,shot.shoes,shot.shoesTint),
     hairLayers(doll,view,shot.hair,shot.hairColor),
     shot.necklace==='none'?null:spriteItemLayer(doll,view,shot.necklace),
-    !earItem||earItem.stud?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint),
+    !earItem||earItem.stud||hairFit.earsUnder?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint), // ears covered: no earrings at all
     !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
   ]);
   const arm=sideView(view)?await armLayer(shot,view,body):null;
@@ -834,7 +886,7 @@ async function dollOps(shot,view){
   const clipAt=hairFit.clip||{},clipBehind=!!clipAt.behind;
   const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
   const drawProc=g=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
-  const stud=earItem?.stud&&dv.face?.lobes?earItem.stud:null;
+  const stud=earItem?.stud&&dv.face?.lobes&&!hairFit.earsUnder?earItem.stud:null;
   const drawStuds=g=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,view==='back'?'clutch':stud,x,y+dv.face.unit*(view==='back'?.02:.06),dv.face.unit*(view==='back'?.09:.15));g.restore()};
   // back view: earrings sit under the hair, so only show where the style leaves the ears free
   const earsUnder=!!hairFit.earsUnder||view==='back';
