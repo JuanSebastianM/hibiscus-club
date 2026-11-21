@@ -15,14 +15,26 @@ const LOOKS={
     {...D.adult,outfit:'denim-jacket-skirt',hair:'side-ponytail',shoes:'pink-chunky-sneakers',earrings:'gold-hoops'},
     {...D.adult,outfit:'lilac-satin-bow-dress',hair:'half-up-curls',shoes:'lilac-mary-jane-heels',hairColor:'honey',shadow:'lilac',lips:'bubblegum'},
     {...D.adult,outfit:'green-hibiscus-sundress',hair:'curly-buns',shoes:'lilac-mary-jane-heels',clip:'peach-blossom'},
-    {...D.adult,outfit:'pink-velour-cargo',hair:'ringlet-pigtails',shoes:'pink-chunky-sneakers',hairColor:'bubblegum'}],
+    {...D.adult,outfit:'pink-velour-cargo',hair:'ringlet-pigtails',shoes:'pink-chunky-sneakers',hairColor:'bubblegum'},
+    // second wardrobe (6..): trousers + long sleeves, short dress over leg warmers, skirt + puffs, shorts, sleeveless dress
+    {...D.adult,outfit:'aqua-velour-tracksuit',hair:'long-waves',shoes:'platform-boots'},
+    {...D.adult,outfit:'hoodie-dress-leg-warmers',hair:'side-ponytail',shoes:'fuzzy-slippers'},
+    {...D.adult,outfit:'tennis-dress',hair:'high-bun-tendrils',shoes:'pink-chunky-sneakers'},
+    {...D.adult,outfit:'tankini-board-shorts',hair:'long-braids',shoes:'flower-flip-flops'},
+    {...D.adult,outfit:'sequin-halter-dress',hair:'flip-bob',shoes:'wedge-sandals',necklace:'butterfly-necklace'}],
   little:[
     {...D.little},
     {...D.little,outfit:'denim-overalls',hair:'curly-buns',shoes:'white-velcro-sneakers'},
     {...D.little,outfit:'star-pajamas',hair:'curly-bob',shoes:'strawberry-rain-boots',hairColor:'chestnut'},
     {...D.little,outfit:'mint-cardigan-dress',hair:'curly-bob',shoes:'red-mary-janes',hairColor:'honey'},
     {...D.little,outfit:'pink-gingham-bow-dress',hair:'ringlet-pigtails'},
-    {...D.little,outfit:'lilac-cord-pinafore',hair:'curly-buns',shoes:'white-velcro-sneakers'}]
+    {...D.little,outfit:'lilac-cord-pinafore',hair:'curly-buns',shoes:'white-velcro-sneakers'},
+    // second wardrobe (6..)
+    {...D.little,outfit:'raincoat-set',hair:'curly-buns',shoes:'cowboy-boots'},
+    {...D.little,outfit:'tulle-party-dress',hair:'ringlet-pigtails',shoes:'jelly-shoes'},
+    {...D.little,outfit:'ballet-wrap-set',hair:'top-ponytail',shoes:'ballet-slippers'},
+    {...D.little,outfit:'dino-romper',hair:'curly-bob',shoes:'light-up-sneakers'},
+    {...D.little,outfit:'beach-poncho',hair:'tiny-pigtails',shoes:'toddler-sandals'}]
 };
 const lookOf=(doll,i)=>({...LOOKS[doll][i%LOOKS[doll].length],doll});
 /* The pose of an animation at time t (seconds). walk: t in seconds at the natural speed. */

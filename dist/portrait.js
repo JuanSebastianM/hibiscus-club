@@ -786,7 +786,7 @@ function tintSuit(d,w,h,{color,y0=0},info){
 function bareThighs(d,w,h,{y0,y1,band=36},c,arm){
   const A=(x,y)=>d[(y*w+x)*4+3];
   let keep=null;
-  if(arm){const m=makeCanvas(w,h),g=m.getContext('2d');pathPoly(g,arm);g.fill();keep=g.getImageData(0,0,w,h).data}
+  if(arm){const m=makeCanvas(w,h),g=ctx2d(m);pathPoly(g,arm);g.fill();keep=g.getImageData(0,0,w,h).data}
   const runs=y=>{const r=[];let s=-1;for(let x=0;x<=w;x++){const on=x<w&&A(x,y)>100;if(on&&s<0)s=x;else if(!on&&s>=0){r.push([s,x]);s=-1}}return r};
   const legs=y=>{const r=runs(y);if(!r.length)return [];
     if(c==null){const b=r.reduce((p,q)=>q[1]-q[0]>p[1]-p[0]?q:p);return [b]}
