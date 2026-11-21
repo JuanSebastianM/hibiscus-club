@@ -457,7 +457,7 @@ const HAIR_TUNE={
   /* drawn differently from its proof (a fuller bob, its swoop lower on the forehead): raised to the
      proof's hairline; seen from the right her forehead is flatter than the proof's, so the sheer
      hairline in front of it is moved onto her forehead */
-  'curly-bob':{little:{all:{earsUnder:true,dy:-8},right:{dx:4}}},
+  'curly-bob':{little:{all:{earsUnder:true,dy:-8},left:{scalpFill:[{ellipse:[29,40,6,6]}]},right:{dx:4,scalpFill:[{ellipse:[184,47,8,10]}]}}},
   /* her skull is a little rounder at the back than the toddler proofs': in profile these short styles
      grow 2-2.5% about the forehead so no scalp peeks out behind them */
   'pixie-sweep':{little:{left:{k:1.025,at:[40,130]},right:{k:1.025,at:[167,130]}}},
@@ -480,7 +480,7 @@ for(const it of items)if(it.category==='hair'){
       else if(layer==='neck')fit.front=view==='right'?mirrorShapes(FRONT_SIDE[doll],MIRROR[doll]):FRONT_SIDE[doll];
       else if(Array.isArray(layer))fit.front=layer;
       fit.clip={...CLIP_AT[doll][view],...t.clip};
-      for(const k of ['earsUnder','soften','shade','scalp','cut','cutDoll'])if(t[k]!==undefined)fit[k]=t[k];
+      for(const k of ['earsUnder','soften','shade','scalp','scalpFill','cut','cutDoll'])if(t[k]!==undefined)fit[k]=t[k];
       (it.fit[doll]??={})[view]=fit;
     }
   }

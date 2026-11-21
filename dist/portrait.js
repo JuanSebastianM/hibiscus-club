@@ -353,7 +353,7 @@ function shoeLayers(doll,view,id,tintId){
    fit.front shapes = doll-local regions drawn again in front of the body (the whole style is then
    also drawn behind it: lengths behind the shoulders and arms); fit.behind = the reverse, doll-local
    shapes where the style passes behind the body (e.g. the near arm in a side view, feathered);
-   fit.cut = sprite polys removed;
+   fit.cut = sprite polys removed; fit.scalpFill = doll-local shapes for scalpShow's force;
    fit.cutDoll = doll-local shapes removed; fit.soften = feathered hairline over skin (opt-in, see
    softenHairline); fit.shade = contact shadow (opt-in, see hairShade); fit.scalp=false turns off
    the scalp shown through partings (scalpShow). */
@@ -364,7 +364,9 @@ function hairLayers(doll,view,id,colorId){
     let src=await itemSprite(item,view,'main',null,colorId);
     if(fit.cut)src=maskSprite(src,{cut:fit.cut});
     const [full,g]=dollLayer(doll,view);drawFitted(g,src,fit);
-    if(fit.scalp!==false)scalpShow(full,await spriteCanvas(dollView(doll,view).art),dollView(doll,view).origin,CATALOG.dolls[doll].skin);
+    if(fit.scalp!==false){const dv=dollView(doll,view);let force=null;
+      if(fit.scalpFill){force=makeCanvas(full.width,full.height);const fg=ctx2d(force);fg.translate(...dv.origin);fg.fillStyle='#000';fg.beginPath();fit.scalpFill.forEach(sh=>shapePathInto(fg,sh));fg.fill()}
+      scalpShow(full,await spriteCanvas(dv.art),dv.origin,CATALOG.dolls[doll].skin,force)}
     if(fit.cutDoll)eraseShapes(doll,view,full,fit.cutDoll);
     if(fit.soften){const dv=dollView(doll,view);softenHairline(full,await spriteCanvas(dv.art),dv.origin,fit.soften)}
     const done=r=>({...r,shade:hairShade(r.front,fit.shade)});
@@ -387,8 +389,10 @@ function hairLayers(doll,view,id,colorId){
    painted head's scalp. Where her own head is a little smaller than the one the style was painted
    on, that scalp is missing and the backdrop would show through a parting. So inside the hair's
    closed silhouette (holes and partings narrower than ~2r px, not the face window or the outer
-   edge), and only off her own picture, the hair is composited over her skin tone, slightly shaded. */
-function scalpShow(full,base,[ox,oy],skin,r=4){
+   edge), and only off her own picture, the hair is composited over her skin tone, slightly shaded.
+   force = optional canvas: inside its shapes (fit.scalpFill, doll-local) this is done whatever the
+   hair's shape there, for sheer hairlines painted over a forehead that is not quite where hers is. */
+function scalpShow(full,base,[ox,oy],skin,force,r=4){
   const W=full.width,H=full.height,g=full.getContext('2d'),im=g.getImageData(0,0,W,H),d=im.data;
   const BW=base.width,BH=base.height,bd=ctx2d(base).getImageData(0,0,BW,BH).data,X0=Math.round(ox),Y0=Math.round(oy);
   const blur=(src,rad)=>{const t=new Float32Array(W*H),o=new Float32Array(W*H),k=2*rad+1;
@@ -405,12 +409,13 @@ function scalpShow(full,base,[ox,oy],skin,r=4){
   // never next to empty pixels: the outer edge (and its outline) stays as painted
   const empty=new Float32Array(W*H);for(let i=0;i<W*H;i++)if(d[i*4+3]<6)empty[i]=1;
   const nearEmpty=blur(empty,2);
-  const sk=skin.map(c=>c*.82);let changed=false;
+  const sk=skin.map(c=>c*.82),fd=force&&ctx2d(force).getImageData(0,0,W,H).data;let changed=false;
   for(let i=0;i<W*H;i++){
-    const a=d[i*4+3]/255;if(a>.98||ero[i]<.98||nearEmpty[i]>0)continue;
+    const a=d[i*4+3]/255;if(a>.98)continue;
+    if(!(fd&&fd[i*4+3]>128)&&(ero[i]<.98||nearEmpty[i]>0))continue;
     const x=i%W,y=(i/W)|0,bx=x-X0,by=y-Y0;
     const body=bx>=0&&by>=0&&bx<BW&&by<BH?bd[(by*BW+bx)*4+3]/255:0;
-    const f=1-body;if(f<=0)continue;
+    const forced=fd&&fd[i*4+3]>128,f=forced?1:1-body;if(f<=0)continue; // forced: fully, her own edge is antialiased there
     const na=a+(1-a)*f;
     for(let j=0;j<3;j++)d[i*4+j]=(d[i*4+j]*a+sk[j]*(1-a)*f)/na;
     d[i*4+3]=na*255;changed=true;

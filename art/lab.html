@@ -188,7 +188,7 @@ Object.assign(sheets,{
         const look=L(d,{hair:h,clip:'none',earrings:'none',necklace:'none',...(c?{hairColor:c}:{}),...extra}),sc=q.get('scale')?scale:(d==='adult'?1.6:1.3);
         await tile(h+' '+(c||'')+' '+v+' game',look,{zoom:fullBox(d,v).map((n,i)=>i===3?560:n),scale:gk,view:v});
         await tile(h+' '+(c||'')+' '+v,look,{zoom:box[d][v],scale:sc,view:v});
-        const r=reg[h]?.[v];if(!r||c)continue;
+        const r=reg[h]?.[v];if(!r||c&&c!==colors[0])continue;
         const img=new Image();img.src='/art/proofs/pack2/hair/'+h+'-'+v+'.webp';await img.decode();
         const [x,y,w,hh]=box[d][v],t=document.createElement('canvas');t.width=Math.round(w*sc);t.height=Math.round(hh*sc);
         const g=t.getContext('2d');g.fillStyle='#cfe6d4';g.fillRect(0,0,t.width,t.height);g.scale(sc,sc);g.translate(-x,-y);
