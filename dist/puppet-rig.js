@@ -114,6 +114,16 @@ const SLEEVES={'hibiscus-flares':'puff','lilac-satin-bow-dress':'puff','lilac-co
 for(const id of LONG_SLEEVES)SLEEVES[id]='long';
 /* emote -> its gentle variant, used with LONG_SLEEVES */
 const GENTLE={wave:'waveLow',cheer:'wiggle',pose:'poseSoft'};
+/* RAISED_ARM_EMOTES: the full wave, cheer and hand-on-hip pose lift the upper arm away from the body,
+   which the cut-out shoulders cannot show cleanly yet. While false, every outfit in every view plays
+   the arm-safe versions (ARM_SAFE: the upper arm stays against the body); set it to true once the
+   shoulder joints are fixed. Arms still swing when walking. */
+const RAISED_ARM_EMOTES=false;
+/* the emotes the game asks for (the rest of DURATION are variants chosen by emoteFor) */
+const EMOTES=['smile','laugh','wave','cheer','sway','shy','pose','nod'];
+const ARM_SAFE={wave:'waveSafe',cheer:'wiggle',pose:'poseSafe'};
+/* the largest upper-arm rotation (degrees) an arm-safe emote may use */
+const ARM_SAFE_MAX=4;
 const SKIRT_TOP={'denim-jacket-skirt':{adult:415},'mint-cardigan-dress':{little:462}};
 const OUTFIT_KIND={'hibiscus-flares':'trousers','black-flares-set':'trousers','pink-velour-cargo':'trousers',
   'lilac-satin-bow-dress':'skirt','denim-jacket-skirt':'skirt','green-hibiscus-sundress':'skirt',
@@ -346,10 +356,11 @@ function talkPose(t,ctx){
   return p;
 }
 /* Emotes: one-shot clips. emotePose(name, t, ctx) -> {pose, done}. DURATION in seconds. */
-const DURATION={smile:1.8,laugh:1.9,wave:2.2,cheer:1.9,sway:1.7,shy:2.2,pose:1.5,nod:1,waveLow:2.2,wiggle:1.9,poseSoft:1.5};
+const DURATION={smile:1.8,laugh:1.9,wave:2.2,cheer:1.9,sway:1.7,shy:2.2,pose:1.5,nod:1,waveLow:2.2,wiggle:1.9,poseSoft:1.5,waveSafe:2,poseSafe:1.5};
 /* The emote actually played: long sleeves always use the gentle variants; puffed sleeves in profile too
    (the near arm is only drawn below their hem there, so it cannot rise out from under them). */
 function emoteFor(name,outfit,view){
+  if(!RAISED_ARM_EMOTES&&ARM_SAFE[name])return ARM_SAFE[name];
   const sl=SLEEVES[outfit]||'none',side=view==='left'||view==='right';
   return GENTLE[name]&&(sl==='long'||(sl==='puff'&&side))?GENTLE[name]:name;
 }
@@ -385,13 +396,13 @@ function emotePose(name,t,ctx){
       const w=Math.sin(t/dur*TAU*2)*e;
       bone(p,'root').r=w*(kid?3.2:2.6)*DEG;bone(p,'hips').x=w*(kid?5:6);bone(p,'chest').r=-w*1.4*DEG;bone(p,'head').r=-w*2.4*DEG;
       bone(p,'skirt0').r=w*4*DEG;bone(p,'skirt1').r=w*4*DEG;
-      if(!side){bone(p,'arm0').r=(6+w*3)*DEG*e;bone(p,'arm1').r=-(6-w*3)*DEG*e}
+      if(!side){bone(p,'arm0').r=(2.5+w*1.2)*DEG*e;bone(p,'arm1').r=-(2.5-w*1.2)*DEG*e}
       f.smile=e;f.squint=.5*e;
       break;
     }
     case 'shy':{
       f.smile=.65*e;f.squint=.3*e;bone(p,'head').r=(side?dir*-6:7)*DEG*e;bone(p,'neck').r=(side?0:2)*DEG*e;bone(p,'chest').y=-2.2*e;
-      if(!side){bone(p,'arm0').r=-5*DEG*e;bone(p,'arm1').r=5*DEG*e;bone(p,'fore0').r=-18*DEG*e;bone(p,'fore1').r=18*DEG*e}
+      if(!side){bone(p,'arm0').r=-3*DEG*e;bone(p,'arm1').r=3*DEG*e;bone(p,'fore0').r=-18*DEG*e;bone(p,'fore1').r=18*DEG*e}
       bone(p,'root').r=Math.sin(t*TAU*.9)*1.2*DEG*e;
       f.glance=side?0:-.7*e;
       break;
@@ -412,9 +423,21 @@ function emotePose(name,t,ctx){
     }
     case 'wiggle':{ // a happy bounce: elbows in, hands up a little, shoulders and head bob, big smile
       const b=Math.abs(Math.sin(t*TAU*2.2)),sw=Math.sin(t*TAU*1.1);
-      for(const i of [0,1]){const o=out(i);bone(p,'arm'+i).r=o*(side?-6:9)*DEG*e;bone(p,'fore'+i).r=o*(side?24:-22)*DEG*e}
-      bone(p,'root').y=-b*(kid?6:7)*e;bone(p,'chest').y=-b*1.5*e;bone(p,'head').r=(side?dir*-3:sw*4)*DEG*e;bone(p,'hips').x=(side?0:sw*4)*e;
+      for(const i of [0,1]){const o=out(i);bone(p,'arm'+i).r=o*(side?-3:3)*DEG*e;bone(p,'fore'+i).r=o*(side?14:-6)*DEG*e}
+      bone(p,'root').y=-b*(kid?6:7)*e;bone(p,'head').r=(side?dir*-3:sw*4)*DEG*e;bone(p,'hips').x=(side?0:sw*4)*e;
       f.smile=e;f.jaw=(rg.face?.jawMax||3)*.6*e;f.laugh=.8*e;f.squint=.8*e;
+      break;
+    }
+    case 'waveSafe':{ // a friendly hello without lifting the arm: head tilt, a little bob, a big smile
+      const i=side?0:1,b=Math.abs(Math.sin(t*TAU*1.6));
+      bone(p,'head').r=(side?dir*-4:(i?1:-1)*5.5)*DEG*e;bone(p,'neck').r=(side?0:(i?1:-1)*1.5)*DEG*e;
+      bone(p,'root').y=-b*(kid?3:2.5)*e; // the whole body bobs: no part moves against another
+      f.smile=e;f.squint=.6*e;
+      break;
+    }
+    case 'poseSafe':{ // weight on one hip, head tilt, smile; arms as at rest
+      bone(p,'hips').x=7*e;bone(p,'hips').r=-1.8*DEG*e;bone(p,'chest').r=1.6*DEG*e;bone(p,'head').r=-3.5*DEG*e;
+      f.smile=e;f.squint=.5*e;
       break;
     }
     case 'poseSoft':{ // runway pose without the bent elbow: weight on one hip, head tilt, arm a little out
@@ -596,7 +619,7 @@ const api={TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIN
   views,rig,residentRig,toCanvas,expressionFor,expressionTargets,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
   restPose,copyPose,addPose,mixPose,localMatrix,forward,mul,apply,
   idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,GAIT_FAST,gait,paceFor,
-  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,LONG_SLEEVES,SLEEVES,sleevesOf:id=>SLEEVES[id]||'none',GENTLE,emoteFor,
+  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,LONG_SLEEVES,RAISED_ARM_EMOTES,EMOTES,ARM_SAFE,ARM_SAFE_MAX,SLEEVES,sleevesOf:id=>SLEEVES[id]||'none',GENTLE,emoteFor,
   /* the rig of a view as dressed in an outfit (its own skirt line, canvas px) */
   dressedRig(doll,view,outfit){const rg=rig(doll,view),y=SKIRT_TOP[outfit]?.[doll];if(y===undefined)return rg;
     const srcView=view==='right'?'left':view;return {...rg,skirtTop:y+ORIGINS[doll][srcView][1]}}};

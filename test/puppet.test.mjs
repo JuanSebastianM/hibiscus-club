@@ -180,6 +180,7 @@ test('emotes end, and a wave lifts the arm', () => {
     const end = R.emotePose(name, R.DURATION[name], ctx).pose;
     assert.ok(end.bones.every(b => Math.abs(b.r) < 1e-6), `${name} returns to rest`);
   }
+  // the full wave (kept for when RAISED_ARM_EMOTES comes back) lifts the hand above the shoulder
   const wave = R.emotePose('wave', 1, ctx).pose, W = R.forward(rg, wave);
   assert.ok(R.apply(W[R.B.hand1], rg.px.hand1)[1] < rg.px.sh1[1], 'the waving hand is above the shoulder');
 });
@@ -220,32 +221,30 @@ test('expression art: every doll and view names a sheet slot, and the face picks
   assert.equal(R.expressionFor({ ...base, smile: .9 }), 'big-smile');
   for (const k of ['laugh', 'surprise']) assert.ok(R.EXPRESSIONS.includes(R.expressionFor({ ...base, [k]: 1 })));
 });
-test('gentle emotes: long sleeves never lift overhead; puffed sleeves only in profile; every outfit has a sleeve class', () => {
+test('arm-safe emotes: while RAISED_ARM_EMOTES is off, no emote lifts an upper arm away from the body', () => {
   const CATALOG = loadCatalog();
-  for (const it of CATALOG.itemList.filter(i => i.category === 'outfit')) {
-    const sl = R.sleevesOf(it.id);
-    assert.ok(['long', 'puff', 'none'].includes(sl), it.id);
-    for (const view of ['front', 'left']) for (const name of ['wave', 'cheer', 'pose']) {
+  assert.equal(R.RAISED_ARM_EMOTES, false);
+  const outfits = CATALOG.itemList.filter(i => i.category === 'outfit');
+  for (const it of outfits) assert.ok(['long', 'puff', 'none'].includes(R.sleevesOf(it.id)), it.id);
+  for (const doll of DOLLS) for (const view of VIEWS) {
+    const rg = R.rig(doll, view), ctx = { seed: 1, doll, rig: rg };
+    for (const it of outfits.filter(o => o.dolls.includes(doll))) for (const name of R.EMOTES) {
       const played = R.emoteFor(name, it.id, view);
-      if (sl === 'long' || (sl === 'puff' && view === 'left')) assert.equal(played, R.GENTLE[name], `${it.id} ${view} ${name}`);
-      else assert.equal(played, name);
+      if (R.ARM_SAFE[name]) assert.equal(played, R.ARM_SAFE[name], `${it.id} ${view} ${name}`);
+      for (let t = 0; t <= R.DURATION[played]; t += .05) {
+        const pose = R.emotePose(played, t, ctx).pose;
+        for (const b of ['arm0', 'arm1']) assert.ok(Math.abs(pose.bones[R.B[b]].r) <= R.ARM_SAFE_MAX * R.DEG + 1e-9, `${doll} ${view} ${it.id} ${played} ${b} at ${t.toFixed(2)}: ${(pose.bones[R.B[b]].r / R.DEG).toFixed(1)} deg`);
+      }
     }
-  }
-  // the gentle variants keep the hands below the shoulders and end at rest
-  for (const doll of DOLLS) for (const v of Object.values(R.GENTLE)) {
-    const rg = R.rig(doll, 'front'), ctx = { seed: 1, doll, rig: rg };
-    for (let t = 0; t < R.DURATION[v]; t += .1) {
+    // the hands stay below the shoulders in every arm-safe emote
+    for (const v of Object.values(R.ARM_SAFE)) for (let t = 0; t < R.DURATION[v]; t += .1) {
       const W = R.forward(rg, R.emotePose(v, t, ctx).pose);
-      for (const i of [0, 1]) assert.ok(R.apply(W[R.B['hand' + i]], rg.px['hand' + i])[1] > rg.px['sh' + i][1], `${doll} ${v} hand ${i} low`);
+      for (const i of [0, 1]) assert.ok(R.apply(W[R.B['hand' + i]], rg.px['hand' + i])[1] > rg.px['sh' + i][1] + 40, `${doll} ${view} ${v} hand ${i} low`);
     }
-    assert.ok(R.emotePose(v, R.DURATION[v], ctx).pose.bones.every(b => Math.abs(b.r) < 1e-6));
   }
-  // profile cheers and waves keep the near hand off the face (behind the face's front)
-  for (const doll of DOLLS) for (const name of ['cheer', 'wave']) {
-    const rg = R.rig(doll, 'left'), W = R.forward(rg, R.emotePose(name, 1, { seed: 1, doll, rig: rg }).pose);
-    const hand = R.apply(W[R.B.hand0], rg.px.hand0), noseX = Math.min(...rg.face.mouth.map(p => p[0]));
-    assert.ok(hand[1] < rg.face.eyes[0][0][1] - 20 || hand[0] > noseX + 45, `${doll} profile ${name}: hand clear of the face`);
-  }
+  // walking still swings the arms
+  const rg = R.rig('adult', 'left'), w = R.walkPose(0, { seed: 1, doll: 'adult', rig: rg });
+  assert.ok(Math.abs(w.bones[R.B.arm0].r) > 5 * R.DEG, 'arms swing when walking');
 });
 test('residents have every torso joint and a face', () => {
   for (const id of Object.keys(R.RESIDENTS)) {

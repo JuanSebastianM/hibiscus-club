@@ -70,9 +70,10 @@ const HibiscusPuppet=(()=>{
   const dot=(p,o,u)=>(p[0]-o[0])*u[0]+(p[1]-o[1])*u[1];
 
   /* ---------- region labels (canvas px) ---------- */
-  const L_TORSO=0,L_ARM0=1,L_ARM1=2,L_LEG0=3,L_LEG1=4,L_SKIRT=5,L_HEAD=6;
-  const ORDER=[L_TORSO,L_HEAD,L_LEG0,L_LEG1,L_SKIRT,L_ARM0,L_ARM1];
-  const GROUP_OF={[L_TORSO]:'torso',[L_HEAD]:'torso',[L_LEG0]:'legs',[L_LEG1]:'legs',[L_SKIRT]:'skirt',[L_ARM0]:'arms',[L_ARM1]:'arms'};
+  // L_PUFF: a puffed sleeve that stays on the shoulder, drawn over the arm that comes out from under it
+  const L_TORSO=0,L_ARM0=1,L_ARM1=2,L_LEG0=3,L_LEG1=4,L_SKIRT=5,L_HEAD=6,L_PUFF=7;
+  const ORDER=[L_TORSO,L_HEAD,L_LEG0,L_LEG1,L_SKIRT,L_ARM0,L_ARM1,L_PUFF];
+  const GROUP_OF={[L_TORSO]:'torso',[L_HEAD]:'torso',[L_LEG0]:'legs',[L_LEG1]:'legs',[L_SKIRT]:'skirt',[L_ARM0]:'arms',[L_ARM1]:'arms',[L_PUFF]:'over'};
   function hipLineY(rg,x){
     const P=rg.hipLine;
     if(P.length===2){const [a,b]=P;return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0])}
@@ -185,12 +186,17 @@ const HibiscusPuppet=(()=>{
     const cw=x1-x0,ch=y1-y0;
     const own=new Uint8Array(cw*ch);
     for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++){const i=y*W+x;if(d[i*4+3]&&member(i))own[(y-y0)*cw+x-x0]=1}
+    // the hard mask reaches 1 px past the piece where the layer is fully opaque: neighbouring pieces of
+    // the layer then overlap by identical pixels, so no hairline can open between them at any scale
+    const msk=new Uint8Array(own);
+    if(!whole)for(let y=1;y<ch-1;y++)for(let x=1;x<cw-1;x++){const k=y*cw+x;if(own[k])continue;
+      if(!(own[k-1]||own[k+1]||own[k-cw]||own[k+cw]))continue;const i=(y+y0)*W+x+x0;if(d[i*4+3]===255)msk[k]=1}
     const reach=whole?own:dilateBox(own,cw,ch,R2);
     const c=mk(cw,ch),g=g2(c),im=g.createImageData(cw,ch),o=im.data;
     for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){if(!reach[y*cw+x])continue;const i=(y+y0)*W+x+x0,k=(y*cw+x)*4;o[k]=d[i*4];o[k+1]=d[i*4+1];o[k+2]=d[i*4+2];o[k+3]=d[i*4+3]}
     g.putImageData(im,0,0);
     let mask=null;
-    if(!whole){mask=mk(cw,ch);const mg=mask.getContext('2d'),mi=mg.createImageData(cw,ch);for(let k=0;k<own.length;k++)if(own[k]){mi.data[k*4]=mi.data[k*4+1]=mi.data[k*4+2]=mi.data[k*4+3]=255}mg.putImageData(mi,0,0)}
+    if(!whole){mask=mk(cw,ch);const mg=mask.getContext('2d'),mi=mg.createImageData(cw,ch);for(let k=0;k<msk.length;k++)if(msk[k]){mi.data[k*4]=mi.data[k*4+1]=mi.data[k*4+2]=mi.data[k*4+3]=255}mg.putImageData(mi,0,0)}
     return {...spec,canvas:c,mask,box:[x0,y0,cw,ch],alpha:reach};
   }
   function dilateBox(m,w,h,r){
@@ -406,7 +412,7 @@ const HibiscusPuppet=(()=>{
     const {lab,armMask}=await baseLabels(rg,dv,!fan);await later();
     const kindOutfit=R.outfitKind(layers.shot.outfit),outfitFit=catalogItem(layers.shot.outfit)?.fit?.[layers.doll]?.[view]||{};
     const armIdx=layers.layers.findIndex(l=>l.kind==='arm');
-    const groups={hairB:[],far:[],torso:[],legs:[],skirt:[],arms:[],hairF:[]};
+    const groups={hairB:[],far:[],torso:[],legs:[],skirt:[],arms:[],over:[],hairF:[]};
     let overlaySrc=null,headPiece=null;
     const armR=layers.doll==='little'?27:26,sleeveR=layers.doll==='little'?24:22,px=rg.px;
     // x of arm a's axis (shoulder, elbow, wrist, hand) at canvas row y
@@ -451,10 +457,11 @@ const HibiscusPuppet=(()=>{
         for(let y=ex[1];y<H;y++)for(let x=ex[0];x<=ex[2];x++){
           const i=y*W+x,l=lb[i];if(l!==L_ARM0&&l!==L_ARM1)continue;
           const a=l===L_ARM0?0:1;
-          if(y<rg.armCut[a][1][1]){if(sleeves==='puff')lb[i]=L_TORSO;continue}
+          if(y<rg.armCut[a][1][1]){if(sleeves==='puff')lb[i]=L_PUFF;continue}
           // outward of the arm's axis everything is sleeve; toward the body only a sleeve's half-width;
           // puffed sleeves stay on the shoulder down to the elbow (the arm comes out from under them)
-          if((x-armAxisX(a,y))*(a?-1:1)>sleeveR||(sleeves==='puff'&&y<px['el'+a][1]-6))lb[i]=y>hipLineY(rg,x)?(x<px.root[0]?L_LEG0:L_LEG1):L_TORSO;
+          if(sleeves==='puff'&&y<px['el'+a][1]-6)lb[i]=L_PUFF;
+          else if((x-armAxisX(a,y))*(a?-1:1)>sleeveR)lb[i]=y>hipLineY(rg,x)?(x<px.root[0]?L_LEG0:L_LEG1):L_TORSO;
         }
       }
       if(rg.side&&li>armIdx&&L.kind==='over')for(let i=0;i<lb.length;i++)if(overArm[i])lb[i]=L_ARM0;
@@ -497,7 +504,7 @@ const HibiscusPuppet=(()=>{
       }
     }
     // front and back: a flared skirt lies over the hands (as in the still picture); side views: the near arm is in front
-    const order=[...groups.hairB,...groups.far,...groups.torso,...groups.legs,...(rg.side?[...groups.skirt,...groups.arms]:[...groups.arms,...groups.skirt]),...groups.hairF];
+    const order=[...groups.hairB,...groups.far,...groups.torso,...groups.legs,...(rg.side?[...groups.skirt,...groups.arms]:[...groups.arms,...groups.skirt]),...groups.over,...groups.hairF];
     // drawn expression heads (puppet-rig.js EXPRESSION_ART), when a sheet exists for this doll and view
     const expr=headPiece&&await expressionHeads(layers.doll,view,headPiece,layers.shot).catch(e=>{if(config.debug)console.warn(e);return null});
     if(expr){headPiece.expr=expr;overlaySrc=null}
