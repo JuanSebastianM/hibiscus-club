@@ -254,6 +254,43 @@ Object.assign(sheets,{
       for(const h of CATALOG.hairStyles[d])for(const v of hv)
         await tile(h+' '+v,L(d,{[cat]:it.id,hair:h,...extra}),{view:v,zoom:zoom||headBox(d,v),scale:zoom?scale:.7,grid})}}
 });
+/* ---------- outfit audit (art/audit_outfits.cjs) ----------
+   audit: one sheet per outfit and variant, judged at zoom: the four views at 1x, then per view fixed
+   crops at 2.5x of the neck and collar, each shoulder or armhole, each cuff and hand, the waist, the
+   crotch and thighs, and the hem (1.5x). variant=a: a long hairstyle, bare feet, a dark background;
+   variant=b: a short hairstyle, shoes and a necklace on a light one. ids= picks outfits. Each sheet is a
+   <canvas data-name> (window.labDone when all are drawn). */
+const AUDIT_CROPS={
+  adult:{front:{neck:[140,95,120,120],shoulderL:[55,165,110,135],shoulderR:[235,165,110,135],handL:[-12,410,95,150],handR:[315,410,95,150],waist:[90,275,220,110],crotch:[85,400,230,150],hem:[30,330,340,420]},
+    left:{neck:[30,90,150,130],shoulder:[30,160,160,160],hand:[15,420,150,150],waist:[0,280,190,120],crotch:[0,390,190,150],hem:[-20,330,220,420]},
+    back:{neck:[140,95,120,120],shoulderL:[60,165,110,135],shoulderR:[230,165,110,135],handL:[-5,400,95,150],handR:[305,400,95,150],waist:[90,275,220,110],crotch:[85,400,230,150],hem:[30,330,340,420]}},
+  little:{front:{neck:[130,150,140,120],shoulderL:[55,205,115,140],shoulderR:[233,205,115,140],handL:[-12,420,95,150],handR:[318,420,95,150],waist:[80,330,240,110],crotch:[80,450,240,150],hem:[30,360,340,420]},
+    left:{neck:[10,140,190,130],shoulder:[30,200,170,160],hand:[40,430,160,150],waist:[0,330,210,120],crotch:[0,440,210,150],hem:[-20,360,250,420]},
+    back:{neck:[130,150,140,120],shoulderL:[55,205,115,140],shoulderR:[233,205,115,140],handL:[-12,420,95,150],handR:[318,420,95,150],waist:[80,330,240,110],crotch:[80,450,240,150],hem:[30,360,340,420]}}};
+const AUDIT_VARIANT={a:{bg:'#17323c',adult:{hair:'long-waves',shoes:'none',necklace:'none'},little:{hair:'ringlet-pigtails',shoes:'none',necklace:'none'}},
+  b:{bg:'#f3df73',adult:{hair:'flip-bob',shoes:'pink-chunky-sneakers',necklace:'pearl-starfish-necklace'},little:{hair:'curly-bob',shoes:'red-mary-janes',necklace:'pearl-starfish-necklace'}}};
+function auditCrops(d,v){const c=AUDIT_CROPS[d][v==='right'?'left':v];if(v!=='right')return c;
+  const M=CATALOG.mirror?.[d]??(d==='adult'?181:207);return Object.fromEntries(Object.entries(c).map(([k,[x,y,w,h]])=>[k,[M-x-w,y,w,h]]))}
+Object.assign(sheets,{
+  async audit(){const vars=(q.get('variant')||'a,b').split(',');
+    for(const d of dolls)for(const it of catalogOptions('outfit',d))if(want(it.id))for(const vk of vars){
+      const V=AUDIT_VARIANT[vk],look=L(d,{outfit:it.id,clip:'none',earrings:'none',...V[d],...(q.get('tint')?{outfitTint:q.get('tint')}:{}),...extra});
+      const vs=CATALOG.views,full=vs.map(v=>fullBox(d,v)),FS=1,CS=2.5,pad=8;
+      const rows=vs.map(v=>Object.entries(auditCrops(d,v)));
+      const W=Math.max(full.reduce((s,b)=>s+b[2]*FS+pad,pad),...rows.map(r=>r.reduce((s,[k,b])=>s+b[2]*(k==='hem'?1.5:CS)+pad,pad)));
+      const H=24+full[0][3]*FS+pad+rows.reduce((s,r)=>s+Math.max(...r.map(([k,b])=>b[3]*(k==='hem'?1.5:CS)))+18+pad,0);
+      const t=document.createElement('canvas');t.width=Math.ceil(W);t.height=Math.ceil(H);const g=t.getContext('2d');
+      g.fillStyle='#fff';g.fillRect(0,0,t.width,t.height);g.fillStyle='#000';g.font='16px system-ui';g.fillText(`${it.id} · ${d} · variant ${vk} (${V[d].hair}, ${V[d].shoes}, ${V[d].necklace})`,8,18);
+      const put=async(view,box,sc,x,y,label)=>{const [ox,oy]=dollView(d,view).origin,c=await composeDoll(look,view);
+        g.fillStyle=V.bg;g.fillRect(x,y,box[2]*sc,box[3]*sc);g.imageSmoothingEnabled=sc<2;g.imageSmoothingQuality='high';
+        g.drawImage(c,box[0]+ox,box[1]+oy,box[2],box[3],x,y,box[2]*sc,box[3]*sc);
+        if(label){g.fillStyle='#000';g.font='12px system-ui';g.fillText(label,x+2,y+box[3]*sc+13)}};
+      let x=pad;for(const [i,v] of vs.entries()){await put(v,full[i],FS,x,24,null);g.fillStyle='#fff';g.font='14px system-ui';g.fillText(v,x+4,40);x+=full[i][2]*FS+pad}
+      let y=24+full[0][3]*FS+pad;
+      for(const [i,v] of vs.entries()){x=pad;let rh=0;for(const [k,b] of rows[i]){const sc=k==='hem'?1.5:CS;await put(v,b,sc,x,y,v+' '+k);x+=b[2]*sc+pad;rh=Math.max(rh,b[3]*sc)}y+=rh+18+pad}
+      t.dataset.name=`${d}-${it.id}-${vk}`;const f=document.createElement('figure');f.append(t);out.append(f);
+    }}
+});
 const original0={id:'original'};
 (async()=>{try{await sheets[sheetName]()}catch(e){console.error(e);const p=document.createElement('pre');p.textContent=e.stack;out.append(p)}window.labDone=true})();
 </script>
