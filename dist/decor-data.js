@@ -192,9 +192,9 @@ const DECOR={
     },
     patio:{
       back:[[{pick:['porch-swing','lemonade-stand']}],[{pick:['grill','flower-planter']}],[{pick:['string-light-pole','potted-palm'],p:.85}],[{pick:['flower-planter','bird-bath','lemonade-stand'],p:.5}]],
-      mid:[[{pick:['umbrella-table'],u:.5,t:.5},{pick:['lounge-chair'],u:.82,t:.55,p:.6}],
-           [{pick:['picnic-blanket'],u:.45,t:.56},{pick:['kiddie-pool','lounge-chair'],u:.78,t:.45,p:.7}],
-           [{pick:['kiddie-pool'],u:.42,t:.52},{pick:['lounge-chair'],u:.8,t:.52}]],
+      mid:[[{pick:['umbrella-table'],u:.5,t:.5},{pick:['lounge-chair'],u:.82,t:.55,p:.6},{pick:['flower-planter','potted-palm'],u:.14,t:.42,p:.7}],
+           [{pick:['picnic-blanket'],u:.45,t:.56},{pick:['kiddie-pool','lounge-chair'],u:.78,t:.45,p:.7},{pick:['bird-bath','flower-planter'],u:.16,t:.4,p:.6}],
+           [{pick:['kiddie-pool'],u:.42,t:.52},{pick:['lounge-chair'],u:.8,t:.52},{pick:['potted-palm','flower-planter'],u:.12,t:.4,p:.6}]],
       front:['garden-gnome','bird-bath','potted-palm','flower-planter','potted-hibiscus','puppy-bed'],
       wall:['pennant-banner','fairy-lights','wall-lamp','round-window','hanging-plant','curtain-window'],
       top:['fruit-bowl','flower-vase']

@@ -522,12 +522,16 @@ const DecorLogic=(()=>{
     }
     /* front corners: one or two small pieces (the other corner when one is in front of a side door) */
     // (a painted room, with its furniture at true size, has room for a third, in the middle)
-    const fronts=shuffle(R.front.filter(ok),rnd).filter(id=>!out.some(p=>p.id===id)).slice(0,g.painted?(rnd()<.6?3:2):rnd()<.6?2:1);
+    // (a painted room whose back wall holds little, beside a door, gets a fourth, so it still looks lived in)
+    let nf=g.painted?(rnd()<.6?3:2):rnd()<.6?2:1;
+    if(g.painted)nf=Math.max(nf,Math.min(4,10-out.length));
+    const fronts=shuffle(R.front.filter(ok),rnd).filter(id=>!out.some(p=>p.id===id)).slice(0,nf);
     const corners=[...shuffle([.07,.93],rnd),.5+(rnd()-.5)*.3];
+    corners.push(corners[2]<.5?.74:.26);
     fronts.forEach((id,i)=>{
       // (in a painted room, whose floor grows fast toward the viewer, a little further back)
       const y=yb+(g.painted?.56+rnd()*.14:.8+rnd()*.12)*depth,[l,r]=floorEdges(y,where),f=flipFor(item(id));
-      let p=constrain(mk(id,l+corners[i]*(r-l),i===2?y+(g.front-y)*.45:y,{f}),where);
+      let p=constrain(mk(id,l+corners[i]*(r-l),i===2?y+(g.front-y)*.45:i===3?y-.12*depth:y,{f}),where);
       // a corner in front of a side door: the other corner, or if that is taken, a little way in
       if(i<2&&inClear(p,where)>.2)p=constrain(mk(id,l+(fronts.length>1?(corners[i]<.5?.3:.7):corners[1-i])*(r-l),y,{f}),where);
       out.push(p);
@@ -553,9 +557,12 @@ const DecorLogic=(()=>{
     /* wall: two or three pieces where nothing tall stands in front */
     const tall=kept.filter(p=>layer(p)===2&&p.y<yb+140*dk).map(p=>box(p,where));
     const noWin=g.painted&&g.openings.length>0; // the painting has its own windows and doors
-    const wallIds=shuffle(R.wall.filter(id=>ok(id)&&item(id).placement==='wall'&&!(noWin&&DECOR.decorWindows.includes(id))),rnd).slice(0,g.painted?3:2+(rnd()<.5?1:0));
+    // (in a painted room every candidate is tried until three hang, since tall furniture hides much of its wall)
+    const wallAll=shuffle(R.wall.filter(id=>ok(id)&&item(id).placement==='wall'&&!(noWin&&DECOR.decorWindows.includes(id))),rnd);
+    const wallWant=g.painted?3:2+(rnd()<.5?1:0),wallIds=g.painted?wallAll:wallAll.slice(0,wallWant);
     const wallBoxes=[];
     for(const id of wallIds){
+      if(wallBoxes.length>=wallWant)break;
       let placed=null;
       const hanger=DECOR.hangers.includes(id);
       const zones=g.painted?g.zones.filter(z=>!z.hang||hanger):[g.zones[0]];
