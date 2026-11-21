@@ -462,13 +462,20 @@ const CLIP_AT={adult:{front:{x:162,y:32,rot:-25},left:{x:122,y:24,behind:true},r
 const UNDER={all:{earsUnder:true}};
 const HAIR_TUNE={
   'long-waves':{adult:UNDER},'half-up-curls':{adult:UNDER},'sleek-curtain-bangs':{adult:UNDER},'flip-bob':{adult:UNDER},
-  'space-buns':{adult:UNDER},'crimped-twists':{adult:UNDER},
-  /* drawn differently from its proof (a fuller bob, its swoop lower on the forehead): raised to the
-     proof's hairline; seen from the right her forehead is flatter than the proof's, so the sheer
-     hairline in front of it is moved onto her forehead */
+  'space-buns':{adult:UNDER},
+  /* round 2 redraw: a small gap the proof's head left at her right temple is backed with hair, and the
+     gaps between the curls are background, not scalp */
+  'crimped-twists':{adult:{all:{earsUnder:true},front:{scalp:false,holeFill:[{ellipse:[262,86,6,8]}]}}},
+  /* round 2 redraw: the hair tucked behind her right ear lies a little outside her narrower head, so the
+     strip between them is filled from behind (underHair) down past the jaw, and the gap the proof's ear
+     left in the hair at her temple is backed with hair (holeFill); the gap between the ponytail and its
+     loose strand is background, not scalp */
+  'side-ponytail':{adult:{front:{under:{y0:28,y1:150},scalp:false,holeFill:[{ellipse:[260,93,7,14]}]}}},
+  /* round 2 redraw: a fine flyaway strand runs just outside the crown; the gap under it is background,
+     not scalp (scalpShow would paint it as a bald rim) */
+  'curly-bob':{little:{front:{scalp:false},back:{scalp:false}}},
   /* its baby curls cross the brows on purpose (as on the proof): the face is not opened through them */
   'ringlet-pigtails':{little:{front:{open:false}}},
-  'curly-bob':{little:{all:{earsUnder:true,dy:-8},left:{scalpFill:[{ellipse:[29,40,6,6]}]},right:{dx:4,scalpFill:[{ellipse:[184,47,8,10]}]}}},
   /* her skull is a little rounder at the back than the toddler proofs': in profile these short styles
      grow 2-2.5% about the forehead so no scalp peeks out behind them */
   'pixie-sweep':{little:{left:{k:1.025,at:[40,130]},right:{k:1.025,at:[167,130]}}},
@@ -492,7 +499,7 @@ for(const it of items)if(it.category==='hair'){
       else if(Array.isArray(layer))fit.front=layer;
       fit.clip={...CLIP_AT[doll][view],...t.clip};
       if(view==='front'&&t.open!==false)fit.open={rows:FACE_OPEN[doll],...t.open};
-      for(const k of ['earsUnder','soften','shade','scalp','scalpFill','cut','cutDoll'])if(t[k]!==undefined)fit[k]=t[k];
+      for(const k of ['earsUnder','soften','shade','scalp','scalpFill','holeFill','cut','cutDoll'])if(t[k]!==undefined)fit[k]=t[k];
       // ears covered: hair behind the head fills the strip between skin and hair (portrait.js underHair)
       if(view==='front'&&t.under!==false)fit.under={...(fit.earsUnder?UNDER_ROWS:TEMPLE_ROWS)[doll],...t.under};
       (it.fit[doll]??={})[view]=fit;
