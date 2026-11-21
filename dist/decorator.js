@@ -305,13 +305,18 @@ const Decorator=(()=>{
     if(frameHook)frameHook(ts);
   }
   /* Draws pieces in depth order with soft contact shadows. `thumbs` uses the small pictures (room cards). */
-  function drawPieces(g,list,thumbs,k=1){
+  function drawPieces(g,list,thumbs,k=1,imgOf=null){
     g.imageSmoothingEnabled=true;g.imageSmoothingQuality=thumbs?'medium':'high';
-    for(const p of L.sortPieces(list)){
+    const order=L.sortPieces(list),pic=p=>imgOf?imgOf(p):thumbs?thumbImg(p.id):sprite(p.id).img;
+    let cast=false;
+    for(const p of order){
       const i=it(p.id);if(!i)continue;
-      const img=thumbs?thumbImg(p.id):sprite(p.id).img;
-      const b=L.box(p);
-      if(i.placement==='floor'||i.placement==='surface')contactShadow(g,p,i,b);
+      // after the wall pieces: tall pieces standing against the back wall cast a faint shadow on it
+      if(!cast&&i.placement!=='wall'){cast=true;wallCast(g,order,pic)}
+      const img=pic(p),b=L.box(p);
+      if(i.placement==='wall')mountShadow(g,p,b,img);
+      else if(i.placement==='rug')rugShadow(g,p,b,img);
+      else groundShadow(g,p,i,b,img);
       if(!img)continue;
       if(p.trial)g.globalAlpha=.9;
       if(p.f){g.save();g.translate(b.x+b.w,b.y);g.scale(-1,1);g.drawImage(img,0,0,b.w,b.h);g.restore()}
@@ -319,13 +324,62 @@ const Decorator=(()=>{
       g.globalAlpha=1;
       if(p.trial&&!thumbs){g.save();g.setLineDash([10/k,7/k]);g.strokeStyle='#dba92a';g.lineWidth=3/k;g.strokeRect(b.x,b.y,b.w,b.h);g.restore()}
     }
+    if(!cast)wallCast(g,order,pic);
   }
-  /* A soft contact shadow tucked under the piece's feet (most of it hidden behind the piece). */
-  function contactShadow(g,p,i,b){
-    const fw=(i.footprint?.width||i.width*.7)*L.scaleOf(p),cx=b.x+(p.f?1-i.anchor[0]:i.anchor[0])*b.w,rx=fw*.55,ry=Math.max(6,fw*.12),cy=p.y-ry*.45;
+  /* A blurred silhouette of a sprite (made once per picture, at most ~200 px) for shadows. */
+  const silhouettes=new WeakMap();
+  function silhouette(img){
+    if(!img)return null;let s=silhouettes.get(img);if(s)return s;
+    const w=img.width,h=img.height,k=Math.min(1,200/Math.max(w,h)),sw=Math.max(1,Math.round(w*k)),sh=Math.max(1,Math.round(h*k)),pad=Math.ceil(Math.max(sw,sh)*.05)+3;
+    const c=document.createElement('canvas');c.width=sw+pad*2;c.height=sh+pad*2;const g=c.getContext('2d');
+    g.shadowColor='rgb(52,26,48)';g.shadowBlur=pad*.7;g.shadowOffsetX=4000;g.drawImage(img,pad-4000,pad,sw,sh);
+    s={c,pad:pad/k};silhouettes.set(img,s);return s;
+  }
+  /* Draws a piece's blurred silhouette over its box (mirrored with it), shifted by dx,dy. */
+  function drawSil(g,p,b,img,dx,dy,alpha){
+    const s=silhouette(img);if(!s)return;
+    const sc=b.w/img.width,pd=s.pad*sc;
+    g.save();g.globalAlpha=alpha;
+    if(p.f){g.translate(b.x+b.w+dx,0);g.scale(-1,1);g.drawImage(s.c,-pd,b.y-pd+dy,b.w+2*pd,b.h+2*pd)}
+    else g.drawImage(s.c,b.x-pd+dx,b.y-pd+dy,b.w+2*pd,b.h+2*pd);
+    g.restore();
+  }
+  /* Grounding for anything that stands: a soft pool of shade over the whole footprint (wider and
+     lighter outward), and the darker, tighter shadow of the piece's own base right at its feet.
+     The light comes from the upper left, as in the art, so shade leans a little to the right. */
+  function groundShadow(g,p,i,b,img){
+    const f=L.footprint(p),fw=Math.max(8,f.r-f.l),fd=Math.max(4,f.front-f.rear),lean=fw*.04;
+    const cx=(f.l+f.r)/2+lean,cy=(f.front+f.rear)/2+1,rx=fw*.56+8,ry=fd*.5+Math.max(6,fw*.05);
     g.save();g.translate(cx,cy);g.scale(1,ry/rx);
-    const gr=g.createRadialGradient(0,0,rx*.2,0,0,rx);gr.addColorStop(0,p.host?'rgba(70,40,60,.2)':'rgba(70,40,60,.26)');gr.addColorStop(.7,'rgba(70,40,60,.1)');gr.addColorStop(1,'rgba(70,40,60,0)');
+    const gr=g.createRadialGradient(0,0,0,0,0,rx);gr.addColorStop(0,'rgba(60,30,55,.32)');gr.addColorStop(.55,'rgba(60,30,55,.18)');gr.addColorStop(1,'rgba(60,30,55,0)');
     g.fillStyle=gr;g.beginPath();g.arc(0,0,rx,0,Math.PI*2);g.fill();g.restore();
+    if(!img)return;
+    // contact: only the base of the silhouette (from just above the rear feet down)
+    const top=f.rear-Math.min(b.h*.08,30);
+    // the base, laid flat on the floor toward the lower right (light from the upper left)
+    g.save();g.beginPath();g.rect(b.x-b.w,f.rear-6,b.w*3,b.b-f.rear+60);g.clip();
+    g.translate(0,f.front);g.scale(1,.42);g.translate(0,-f.front);
+    drawSil(g,p,b,img,b.w*.035+3,fd*.2+6,.42);
+    g.restore();
+    // and the dark contact right at the feet
+    g.save();g.beginPath();g.rect(b.x-b.w,top,b.w*3,b.b-top+40);g.clip();
+    drawSil(g,p,b,img,b.w*.012+1.5,2.5,.85);
+    g.restore();
+  }
+  function rugShadow(g,p,b,img){if(img)drawSil(g,p,b,img,1.5,3,.22)}
+  function mountShadow(g,p,b,img){if(img)drawSil(g,p,b,img,Math.max(3,b.w*.018),Math.max(4,b.h*.025),.3)}
+  /* Tall pieces whose back is against the back wall throw a faint shadow up and to the right onto it. */
+  function wallCast(g,order,pic){
+    const {back}=ROOM;
+    for(const p of order){
+      const i=it(p.id);if(!i||i.placement==='wall'||i.placement==='rug'||p.host)continue;
+      const f=L.footprint(p),b=L.box(p),near=f.rear-back.y1;
+      if(near>70||b.y>back.y1-60)continue;
+      const img=pic(p);if(!img)continue;
+      g.save();g.beginPath();g.rect(back.x0,0,back.x1-back.x0,back.y1);g.clip();
+      drawSil(g,p,b,img,b.w*.05+6,-Math.max(4,b.h*.02),.16*(1-near/70));
+      g.restore();
+    }
   }
   const HANDLE=19; // css px radius of the on-item handles
   function handles(p,k){
@@ -367,7 +421,7 @@ const Decorator=(()=>{
   }
   let drag=null,pendingMove=null;
   function down(e){
-    if(e.button>0)return;
+    if(e.button>0||e.target.closest("#dec-tryon")&&e.target.closest("button,.tryon"))return; // the Buy / Put back bar sits over the room
     const pt=roomPoint(e),k=ui.fg.width/ROOM.W;
     if(sel&&pieces().includes(sel)){
       const hd=handles(sel,k),near=h=>Math.hypot(pt.x-h.x,pt.y-h.y)<=hd.r*1.25;
@@ -490,7 +544,7 @@ const Decorator=(()=>{
       case 'flip':if(!i.mirror)return;remember();p.f=!p.f;L.constrain(p,house.at);commit(t('house.flippedSay',{name:nameOf(p.id)}));break;
       case 'smaller':case 'bigger':{const s=Math.round((p.s+(kind==='bigger'?L.SCALE.step:-L.SCALE.step))*100)/100;
         if(s<L.SCALE.min-.001||s>L.SCALE.max+.001){say(t(kind==='bigger'?'house.maxSize':'house.minSize'));return}
-        remember();p.s=s;L.constrain(p,house.at);for(const q of pieces())if(q.host===p)L.constrain(q,house.at);
+        {const was=p.s;remember();p.s=s;L.constrain(p,house.at);if(Math.abs(p.s-was)<.001){hs().undo.pop();say(t(kind==="bigger"?"house.maxSize":"house.minSize"));return}}for(const q of pieces())if(q.host===p)L.constrain(q,house.at);
         commit(t('house.sizeSay',{name:nameOf(p.id),percent:Math.round(p.s*100)}));break}
       case 'forward':case 'back':{const snap=snapshot();if(!L.reorder(p,pieces(),kind==='forward'?1:-1)){say(t(kind==='forward'?'house.frontMost':'house.backMost',{name:nameOf(p.id)}));return}
         const h=hs();h.undo.push(snap);h.redo.length=0;commit(t(kind==='forward'?'house.forwardSay':'house.backSay',{name:nameOf(p.id)}));break}
@@ -691,13 +745,7 @@ const Decorator=(()=>{
     const saved=new Map();
     for(const p of list)if(L.isDoll(p.id)&&looks?.[p.id.slice(1)]){const doll=p.id.slice(1);saved.set(doll,lookKey({...looks[doll],doll}))}
     g.imageSmoothingQuality='high';
-    for(const p of L.sortPieces(list)){
-      const i=it(p.id),b=L.box(p);
-      const img=L.isDoll(p.id)?dollSprites.get(saved.get(p.id.slice(1))||dollKey(p.id.slice(1)))?.img:sprites.get(p.id)?.img;
-      if(i.placement==='floor'||i.placement==='surface')contactShadow(g,p,i,b);
-      if(!img)continue;
-      if(p.f){g.save();g.translate(b.x+b.w,b.y);g.scale(-1,1);g.drawImage(img,0,0,b.w,b.h);g.restore()}else g.drawImage(img,b.x,b.y,b.w,b.h);
-    }
+    drawPieces(g,list,false,1,p=>L.isDoll(p.id)?dollSprites.get(saved.get(p.id.slice(1))||dollKey(p.id.slice(1)))?.img:sprites.get(p.id)?.img);
     return c;
   }
   /* The postcard: the room on paper in a striped frame, like the doll postcards, with a caption. */

@@ -72,6 +72,28 @@ const DECOR={
     'sink-vanity':[.34,.08,.92],'bath-stool':[.12,.12,.88],'toy-shelf':[.15,.08,.92],'kids-table-set':[.42,.32,.68],
     'toy-piano':[.07,.12,.88]
   },
+  /* How deep each standing piece is on the floor, as a fraction of its sprite's height: the art is in
+     3/4 view, so the rear feet (or the back of the base) sit this far above the front contact point
+     (the manifest anchor). A piece may stand with its rear feet against the back wall line, never
+     above it. Read by eye from the sprites (an automatic estimate from the alpha outline was
+     unreliable for pots, baskets and anything with overhangs); pieces not listed use 0.1. */
+  ground:{
+    'canopy-bed':.18,'single-bed':.25,'bunk-bed':.17,'wardrobe':.07,'vanity-dresser':.08,'bedside-table':.1,'desk':.2,'desk-chair':.12,
+    'bookshelf':.06,'toy-chest':.17,'beanbag':.14,'floor-lamp':.04,
+    'fridge':.06,'stove':.08,'sink-counter':.13,'corner-counter':.2,'kitchen-island':.2,'dining-table':.22,'dining-chair':.12,'bar-stool':.12,
+    'toaster-kettle':.06,'fruit-bowl':.08,
+    'sofa':.2,'loveseat':.2,'armchair':.14,'coffee-table':.22,'tv-stand':.12,'fireplace':.14,'tall-plant':.06,'side-table':.1,
+    'floor-cushion':.2,'record-player':.14,'trinket-shelf':.06,'standing-mirror':.07,
+    'bathtub':.2,'shower':.16,'sink-vanity':.12,'toilet':.14,'towel-rack':.1,'laundry-basket':.1,'bottle-shelf':.1,'rubber-duck':.1,
+    'potted-fern':.06,'bath-stool':.15,
+    'dollhouse':.1,'play-kitchen':.08,'rocking-horse':.1,'toy-shelf':.06,'art-easel':.12,'kids-table-set':.24,'ball-pit':.2,'teepee':.14,
+    'plush-pile':.2,'toy-piano':.1,'building-blocks':.2,
+    'lounge-chair':.3,'umbrella-table':.16,'grill':.12,'porch-swing':.18,'kiddie-pool':.2,'flower-planter':.15,'string-light-pole':.03,
+    'garden-gnome':.05,'bird-bath':.06,'lemonade-stand':.1,'potted-palm':.06,
+    'kitten-bed':.2,'puppy-bed':.22,'fish-tank':.1,'flower-vase':.05,'disco-ball':.06,'lava-lamp':.03,'gift-boxes':.12,
+    'balloon-bunch':.02,'potted-hibiscus':.06,
+    '@adult':.02,'@little':.02
+  },
   /* A room counts as furnished (a one-time reward per room) with at least this many pieces, `own` of
      them from the room's own collection. */
   furnished:{pieces:6,own:3,reward:5},

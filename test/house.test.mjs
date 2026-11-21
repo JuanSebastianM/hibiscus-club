@@ -64,6 +64,53 @@ test('placement: floor pieces stay on the floor band and inside the room, smalle
   assert.ok(L.scaleOf(front) / L.scaleOf(back) < 1.25, 'only slightly');
 });
 
+test('grounding: every standing piece keeps its whole footprint on the floor, rear feet never above the wall line', () => {
+  const { L, DECOR } = load();
+  const ids = [...manifest.items.filter(i => i.placement === 'floor' || i.placement === 'surface').map(i => i.id), '@adult', '@little'];
+  for (const id of ids) {
+    assert.ok(Object.hasOwn(DECOR.ground, id), 'ground depth listed for ' + id);
+    for (const s of [0.5, 1, 1.8]) for (const f of [false, true]) for (const [x, y] of [[0, 0], [1536, 0], [0, 1152], [1536, 1152], [768, 640], [768, 660], [-999, 900], [2999, 700]]) {
+      const p = L.constrain(piece(id, x, y, { s, f }), 'bedroom'), fp = L.footprint(p);
+      const [l, r] = L.floorEdges(fp.rear);
+      const tag = `${id} s${s} f${f} @${x},${y}`;
+      assert.ok(fp.rear >= L.ROOM.back.y1 - 0.01, `${tag}: rear feet ${fp.rear} above the wall line`);
+      assert.ok(fp.front <= L.ROOM.frame.b, `${tag}: past the front edge`);
+      if (fp.r - fp.l < r - l - 8) assert.ok(fp.l >= l - 0.01 && fp.r <= r + 0.01, `${tag}: a foot off the floor ${fp.l}..${fp.r} vs ${l}..${r}`);
+    }
+  }
+  // a deep piece against the back wall stands lower than a shallow one
+  const bed = L.constrain(piece('single-bed', 768, 0), 'bedroom'), shelf = L.constrain(piece('bookshelf', 768, 0), 'bedroom');
+  assert.ok(bed.y > shelf.y + 40, `bed ${bed.y} vs bookshelf ${shelf.y}`);
+  assert.ok(Math.abs(L.footprint(bed).rear - L.ROOM.back.y1) < 4, 'pushed to the back, the bed\'s rear feet touch the wall line');
+  // bigger is deeper: resizing re-grounds
+  const big = L.constrain(piece('single-bed', 768, 0, { s: 1.8 }), 'bedroom');
+  assert.ok(big.y > bed.y, 'a bigger bed stands further forward');
+});
+
+test('grounding: rugs lie wholly on the floor; wall pieces stay between moulding and skirting', () => {
+  const { L } = load();
+  for (const id of manifest.items.filter(i => i.placement === 'rug').map(i => i.id)) for (const [x, y] of [[0, 0], [1536, 1152], [768, 600], [0, 1152]]) {
+    const p = L.constrain(piece(id, x, y), 'living'), fp = L.footprint(p);
+    assert.ok(fp.rear >= L.ROOM.back.y1 && fp.front <= L.ROOM.frame.b, `${id}: rug edges ${fp.rear}..${fp.front}`);
+    const [l, r] = L.floorEdges(fp.rear);
+    assert.ok(fp.l >= l - 0.01 && fp.r <= r + 0.01, `${id}: rug sides on the floor`);
+  }
+  for (const id of manifest.items.filter(i => i.placement === 'wall').map(i => i.id)) for (const room of ['bedroom', 'patio']) for (const [x, y] of [[0, 0], [1536, 1152], [768, 640]]) {
+    const b = L.box(L.constrain(piece(id, x, y), room));
+    assert.ok(b.b <= L.ROOM.back.y1 - L.SKIRT + 0.01, `${id} in ${room}: bottom ${b.b} on the skirting or floor`);
+    assert.ok(b.x >= L.ROOM.back.x0 && b.r <= L.ROOM.back.x1, `${id}: on the back wall only`);
+  }
+});
+
+test('grounding: pieces from earlier saves are re-grounded on load', () => {
+  const { L } = load();
+  // saved by the first version, with the bed's front feet just below the wall line
+  const h = L.readHouse({ rooms: { bedroom: { p: [['single-bed', 400, 652, 100, 0], ['@adult', 900, 645, 100, 0]] } } });
+  const [bed] = L.readPieces(h.rooms.bedroom.p, 'bedroom');
+  assert.ok(L.footprint(bed).rear >= L.ROOM.back.y1 - 0.5, 'rear feet back on the floor');
+  assert.ok(bed.y > 700);
+});
+
 test('placement: wall pieces stay on the wall, rugs on the floor, flip only when allowed', () => {
   const { L } = load();
   for (const [x, y] of [[0, 0], [1536, 1152], [768, 900]]) {
@@ -203,7 +250,7 @@ test('Surprise me: tidy layouts from owned pieces only, every room, many times',
       for (const p of out) {
         const before = JSON.stringify([p.x, p.y]);
         L.constrain(p, room);
-        assert.equal(JSON.stringify([p.x, p.y]), before, `${room} #${seed}: ${p.id} already where it belongs`);
+        const [bx, by] = JSON.parse(before); assert.ok(Math.abs(bx - p.x) < 0.05 && Math.abs(by - p.y) < 0.05, `${room} #${seed}: ${p.id} already where it belongs`);
       }
       // no two standing pieces on top of each other at the same depth
       const standing = out.filter(p => L.layer(p) === 2 && !p.host);

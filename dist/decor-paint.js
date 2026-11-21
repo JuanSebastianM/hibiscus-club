@@ -138,7 +138,7 @@ const DecorPaint=(()=>{
         break}
     }
     // light: brighter toward the front, a soft shadow along the back wall
-    const lg=g.createLinearGradient(0,BY,0,FY);lg.addColorStop(0,'rgba(110,70,100,.2)');lg.addColorStop(.18,'rgba(110,70,100,.04)');lg.addColorStop(1,'rgba(255,255,255,.1)');
+    const lg=g.createLinearGradient(0,BY,0,FY);lg.addColorStop(0,'rgba(110,70,100,.16)');lg.addColorStop(.18,'rgba(110,70,100,.04)');lg.addColorStop(1,'rgba(255,255,255,.1)');
     g.fillStyle=lg;g.fillRect(0,BY,W,FY-BY);
     const sp=g.createRadialGradient(W*.45,FY-120,40,W*.45,FY-120,820);sp.addColorStop(0,'rgba(255,250,235,.28)');sp.addColorStop(1,'rgba(255,250,235,0)');
     g.fillStyle=sp;g.fillRect(0,BY,W,FY-BY);
@@ -168,8 +168,13 @@ const DecorPaint=(()=>{
     if(!outdoor){
       // crown moulding and baseboard on the back wall, baseboards along the side walls
       g.fillStyle='#fffdf8';g.fillRect(BX0,34,BX1-BX0,16);g.fillStyle='rgba(150,110,130,.22)';g.fillRect(BX0,50,BX1-BX0,3);
-      g.fillStyle='#fffdf8';g.fillRect(BX0,BY-26,BX1-BX0,26);g.fillStyle='rgba(150,110,130,.28)';g.fillRect(BX0,BY-26,BX1-BX0,3);
-      for(const side of [-1,1]){const xf=side<0?FL:FR,xb=side<0?BX0:BX1,h0=26,h1=26*ZB;
+      // skirting board: a cap moulding, a flat face lit from above, a shadow line where it meets the floor
+      const SK=DecorLogic.SKIRT,sk=g.createLinearGradient(0,BY-SK,0,BY);sk.addColorStop(0,'#fffefb');sk.addColorStop(.25,'#fbf6f0');sk.addColorStop(1,'#efe5dc');
+      g.fillStyle='rgba(90,50,90,.16)';g.fillRect(BX0,BY-SK-5,BX1-BX0,5);
+      g.fillStyle=sk;g.fillRect(BX0,BY-SK,BX1-BX0,SK);
+      g.fillStyle='#ffffff';g.fillRect(BX0,BY-SK,BX1-BX0,4);g.fillStyle='rgba(150,110,130,.3)';g.fillRect(BX0,BY-SK+5,BX1-BX0,1.5);
+      g.fillStyle='rgba(110,70,90,.35)';g.fillRect(BX0,BY-2,BX1-BX0,2);
+      for(const side of [-1,1]){const xf=side<0?FL:FR,xb=side<0?BX0:BX1,h0=DecorLogic.SKIRT,h1=DecorLogic.SKIRT*ZB;
         poly(g,[[xb,BY-h0],[xb,BY],[xf,FY],[xf,FY-h1]]);g.fillStyle='#f4ece4';g.fill();
         g.strokeStyle='rgba(150,110,130,.3)';g.lineWidth=2.5;g.beginPath();g.moveTo(xb,BY-h0);g.lineTo(xf,FY-h1);g.stroke()}
       // a soft window light on the back wall and darker corners
@@ -177,7 +182,7 @@ const DecorPaint=(()=>{
       g.fillStyle=lt;g.fillRect(BX0,0,BX1-BX0,BY);
     }
     for(const [x,dir] of [[BX0,1],[BX1,-1]]){const cg=g.createLinearGradient(x,0,x+dir*90,0);cg.addColorStop(0,'rgba(90,50,90,.16)');cg.addColorStop(1,'rgba(90,50,90,0)');g.fillStyle=cg;g.fillRect(Math.min(x,x+dir*90),top,90,BY-top)}
-    const ao=g.createLinearGradient(0,BY-60,0,BY);ao.addColorStop(0,'rgba(90,50,90,0)');ao.addColorStop(1,'rgba(90,50,90,.14)');g.fillStyle=ao;g.fillRect(BX0,BY-60,BX1-BX0,60);
+    const ao=g.createLinearGradient(0,BY-60,0,BY);ao.addColorStop(0,'rgba(90,50,90,0)');ao.addColorStop(1,'rgba(90,50,90,.1)');g.fillStyle=ao;g.fillRect(BX0,BY-60,BX1-BX0,60);
     if(outdoor){ // the wall's cap: a little roof edge for siding, a top rail for the others
       const d=DECOR.walls[id]||{};
       if(d.kind==='siding'){g.fillStyle='#fffaf6';g.fillRect(BX0-20,top-18,BX1-BX0+40,30);g.fillStyle=shade(d.base,-.25);
@@ -243,6 +248,14 @@ const DecorPaint=(()=>{
     g.fillStyle='#fff8ef';g.fillRect(0,0,W,H);
     paintWalls(g,wallId,outdoor);
     paintFloor(g,floorId);
+    // ambient occlusion where the floor meets the back and side walls
+    g.save();g.beginPath();g.moveTo(BX0,BY);g.lineTo(BX1,BY);g.lineTo(FR,FY);g.lineTo(FL,FY);g.closePath();g.clip();
+    const fa=g.createLinearGradient(0,BY,0,BY+46);fa.addColorStop(0,'rgba(80,45,75,.3)');fa.addColorStop(.35,'rgba(80,45,75,.12)');fa.addColorStop(1,'rgba(80,45,75,0)');
+    g.fillStyle=fa;g.fillRect(0,BY,W,46);
+    g.strokeStyle='rgba(80,45,75,.22)';g.lineWidth=14;g.shadowColor='rgba(80,45,75,.35)';g.shadowBlur=22;
+    for(const [xb,xf] of [[BX0,FL],[BX1,FR]]){g.beginPath();g.moveTo(xb,BY);g.lineTo(xf,FY);g.stroke()}
+    g.shadowBlur=0;
+    g.restore();
     paintFrame(g,roomId,outdoor);
     g.restore();
   }

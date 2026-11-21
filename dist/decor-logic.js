@@ -14,15 +14,17 @@
 const DecorLogic=(()=>{
   const ROOM={W:1536,H:1152,frame:{l:30,r:1506,t:34,b:1108},back:{x0:150,x1:1386,y1:640}};
   const FLOOR={y0:652,y1:1094},RUG={y0:690,y1:1070};
-  const WALL={x0:160,x1:1376,y0:58,y1:628},WALL_OUT={x0:160,x1:1376,y0:236,y1:628};
+  /* wall pieces stay between the crown moulding and the top of the skirting board (y 604) */
+  const WALL={x0:160,x1:1376,y0:58,y1:598},WALL_OUT={x0:160,x1:1376,y0:236,y1:598};
+  const SKIRT=36; // skirting board height on the back wall
   const SCALE={min:.5,max:1.8,step:.1};
   const Z_MAX=30;
   const DOLLS=['@adult','@little'];
   /* The characters as pieces: their picture is a fixed crop of composeDoll()'s 600 x 1060 canvas
      (x 80..520, y 0..1040, feet on y 1010). */
   const DOLL_ITEMS={
-    '@adult':{id:'@adult',placement:'floor',width:440,height:1040,anchor:[.5,1010/1040],defaultScale:.5,mirror:true,footprint:{width:200},doll:'adult'},
-    '@little':{id:'@little',placement:'floor',width:440,height:1040,anchor:[.5,1010/1040],defaultScale:.37,mirror:true,footprint:{width:200},doll:'little'}
+    '@adult':{id:'@adult',placement:'floor',width:440,height:1040,anchor:[.5,1010/1040],defaultScale:.5,mirror:true,footprint:{x0:150,x1:290,width:140},doll:'adult'},
+    '@little':{id:'@little',placement:'floor',width:440,height:1040,anchor:[.5,1010/1040],defaultScale:.37,mirror:true,footprint:{x0:150,x1:290,width:140},doll:'little'}
   };
   let ITEMS=new Map(),ORDER=[];
   function setItems(list){
@@ -69,13 +71,32 @@ const DecorLogic=(()=>{
     return {y:b.y+fy*b.h,x0,x1,host};
   }
 
+  /* How far above its front contact a standing piece's rear feet are, in room pixels. */
+  function groundDepth(p){
+    const it=item(p.id);if(!it||it.placement==='wall'||it.placement==='rug')return 0;
+    const g=Object.hasOwn(DECOR.ground,p.id)?DECOR.ground[p.id]:.1;
+    return g*it.height*scaleOf(p);
+  }
+  /* Where a piece touches what it stands on: front y (its anchor), rear y, and the left and right
+     contact x (the manifest footprint band, mirrored with the piece). Rugs: their whole outline. */
+  function footprint(p){
+    const it=item(p.id),b=box(p),k=scaleOf(p);
+    if(it.placement==='rug')return {front:b.b-b.h*.06,rear:b.y+b.h*.06,l:b.x+b.w*.04,r:b.r-b.w*.04};
+    const fp=it.footprint||{},x0=Number.isFinite(fp.x0)?fp.x0:it.width*.1,x1=Number.isFinite(fp.x1)?fp.x1:it.width*.9;
+    const l=p.f?b.r-x1*k:b.x+x0*k,r=p.f?b.r-x0*k:b.x+x1*k;
+    return {front:p.y,rear:p.y-groundDepth(p),l,r};
+  }
   /* Keep a piece where its kind belongs, and on screen. Mutates and returns p. */
   function constrain(p,roomId){
     const it=item(p.id);if(!it)return p;
     p.s=clamp(Number.isFinite(p.s)?p.s:1,SCALE.min,SCALE.max);
     if(!it.mirror)p.f=false;
     if(it.placement==='wall'){
-      const z=wallZone(roomId),k=scaleOf(p),w=it.width*k,h=it.height*k;
+      const z=wallZone(roomId);
+      // a piece taller or wider than the wall is made to fit (the patio's garden wall is low)
+      const fit=Math.min((z.y1-z.y0)/(it.height*it.defaultScale),(z.x1-z.x0)/(it.width*it.defaultScale));
+      if(p.s>fit)p.s=Math.floor(fit*100)/100;
+      const k=scaleOf(p),w=it.width*k,h=it.height*k;
       const ax=p.f?1-it.anchor[0]:it.anchor[0],ay=it.anchor[1];
       p.x=w>=z.x1-z.x0?(z.x0+z.x1)/2-(.5-ax)*w:clamp(p.x,z.x0+ax*w,z.x1-(1-ax)*w);
       p.y=h>=z.y1-z.y0?z.y0+ay*h:clamp(p.y,z.y0+ay*h,z.y1-(1-ay)*h);
@@ -87,13 +108,21 @@ const DecorLogic=(()=>{
       if(s){p.y=s.y;p.x=clamp(p.x,s.x0,s.x1);return p}
       p.host=null;
     }
-    const band=it.placement==='rug'?RUG:FLOOR;
-    p.y=clamp(Number.isFinite(p.y)?p.y:band.y0,band.y0,band.y1);
-    const [l,r]=floorEdges(p.y),k=scaleOf(p),w=it.width*k;
-    const ax=p.f?1-it.anchor[0]:it.anchor[0];
-    // the floor point stays on the floor; at most a third of the picture may run past the side frame
-    const margin=it.placement==='rug'?w*.3:12;
-    const lo=Math.max(l+margin,ROOM.frame.l+ax*w*.66),hi=Math.min(r-margin,ROOM.frame.r-(1-ax)*w*.66);
+    if(it.placement==='rug'){
+      // the whole rug lies on the floor: its far edge below the wall line, its near edge before the front edge
+      const ay=it.anchor[1];let y=Number.isFinite(p.y)?p.y:RUG.y0;
+      for(let i=0;i<3;i++){p.y=y;const h=it.height*scaleOf(p);y=clamp(y,ROOM.back.y1+6+ay*h,Math.max(ROOM.back.y1+6+ay*h,ROOM.frame.b-6-(1-ay)*h))}
+      p.y=y;const b=box(p),[l,r]=floorEdges(b.y+b.h*.06),inset=b.w*.04;
+      const lo=l+4-(b.x+inset-p.x),hi=r-4-(b.r-inset-p.x);
+      p.x=lo<=hi?clamp(Number.isFinite(p.x)?p.x:(lo+hi)/2,lo,hi):(l+r)/2;
+      return p;
+    }
+    // standing pieces: the whole footprint (front contact to rear feet, left to right foot) is on the floor
+    let y=clamp(Number.isFinite(p.y)?p.y:FLOOR.y0,FLOOR.y0,FLOOR.y1);
+    for(let i=0;i<8;i++){p.y=y;const n=clamp(Math.max(y,ROOM.back.y1+3+groundDepth(p)),FLOOR.y0,FLOOR.y1);if(Math.abs(n-y)<1e-3){y=n;break}y=n}
+    p.y=y;
+    const f=footprint(p),[l,r]=floorEdges(f.rear);
+    const lo=l+4-(f.l-p.x),hi=r-4-(f.r-p.x);
     p.x=lo<=hi?clamp(Number.isFinite(p.x)?p.x:(lo+hi)/2,lo,hi):(l+r)/2;
     return p;
   }
@@ -357,6 +386,6 @@ const DecorLogic=(()=>{
 
   return {ROOM,FLOOR,RUG,WALL,WALL_OUT,SCALE,DOLLS,DOLL_ITEMS,ROOM_IDS,
     setItems,item,isDoll,roomDef,price,get order(){return ORDER.slice()},
-    depthT,depthScale,floorEdges,wallZone,scaleOf,box,hits,footprintRange,surfaceOf,constrain,hostAt,layer,sortPieces,reorder,
+    depthT,depthScale,floorEdges,wallZone,scaleOf,box,hits,footprintRange,footprint,groundDepth,SKIRT,surfaceOf,constrain,hostAt,layer,sortPieces,reorder,
     emptyRoom,readPieces,writePieces,settle,readHouse,findSpot,isFurnished,goalsMet,surprise};
 })();
