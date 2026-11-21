@@ -443,7 +443,7 @@ function gait(doll,k=0){
   return out;
 }
 /* Doll px travelled per gait cycle (one step of each foot). */
-function cycleLength(doll,view,k=0){const g=gait(doll,k),L=DOLL[doll].legLength;const side=view==='left'||view==='right';return g.stride*L/g.stance*(side?1:.32)}
+function cycleLength(doll,view,k=0){const g=gait(doll,k),L=DOLL[doll].legLength;const side=view==='left'||view==='right';return g.stride*L/g.stance*(side?1:.42)}
 /* Travel speed (doll px per second) at pace k. */
 function walkSpeed(doll,view='left',k=0){return cycleLength(doll,view,k)/gait(doll,k).cycle}
 /* Pace for a walk of `dist` doll px: short hops stroll, long walks are brisk. */
