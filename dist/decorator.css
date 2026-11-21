@@ -56,6 +56,14 @@
 .dec-swatch{padding-top:8px}
 .dec-swatch-pic{display:block;width:52px;height:52px;border-radius:12px;background:center/cover no-repeat;border:2px solid #fff;box-shadow:0 0 0 1px #9c8597,inset 0 -3px 6px #0000001a}
 .dec-swatch[aria-pressed=true] .dec-swatch-pic{box-shadow:0 0 0 2.5px var(--a700)}
+/* painted schemes: a small picture of the room and its name */
+.dec-schemes{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+.dec-scheme{display:grid;gap:5px;align-content:start;padding:6px;border:1.5px solid var(--a200);border-radius:12px;background:var(--white);color:var(--text);text-align:center;min-height:44px}
+.dec-scheme:hover{border-color:var(--a300);background:var(--a50)}
+.dec-scheme img{display:block;width:100%;height:auto;aspect-ratio:4/3;border-radius:8px;box-shadow:0 0 0 1px #9c859766}
+.dec-scheme .chip-name{font-size:var(--fs-xs);font-weight:bold;line-height:1.25}
+.dec-scheme[aria-pressed=true]{background:var(--a100);border-color:var(--a700);box-shadow:inset 0 0 0 1.5px var(--a700)}
+.dec-scheme[aria-pressed=true] img{box-shadow:0 0 0 2.5px var(--a700)}
 
 /* In this room */
 .dec-inroom{padding:0 18px 16px;overflow:hidden}
