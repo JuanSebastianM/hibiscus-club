@@ -2,8 +2,9 @@
 const marks=[0,1,2];
 const markName=i=>t('runway.mark.'+i);
 let rehearsal, cueTimer;
+let shownMark=1; // where the moving doll stands (puppet.js), so she walks to each new mark
 function resetRunway(){
-  clearTimeout(cueTimer);
+  clearTimeout(cueTimer);shownMark=1;
   rehearsal={sequence:[],step:0,phase:'ready',mark:null,note:['runway.note.ready']};
 }
 function runway(){
@@ -40,4 +41,14 @@ function performPose(i){
     state.stars+=6;persist();tone(true);say(t('runway.won'));track('game-done','runway');
   }else r.note=['runway.note.correct',{n:r.step+1}];
   draw();
+}
+/* The moving doll: walks (side view) to a newly lit mark while the stage slides her there, then strikes
+   a pose; cheers when the routine is won. Only called when a puppet is on. */
+function runwayMotion(p){
+  const r=rehearsal,mark=r.mark??1;
+  if(r.phase==='won'&&p.cheeredFor!==r){p.cheeredFor=r;p.emote('cheer');return}
+  if(mark===shownMark)return;
+  const side=mark>shownMark?'right':'left';shownMark=mark;
+  p.setView(side,true);p.strut(.36);
+  setTimeout(()=>{if(!p.dead){p.setView('front',true);p.emote('pose')}},400);
 }
