@@ -84,8 +84,11 @@ test('short sleeves and side long sleeves: the near arm comes out of the sleeve 
     'rash-guard-set', 'rainbow-tutu-tee', 'dino-romper', 'tulle-party-dress', 'raincoat-set', 'bear-onesie', 'ballet-wrap-set']) {
     const it = ctx.CATALOG.items[id];
     for (const view of ['left', 'right']) {
-      const clip = it.fit[it.dolls[0]][view].armClip;
-      assert.ok(clip?.some(s => s.ellipse), `${id} ${view}: arm through the sleeve opening`);
+      const f = it.fit[it.dolls[0]][view], clip = f.armClip;
+      // either the arm is drawn inside the sleeve's opening, or a sleeve is laid over the arm (a puff
+      // taken from the front view) and the arm starts under it
+      const puffOver = f.pieces.some(p => (p.parts || []).some(l => l.over && l.view === 'front'));
+      assert.ok(clip?.some(s => s.ellipse) || puffOver && clip?.length, `${id} ${view}: arm through the sleeve opening`);
     }
   }
 });
