@@ -256,6 +256,13 @@ const HibiscusPuppet=(()=>{
       for(const b of [B.spine,B.chest])fr[b]=lerp(fr[b],1,f);
       fr[B.neck]*=1-f;fr[B.head]*=1-f;
       fr[B['arm'+i]]=f;fr[B['fore'+i]]=smooth(-10,10,dot(P,el,u1));fr[B['hand'+i]]=smooth(-6,6,dot(P,wr,u2));
+    }else if(kind==='held'){ // a bag or toy in her hand: rigid with the hand of `limb`
+      for(const b of [B.spine,B.chest])fr[b]=1;
+      fr[B.neck]=fr[B.head]=0;
+      fr[B['arm'+limb]]=fr[B['fore'+limb]]=fr[B['hand'+limb]]=1;
+    }else if(kind==='pack'){ // a backpack: rigid with the chest
+      for(const b of [B.root,B.hips,B.spine,B.chest])fr[b]=1;
+      fr[B.neck]=fr[B.head]=0;
     }else if(kind==='leg'){
       const i=limb,hp=p['hip'+i],kn=p['kn'+i],an=p['an'+i],u1=unit(hp,kn),u2=unit(kn,an);
       const sdist=y-hipLineY(rg,x);
@@ -464,7 +471,14 @@ const HibiscusPuppet=(()=>{
       let d=pixelsOf(canvas).data;
       const box=alphaBox(d);if(!box)continue;
       const hairKind=['hairBack','hairFront','clipBehind'].includes(L.kind)||(L.kind==='charm'&&L.behind);
-      const headKind=['earrings','studs','clip','charm'].includes(L.kind)&&!hairKind;
+      const headKind=['earrings','studs','clip','charm','glassesUnder','glasses','hat'].includes(L.kind)&&!hairKind;
+      if(L.kind==='held'||L.kind==='pack'){ // accessories that follow her hand or her chest, whole
+        let limb=0;
+        if(L.kind==='held'&&!rg.side){const cx=(box[0]+box[2])/2;limb=Math.abs(px.hand1[0]-cx)<Math.abs(px.hand0[0]-cx)?1:0}
+        const pc=makePiece(d,box,()=>true,{kind:L.kind,limb,grid:6,layer:L.kind},true);
+        if(pc)(L.kind==='pack'?groups.torso:groups.over).push(pc);
+        continue;
+      }
       if(hairKind||headKind){
         const pc=makePiece(d,box,()=>true,{kind:hairKind?'hair':'headItem',grid:hairKind?config.hairGrid:6,layer:L.kind},true);
         if(pc)(L.kind==='hairBack'||L.kind==='clipBehind'||L.behind?groups.hairB:groups.hairF).push(pc);

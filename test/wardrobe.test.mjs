@@ -3,11 +3,18 @@
 // saved ownership surviving price changes.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
 
 const dist = new URL('../dist/', import.meta.url);
 const read = name => readFileSync(new URL(name, dist), 'utf8');
+
+// portrait.js's colour helpers, which Surprise me uses to sort colourways into families
+function colourHelpers() {
+  const src = read('portrait.js');
+  return src.match(/^const hexRgb=.*$/m)[0] + '\n' + src.match(/^function rgbToHsl\(r,g,b\)\{[\s\S]*?\n\}/m)[0] + '\n' +
+    src.match(/^function lookKey\(shot,view='front'\)\{[\s\S]*?\n\}/m)[0] + '\n';
+}
 
 function loadWardrobe() {
   const ctx = {
@@ -18,7 +25,7 @@ function loadWardrobe() {
   vm.createContext(ctx);
   // a style challenge naming one hairstyle for both characters, as game.js declares them
   vm.runInContext(read('i18n.js') + read('i18n-es.js') + read('hair-fit.js') + read('catalog.js') +
-    'const briefs=[{key:"mall",need:{hair:"side-ponytail"}},{key:"bob",need:{hair:"curly-bob"}}];\nvar state={owned:[]};\n' + read('shop.js') +
+    colourHelpers() + 'const briefs=[{key:"mall",need:{hair:"side-ponytail"}},{key:"bob",need:{hair:"curly-bob"}}];\nvar state={owned:[]};\n' + read('shop.js') +
     '\nthis.I18N=I18N;this.CATALOG=CATALOG;this.Shop=Shop;this.readLook=readLook;this.catalogOptions=catalogOptions;this.briefs=briefs;this.state=state;', ctx);
   return ctx;
 }
@@ -226,4 +233,110 @@ test('old looks are read as before: the first wardrobe and the defaults are unch
   }
   assert.equal(readLook({ outfit: 'denim-jacket-skirt', shoes: 'lilac-mary-jane-heels' }, 'adult').outfit, 'denim-jacket-skirt');
   assert.equal(readLook({ outfit: 1, clip: 1, gem: 1 }, 'little').outfit, 'pink-gingham-bow-dress');
+});
+
+// ----- accessories: hats, glasses, bags (Grown-up), toys (Little Me) -----
+const ACC = {
+  adult: { hat: ['bucket-hat', 'sun-hat', 'baseball-cap', 'tiara', 'bow-headband'],
+    glasses: ['heart-sunglasses', 'round-tinted-glasses', 'cat-eye-glasses'],
+    bag: ['beaded-tote', 'heart-purse', 'beach-tote', 'mini-backpack'], toy: [] },
+  little: { hat: ['sun-bonnet', 'bear-beanie', 'party-crown'], glasses: ['star-sunglasses', 'round-play-glasses'],
+    bag: [], toy: ['plush-bunny', 'teddy-bear', 'kitten-plush', 'sand-bucket'] }
+};
+
+test('accessories: each doll has her own, each with art on disk and a fit in every view it shows', () => {
+  const { catalogOptions, CATALOG } = loadWardrobe();
+  const finite = f => [f.x, f.y, f.w, f.h].every(Number.isFinite) && f.w > 8 && f.h > 8;
+  for (const doll of ['adult', 'little']) for (const [cat, ids] of Object.entries(ACC[doll])) {
+    assert.deepEqual([...catalogOptions(cat, doll).map(i => i.id)], ids, `${doll} ${cat}`);
+    for (const id of ids) {
+      const it = CATALOG.items[id];
+      assert.deepEqual([...it.dolls], [doll], `${id} is ${doll}'s only`);
+      const views = cat === 'glasses' ? ['front', 'left', 'right'] : CATALOG.views;
+      for (const view of CATALOG.views) {
+        const f = it.fit[doll][view];
+        if (!views.includes(view)) { assert.equal(f, undefined, `${id} hidden ${view}`); continue; }
+        assert.ok(f && finite(f), `${id} ${view} fit`);
+        assert.ok(existsSync(new URL(it.art[view].main, dist)), `${id} ${view} sprite on disk`);
+        // placed on the right part of her: hats and glasses on the head, held things at the hand
+        const top = doll === 'adult' ? -120 : -110, head = doll === 'adult' ? 160 : 230;
+        if (cat === 'hat') assert.ok(f.y > top && f.y < head && f.y + f.h / 2 < head, `${id} ${view} on the head`);
+        if (cat === 'glasses') assert.ok(f.y + f.h / 2 > 40 && f.y + f.h / 2 < (doll === 'adult' ? 110 : 150), `${id} ${view} at the eyes`);
+        if (it.kind === 'held') {
+          assert.ok(Array.isArray(f.grip) && f.grip.length >= 3, `${id} ${view} grip`);
+          const gy = f.grip.reduce((s, p) => s + p[1], 0) / f.grip.length;
+          assert.ok(f.y < gy && f.y + f.h > gy && f.y + f.h < 860, `${id} ${view} hangs from the hand`);
+        }
+        if (cat === 'glasses' && view !== 'front') assert.ok(Array.isArray(f.lens), `${id} ${view} frame front over the hair`);
+        if (cat === 'hat' && f.cut) assert.ok(f.cut.length > 6 && f.cut.every(p => p.every(Number.isFinite)), `${id} ${view} hair cut`);
+      }
+      assert.ok(existsSync(new URL(it.thumb, dist)), `${id} card picture`);
+    }
+  }
+  // the right views mirror the left ones where there is no art of their own
+  for (const id of ['heart-sunglasses', 'tiara', 'plush-bunny']) {
+    const it = CATALOG.items[id], d = it.dolls[0], M = { adult: 181, little: 207 }[d];
+    const l = it.fit[d].left, r = it.fit[d].right;
+    assert.ok(Math.abs((M - l.x - l.w) - r.x) < .02, `${id} right = mirrored left`);
+  }
+});
+
+test('accessories: names in both languages, mostly free, a few showpieces per doll', () => {
+  const { I18N, CATALOG, Shop } = loadWardrobe();
+  const es = I18N.dict ? I18N.dict('es') : null;
+  for (const doll of ['adult', 'little']) {
+    let paid = 0;
+    const all = Object.values(ACC[doll]).flat();
+    for (const id of all) {
+      I18N.set?.('en');
+      const en = CATALOG.items[id].name;
+      assert.ok(en && en.length > 2, `${id} English name`);
+      assert.match(read('i18n-es.js'), new RegExp(`'catalog\\.item\\.${id}':'[^']+'`), `${id} Spanish name`);
+      const p = Shop.price('item:' + id);
+      if (p) { paid++; assert.ok(p >= 10 && p <= 18, `${id} price ${p}`); }
+    }
+    assert.ok(paid >= 1 && paid <= 3, `${doll}: ${paid} showpieces`);
+    assert.ok(paid * 2 < all.length, `${doll}: most accessories are free`);
+  }
+  for (const key of ['tab.extras', 'tab.extrasLabel', 'group.hat', 'group.glasses', 'group.bag', 'group.toy', 'none.hat', 'none.glasses', 'none.bag', 'none.toy']) {
+    assert.match(read('i18n.js'), new RegExp(`'${key.replace('.', '\\.')}':`), `${key} en`);
+    assert.match(read('i18n-es.js'), new RegExp(`'${key.replace('.', '\\.')}':`), `${key} es`);
+  }
+});
+
+test('accessories: old looks, saves and postcards read exactly as before (none), and are validated', () => {
+  const { readLook, CATALOG, Shop } = loadWardrobe();
+  for (const doll of ['adult', 'little']) {
+    const d = CATALOG.defaults[doll];
+    for (const f of ['hat', 'glasses', 'bag', 'toy']) assert.equal(d[f], 'none');
+    // a look saved before the accessories existed
+    const old = { ...d };for (const f of ['hat', 'glasses', 'bag', 'toy']) delete old[f];
+    const read1 = readLook(old, doll);
+    for (const f of ['hat', 'glasses', 'bag', 'toy']) assert.equal(read1[f], 'none', `${doll} old look ${f}`);
+    // the other doll's things, unknown ids and junk fall back to none
+    const other = doll === 'adult' ? { hat: 'bear-beanie', toy: 'teddy-bear', glasses: 'star-sunglasses' } : { hat: 'tiara', bag: 'beach-tote', glasses: 'heart-sunglasses' };
+    const bad = readLook({ ...d, ...other, bag: doll === 'adult' ? 42 : 'beach-tote' }, doll);
+    for (const f of ['hat', 'glasses', 'bag', 'toy']) assert.equal(bad[f], 'none', `${doll} ${f} validated`);
+    for (const [f, ids] of Object.entries(ACC[doll])) for (const id of ids) assert.equal(readLook({ ...d, [f]: id }, doll)[f], id);
+    // owning: a free accessory needs no purchase; a paid one is a try-on until bought
+    assert.deepEqual([...Shop.missing(readLook({ ...d, hat: ACC[doll].hat[0] }, doll))], []);
+  }
+  assert.deepEqual([...Shop.missing(readLook({ ...CATALOG.defaults.adult, hat: 'tiara' }, 'adult'))], ['item:tiara']);
+  // lookKey (portrait.js) caches by look: the accessories are part of it
+  assert.match(read('portrait.js'), /shot\.hat,shot\.glasses,shot\.bag,shot\.toy/);
+});
+
+test('accessories: Surprise me uses them now and then, only owned ones', () => {
+  const { Shop, CATALOG, state } = loadWardrobe();
+  let seed = 3;const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (const doll of ['adult', 'little']) {
+    let worn = 0;const n = 300;
+    for (let i = 0; i < n; i++) {
+      const res = Shop.surprise(doll, CATALOG.defaults[doll], rnd);
+      if (res.look.hat !== 'none') worn++;
+      for (const f of ['hat', 'glasses', 'bag', 'toy']) if (res.look[f] !== 'none') assert.ok(Shop.owned('item:' + res.look[f]), `${f} ${res.look[f]} owned`);
+    }
+    assert.ok(worn > n * .08 && worn < n * .45, `${doll} wears a hat in ${worn} of ${n} surprises`);
+  }
+  assert.equal(state.owned.length, 0);
 });

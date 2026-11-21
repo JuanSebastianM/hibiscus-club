@@ -21,7 +21,10 @@ const LOOKS={
     {...D.adult,outfit:'hoodie-dress-leg-warmers',hair:'side-ponytail',shoes:'fuzzy-slippers'},
     {...D.adult,outfit:'tennis-dress',hair:'high-bun-tendrils',shoes:'pink-chunky-sneakers'},
     {...D.adult,outfit:'tankini-board-shorts',hair:'long-braids',shoes:'flower-flip-flops'},
-    {...D.adult,outfit:'sequin-halter-dress',hair:'flip-bob',shoes:'wedge-sandals',necklace:'butterfly-necklace'}],
+    {...D.adult,outfit:'sequin-halter-dress',hair:'flip-bob',shoes:'wedge-sandals',necklace:'butterfly-necklace'},
+    // accessories (11..): hat, glasses and a bag in her hand; a cap and a backpack
+    {...D.adult,outfit:'tennis-dress',hair:'long-waves',hat:'sun-hat',glasses:'heart-sunglasses',bag:'beaded-tote'},
+    {...D.adult,outfit:'baby-tee-cargo',hair:'space-buns',hat:'baseball-cap',glasses:'cat-eye-glasses',bag:'mini-backpack'}],
   little:[
     {...D.little},
     {...D.little,outfit:'denim-overalls',hair:'curly-buns',shoes:'white-velcro-sneakers'},
@@ -34,7 +37,10 @@ const LOOKS={
     {...D.little,outfit:'tulle-party-dress',hair:'ringlet-pigtails',shoes:'jelly-shoes'},
     {...D.little,outfit:'ballet-wrap-set',hair:'top-ponytail',shoes:'ballet-slippers'},
     {...D.little,outfit:'dino-romper',hair:'curly-bob',shoes:'light-up-sneakers'},
-    {...D.little,outfit:'beach-poncho',hair:'tiny-pigtails',shoes:'toddler-sandals'}]
+    {...D.little,outfit:'beach-poncho',hair:'tiny-pigtails',shoes:'toddler-sandals'},
+    // accessories (11..): a beanie, glasses and a plush; a crown and the teddy
+    {...D.little,hat:'bear-beanie',glasses:'star-sunglasses',toy:'plush-bunny'},
+    {...D.little,outfit:'dino-romper',hair:'curly-buns',hat:'party-crown',toy:'teddy-bear'}]
 };
 const lookOf=(doll,i)=>({...LOOKS[doll][i%LOOKS[doll].length],doll});
 /* The pose of an animation at time t (seconds). walk: t in seconds at the natural speed. */
