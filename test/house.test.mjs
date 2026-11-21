@@ -288,3 +288,156 @@ test('free spots: tap-to-add never stacks a new piece on an old one when there i
   const wall = L.findSpot('wall-clock', list, 'living', seeded(4));
   assert.equal(L.item(wall.id).placement, 'wall');
 });
+
+// ---------- painted rooms ----------
+// inside the floor quadrilateral (back-left, back-right, front-right, front-left), with a little tolerance
+const insideQuad = (q, x, y, tol = 0.5) => {
+  for (let i = 0; i < 4; i++) {
+    const [ax, ay] = q[i], [bx, by] = q[(i + 1) % 4];
+    if ((bx - ax) * (y - ay) - (by - ay) * (x - ax) < -tol * Math.hypot(bx - ax, by - ay)) return false;
+  }
+  return true;
+};
+
+test('painted rooms: eighteen backdrops, three per room, with sound measured geometry and names', () => {
+  const { DECOR, L } = load();
+  assert.equal(DECOR.backdrops.length, 18);
+  const en = read('i18n.js'), es = read('i18n-es.js');
+  for (const r of DECOR.rooms) assert.equal(L.schemes(r.id).length, 3, r.id);
+  for (const b of DECOR.backdrops) {
+    const [bl, br, fr, fl] = b.floor, tag = b.id;
+    assert.ok(readFileSync(new URL(b.file, dist)).length > 10000, tag + ' picture');
+    assert.ok(readFileSync(new URL(b.thumb, dist)).length < 12000, tag + ' thumbnail is small');
+    assert.ok(en.includes(`'house.scheme.${b.id}'`) && es.includes(`'house.scheme.${b.id}'`), tag + ' named in both languages');
+    assert.equal(bl[1], br[1]); assert.equal(fl[1], fr[1]);
+    assert.ok(bl[1] > 600 && bl[1] < 1000 && fr[1] > bl[1] + 140 && fr[1] <= 1152, tag + ' floor lines');
+    assert.ok(bl[0] < br[0] && fl[0] < bl[0] && fr[0] > br[0], tag + ' floor widens toward the viewer');
+    // the side lines meet at the vanishing point, above the floor
+    const [vx, vy] = b.vp;
+    assert.ok(vy < bl[1] - 150, tag + ' horizon above the floor');
+    for (const [a, c] of [[bl, fl], [br, fr]]) {
+      const x = a[0] + (c[0] - a[0]) * (vy - a[1]) / (c[1] - a[1]);
+      assert.ok(Math.abs(x - vx) < 3, `${tag}: side line misses the vanishing point by ${x - vx}`);
+    }
+    assert.ok(b.scale > 0.5 && b.scale < 1.3, tag + ' scale ' + b.scale);
+    for (const z of b.wall) assert.ok(z[0] < z[2] && z[1] < z[3] && z[3] <= bl[1] && z[0] >= 0 && z[2] <= 1536, tag + ' wall zone');
+    for (const o of b.openings) assert.ok(['window', 'door', 'arch', 'awning'].includes(o[4]) && o[0] < o[2] && o[1] < o[3], tag + ' opening');
+    // a door at the back wall keeps the floor in front of it clear
+    if (b.openings.some(o => o[4] === 'door')) assert.ok(b.clear.some(c => c[1] <= bl[1] + 6), tag + ' clear before door');
+  }
+});
+
+test('painted rooms: every standing piece and rug stays on that room\'s floor, at every corner and size', () => {
+  const { DECOR, L } = load();
+  const standing = [...manifest.items.filter(i => i.placement === 'floor' || i.placement === 'surface').map(i => i.id), '@adult', '@little'];
+  const rugs = manifest.items.filter(i => i.placement === 'rug').map(i => i.id);
+  const spots = [[0, 0], [1536, 0], [0, 1152], [1536, 1152], [768, 0], [768, 2000], [-999, 950], [2999, 950]];
+  for (const b of DECOR.backdrops) {
+    const q = b.floor, yb = q[0][1];
+    for (const id of standing) for (const s of [0.5, 1, 1.8]) for (const f of [false, true]) for (const [x, y] of spots) {
+      const p = L.constrain(piece(id, x, y, { s, f }), b.id), fp = L.footprint(p, b.id), tag = `${b.id} ${id} s${s} f${f} @${x},${y}`;
+      assert.ok(fp.rear >= yb - 0.01, `${tag}: rear feet ${fp.rear} above the floor line ${yb}`);
+      assert.ok(fp.front <= q[2][1], `${tag}: past the front edge`);
+      const [l, r] = L.floorEdges(fp.rear, b.id);
+      if (fp.r - fp.l < r - l - 8) for (const [cx, cy] of [[fp.l, fp.rear], [fp.r, fp.rear], [fp.l, fp.front], [fp.r, fp.front]])
+        assert.ok(insideQuad(q, cx, cy) && cx >= 0 && cx <= 1536, `${tag}: foot ${cx},${cy} off the floor`);
+    }
+    for (const id of rugs) for (const [x, y] of spots) {
+      const p = L.constrain(piece(id, x, y), b.id), fp = L.footprint(p, b.id);
+      for (const [cx, cy] of [[fp.l, fp.rear], [fp.r, fp.rear], [fp.l, fp.front], [fp.r, fp.front]])
+        assert.ok(insideQuad(q, cx, cy), `${b.id} ${id}: rug corner ${cx},${cy} off the floor`);
+    }
+    // further back is smaller, in proportion to this painting's floor
+    const back = L.constrain(piece('armchair', 768, yb + 5), b.id), front = L.constrain(piece('armchair', 768, 1140), b.id);
+    const want = (front.y - b.vp[1]) / (back.y - b.vp[1]);
+    assert.ok(Math.abs(L.scaleOf(front, b.id) / L.scaleOf(back, b.id) - want) < 0.01, b.id + ' perspective scale');
+  }
+});
+
+test('painted rooms: wall pieces stay in the wall zones and off windows and doors', () => {
+  const { DECOR, L } = load();
+  const wall = manifest.items.filter(i => i.placement === 'wall').map(i => i.id);
+  for (const b of DECOR.backdrops) {
+    const g = L.geo(b.id);
+    for (const id of wall) for (const [x, y] of [[0, 0], [1536, 1152], [768, 400], [400, 300], [1100, 500]]) {
+      const p = L.constrain(piece(id, x, y), b.id), bx = L.box(p, b.id), tag = `${b.id} ${id} @${x},${y}`;
+      const inZone = g.zones.some(z => z.hang
+        ? DECOR.hangers.includes(id) && bx.y >= z.y0 - 0.5 && bx.y <= z.y1 + 0.5 && bx.x >= z.x0 - 0.5 && bx.r <= z.x1 + 0.5 && bx.b <= g.back.y1
+        : bx.x >= z.x0 - 0.5 && bx.r <= z.x1 + 0.5 && bx.y >= z.y0 - 0.5 && bx.b <= z.y1 + 0.5);
+      assert.ok(inZone, `${tag}: outside the wall zones ${JSON.stringify(bx)}`);
+      // where the wall has room beside the openings, the piece keeps off them
+      const blocked = g.openings.filter(o => !(DECOR.overOpenings[id] || []).includes(o.kind));
+      const overlap = blocked.reduce((s, o) => s + Math.max(0, Math.min(bx.r, o.x1) - Math.max(bx.x, o.x0)) * Math.max(0, Math.min(bx.b, o.y1) - Math.max(bx.y, o.y0)), 0);
+      const z = g.zones[0];
+      const roomBeside = g.zones.length === 1 && blocked.every(o => o.x0 - z.x0 > bx.w + 14 || z.x1 - o.x1 > bx.w + 14);
+      if (roomBeside) assert.ok(overlap < bx.w * bx.h * 0.02, `${tag}: covers an opening`);
+    }
+  }
+});
+
+test('painted rooms: switching schemes or back to paint keeps every piece, grounded', () => {
+  const { DECOR, L } = load();
+  for (const r of DECOR.rooms) {
+    const ids = [...L.schemes(r.id).map(b => b.id), r.id];
+    for (let seed = 1; seed <= 10; seed++) {
+      let from = ids[seed % ids.length];
+      const list = L.surprise(from, () => true, seeded(seed * 31));
+      const n = list.length;
+      for (const to of [...ids, ids[0]]) {
+        L.regeo(list, from, to); L.settle(list, to);
+        assert.equal(list.length, n, `${r.id}: ${from} -> ${to} lost pieces`);
+        for (const p of list) {
+          const before = [p.x, p.y]; L.constrain(p, to);
+          assert.ok(Math.abs(before[0] - p.x) < 1.01 && Math.abs(before[1] - p.y) < 1.01, `${from} -> ${to}: ${p.id} not grounded`);
+          if (p.host) assert.ok(list.includes(p.host), 'host kept');
+        }
+        from = to;
+      }
+    }
+  }
+});
+
+test('painted rooms: saves remember the scheme, old saves keep their look, unknown ids fall back', () => {
+  const { DECOR, L } = load();
+  // a new house: every room starts in its first painted scheme
+  const fresh = L.readHouse(undefined);
+  for (const r of DECOR.rooms) assert.equal(fresh.rooms[r.id].b, L.defaultScheme(r.id));
+  // an old save (no b): a decorated room keeps its paint and floor, an untouched one goes painted
+  const old = L.readHouse({ rooms: { bedroom: { w: 'lilac', f: 'cherry', p: [['single-bed', 400, 700, 100, 0]] }, kitchen: { w: 'mint-stripes', f: 'pink-check', p: [['fridge', 300, 700, 100, 0]] } } });
+  assert.equal(old.rooms.bedroom.b, undefined); assert.equal(old.rooms.kitchen.b, undefined, 'furnished with the default paint: kept procedural');
+  assert.equal(old.rooms.living.b, 'living-1');
+  // chosen scheme, chosen paint over painted (''), another room's scheme, junk
+  const h = L.readHouse({ rooms: { bedroom: { b: 'bedroom-3', p: [['single-bed', 400, 700, 100, 0]] }, kitchen: { b: '', w: 'butter', p: [] }, living: { b: 'bedroom-2', p: [['sofa', 1, 1, 100, 0]] }, bathroom: { b: 42 }, patio: { b: 'nope', p: [] } } });
+  assert.equal(h.rooms.bedroom.b, 'bedroom-3'); assert.equal(h.rooms.kitchen.b, ''); assert.equal(h.rooms.living.b, undefined);
+  assert.equal(h.rooms.bathroom.b, 'bathroom-1', 'untouched room'); assert.equal(h.rooms.patio.b, 'patio-1');
+  // pieces of a painted room are grounded in its geometry and read back unchanged
+  const [pb] = L.readPieces(h.rooms.bedroom.p, 'bedroom-3');
+  assert.ok(L.footprint(pb, 'bedroom-3').rear >= L.geo('bedroom-3').back.y1 - 0.5);
+  assert.deepEqual(plain(L.writePieces(L.readPieces(h.rooms.bedroom.p, 'bedroom-3'))), plain(h.rooms.bedroom.p));
+  assert.deepEqual(plain(L.readHouse(plain(h))), plain(h), 'reads back exactly');
+  // goals: the starting scheme is not a new look, another scheme is
+  assert.ok(!L.goalsMet({ bedroom: { w: 'candy-stripes', f: 'honey-oak', b: 'bedroom-1', pieces: [] } }).has('paint'));
+  assert.ok(L.goalsMet({ bedroom: { w: 'candy-stripes', f: 'honey-oak', b: 'bedroom-2', pieces: [] } }).has('paint'));
+});
+
+test('painted rooms: Surprise me lays out every scheme tidily, big pieces at the back, doors kept clear', () => {
+  const { DECOR, L } = load();
+  const big = ['single-bed', 'bunk-bed', 'canopy-bed', 'fridge', 'bathtub', 'shower', 'dollhouse', 'play-kitchen', 'toy-shelf', 'wardrobe', 'bookshelf'];
+  for (const b of DECOR.backdrops) {
+    let atBack = 0, total = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const out = L.surprise(b.id, () => false, seeded(seed * 53 + b.id.length));
+      assert.ok(out.length >= 4 && out.length <= 40, `${b.id} #${seed}: ${out.length}`);
+      for (const p of out) {
+        const before = [p.x, p.y]; L.constrain(p, b.id);
+        assert.ok(Math.abs(before[0] - p.x) < 0.05 && Math.abs(before[1] - p.y) < 0.05, `${b.id} #${seed}: ${p.id} where it belongs`);
+      }
+      for (const p of out.filter(p => big.includes(p.id))) { total++; if (L.footprint(p, b.id).rear < L.geo(b.id).back.y1 + 30) atBack++ }
+      // the doorway stays free, apart from a centrepiece that has nowhere else to go
+      const blocking = out.filter(p => L.inClear(p, b.id) > 0.25);
+      assert.ok(blocking.length <= 1, `${b.id} #${seed}: ${blocking.map(p => p.id)} in front of a door`);
+    }
+    // (beside a wide door in the back wall there may be no room for big pieces: they stand out in the room)
+    if (total && !b.openings.some(o => o[4] === 'door')) assert.ok(atBack / total > 0.8, `${b.id}: big pieces against the back wall ${atBack}/${total}`);
+  }
+});

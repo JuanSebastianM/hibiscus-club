@@ -249,7 +249,8 @@ def measure(name: str, img: Image.Image) -> tuple[dict, dict]:
     for o in opens:
         if o[4] in ("door", "arch") and o[3] >= yb - 4:
             # the floor in front of a doorway at the back wall, a third of the way forward
-            clear.append([o[0] + 10, yb, o[2] - 10, round(yb + (front - yb) * .38)])
+            # the doorway itself (its casing may be overlapped a little)
+            clear.append([o[0] + 36, yb, o[2] - 36, round(yb + (front - yb) * .38)])
     if "side" in h:
         s = h["side"]
         y0, y1 = min(s[1], s[3]) - 10, max(s[1], s[3]) + 30

@@ -52,7 +52,7 @@ const DecorLogic=(()=>{
      back and at the front (pieces scale linearly with their floor y between the two, which is exact
      in one-point perspective), the wall zones and the openings on them, the floor kept clear in
      front of doors, and which way the light falls. The procedural room is one fixed geometry. */
-  const PROC={painted:false,back:ROOM.back,front:ROOM.frame.b,fl:ROOM.frame.l,fr:ROOM.frame.r,sB:1236/1356,sF:1476/1356,wallK:1,
+  const PROC={painted:false,back:ROOM.back,front:ROOM.frame.b,fl:ROOM.frame.l,fr:ROOM.frame.r,sB:1236/1356,sF:1476/1356,wallK:1,rugK:1,
     floor:FLOOR,rug:RUG,zones:[WALL],openings:[],clear:[],light:.04,skirt:SKIRT,xmin:-Infinity,xmax:Infinity,outdoor:false};
   const PROC_OUT={...PROC,zones:[WALL_OUT],outdoor:true};
   const geos=new Map();
@@ -68,6 +68,8 @@ const DecorLogic=(()=>{
       const [bl,br,fr,fl]=b.floor,yb=bl[1],front=fr[1],vy=b.vp[1];
       g={painted:true,id:b.id,back:{x0:bl[0],x1:br[0],y1:yb},front,fl:fl[0],fr:fr[0],vp:b.vp,
         sB:b.scale,sF:b.scale*(front-vy)/(yb-vy),wallK:b.scale,
+        // rugs lie flatter on these floors, seen from lower down than the procedural room's
+        rugK:clamp((front-yb)/468*1.15,.45,1),
         floor:{y0:yb+4,y1:front-(front>=ROOM.H-2?10:6)},rug:{y0:yb+6,y1:front-6},
         zones:b.wall.map(z=>({x0:z[0],y0:z[1],x1:z[2],y1:z[3],hang:z[4]==='hang'})),
         openings:b.openings.map(o=>({x0:o[0],y0:o[1],x1:o[2],y1:o[3],kind:o[4]})),
@@ -95,7 +97,7 @@ const DecorLogic=(()=>{
   }
   /* Bounding box in room coordinates. */
   function box(p,w){
-    const it=item(p.id),k=scaleOf(p,w),wd=it.width*k,h=it.height*k;
+    const it=item(p.id),k=scaleOf(p,w),wd=it.width*k,h=it.height*k*(it.placement==='rug'?geo(w).rugK:1);
     const ax=p.f?1-it.anchor[0]:it.anchor[0];
     const x=p.x-ax*wd,y=p.y-it.anchor[1]*h;
     return {x,y,w:wd,h,r:x+wd,b:y+h};
@@ -155,6 +157,11 @@ const DecorLogic=(()=>{
     if(best){p.x=best.x;p.y=best.y;p.s=best.s}
     return p;
   }
+  /* ...settled: placed again from where it landed until it stays put, so placing is idempotent. */
+  function placeWall(p,it,g){
+    for(let i=0;i<6;i++){const x=p.x,y=p.y,s=p.s;placeWallPainted(p,it,g);if(Math.abs(p.x-x)<1e-6&&Math.abs(p.y-y)<1e-6&&p.s===s)break}
+    return p;
+  }
   /* Keep a piece where its kind belongs, and on screen. Mutates and returns p. */
   function constrain(p,w){
     const it=item(p.id);if(!it)return p;
@@ -163,7 +170,7 @@ const DecorLogic=(()=>{
     if(!it.mirror)p.f=false;
     if(it.placement==='wall'){
       p.host=null;
-      if(g.painted)return placeWallPainted(p,it,g);
+      if(g.painted)return placeWall(p,it,g);
       const z=g.zones[0];
       // a piece taller or wider than the wall is made to fit (the patio's garden wall is low)
       const fit=Math.min((z.y1-z.y0)/(it.height*it.defaultScale),(z.x1-z.x0)/(it.width*it.defaultScale));
@@ -184,7 +191,9 @@ const DecorLogic=(()=>{
     if(it.placement==='rug'){
       // the whole rug lies on the floor: its far edge below the wall line, its near edge before the front edge
       const ay=it.anchor[1];let y=Number.isFinite(p.y)?p.y:g.rug.y0;
-      for(let i=0;i<3;i++){p.y=y;const h=it.height*scaleOf(p,w);y=clamp(y,yb+6+ay*h,Math.max(yb+6+ay*h,g.front-6-(1-ay)*h))}
+      // (a rug deeper than the floor is made smaller; its size changes with its depth, so iterate)
+      for(let i=0;i<4;i++){p.y=(yb+g.front)/2;const h=box(p,w).h;if(h<=g.front-yb-14)break;p.s=Math.max(SCALE.min,Math.floor(p.s*(g.front-yb-14)/h*100)/100)}
+      for(let i=0;i<30;i++){p.y=y;const h=box(p,w).h,n=clamp(y,yb+6+ay*h,Math.max(yb+6+ay*h,g.front-6-(1-ay)*h));if(Math.abs(n-y)<1e-4)break;y=n}
       p.y=y;const b=box(p,w),[l,r]=floorEdges(b.y+b.h*.06,w),inset=b.w*.04;
       const lo=l+4-(b.x+inset-p.x),hi=r-4-(b.r-inset-p.x);
       p.x=lo<=hi?clamp(Number.isFinite(p.x)?p.x:(lo+hi)/2,lo,hi):(l+r)/2;
@@ -193,7 +202,9 @@ const DecorLogic=(()=>{
     // standing pieces: the whole footprint (front contact to rear feet, left to right foot) is on the floor
     const F=g.floor;
     let y=clamp(Number.isFinite(p.y)?p.y:F.y0,F.y0,F.y1);
-    for(let i=0;i<8;i++){p.y=y;const n=clamp(Math.max(y,yb+3+groundDepth(p,w)),F.y0,F.y1);if(Math.abs(n-y)<1e-3){y=n;break}y=n}
+    // a piece deeper than the floor (a big canopy bed in a shallow painted room) is made smaller
+    for(let i=0;i<4;i++){p.y=F.y1;const d=groundDepth(p,w);if(F.y1-d>=yb+3||p.s<=SCALE.min)break;p.s=Math.max(SCALE.min,Math.floor(p.s*(F.y1-yb-4)/d*100)/100)}
+    for(let i=0;i<30;i++){p.y=y;const n=clamp(Math.max(y,yb+3+groundDepth(p,w)),F.y0,F.y1);if(Math.abs(n-y)<1e-4){y=n;break}y=n}
     p.y=y;
     const f=footprint(p,w),[l,r]=floorEdges(f.rear,w);
     const lo=l+4-(f.l-p.x),hi=r-4-(f.r-p.x);
@@ -457,9 +468,11 @@ const DecorLogic=(()=>{
       const w=r=>r.reduce((s,e)=>s+e.w,0)+30;
       let floating=null;
       rows.forEach((row,ri)=>{
-        const seg=room.filter(s=>s.left>=w(row)).sort((a,b)=>b.left-a.left)[0];
+        const fit=r=>room.filter(s=>s.left>=w(r)).sort((a,b)=>b.left-a.left)[0];
+        let seg=fit(row);
+        if(!seg&&ri>0&&row.length>1){row=row.slice(0,1);seg=fit(row)} // a cluster's first piece alone
         if(seg){seg.rows.push(row);seg.left-=w(row)}
-        else if(ri===0)floating=row; // the centrepiece does not fit beside the door
+        else if(ri===0)floating=row.slice(0,1); // the centrepiece (alone) does not fit beside the door
       });
       for(const s of room){
         if(!s.rows.length)continue;
@@ -471,7 +484,7 @@ const DecorLogic=(()=>{
         // it stands out in the room instead, just in front of the floor kept clear before the door
         const c=g.clear.find(c=>c.y0<=yb+6),n=out.length;
         const fw=w(floating)-30,side=rnd()<.5?c.x0:c.x1;
-        placeRow(floating,side-fw/2+(side===c.x0?-1:1)*fw*.15,false);
+        placeRow(floating,side-fw/2+(side===c.x0?-.3:.3)*fw,false);
         for(const p of out.slice(n)){const f=footprint(p,where);if(f.rear<c.y1+4){p.y+=c.y1+4-f.rear;constrain(p,where)}floats.add(p)}
       }
     }
