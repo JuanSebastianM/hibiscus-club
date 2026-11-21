@@ -633,14 +633,14 @@ SRCMAP = {}  # (id, view, part) -> full-resolution source file, for shipping
 # (foot bed, trim, collar, keep / open / over polygons). `open`: the round 2 under/over layers.
 SHOES = {
     "jelly-sandals": dict(src="r", k=.265),
-    "flower-flip-flops": dict(src="r", k=.265),
+    "flower-flip-flops": dict(src="r", k=.265, trimDy=64),  # no heel strap: the whole heel shows over the sole
     "wedge-sandals": dict(src="r", k=.265, lift=14),
     "platform-boots": dict(src="p", k=.31),
     "fuzzy-slippers": dict(src="p", k=.265),
     "ribbon-ballet-flats": dict(src="p", k=.265),
-    "toddler-sandals": dict(src="r", k=.265),
-    "jelly-shoes": dict(src="r", k=.265),
-    "bunny-slippers": dict(src="p", k=.30),
+    "toddler-sandals": dict(src="r", k=.265, bedDy=11, sx=.94, lift=11),
+    "jelly-shoes": dict(src="r", k=.265, bedDy=11, sx=.94, lift=11),
+    "bunny-slippers": dict(src="p", k=.30, left=dict(dx=6), right=dict(dx=6)),  # heel back over hers
     "light-up-sneakers": dict(src="p", k=.295),
     "cowboy-boots": dict(src="p", k=.30),
     "ballet-slippers": dict(src="p", k=.295),
@@ -683,9 +683,16 @@ def foot_bed(doll, view, fit, P, k, c):
     top edge of the under layer (the insole as drawn), sampled every 6 doll px, `bedDy` below it; front and
     back: a level bed `lift` px above the floor (the sole's thickness where the toes rest)."""
     F = FEET[doll]
-    if view in ("front", "back"):
-        y = F["floor"] - c.get("lift", 4)
+    if view == "front":
+        # the toes rest on the sole's front edge, above its rim (`lift` px over the floor)
+        y = F["floor"] - c.get("lift", 7)
         return {"top": FOOT_TOP[doll][view], "bed": [[0, y], [400, y]]}
+    if view == "back":
+        # from behind the heel sits on the heel end of the footbed: as high over the floor as the side view's
+        # bed is under the heel (measured there, `backDy` lower: the insole is seen from above), each foot
+        y = round(F["floor"] - c["_heelLift"] + c.get("backDy", 3), 1)
+        top = min(FOOT_TOP[doll][view], round(y - 90))
+        return {"top": top, "bed": [[0, y], [400, y]]}
     f = fit["near"]
     a = load_rgba(P["under"][0])[..., 3] > 128
     H, W = a.shape
@@ -699,6 +706,9 @@ def foot_bed(doll, view, fit, P, k, c):
                 pts.append([round(x, 1), round(f["y"] + ys[0] * k + c.get("bedDy", 1.5), 1)])
         x += 6
     heel = F["heel"] if view == "left" else MIRROR[doll] - F["heel"]
+    if view == "left":  # how high the heel stands: the bed over the back of the heel (not the cup's rim)
+        hb = [y for x, y in pts if F["heel"] - 40 <= x <= F["heel"] - 12]
+        c["_heelLift"] = round(F["floor"] - float(np.median(hb)), 1)
     return {"top": FOOT_TOP[doll]["side"], "bed": pts, "ramp": 40, "cx": heel, "sx": c.get("sx", 1.0)}
 
 
@@ -763,6 +773,10 @@ def build_shoe(iid, c, doll):
                 fit[key] = v
         if c["src"] == "r" and "foot" not in vc:
             fit["foot"] = foot_bed(doll, view, fit, P, k, c)
+        if c["src"] == "r" and view in ("left", "right") and "trim" not in vc:
+            # from the side the foot is kept inside the shoe's filled outline (portrait.js shoeLayers) from
+            # just under the ankle strap down
+            fit["trim"] = FOOT_TOP[doll]["side"] + c.get("trimDy", 36)
         if view == "right":  # extras given for the left view, mirrored
             lv = {**c.get("all", {}), **c.get("left", {})}
             if "foot" in lv and "foot" not in c.get("right", {}):
