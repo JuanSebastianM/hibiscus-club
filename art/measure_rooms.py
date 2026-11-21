@@ -29,7 +29,7 @@ overlay previews (--overlay) are how they were checked and corrected.
 
 Scale: the furniture manifest's defaultScale assumes 280 px per metre. A room's scale at
 the back wall is pxPerMetre / 280 with pxPerMetre = the back wall's width in px / its width in
-metres (BACK_WALL_M: 7.2 m indoors, 7.5 m on the terraces). The paintings are wide-angle, so the
+metres (BACK_WALL_M: 6.6 m indoors, 7.5 m on the terraces). The paintings are wide-angle, so the
 yardsticks in them (a door's height, a side door carried back through the perspective, the
 ceiling, the patios' central arch) are drawn tall: sized by them, furniture crowded every room.
 They still bound the result: the scale is kept within 42 to 72 % of the yardstick's, and the
@@ -54,7 +54,7 @@ ROOMS_DIR = ROOT / "dist" / "assets" / "decor" / "rooms"
 DATA = ROOT / "dist" / "decor-data.js"
 W, H = 1536, 1152
 PX_PER_M = 280
-BACK_WALL_M = {"indoor": 7.2, "patio": 7.5}  # the back wall's width in metres (see measure())
+BACK_WALL_M = {"indoor": 6.6, "patio": 7.5}  # the back wall's width in metres (see measure())
 
 # Read by eye on the 50 px grid of each backdrop (room pixels). Keys:
 #   back: [y, xLeft, xRight]   floor line at the back wall and the two back corners (refined)
@@ -245,7 +245,7 @@ def measure(name: str, img: Image.Image) -> tuple[dict, dict]:
         ppm = ppm_there * (yb - vy) / (by - vy)
     # The paintings are wide-angle: their doors and ceilings are drawn tall for the room's width, and
     # furniture sized by them crowds the room. The scale comes from the back wall's width instead
-    # (BACK_WALL_M: 7.2 m indoors, 7.5 m for the open terraces), and the door yardstick is kept as a
+    # (BACK_WALL_M: 6.6 m indoors, 7.5 m for the open terraces), and the door yardstick is kept as a
     # check: the door heights this implies are printed.
     width_m = BACK_WALL_M["patio" if patio else "indoor"]
     # ...kept within 42 to 72 % of the yardstick's scale, so neither measure runs away
