@@ -281,6 +281,7 @@ const HibiscusPuppet=(()=>{
     constructor(rg,src,k=3){
       const f=rg.face;this.f=f;this.rg=rg;this.k=k;
       const all=[...f.eyes.flat(),...f.mouth.map(p=>[p[0],p[1]])];
+      if(f.patch){const [px,py,rx,ry]=f.patch;all.push([px-rx,py-ry],[px+rx,py+ry])} // real mouth frames (setFrames)
       const xs=all.map(p=>p[0]),ys=all.map(p=>p[1]),u=rg.resident?3:8;
       this.box=[Math.floor(Math.min(...xs)-u),Math.floor(Math.min(...ys)-u*1.5),0,0];
       this.box[2]=Math.ceil(Math.max(...xs)+u)-this.box[0];this.box[3]=Math.ceil(Math.max(...ys)+u*1.4+(f.jawMax||3))-this.box[1];
@@ -295,6 +296,21 @@ const HibiscusPuppet=(()=>{
       const m=f.mouth,cx=(Math.min(...m.map(p=>p[0]))+Math.max(...m.map(p=>p[0])))/2;
       this.mouthCx=cx;
       this.state='';
+    }
+    /* Real frames (pack-2 residents): the talk and smile pictures, registered with the neutral one, cut
+       to the feathered ellipse face.patch round the mouth. draw() blends them in place of the drawn mouth. */
+    setFrames(frames){
+      const [px,py,rx,ry]=this.f.patch,k=this.k,[bx,by]=this.box,out={};
+      for(const [name,img] of Object.entries(frames)){
+        const c=mk(this.canvas.width,this.canvas.height),g=c.getContext('2d');
+        g.imageSmoothingQuality='high';g.setTransform(k,0,0,k,-bx*k,-by*k);g.drawImage(img,0,0,this.rg.size[0],this.rg.size[1]);
+        // feathered ellipse: solid in the middle, fading over its outer 45 %
+        g.globalCompositeOperation='destination-in';g.translate(px,py);g.scale(rx,ry);
+        const gr=g.createRadialGradient(0,0,0,0,0,1);gr.addColorStop(0,'#000');gr.addColorStop(.55,'#000');gr.addColorStop(1,'rgba(0,0,0,0)');
+        g.fillStyle=gr;g.fillRect(-1,-1,2,2);
+        out[name]=c;
+      }
+      this.frames=out;this.state='';
     }
     pixel(x,y){const d=this.sd.data,w=this.sd.width,i=(Math.round(clamp(y,0,this.sd.height-1))*w+Math.round(clamp(x,0,w-1)))*4;return [d[i],d[i+1],d[i+2],d[i+3]]}
     prepEye(poly){
@@ -341,8 +357,15 @@ const HibiscusPuppet=(()=>{
       g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,this.canvas.width,this.canvas.height);
       g.setTransform(k,0,0,k,-bx*k,-by*k);
       let any=false;
+      if(this.frames){ // real frames: the open mouth fades in with the jaw, the smile while she talks or smiles
+        const a=smooth(.1,.55,f.jaw/(this.f.jawMax||1.5)),s=clamp(f.smile,0,1)*(1-a);
+        g.setTransform(1,0,0,1,0,0);
+        if(s>.02&&this.frames.smile){g.globalAlpha=s;g.drawImage(this.frames.smile,0,0);any=true}
+        if(a>.02&&this.frames.talk){g.globalAlpha=a;g.drawImage(this.frames.talk,0,0);any=true}
+        g.globalAlpha=1;g.setTransform(k,0,0,k,-bx*k,-by*k);
+      }
       this.eyes.forEach((e,i)=>{const b=f.blink[Math.min(i,f.blink.length-1)];if(b>.02){this.drawLid(e,b);any=true}});
-      if(f.jaw>.05){this.drawMouth(f,disp);any=true}
+      if(f.jaw>.05&&!this.frames){this.drawMouth(f,disp);any=true}
       if(any){g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='destination-in';g.drawImage(this.faceMask,0,0);g.globalCompositeOperation='source-over'}
       this.visible=any;return any;
     }
@@ -556,7 +579,14 @@ const HibiscusPuppet=(()=>{
     const pb=makePiece(d,box,i=>Math.floor(i/W)>=rg.neckCut,{kind:'torso',grid:6});if(pb)pieces.push(pb);
     const ph=makePiece(d,box,i=>Math.floor(i/W)<rg.neckCut,{kind:'torso',grid:1,face:true});if(ph)pieces.push(ph);
     pieces.push({overlay:true});
-    return finishModel(rg,pieces,bc,{resident:id,size:[w,h]});
+    const m=finishModel(rg,pieces,bc,{resident:id,size:[w,h]});
+    if(rg.frames&&m.overlay&&rg.face.patch){ // real talk / smile frames; without them the drawn mouth stays
+      try{
+        const [talk,smile]=await Promise.all(['talk','smile'].map(v=>asset('assets/scenes/'+id+'-'+v+'.png')));
+        m.overlay.setFrames({talk,smile});m.frames=true;
+      }catch{}
+    }
+    return m;
   }
   /* Meshes, skinning chains and face bases for every piece (far copies share their source's mesh). */
   function finishModel(rg,order,overlaySrc,extra){
@@ -825,6 +855,7 @@ void main(){
       const sk=R.springStep(this.springs.skirt,-clamp(hv,-60,60)*.0012+pose.bones[B.root].r*-.4,dt,1.9,.38);
       pose.bones[B.skirt0].r+=sk;pose.bones[B.skirt1].r+=sk;
       if(rg.face)pose.face.jaw=Math.min(pose.face.jaw,rg.face.jawMax||4);
+      if(this.model?.frames)pose.face.smile=Math.max(pose.face.smile,this.talkW*.85); // real frames: she smiles between words
       if(this.kind==='doll'&&this.model?.farOffset){const t=pose.bones[B.thigh1];t.x+=this.model.farOffset[0];t.y+=this.model.farOffset[1]}
       this.pose=pose;
     }
@@ -843,6 +874,7 @@ void main(){
       const S=gpu.shared;
       for(let b=0;b<NB;b++){const p=pose.bones[b];S.uP.value[b].set(p.r,p.x,p.y,0);S.uS.value[b].set(p.sx,p.sy)}
       const f=pose.face;S.uFace.value.set(f.jaw,f.smile,f.wide,f.squint);
+      if(m.frames)S.uFace.value.set(f.jaw*.25,0,0,0); // the frames carry the mouth; only a hint of chin drop
       if(m.expr){ // drawn heads take over from the procedural face (only the Grown-up's own smile stays a warp)
         S.uFace.value.set(0,this.doll==='adult'?f.smile:0,0,this.doll==='adult'?f.squint*.5:0);
         const w=this.exprWeights(f),U=w&&gpu.meshes.find(x=>x.userData.piece.expr)?.material.uniforms;
@@ -912,7 +944,7 @@ void main(){
 
   return {
     /* create(canvas, opts) -> puppet, or null when puppets are off. opts: shot + view (doll) or
-       resident ('mara' | 'rosa' | 'kit'); layout(p) -> {size:[w,h] canvas px to set, crop:[x,y,w,h]
+       resident ('mara' | 'rosa' | 'kit' | 'sol' | 'teo'); layout(p) -> {size:[w,h] canvas px to set, crop:[x,y,w,h]
        of the doll canvas, dest:[x,y,w,h] in the canvas, clip, back (canvas drawn first), front
        (drawn last)}; onActive(on): true when it starts drawing, false when the page must show the
        still picture again; energy (idle amplitude 0..1); seed. */
