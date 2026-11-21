@@ -289,6 +289,8 @@ function outfitLayer(doll,view,id,tintId){
     }
     if(fit.erase)eraseShapes(doll,view,c,fit.erase);
     const res={front:c,back:null,over};
+    // a hood worn up: drawn over her hair, the face opening cut out of it (see dollOps)
+    if(fit.hood){res.hood=splitLayer(doll,view,c,fit.hood.region);if(fit.hood.face?.length)eraseShapes(doll,view,res.hood,fit.hood.face)}
     if(fit.behind)res.back=splitLayer(doll,view,c,fit.behind);
     if(fit.overRegion){const o=splitLayer(doll,view,c,fit.overRegion);if(over)o.getContext('2d').drawImage(over,0,0);res.over=o}
     return res;
@@ -692,10 +694,14 @@ function armLayer(shot,view,body){
   return memo(dollCaches.layer,'arm|'+bodyKey(shot,view),async()=>{
     const [c,g]=dollLayer(shot.doll,view);
     g.save();g.beginPath();shapePathInto(g,{poly:dv.arm});g.clip();g.drawImage(body,0,0);g.restore();
-    const im=g.getImageData(0,0,c.width,c.height),d=im.data;
+    // fit.armBase (the arm drawn inside a short sleeve's opening): the bodysuit is judged on the base
+    // picture, since an outfit's skin repaint turns the torso's bodysuit into skin, which must not come
+    // along with the arm there
+    const im=g.getImageData(0,0,c.width,c.height),d=im.data;let bd=d;
+    if(catalogItem(shot.outfit)?.fit?.[shot.doll]?.[view]?.armBase){const [,bg]=dollLayer(shot.doll,view);bg.drawImage(await spriteCanvas(dv.art),0,0);bd=bg.getImageData(0,0,c.width,c.height).data}
     for(let i=0;i<d.length;i+=4){
       if(!d[i+3])continue;
-      const r=d[i],gg=d[i+1],b=d[i+2],w=Math.min(1,Math.max(0,(b/(r||1)-.62)/.2))*(gg<b+6?1:0);
+      const r=bd[i],gg=bd[i+1],b=bd[i+2],w=Math.min(1,Math.max(0,(b/(r||1)-.62)/.2))*(gg<b+6?1:0);
       if(w>0)d[i+3]*=1-w;
     }
     g.putImageData(im,0,0);
@@ -853,8 +859,13 @@ function bareThighs(d,w,h,{y0,y1,band=36},c,arm){
   const runs=y=>{const r=[];let s=-1;for(let x=0;x<=w;x++){const on=x<w&&A(x,y)>100;if(on&&s<0)s=x;else if(!on&&s>=0){r.push([s,x]);s=-1}}return r};
   const legs=y=>{const r=runs(y);if(!r.length)return [];
     if(c==null){const b=r.reduce((p,q)=>q[1]-q[0]>p[1]-p[0]?q:p);return [b]}
+    // (c rounded: a fractional centre made the right leg's pixel loop run on fractional indexes, so that
+    // thigh was never redrawn and kept the bodysuit's flat repaint)
+    c=Math.round(c);
     const L=r.filter(q=>q[0]<c),R=r.filter(q=>q[1]>c);if(!L.length||!R.length)return [];
-    const l=L[L.length-1],rr=R[0];return [[l[0],Math.min(l[1],c)],[Math.max(rr[0],c),rr[1]]]};
+    // the faint slit between the bodysuit's legs (alpha under the run threshold) belongs to the legs:
+    // left of the centre line to the left thigh, right of it to the right one
+    const l=L[L.length-1],rr=R[0],near=8;return [[l[0],l[1]<c&&c-l[1]<near?c:Math.min(l[1],c)],[rr[0]>c&&rr[0]-c<near?c:Math.max(rr[0],c),rr[1]]]};
   const src=new Uint8ClampedArray(d);
   for(let y=Math.max(0,y0|0);y<Math.min(h,y1|0);y++){
     const ys=Math.min(h-1,Math.round(y1+(y1-y)*band/(y1-y0)));
@@ -862,7 +873,16 @@ function bareThighs(d,w,h,{y0,y1,band=36},c,arm){
     dl.forEach(([a,b],i)=>{const [sa,sb]=sl[i];
       for(let x=a;x<b;x++){const o=(y*w+x)*4;if(keep&&keep[o+3]>0)continue;
         const xs=Math.min(w-1,Math.max(0,Math.round(sa+(x+.5-a)*(sb-sa)/(b-a)-.5))),q=(ys*w+xs)*4;
-        if(!src[q+3])continue;d[o]=src[q];d[o+1]=src[q+1];d[o+2]=src[q+2]}});
+        if(!src[q+3])continue;d[o]=src[q];d[o+1]=src[q+1];d[o+2]=src[q+2];d[o+3]=Math.max(d[o+3],src[q+3])}});
+    // the bodysuit's dark crotch seam (opaque, near the centre line, where the thighs meet) has no thigh
+    // below it to copy: it is filled across from the skin either side
+    if(c!=null&&dl.length===2){const cc=Math.round(c),B=9,o0=(y*w+cc)*4;
+      if(src[o0+3]>200){ // thighs still touching on this row: a smooth band across the seam
+        const avg=x0=>{const s=[0,0,0];for(let x=x0-1;x<=x0+1;x++){const o=(y*w+x)*4;for(let k=0;k<3;k++)s[k]+=d[o+k]/3}return s};
+        const a=avg(cc-B-1),b=avg(cc+B+1);
+        for(let x=cc-B;x<=cc+B;x++){const o=(y*w+x)*4,t=(x-cc+B+1)/(2*B+2),u=1-((x-cc)/(B+1))**2;
+          for(let k=0;k<3;k++)d[o+k]+=(a[k]+(b[k]-a[k])*t-d[o+k])*u;d[o+3]=255}}
+      else for(let x=cc-B;x<=cc+B;x++){const o=(y*w+x)*4;if(src[o+3]<200||luma(d[o],d[o+1],d[o+2])<100)d[o+3]=0}} // the gap between the thighs: clean (no seam remnants)
   }
 }
 function bodyKey(shot,view){return [shot.doll,view,shot.outfit,shot.lips,shot.blush,shot.shadow,shot.nails,shot.shoes].join('|')}
@@ -1144,17 +1164,28 @@ async function dollOps(shot,view){
   const drawStuds=g=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,view==='back'?'clutch':stud,x,y+dv.face.unit*(view==='back'?.02:.06),dv.face.unit*(view==='back'?.09:.15));g.restore()};
   // back view: earrings sit under the hair, so only show where the style leaves the ears free
   const earsUnder=!!hairFit.earsUnder||view==='back';
+  // a hood worn up hides her hair (but what shows in its face opening), her ears and hair clips
+  const hood=outfit.hood,hoodFit=hood&&catalogItem(shot.outfit).fit[doll][view].hood;
+  if(hood){hair={...hair,back:null,shade:null,front:hoodFit.face.length?softClip(hair.front,ox,oy,hoodFit.face):null};earrings=null;clipLayer=null;clipAt.hide=true}
   const clips=kind=>{if(clipLayer)put(kind,clipLayer);if(proc)ops.push({kind:'charm',behind:kind==='clipBehind',draw:drawProc})};
   if(clipBehind&&!clipAt.hide)clips('clipBehind');
   if(hair.back)put('hairBack',hair.back);
   if(outfit.back)put('outfitBack',outfit.back);
   if(shoes)put('shoesBack',shoes.back);
-  ops.push({kind:'body',draw:g=>g.drawImage(bodyPic,ox,oy)});
+  // long sleeves (front, back): her arm from the armpit to the wrist is inside the sleeve, so none of it
+  // may show beside a sleeve drawn a little off the arm (fit.hideArms, doll-local; the hand stays)
+  const hideArms=catalogItem(shot.outfit).fit[doll][view].hideArms;
+  let bodyShown=bodyPic;
+  if(hideArms){bodyShown=makeCanvas(bodyPic.width,bodyPic.height);const bg=bodyShown.getContext('2d');bg.drawImage(bodyPic,0,0);
+    bg.globalCompositeOperation='destination-out';bg.fillStyle='#000';for(const sh of hideArms){bg.beginPath();shapePathInto(bg,sh);bg.fill()}}
+  ops.push({kind:'body',draw:g=>g.drawImage(bodyShown,ox,oy)});
   ops.push({kind:'gem',draw:g=>{g.save();g.translate(ox,oy);drawGem(g,shot,view);g.restore()}});
   const outfitFit=catalogItem(shot.outfit).fit[doll][view];
   if(shoes&&!outfitFit.shoesOver)put('shoesFront',shoes.front);
   put('outfit',outfit.front);
   if(shoes&&outfitFit.shoesOver)put('shoesFront',shoes.front);
+  // long sleeves (front, back): her hands drawn again over the cuffs, so they come out of the sleeves
+  if(outfitFit.hands){const [hc,hg]=dollLayer(doll,view);hg.drawImage(bodyPic,0,0);put('hands',softClip(hc,ox,oy,outfitFit.hands))}
   // a backpack: its straps over the outfit, under the near arm in side views
   if(held&&bagItem.kind==='pack')put('pack',held);
   if(arm&&outfitFit.arm!=='hidden'){
@@ -1167,13 +1198,14 @@ async function dollOps(shot,view){
   if(held&&bagItem.kind!=='pack')put('held',held);
   if(necklace)put('necklace',necklace);
   const ears=()=>{if(earrings)put('earrings',earrings);if(stud)ops.push({kind:'studs',draw:drawStuds})};
-  if(earsUnder)ears();
+  if(earsUnder&&!hood)ears();
   // glasses: in side views the arms run under the hair to the ear and only the frame front is drawn
   // again over it; from the front the whole frame sits on the face, over the hair beside it
   if(glasses&&lens)put('glassesUnder',glasses);
   if(hair.shade)ops.push({kind:'shade',draw:g=>{g.save();g.globalCompositeOperation='source-atop';g.drawImage(hair.shade,0,0);g.restore()}});
-  put('hairFront',hair.front);
-  if(!earsUnder)ears();
+  if(hair.front)put('hairFront',hair.front);
+  if(!earsUnder&&!hood)ears();
+  if(hood)put('hood',hood);
   if(!clipBehind&&!clipAt.hide)clips('clip');
   if(glasses)put('glasses',lens||glasses);
   if(hat)put('hat',hat);
