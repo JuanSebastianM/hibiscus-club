@@ -8,7 +8,8 @@ const places = [
   {id:'booth',icon:'camera',color:'#e3924f',x:43,y:70},
   {id:'house',icon:'home',color:'#ec6a63',x:52,y:11} // Dream House, up on the hill (decorator.js)
 ].map(p=>Object.defineProperty(p,'name',{get(){return t('place.'+p.id)},enumerable:true}));
-const walkPins={boardwalk:{x:62,y:74},market:{x:25,y:65},pavilion:{x:49,y:41}};
+const walkPins={boardwalk:{x:62,y:74},market:{x:25,y:65},pavilion:{x:49,y:41},
+  beach:{x:31,y:90},park:{x:87,y:33}}; // Sunny Cove on the south-west sand, Breezy Park on the green east of the salon
 const stampIds=[...districts.map(d=>d.id),...places.map(p=>p.id)];
 const dollNames={get adult(){return t('doll.adult')},get little(){return t('doll.little')}};
 const saveKey='hibiscus-club-v1';
