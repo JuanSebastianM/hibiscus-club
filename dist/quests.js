@@ -11,11 +11,28 @@ const districts = [
   {id:'market',resident:'Rosa',icon:'flower',person:[.57,.73],object:[.82,.54],approach:[.82,.75],floor:.73,color:'#8ebd89',sparkle:'petal',
     spots:[[.1,.8],[.2,.92],[.3,.77],[.36,.88],[.6,.91],[.7,.82],[.92,.86],[.13,.88],[.77,.93],[.47,.8]]},
   {id:'pavilion',resident:'Kit',icon:'music',person:[.58,.70],object:[.28,.48],approach:[.28,.64],floor:.63,color:'#aa92c9',sparkle:'star',
-    spots:[[.1,.7],[.18,.86],[.34,.72],[.3,.92],[.6,.9],[.72,.78],[.9,.74],[.86,.9],[.45,.68],[.12,.93]]}
+    spots:[[.1,.7],[.18,.86],[.34,.72],[.3,.92],[.6,.9],[.72,.78],[.9,.74],[.86,.9],[.45,.68],[.12,.93]]},
+  /* Pack-2 places (art/scenes-pack2.json). `floorLine` is the highest the feet may go across the scene
+     ([x, y] points, straight between them) and `xMin` / `xMax` the sides, where scenery stands in the way. */
+  {id:'beach',resident:'Sol',icon:'sun',person:[.575,.76],object:[.775,.69],approach:[.565,.9],floor:.62,color:'#e3a04a',sparkle:'sand',findIcon:'star',
+    floorLine:[[0,.7],[.26,.69],[.33,.63],[.5,.62],[.8,.655],[1,.69]],
+    spots:[[.1,.8],[.2,.92],[.3,.74],[.38,.85],[.47,.68],[.47,.93],[.61,.66],[.9,.72],[.15,.72],[.27,.85]]},
+  {id:'park',resident:'Teo',icon:'kite',person:[.53,.87],object:[.79,.56],approach:[.71,.9],floor:.75,color:'#e27fa3',sparkle:'clover',findIcon:'bow',
+    floorLine:[[0,.75],[.55,.75],[.62,.81],[1,.83]],xMin:.2,xMax:.9,
+    spots:[[.24,.8],[.3,.93],[.37,.77],[.45,.86],[.52,.77],[.63,.93],[.76,.87],[.87,.91],[.4,.94],[.27,.86]]}
 ].map(d=>I18N.localize(d,'district.'+d.id,['name','role','spot','walkSpot','friend','new','greeting','topic','answer','objectLine','sparkleName','tokenName']));
 const DISTRICT_IDS=districts.map(d=>d.id);
 const districtOf=id=>districts.find(d=>d.id===id);
-const sceneryNames=()=>[t('scenery.studio'),...districts.map(d=>d.name)];
+/* Postcard scenery: the studio and the first three places (a saved look's backdrop is 0..3, catalog.js). */
+const SCENERY_PLACES=3;
+const sceneryNames=()=>[t('scenery.studio'),...districts.slice(0,SCENERY_PLACES).map(d=>d.name)];
+/* The highest the feet may go at x in a district: its floor line, else its flat floor. */
+function floorAt(d,x){
+  const L=d.floorLine;if(!L)return d.floor;
+  if(x<=L[0][0])return L[0][1];
+  for(let i=1;i<L.length;i++)if(x<=L[i][0]){const [x0,y0]=L[i-1],[x1,y1]=L[i];return y0+(y1-y0)*(x-x0)/((x1-x0)||1)}
+  return L[L.length-1][1];
+}
 const cleanName=name=>typeof name==='string'?Array.from(name.trim().replace(/[\u0000-\u001f\u007f]/g,'')).slice(0,24).join(''):'';
 const escapeText=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
@@ -28,13 +45,18 @@ const STORIES={
     {giver:'boardwalk',reward:6,steps:[{at:'boardwalk',target:'object',item:1},{at:'pavilion',target:'person'}]},
     {giver:'market',reward:8,steps:[{at:'market',target:'object',item:1},{at:'boardwalk',target:'person'}]},
     {giver:'pavilion',reward:10,steps:[{at:'market',target:'object',item:1},{at:'pavilion',target:'object'},{at:'pavilion',target:'person'}]},
-    {giver:'pavilion',reward:12,steps:[{at:'boardwalk',target:'person'},{at:'market',target:'object',item:1},{at:'market',target:'person',item:1},{at:'pavilion',target:'object'},{at:'pavilion',target:'person'}]}
+    {giver:'pavilion',reward:12,steps:[{at:'boardwalk',target:'person'},{at:'market',target:'object',item:1},{at:'market',target:'person',item:1},{at:'pavilion',target:'object'},{at:'pavilion',target:'person'}]},
+    // Sunny Cove and Breezy Park (added later: new stories go at the end, so saved stages keep their places)
+    {giver:'beach',reward:10,steps:[{at:'beach',target:'object'},{at:'pavilion',target:'person'},{at:'boardwalk',target:'person',item:1},{at:'beach',target:'person'}]},
+    {giver:'park',reward:12,steps:[{at:'park',target:'object',item:1},{at:'market',target:'object',item:1},{at:'beach',target:'person',item:1},{at:'park',target:'person'}]}
   ],
   little:[
     {giver:'market',reward:6,steps:[{at:'market',target:'object',item:1},{at:'market',target:'person'}]},
     {giver:'boardwalk',reward:6,steps:[{at:'boardwalk',target:'object'},{at:'pavilion',target:'object',item:1},{at:'boardwalk',target:'person'}]},
     {giver:'pavilion',reward:8,steps:[{at:'market',target:'object',item:1},{at:'boardwalk',target:'person',item:1},{at:'pavilion',target:'person'}]},
-    {giver:'pavilion',reward:10,steps:[{at:'boardwalk',target:'person',item:1},{at:'market',target:'person',item:1},{at:'pavilion',target:'object'},{at:'pavilion',target:'person'}]}
+    {giver:'pavilion',reward:10,steps:[{at:'boardwalk',target:'person',item:1},{at:'market',target:'person',item:1},{at:'pavilion',target:'object'},{at:'pavilion',target:'person'}]},
+    {giver:'beach',reward:8,steps:[{at:'beach',target:'object'},{at:'boardwalk',target:'person',item:1},{at:'park',target:'object',item:1},{at:'beach',target:'person'}]},
+    {giver:'park',reward:10,steps:[{at:'market',target:'person',item:1},{at:'beach',target:'object',item:1},{at:'park',target:'person'},{at:'park',target:'object'}]}
   ]
 };
 for(const doll of ['adult','little'])STORIES[doll].forEach((story,i)=>{
@@ -48,7 +70,12 @@ const LEGACY_REWARDS=[6,8,10];
 /* ---------- daily errands and sparkles ---------- */
 const DAILY_REWARD={deliver:4,find:3,greet:3,compliment:2,tidy:2};
 const DAILY_TYPES=Object.keys(DAILY_REWARD);
-const DAILY_COUNT=3,SPARKLES_PER_PLACE=2,FIND_COUNT=3;
+/* SPARKLES_PER_PLACE is the stride of a place's treasures in the `found` bits (place * 2 + k); TREASURES
+   is how many hide each day across all the places. */
+const DAILY_COUNT=3,SPARKLES_PER_PLACE=2,FIND_COUNT=3,TREASURES=6,GREET_COUNT=3;
+/* Daily plans are versioned. Version 1 (three places) is kept exactly for a day record saved before the
+   two new places opened, so an errand half done that day stays the same errand; every new day is version 2. */
+const DAILY_VERSION=2;
 const DAY_RE=/^\d{4}-\d{2}-\d{2}$/;
 function dayKey(date=new Date()){
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
@@ -70,34 +97,61 @@ function seededRandom(text){
 }
 function shuffled(list,rand){const a=[...list];for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const dailyCache=new Map();
-/* The day's plan for one character: three errands from different templates, the sparkles hidden in each
-   district (two each) and, for a "find" errand, where its three things are. Same day + character = same plan. */
-function dailyPlan(day,doll){
-  const key=day+'|'+doll;
+/* The day's plan for one character: three errands from different templates, six treasures (one in each
+   place, a second in one of them), and, for a "find" errand, where its three things are. A greeting errand
+   names three residents. Same day + character (+ version) = same plan. */
+function dailyPlan(day,doll,version=DAILY_VERSION){
+  const key=day+'|'+doll+(version===1?'':'|v'+version);
   if(dailyCache.has(key))return dailyCache.get(key);
+  const plan=version===1?dailyPlanV1(day,doll):dailyPlanV2(day,doll,key);
+  dailyCache.set(key,plan);
+  return plan;
+}
+function dailyPlanV2(day,doll,key){
+  const rand=seededRandom('hibiscus|'+key),pick=n=>Math.floor(rand()*n),N=districts.length;
+  const errands=shuffled(DAILY_TYPES,rand).slice(0,DAILY_COUNT).map(type=>{
+    const e={type,reward:DAILY_REWARD[type]};
+    if(type==='deliver'){e.from=pick(N);e.to=(e.from+1+pick(N-1))%N;e.item=pick(3)}
+    else if(type==='greet')e.who=shuffled(districts.map((_,i)=>i),rand).slice(0,GREET_COUNT).sort((x,y)=>x-y);
+    else e.at=pick(N);
+    return e;
+  });
+  const spots=districts.map(d=>shuffled(d.spots,rand)),extra=pick(N);
+  const count=i=>Math.min(SPARKLES_PER_PLACE,Math.floor(TREASURES/N)+(i===extra?TREASURES%N:0));
+  return {day,doll,version:2,errands,
+    sparkles:spots.map((s,i)=>s.slice(0,count(i))),
+    tokens:spots.map(s=>s.slice(SPARKLES_PER_PLACE,SPARKLES_PER_PLACE+FIND_COUNT))};
+}
+/* Version 1, unchanged: the three first places, two treasures each, all three residents greeted. */
+function dailyPlanV1(day,doll){
+  const key=day+'|'+doll;
   const rand=seededRandom('hibiscus|'+key),pick=n=>Math.floor(rand()*n);
   const errands=shuffled(DAILY_TYPES,rand).slice(0,DAILY_COUNT).map(type=>{
     const e={type,reward:DAILY_REWARD[type]};
     if(type==='deliver'){e.from=pick(3);e.to=(e.from+1+pick(2))%3;e.item=pick(3)}
     else if(type==='find'||type==='tidy')e.at=pick(3);
     else if(type==='compliment')e.at=pick(3);
+    else if(type==='greet')e.who=[0,1,2];
     return e;
   });
-  const spots=districts.map(d=>shuffled(d.spots,rand));
-  const plan={day,doll,errands,
-    sparkles:spots.map(s=>s.slice(0,SPARKLES_PER_PLACE)),
-    tokens:spots.map(s=>s.slice(SPARKLES_PER_PLACE,SPARKLES_PER_PLACE+FIND_COUNT))};
-  dailyCache.set(key,plan);
-  return plan;
+  const spots=districts.slice(0,3).map(d=>shuffled(d.spots,rand));
+  const none=districts.slice(3).map(()=>[]);
+  return {day,doll,version:1,errands,
+    sparkles:[...spots.map(s=>s.slice(0,SPARKLES_PER_PLACE)),...none],
+    tokens:[...spots.map(s=>s.slice(SPARKLES_PER_PLACE,SPARKLES_PER_PLACE+FIND_COUNT)),...none]};
 }
 const bits=n=>{let c=0;for(;n;n&=n-1)c++;return c};
-/* Progress per errand: deliver 0 → 1 (picked up) → 2; find and greet are bit masks (all three = 7);
-   compliment and tidy 0 → 1. */
-function dailyDone(e,prog){return e.type==='deliver'?prog===2:e.type==='find'||e.type==='greet'?prog===7:prog===1}
-/* This character's daily record for the current day (reset when the day changes). */
+const greetMask=e=>e.who.reduce((m,k)=>m|1<<k,0);
+/* Progress per errand: deliver 0 → 1 (picked up) → 2; find is a bit mask of its three things (7), greet a
+   bit mask of the places whose residents were greeted (done when its three residents are); compliment and
+   tidy 0 → 1. */
+function dailyDone(e,prog){return e.type==='deliver'?prog===2:e.type==='find'?prog===7:e.type==='greet'?(prog&greetMask(e))===greetMask(e):prog===1}
+/* How many of a find or greet errand's three are done. */
+function dailyCount(e,prog){return e.type==='greet'?bits(prog&greetMask(e)):bits(prog)}
+/* This character's daily record for the current day (reset, on the current plan version, when the day changes). */
 function today(p=lifePlayer()){
   const day=currentDay();
-  if(p.daily.day!==day)p.daily={day,prog:Array(DAILY_COUNT).fill(0),found:0};
+  if(p.daily.day!==day)p.daily={day,v:DAILY_VERSION,prog:Array(DAILY_COUNT).fill(0),found:0};
   return p.daily;
 }
 
@@ -105,7 +159,9 @@ function today(p=lifePlayer()){
 const smallCount=(n,max)=>Number.isInteger(n)&&n>=0&&n<=max?n:0;
 function readDaily(raw){
   const ok=raw&&typeof raw==='object'&&DAY_RE.test(raw.day);
-  return {day:ok?raw.day:'',prog:Array.from({length:DAILY_COUNT},(_,i)=>ok?smallCount(raw.prog?.[i],7):0),found:ok?smallCount(raw.found,(1<<(SPARKLES_PER_PLACE*3))-1):0};
+  // a record without `v` was saved before the new places opened: that day keeps the version 1 plan
+  const v=ok&&raw.v===DAILY_VERSION?DAILY_VERSION:1,places=v===1?3:districts.length;
+  return {day:ok?raw.day:'',v,prog:Array.from({length:DAILY_COUNT},(_,i)=>ok?smallCount(raw.prog?.[i],(1<<places)-1):0),found:ok?smallCount(raw.found,(1<<(SPARKLES_PER_PLACE*places))-1):0};
 }
 /* `state.life[doll]`: name, scene (district index), x/y (normalized position), topics (asked each resident
    about her work), quests (story stages for this character's stories), credit (stars already paid by
@@ -127,7 +183,7 @@ function loadIslandLife(raw){
       else{quests=stories.map(()=>0);credit=old.reduce((sum,stage,i)=>sum+(stage===[2,2,3][i]+1?LEGACY_REWARDS[i]:0),0);}
     }
     life[id]={
-      name:cleanName(saved.name),scene:smallCount(saved.scene,2),
+      name:cleanName(saved.name),scene:smallCount(saved.scene,districts.length-1),
       x:Number.isFinite(saved.x)?clamp(saved.x,.07,.93):.43,
       y:Number.isFinite(saved.y)?clamp(saved.y,.60,.94):.86,
       topics:districts.map((_,i)=>saved.topics?.[i]===true),
@@ -166,7 +222,7 @@ function storySteps(at,target,p=lifePlayer(),doll=state.doll){
 function deliverItem(e){return t(`daily.item.${DISTRICT_IDS[e.from]}.${e.item}`)}
 /* Daily errand steps that can be done here, at this target: {i, kind}. Greeting happens on its own. */
 function dailySteps(at,target,p=lifePlayer(),doll=state.doll){
-  const day=today(p),plan=dailyPlan(day.day,doll),idx=DISTRICT_IDS.indexOf(at);
+  const day=today(p),plan=dailyPlan(day.day,doll,day.v),idx=DISTRICT_IDS.indexOf(at);
   return plan.errands.flatMap((e,i)=>{
     const prog=day.prog[i];if(dailyDone(e,prog))return [];
     if(e.type==='deliver'&&target==='person'){
@@ -186,25 +242,27 @@ function dailyObjective(e,prog){
       ?{text:t('daily.deliver.todo',{item:deliverItem(e),from:D[e.from].resident,to:D[e.to].resident}),at:D[e.from].id,target:'person'}
       :{text:t('daily.deliver.give',{item:deliverItem(e),to:D[e.to].resident}),at:D[e.to].id,target:'person'};
     case 'find':return {text:t('daily.find.todo',{count:FIND_COUNT,things:D[e.at].tokenName,place:D[e.at].name,n:bits(prog)}),at:D[e.at].id,target:'token'};
-    case 'greet':{const next=[0,1,2].find(k=>!(prog&1<<k));return {text:t('daily.greet.todo',{n:bits(prog)}),at:D[next].id,target:'person'}}
+    case 'greet':{const next=e.who.find(k=>!(prog&1<<k));return {text:t('daily.greet.todo',{...greetNames(e),n:dailyCount(e,prog)}),at:D[next].id,target:'person'}}
     case 'compliment':return {text:t('daily.compliment.todo.'+D[e.at].id),at:D[e.at].id,target:'person'};
     case 'tidy':return {text:t('daily.tidy.todo.'+D[e.at].id),at:D[e.at].id,target:'object'};
   }
 }
+/* The three residents a greeting errand names: {a, b, c}. */
+function greetNames(e){const [a,b,c]=e.who.map(k=>districts[k].resident);return {a,b,c}}
 function dailyTitle(e){
   const D=districts;
   switch(e.type){
     case 'deliver':return t('daily.deliver.title',{item:deliverItem(e),from:D[e.from].resident,to:D[e.to].resident});
     case 'find':return t('daily.find.title',{count:FIND_COUNT,things:D[e.at].tokenName,place:D[e.at].name});
-    case 'greet':return t('daily.greet.title');
+    case 'greet':return t('daily.greet.title',greetNames(e));
     case 'compliment':return t('daily.compliment.todo.'+D[e.at].id);
     case 'tidy':return t('daily.tidy.todo.'+D[e.at].id);
   }
 }
 function dailySummary(p=lifePlayer(),doll=state.doll){
-  const day=today(p),plan=dailyPlan(day.day,doll);
+  const day=today(p),plan=dailyPlan(day.day,doll,day.v);
   const done=plan.errands.filter((e,i)=>dailyDone(e,day.prog[i])).length;
-  return {done,total:plan.errands.length,found:bits(day.found),spots:SPARKLES_PER_PLACE*districts.length,plan,day};
+  return {done,total:plan.errands.length,found:bits(day.found),spots:plan.sparkles.flat().length,plan,day};
 }
 /* What to do next, for the HUD, the map tracker and the player card:
    {kind:'story'|'offer'|'daily'|'rest', text, at (district id or null), target, story?} */
