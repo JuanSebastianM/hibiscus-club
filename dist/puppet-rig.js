@@ -149,6 +149,9 @@ const RESIDENTS={
    and `lips` marks each cell's lips for the makeup pass. The side sheet serves the left view and,
    mirrored, the right. Little Me's side sheet is drawn in three-quarter view and cannot sit on her
    strict profile, so her side views keep the procedural face. Adding a sheet = its files + one entry. */
+/* Sideways glances (the drawn look-left / look-right eyes) read as side-eye on these faces, so they
+   are off: idle and emotes never pick them while this is false. */
+const SIDE_GLANCES=false;
 const EXPRESSIONS=['neutral','soft-smile','big-smile','laugh','blink','half-closed','talk-eh','talk-oh','talk-ah','surprised','look-left','look-right'];
 const EXPRESSION_REGION={'neutral':'face','soft-smile':'face','big-smile':'face','laugh':'face','surprised':'face',
   'blink':'eyes','half-closed':'eyes','look-left':'eyes','look-right':'eyes','talk-eh':'mouth','talk-oh':'mouth','talk-ah':'mouth'};
@@ -169,8 +172,8 @@ function expressionFor(f){
   if(f.surprise>.5)return 'surprised';
   if(f.smile>.6)return 'big-smile';
   if(f.smile>.25)return 'soft-smile';
-  if(f.glance<-.5)return 'look-left';
-  if(f.glance>.5)return 'look-right';
+  if(SIDE_GLANCES&&f.glance<-.5)return 'look-left';
+  if(SIDE_GLANCES&&f.glance>.5)return 'look-right';
   return 'neutral';
 }
 /* Drawn heads play on two channels that cover different parts of the face, so a blink can happen while
@@ -180,7 +183,8 @@ function expressionFor(f){
    so her smiles stay her own. */
 function expressionTargets(f,doll){
   const b=Math.max(...(f.blink||[0])),jm=f.jawMax||4,jf=(f.jaw||0)/jm;
-  const eye=b>.6?'blink':b>.12?'half-closed':f.glance<-.35?'look-left':f.glance>.35?'look-right':null;
+  const g=SIDE_GLANCES?f.glance:0;
+  const eye=b>.6?'blink':b>.12?'half-closed':g<-.35?'look-left':g>.35?'look-right':null;
   let mouth=null,full=false;
   if(f.laugh>.3){mouth='laugh';full=true}
   else if(f.surprise>.3){mouth='surprised';full=true}
@@ -330,12 +334,29 @@ function idlePose(t,ctx){
   // blinking at natural random intervals (sometimes twice)
   const f=p.face;
   f.blink[0]=f.blink[1]=blinkAt(t,s);
-  // glances left / right now and then
-  if(!side&&ctx.doll!=='resident'){
+  // now and then a warm moment (warmMoment): a soft smile held a little, a slow blink or a small head tilt
+  const w=warmMoment(t,s,kid);
+  f.smile=Math.max(f.smile,w.smile*e);
+  f.blink[0]=f.blink[1]=Math.max(f.blink[0],w.blink);
+  head.r+=w.tilt*e;bone(p,'neck').r+=w.tilt*.25*e;
+  // glances left / right (only if SIDE_GLANCES)
+  if(SIDE_GLANCES&&!side&&ctx.doll!=='resident'){
     const g=eventAt(s+71,t,5,11),gu=t-g.start,dirG=rand(s,g.i*5+3)<.5?-1:1;
     f.glance=g.i<0||rand(s,g.i*5+4)<.35?0:dirG*smooth(0,.18,gu)*(1-smooth(1.1,1.3,gu));
   }
   return p;
+}
+/* Idle variety every 5 to 11 s: {smile, blink, tilt (radians)}. Half the moments are a soft smile held
+   about 2.4 s, a quarter a slow blink (half a second down, a short hold, back up), a quarter a small
+   head tilt with a smile. */
+function warmMoment(t,seed,kid){
+  const ev=eventAt(seed+71,t,5,11),u=t-ev.start,out={smile:0,blink:0,tilt:0};
+  if(ev.i<0)return out;
+  const k=rand(seed,ev.i*5+3),sgn=rand(seed,ev.i*5+4)<.5?-1:1;
+  if(k<.5){out.smile=.55*smooth(0,.5,u)*(1-smooth(2.4,3,u))}
+  else if(k<.75){out.blink=u<.45?smooth(0,.45,u):u<.75?1:1-smooth(.75,1.25,u);out.smile=.3*smooth(0,.4,u)*(1-smooth(1.4,1.9,u))}
+  else{const a=smooth(0,.6,u)*(1-smooth(1.9,2.5,u));out.tilt=sgn*(kid?4:2.5)*DEG*a;out.smile=.4*a}
+  return out;
 }
 /* Eyelid closure at time t: a quick close-open every 2.5 to 6 s, one in five doubled. */
 function blinkAt(t,seed){
@@ -404,7 +425,7 @@ function emotePose(name,t,ctx){
       f.smile=.65*e;f.squint=.3*e;bone(p,'head').r=(side?dir*-6:7)*DEG*e;bone(p,'neck').r=(side?0:2)*DEG*e;bone(p,'chest').y=-2.2*e;
       if(!side){bone(p,'arm0').r=-3*DEG*e;bone(p,'arm1').r=3*DEG*e;bone(p,'fore0').r=-18*DEG*e;bone(p,'fore1').r=18*DEG*e}
       bone(p,'root').r=Math.sin(t*TAU*.9)*1.2*DEG*e;
-      f.glance=side?0:-.7*e;
+      if(SIDE_GLANCES)f.glance=side?0:-.7*e;
       break;
     }
     case 'pose':{ // runway: weight on one hip, head tilt, smile
@@ -615,7 +636,7 @@ function faceDisplace(face,f,x,y,below){
   return [dx,dy];
 }
 
-const api={TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIND,RESIDENTS,EXPRESSIONS,EXPRESSION_ART,EXPRESSION_REGION,GAIT,DURATION,
+const api={SIDE_GLANCES,warmMoment,TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIND,RESIDENTS,EXPRESSIONS,EXPRESSION_ART,EXPRESSION_REGION,GAIT,DURATION,
   views,rig,residentRig,toCanvas,expressionFor,expressionTargets,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
   restPose,copyPose,addPose,mixPose,localMatrix,forward,mul,apply,
   idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,GAIT_FAST,gait,paceFor,

@@ -213,13 +213,41 @@ test('expression art: every doll and view names a sheet slot, and the face picks
   assert.equal(T({ blink: [.3, .3] }).eye, 'half-closed');
   assert.equal(T({ jaw: 1.2 }).mouth, 'talk-eh'); assert.equal(T({ jaw: 1.2, wide: -1 }).mouth, 'talk-oh');
   assert.equal(T({ smile: 1 }).mouth, 'big-smile'); assert.equal(T({ smile: 1 }, 'adult').mouth, null);
-  assert.equal(T({ glance: -1 }).eye, 'look-left'); assert.equal(T({ laugh: 1 }).mouth, 'laugh');
+  assert.equal(T({ glance: -1 }).eye, R.SIDE_GLANCES ? 'look-left' : null); assert.equal(T({ laugh: 1 }).mouth, 'laugh');
   const base = { blink: [0, 0], jaw: 0, smile: 0, wide: 0, glance: 0, laugh: 0, surprise: 0, jawMax: 4 };
   assert.equal(R.expressionFor(base), 'neutral');
   assert.equal(R.expressionFor({ ...base, blink: [1, 1] }), 'blink');
   assert.equal(R.expressionFor({ ...base, jaw: 3.5 }), 'talk-ah');
   assert.equal(R.expressionFor({ ...base, smile: .9 }), 'big-smile');
   for (const k of ['laugh', 'surprise']) assert.ok(R.EXPRESSIONS.includes(R.expressionFor({ ...base, [k]: 1 })));
+});
+test('no side-eye: while SIDE_GLANCES is off, idle and emotes never pick a glance, and nothing looks surprised at rest', () => {
+  assert.equal(R.SIDE_GLANCES, false);
+  const glance = new Set(['look-left', 'look-right']);
+  const CATALOG = loadCatalog();
+  for (const doll of [...DOLLS, 'resident']) for (const view of VIEWS) {
+    const rg = R.rig(doll === 'resident' ? 'adult' : doll, view);
+    for (const seed of [1, 7, 42, 1234]) {
+      const ctx = { seed, doll, rig: rg, energy: 1 };
+      let smiles = 0;
+      for (let t = 0; t < 120; t += 1 / 15) {
+        const f = { ...R.idlePose(t, ctx).face, jawMax: 3 };
+        const tg = R.expressionTargets(f, doll === 'little' ? 'little' : 'adult');
+        assert.ok(!glance.has(tg.eye) && !glance.has(R.expressionFor(f)), `${doll} ${view} idle at ${t.toFixed(2)}`);
+        assert.ok(tg.mouth !== 'surprised' && f.surprise === 0, 'no surprise at rest');
+        if (f.smile > .3) smiles++;
+      }
+      assert.ok(smiles > 0, `${doll} ${view} ${seed}: idle has warm moments`);
+    }
+    const outfit = CATALOG.itemList.find(i => i.category === 'outfit' && i.dolls.includes(doll === 'little' ? 'little' : 'adult')).id;
+    for (const name of R.EMOTES) {
+      const played = R.emoteFor(name, outfit, view);
+      for (let t = 0; t <= R.DURATION[played]; t += .05) {
+        const f = { ...R.emotePose(played, t, { seed: 1, doll, rig: rg }).pose.face, jawMax: 3 };
+        assert.ok(!glance.has(R.expressionTargets(f, 'adult').eye) && !glance.has(R.expressionFor(f)), `${doll} ${view} ${played} at ${t}`);
+      }
+    }
+  }
 });
 test('arm-safe emotes: while RAISED_ARM_EMOTES is off, no emote lifts an upper arm away from the body', () => {
   const CATALOG = loadCatalog();
