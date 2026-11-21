@@ -711,6 +711,37 @@ function coverBodysuit(d,w,h,shapes,info){
   }
 }
 function bodyKey(shot,view){return [shot.doll,view,shot.outfit,shot.lips,shot.blush,shot.shadow,shot.nails,shot.shoes].join('|')}
+/* Eyeshadow, blush and lipstick on pixels d (w x h) whose coordinates match `face` (the doll view's
+   landmarks, see shiftFace). puppet.js runs it again on drawn expression heads: opts.lipsMask (Float32
+   per pixel) replaces the lips polygon there, opts.eyesClosed (0..1) puts the shadow on the closed lid. */
+function applyFaceMakeup(d,w,h,shot,face,opts={}){
+  const opt=(list,id)=>CATALOG.makeup[list].find(o=>o.id===id);
+  const shadow=opt('shadow',shot.shadow);
+  if(shadow?.color&&face.lids){
+    const m=shapeMask(w,h,face.lids,face.lidBlur||0),open=1-(opts.eyesClosed||0);
+    if(face.eyes){const e=shapeMask(w,h,face.eyes.map(p=>({poly:p})),.6);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-e[i]*1.2*open)}
+    applyColor(d,m,hexRgb(shadow.color),shadow.strength||.5,'color',{ref:150,contrast:1,skipDark:60});
+    if(shadow.shimmer)applyColor(d,m,hexRgb(shadow.shimmer),.22,'screen');
+  }
+  const blush=opt('blush',shot.blush);
+  if(blush?.color&&face.cheeks)applyColor(d,shapeMask(w,h,face.cheeks.map(([x,y,rx,ry])=>({gradient:[x,y,rx,ry,1]}))),hexRgb(blush.color),blush.strength||.4,'multiply');
+  const lips=opt('lips',shot.lips);
+  if(lips?.color&&(face.lips||opts.lipsMask)){
+    let m;
+    if(opts.lipsMask)m=opts.lipsMask;
+    else{
+      m=shapeMask(w,h,[{poly:face.lips}],face.lipBlur||1.2);
+      if(face.mouth){const inner=shapeMask(w,h,[{poly:face.mouth}],.8);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-inner[i])}
+    }
+    applyColor(d,m,hexRgb(lips.color),lips.strength||.8,'color',{ref:face.lipRef||130,contrast:lips.contrast||1.1,gloss:lips.gloss,skipBright:.3,lift:lips.lift||1});
+  }
+}
+/* A view's face landmarks moved by (dx, dy), for makeup on a crop of the base picture. */
+function shiftFace(face,dx,dy){
+  const P=p=>p.map(([x,y])=>[x+dx,y+dy]);
+  return {...face,lids:face.lids&&face.lids.map(g=>({...g,gradient:[g.gradient[0]+dx,g.gradient[1]+dy,...g.gradient.slice(2)]})),
+    eyes:face.eyes&&face.eyes.map(P),cheeks:face.cheeks&&face.cheeks.map(([x,y,...r])=>[x+dx,y+dy,...r]),lips:face.lips&&P(face.lips),mouth:face.mouth&&P(face.mouth)};
+}
 function bodyLayer(shot,view){
   const doll=shot.doll,info=CATALOG.dolls[doll];
   return memo(dollCaches.body,bodyKey(shot,view),async()=>{
@@ -719,23 +750,8 @@ function bodyLayer(shot,view){
     const im=g.getImageData(0,0,w,h),d=im.data;
     const outfitFit=catalogItem(shot.outfit)?.fit?.[doll]?.[view];
     if(outfitFit?.skin?.length)coverBodysuit(d,w,h,outfitFit.skin,info);
-    const face=dv.face||{};
+    applyFaceMakeup(d,w,h,shot,dv.face||{});
     const opt=(list,id)=>CATALOG.makeup[list].find(o=>o.id===id);
-    const shadow=opt('shadow',shot.shadow);
-    if(shadow?.color&&face.lids){
-      const m=shapeMask(w,h,face.lids,face.lidBlur||0);
-      if(face.eyes){const e=shapeMask(w,h,face.eyes.map(p=>({poly:p})),.6);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-e[i]*1.2)}
-      applyColor(d,m,hexRgb(shadow.color),shadow.strength||.5,'color',{ref:150,contrast:1,skipDark:60});
-      if(shadow.shimmer)applyColor(d,m,hexRgb(shadow.shimmer),.22,'screen');
-    }
-    const blush=opt('blush',shot.blush);
-    if(blush?.color&&face.cheeks)applyColor(d,shapeMask(w,h,face.cheeks.map(([x,y,rx,ry])=>({gradient:[x,y,rx,ry,1]}))),hexRgb(blush.color),blush.strength||.4,'multiply');
-    const lips=opt('lips',shot.lips);
-    if(lips?.color&&face.lips){
-      const m=shapeMask(w,h,[{poly:face.lips}],face.lipBlur||1.2);
-      if(face.mouth){const inner=shapeMask(w,h,[{poly:face.mouth}],.8);for(let i=0;i<m.length;i++)m[i]=Math.max(0,m[i]-inner[i])}
-      applyColor(d,m,hexRgb(lips.color),lips.strength||.8,'color',{ref:face.lipRef||130,contrast:lips.contrast||1.1,gloss:lips.gloss,skipBright:.3,lift:lips.lift||1});
-    }
     const nails=opt('nails',shot.nails);
     if(nails?.color&&dv.nails){
       const shoe=catalogItem(shot.shoes),toes=!shoe||shoe.openToe;

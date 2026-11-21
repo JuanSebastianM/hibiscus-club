@@ -122,18 +122,23 @@ const RESIDENTS={
     face:{eyes:[[[92,37.5],[94.5,36],[98,35.7],[101,36.5],[102,38],[98,39.2],[94.5,39]],[[110,39.5],[112.5,38.2],[116,38],[119,39],[119.5,40.8],[116,41.6],[112.5,41.3]]],
       mouth:[[94,53.6,0],[98,55.8,.6],[102,56.6,1],[106,56.5,1],[110,55.8,.6],[113,54,0]],corners:[[94,53.6],[113,54]],cheeks:[[92,47,5],[112,48,5]],chin:66,jawMax:1.6,teeth:true,lash:[.55,.8],lidSample:1.5}}
 };
-/* Drawn expression heads (art/ART-REQUESTS.md section 2). When a sheet is added to the game, set its
-   `file` here (relative to dist/) and the puppet uses the drawn heads instead of the procedural face
-   for that doll and view (the side sheet serves both side views; the right is mirrored). Each sheet is
-   a 4 x 3 grid of cells of `cell` doll-local px times `scale`, cell n (left to right, top to bottom)
-   holding EXPRESSIONS[n], each drawn so that it replaces the head pixel for pixel when placed with its
-   top-left corner at doll-local `at`. */
+/* Drawn expression heads (art/ART-REQUESTS.md section 2), made game-ready by art/build_faces.py from
+   art/source/pack2/02-faces: each sheet is a 4 x 3 grid in EXPRESSIONS order, cells of `cell` doll-local
+   px drawn at `scale`, registered and colour-matched to the base doll's head and placed with their
+   top-left at doll-local `at`; the alpha is the blend mask (only the region EXPRESSION_REGION names),
+   and `lips` marks each cell's lips for the makeup pass. The side sheet serves the left view and,
+   mirrored, the right. Little Me's side sheet is drawn in three-quarter view and cannot sit on her
+   strict profile, so her side views keep the procedural face. Adding a sheet = its files + one entry. */
 const EXPRESSIONS=['neutral','soft-smile','big-smile','laugh','blink','half-closed','talk-eh','talk-oh','talk-ah','surprised','look-left','look-right'];
+const EXPRESSION_REGION={'neutral':'face','soft-smile':'face','big-smile':'face','laugh':'face','surprised':'face',
+  'blink':'eyes','half-closed':'eyes','look-left':'eyes','look-right':'eyes','talk-eh':'mouth','talk-oh':'mouth','talk-ah':'mouth'};
 const EXPRESSION_ART={
-  adult:{front:{file:null,at:[130,0],cell:[140,175],scale:2},side:{file:null,at:[10,0],cell:[160,175],scale:2}},
-  little:{front:{file:null,at:[110,0],cell:[180,225],scale:2},side:{file:null,at:[0,0],cell:[205,225],scale:2}}
+  adult:{front:{file:'assets/faces/faces-adult-front.webp',lips:'assets/faces/faces-adult-front-lips.webp',at:[156,56],cell:[104,100],scale:2},
+    side:{file:'assets/faces/faces-adult-side.webp',lips:'assets/faces/faces-adult-side-lips.webp',at:[12,54],cell:[86,100],scale:2}},
+  little:{front:{file:'assets/faces/faces-little-front.webp',lips:'assets/faces/faces-little-front-lips.webp',at:[140,94],cell:[134,116],scale:2},
+    side:null}
 };
-/* The expression shown for a set of face parameters (drawn heads only). */
+/* The expression shown for a set of face parameters (one name; used for single-texture swaps). */
 function expressionFor(f){
   const blink=Math.max(...(f.blink||[0]));
   if(f.laugh>.5)return 'laugh';
@@ -148,7 +153,21 @@ function expressionFor(f){
   if(f.glance>.5)return 'look-right';
   return 'neutral';
 }
-
+/* Drawn heads play on two channels that cover different parts of the face, so a blink can happen while
+   she talks: `eye` (blink, half closed, glances) and `mouth` (talking visemes chosen by how far the jaw
+   is open, or a whole-face laugh, surprise or, for Little Me, smile). null = the live doll's own face
+   (the rest pose). fade = cross-fade seconds for that channel. The Grown-up's own face already smiles,
+   so her smiles stay her own. */
+function expressionTargets(f,doll){
+  const b=Math.max(...(f.blink||[0])),jm=f.jawMax||4,jf=(f.jaw||0)/jm;
+  const eye=b>.6?'blink':b>.12?'half-closed':f.glance<-.35?'look-left':f.glance>.35?'look-right':null;
+  let mouth=null,full=false;
+  if(f.laugh>.3){mouth='laugh';full=true}
+  else if(f.surprise>.3){mouth='surprised';full=true}
+  else if(jf>.18)mouth=jf>.55?'talk-ah':f.wide<-.3?'talk-oh':'talk-eh';
+  else if(doll==='little'&&f.smile>.35){mouth=f.smile>.75?'big-smile':'soft-smile';full=true}
+  return {eye,mouth,eyeFade:.045,mouthFade:full?.16:.06};
+}
 /* ---------- measured data -> normalized canvas coordinates ---------- */
 const views=['front','left','right','back'];
 function toCanvas(doll,view,[x,y]){const o=ORIGINS[doll][view];return [(x+o[0])/CANVAS[0],(y+o[1])/CANVAS[1]]}
@@ -518,8 +537,8 @@ function faceDisplace(face,f,x,y,below){
   return [dx,dy];
 }
 
-const api={TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIND,RESIDENTS,EXPRESSIONS,EXPRESSION_ART,GAIT,DURATION,
-  views,rig,residentRig,toCanvas,expressionFor,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
+const api={TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIND,RESIDENTS,EXPRESSIONS,EXPRESSION_ART,EXPRESSION_REGION,GAIT,DURATION,
+  views,rig,residentRig,toCanvas,expressionFor,expressionTargets,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
   restPose,copyPose,addPose,mixPose,localMatrix,forward,mul,apply,
   idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,
   mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,

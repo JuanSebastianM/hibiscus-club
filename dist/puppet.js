@@ -315,7 +315,9 @@ const HibiscusPuppet=(()=>{
       // lash colour: the darkest pixels along the upper contour
       let best=[60,40,40],bl=1e9;
       for(let x=x0;x<=x1;x+=.5){const p=this.pixel(x,at(top,x)+.6),l=p[0]+p[1]+p[2];if(p[3]>200&&l<bl){bl=l;best=p}}
-      const lash=`rgb(${Math.round(best[0]*.75)},${Math.round(best[1]*.7)},${Math.round(best[2]*.75)})`;
+      // a soft lash colour: the darkest lash pixel taken a third of the way toward the lid's skin
+      const sk=this.pixel((x0+x1)/2,Math.min(...top.map(p=>p[1]))-gap-sample/2),mixL=(a,b)=>Math.round(a*.67+b*.33);
+      const lash=`rgba(${mixL(best[0]*.8,sk[0])},${mixL(best[1]*.75,sk[1])},${mixL(best[2]*.8,sk[2])},.92)`;
       return {poly,top,bot,at,x0,x1,h:h+gap,gap,outerRight,lid,lidX:x0-1,lidY:yTop,lash};
     }
     /* Redraws for face params f and the mouth points displaced by disp(x,y,below). Returns false when
@@ -346,13 +348,13 @@ const HibiscusPuppet=(()=>{
       g.drawImage(e.lid,e.lidX,e.lidY-(1-b)*e.h*.85,e.lid.width/this.k,e.lid.height/this.k);
       g.restore();
       // lash line along the edge, thicker toward the outer corner
-      const [w0,w1]=this.f.lash||[.8,1.4];
+      const [w0,w1]=(this.f.lash||[.8,1.4]).map(v=>v*.72);
       g.fillStyle=e.lash;g.beginPath();
       const wAt=i=>{const t=i/N,o=e.outerRight?t:1-t;return lerp(w0,w1,o*o)*(.55+.45*smooth(0,.5,b))};
       for(let i=0;i<=N;i++){const [x,y]=edge[i];i?g.lineTo(x,y-wAt(i)*.35):g.moveTo(x,y-wAt(i)*.35)}
       for(let i=N;i>=0;i--){const [x,y]=edge[i];g.lineTo(x,y+wAt(i)*.65)}
       g.closePath();g.fill();
-      if(b>.6&&!this.rg.resident){ // a few lashes at the outer end when closed
+      if(b>.6&&!this.rg.resident&&this.rg.doll==='adult'){ // a few lashes at the outer end when closed
         g.strokeStyle=e.lash;g.lineWidth=.45;g.lineCap='round';
         for(let j=0;j<3;j++){const i=e.outerRight?N-1-j*2:1+j*2,[x,y]=edge[i],dx=(e.outerRight?1:-1)*(.6+j*.15);g.beginPath();g.moveTo(x,y+.3);g.lineTo(x+dx,y+1.1+(2-j)*.15);g.stroke()}
       }
@@ -488,25 +490,45 @@ const HibiscusPuppet=(()=>{
     // front and back: a flared skirt lies over the hands (as in the still picture); side views: the near arm is in front
     const order=[...groups.hairB,...groups.far,...groups.torso,...groups.legs,...(rg.side?[...groups.skirt,...groups.arms]:[...groups.arms,...groups.skirt]),...groups.hairF];
     // drawn expression heads (puppet-rig.js EXPRESSION_ART), when a sheet exists for this doll and view
-    const expr=headPiece&&await expressionHeads(layers.doll,view,headPiece).catch(()=>null);
+    const expr=headPiece&&await expressionHeads(layers.doll,view,headPiece,layers.shot).catch(e=>{if(config.debug)console.warn(e);return null});
     if(expr){headPiece.expr=expr;overlaySrc=null}
     return finishModel(rg,order,overlaySrc,{farOffset,look:layers.shot,doll:layers.doll,expr:!!expr});
   }
-  /* Drawn heads: each cell of the sheet replaces the head pixel for pixel (placed at the spec's doll-local
-     `at`, cells of `cell` doll px drawn at `scale`); the side sheet serves the left view and, mirrored,
-     the right. Returns {name: canvas} in the head piece's own crop, or null when no sheet is set. */
-  async function expressionHeads(doll,view,piece){
+  /* Drawn heads (puppet-rig.js EXPRESSION_ART, built by art/build_faces.py): for each expression the
+     bare base head gets the drawn cell blended in (its alpha is the region mask), then the game's own
+     makeup pass (applyFaceMakeup: the cell's lips, eyeshadow on a closed lid, blush), and the result is
+     laid over the live head piece through the same mask, so outside the region it is the live doll
+     exactly. Side sheets are drawn for the left view and mirrored for the right. Returns
+     {name: canvas in the head piece's crop}, or null when there is no sheet for this doll and view. */
+  async function expressionHeads(doll,view,piece,shot){
     if(view==='back')return null;
     const spec=R.EXPRESSION_ART[doll]?.[view==='front'?'front':'side'];
-    if(!spec?.file)return null;
-    const sheet=await asset(spec.file),[cw,ch]=spec.cell,k=spec.scale||1,o=R.ORIGINS[doll][view==='right'?'left':view];
-    const [bx,by,bw,bh]=piece.box,out={};
+    if(!spec?.file||typeof applyFaceMakeup!=='function')return null;
+    const srcView=view==='right'?'left':view,dv=dollView(doll,srcView);
+    const [sheet,lipsSheet,base]=await Promise.all([asset(spec.file),spec.lips?asset(spec.lips):null,spriteCanvas(dv.art)]);
+    const [cw,ch]=spec.cell,k=spec.scale||1,[ax,ay]=spec.at,o=R.ORIGINS[doll][srcView];
+    const face=shiftFace(dv.face||{},-ax,-ay),[bx,by]=piece.box,out={};
+    // where the crop goes in the head piece (canvas px of this view)
+    const right=view==='right',px=right?R.ORIGINS[doll].right[0]+R.MIRROR[doll]-(ax+cw):ax+o[0],py=ay+o[1];
     R.EXPRESSIONS.forEach((name,n)=>{
-      const c=mk(bw,bh),g=c.getContext('2d');g.drawImage(piece.canvas,0,0);g.imageSmoothingQuality='high';
-      let x=spec.at[0]+o[0],y=spec.at[1]+o[1];
-      if(view==='right'){x=R.MIRROR[doll]+R.ORIGINS[doll].right[0]-(spec.at[0]+cw)+0;g.translate(x-bx+cw,y-by);g.scale(-1,1)}else g.translate(x-bx,y-by);
-      g.clearRect(0,0,cw,ch);g.drawImage(sheet,(n%4)*cw*k,Math.floor(n/4)*ch*k,cw*k,ch*k,0,0,cw,ch);
-      out[name]=c;
+      if(name==='neutral')return; // the rest pose is the live doll's own face
+      const sx=(n%4)*cw*k,sy=Math.floor(n/4)*ch*k;
+      const c=mk(cw,ch),g=g2(c);g.imageSmoothingQuality='high';
+      g.drawImage(base,ax,ay,cw,ch,0,0,cw,ch);g.drawImage(sheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
+      const im=g.getImageData(0,0,cw,ch);
+      const region=R.EXPRESSION_REGION[name];
+      let lipsMask=null;
+      if(lipsSheet&&region!=='eyes'){const lc=mk(cw,ch),lg=g2(lc);lg.imageSmoothingQuality='high';lg.drawImage(lipsSheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
+        const ld=lg.getImageData(0,0,cw,ch).data;lipsMask=new Float32Array(cw*ch);for(let i=0;i<lipsMask.length;i++)lipsMask[i]=ld[i*4]/255}
+      applyFaceMakeup(im.data,cw,ch,shot,face,{lipsMask,eyesClosed:name==='blink'?1:name==='half-closed'?.6:name==='laugh'?.7:0});
+      g.putImageData(im,0,0);
+      // keep it only where the cell blends (its alpha), over the live head piece
+      g.globalCompositeOperation='destination-in';g.drawImage(sheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
+      const v=mk(piece.canvas.width,piece.canvas.height),vg=v.getContext('2d');vg.drawImage(piece.canvas,0,0);vg.imageSmoothingQuality='high';
+      vg.save();vg.beginPath();vg.rect(0,0,v.width,v.height);vg.clip();
+      if(right){vg.translate(px-bx+cw,py-by);vg.scale(-1,1)}else vg.translate(px-bx,py-by);
+      vg.drawImage(c,0,0);vg.restore();
+      out[name]=v;
     });
     return out;
   }
@@ -594,6 +616,17 @@ precision highp float;
 uniform sampler2D map;uniform sampler2D mask;uniform vec4 uTint;
 in vec2 vUv;out vec4 outColor;
 void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTint.rgb,c.a)*uTint.a;}`;
+  /* the head piece with drawn expressions: the rest head plus weighted differences of up to two eye and
+     two mouth variants (each differs from the rest head only in its own region) */
+  const FRAG_EXPR=`
+precision highp float;
+uniform sampler2D map;uniform sampler2D mask;uniform vec4 uTint;
+uniform sampler2D mapE0;uniform sampler2D mapE1;uniform sampler2D mapM0;uniform sampler2D mapM1;uniform vec4 uW;
+in vec2 vUv;out vec4 outColor;
+void main(){
+  vec4 r=texture(map,vUv);
+  vec4 c=r+uW.x*(texture(mapE0,vUv)-r)+uW.y*(texture(mapE1,vUv)-r)+uW.z*(texture(mapM0,vUv)-r)+uW.w*(texture(mapM1,vUv)-r);
+  c*=texture(mask,vUv).a;outColor=vec4(c.rgb*uTint.rgb,c.a)*uTint.a;}`;
   function getGL(){
     if(ctxGL&&!ctxGL.renderer.getContext().isContextLost())return ctxGL;
     const canvas=document.createElement('canvas');
@@ -625,15 +658,15 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       geo.setIndex(new T.BufferAttribute(src.index,1));geo.boundingSphere=new T.Sphere(new T.Vector3(),1e5);
       const shade=pc.far&&!pc.farShoe;
       const dbg=config.debugPieces&&({arm:[1,.55,.55],leg:[.55,.7,1],skirt:[.6,1,.6],hair:[1,1,.5],headItem:[1,.6,1],torso:pc.face?[1,.85,.6]:[1,1,1]}[pc.kind]);
-      const mat=new T.RawShaderMaterial({glslVersion:T.GLSL3,vertexShader:VERT,fragmentShader:FRAG,
-        uniforms:{...shared,map:{value:tex},mask:{value:mtex},uTint:{value:dbg?new T.Vector4(...dbg,1):new T.Vector4(shade?.74:1,shade?.68:1,shade?.76:1,1)},uShift:{value:new T.Vector2(...(pc.shift||[0,0]))}},
+      const mat=new T.RawShaderMaterial({glslVersion:T.GLSL3,vertexShader:VERT,fragmentShader:pc.expr?FRAG_EXPR:FRAG,
+        uniforms:{...shared,map:{value:tex},mask:{value:mtex},...(pc.expr?{mapE0:{value:tex},mapE1:{value:tex},mapM0:{value:tex},mapM1:{value:tex},uW:{value:new T.Vector4()}}:{}),uTint:{value:dbg?new T.Vector4(...dbg,1):new T.Vector4(shade?.74:1,shade?.68:1,shade?.76:1,1)},uShift:{value:new T.Vector2(...(pc.shift||[0,0]))}},
         transparent:true,depthTest:false,depthWrite:false,side:T.DoubleSide,
         blending:T.CustomBlending,blendEquation:T.AddEquation,blendSrc:T.OneFactor,blendDst:T.OneMinusSrcAlphaFactor,blendSrcAlpha:T.OneFactor,blendDstAlpha:T.OneMinusSrcAlphaFactor});
       const mesh=new T.Mesh(geo,mat);mesh.frustumCulled=false;mesh.renderOrder=i;mesh.userData.piece=pc;
       scene.add(mesh);meshes.push(mesh);mats.push(mat);geos.set(geo,1);
     });
     const exprTex={};
-    for(const pc of m.pieces)if(pc.expr)for(const [name,c] of Object.entries(pc.expr)){const t=new T.CanvasTexture(c);t.flipY=false;t.premultiplyAlpha=true;t.colorSpace=T.NoColorSpace;t.minFilter=T.LinearMipmapLinearFilter;textures.set(c,t);exprTex[name]=t}
+    for(const pc of m.pieces)if(pc.expr)for(const [name,c] of Object.entries(pc.expr)){const t=new T.CanvasTexture(c);t.flipY=false;t.premultiplyAlpha=true;t.colorSpace=T.NoColorSpace;t.minFilter=T.LinearMipmapLinearFilter;t.magFilter=T.LinearFilter;textures.set(c,t);exprTex[name]=t}
     return m.gpu={scene,shared,textures,meshes,mats,geos:[...geos.keys()],exprTex,overlayTex:m.overlay?textures.get(m.overlay.canvas):null};
   }
   let white=null;
@@ -743,6 +776,14 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       if(this.model)this.model.refs--;if(this.turn)this.turn.to.refs--;
       this.model=null;trimModels();
     }
+    /* Drawn heads: per channel the current and the previous expression with cross-fade weights. */
+    exprWeights(f){
+      const tg=R.expressionTargets({...f,jawMax:this.rig.face?.jawMax},this.doll),now=this.t;
+      const st=this.expr||(this.expr={eye:{cur:null,prev:null,at:-9},mouth:{cur:null,prev:null,at:-9}});
+      const step=(c,key,fade)=>{if(key!==c.cur){c.prev=c.cur;c.cur=key;c.at=now;c.fade=fade}const u=clamp((now-c.at)/(c.fade||.05),0,1);return [c.cur,u,c.prev,1-u]};
+      const [e0,we0,e1,we1]=step(st.eye,tg.eye,tg.eyeFade),[m0,wm0,m1,wm1]=step(st.mouth,tg.mouth,tg.mouthFade);
+      return {e0,we0,e1,we1,m0,wm0,m1,wm1};
+    }
     retarget(canvas){this.io.unobserve(this.canvas);this.canvas=canvas;this.io.observe(canvas);this.lastBack=null;kick()}
     /* ---- animation ---- */
     update(dt){
@@ -786,10 +827,11 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       const S=gpu.shared;
       for(let b=0;b<NB;b++){const p=pose.bones[b];S.uP.value[b].set(p.r,p.x,p.y,0);S.uS.value[b].set(p.sx,p.sy)}
       const f=pose.face;S.uFace.value.set(f.jaw,f.smile,f.wide,f.squint);
-      if(m.expr){ // drawn heads take over from the procedural face
-        S.uFace.value.set(0,0,0,0);
-        const name=R.expressionFor({...f,jawMax:m.rig.face?.jawMax}),tex=gpu.exprTex[name]||gpu.exprTex.neutral;
-        for(const mesh of gpu.meshes)if(mesh.userData.piece.expr)mesh.material.uniforms.map.value=tex;
+      if(m.expr){ // drawn heads take over from the procedural face (only the Grown-up's own smile stays a warp)
+        S.uFace.value.set(0,this.doll==='adult'?f.smile:0,0,this.doll==='adult'?f.squint*.5:0);
+        const w=this.exprWeights(f),U=w&&gpu.meshes.find(x=>x.userData.piece.expr)?.material.uniforms;
+        if(U){const tx=k=>k&&gpu.exprTex[k]||U.map.value;U.mapE0.value=tx(w.e0);U.mapE1.value=tx(w.e1);U.mapM0.value=tx(w.m0);U.mapM1.value=tx(w.m1);
+          U.uW.value.set(w.e0?w.we0:0,w.e1?w.we1:0,w.m0?w.wm0:0,w.m1?w.wm1:0)}
       }
       // turning: squash about the body's middle
       let sq=1;if(this.turn){const u=this.turn.t/this.turn.dur;sq=Math.max(.06,Math.abs(Math.cos(Math.PI*u)))}
@@ -896,7 +938,7 @@ void main(){vec4 c=texture(map,vUv)*texture(mask,vUv).a;outColor=vec4(c.rgb*uTin
       await loadThree();getGL();
       const m=await modelFor(opts,opts.view||'front');
       const p=Object.create(Puppet.prototype);Object.assign(p,{canvas,opts:{...opts,layout:()=>layout},model:m,rig:m.rig,turn:null});
-      p.pose=poseFn(m.rig);p.render();return m;
+      p.pose=poseFn(m.rig);p.t=0;p.doll=m.doll||"resident";if(m.expr)p.exprWeights(p.pose.face);p.t=10;p.render();return m; // cross-fades settled
     },
     _models:models,_instances:instances
   };

@@ -4,7 +4,7 @@
 // hopping, and the clips are deterministic per character.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import vm from 'node:vm';
 import { createRequire } from 'node:module';
 
@@ -186,7 +186,21 @@ test('face displacement: the jaw opens only below the mouth line, tapering to th
 });
 test('expression art: every doll and view names a sheet slot, and the face picks a valid expression', () => {
   assert.equal(R.EXPRESSIONS.length, 12);
-  for (const doll of DOLLS) for (const v of ['front', 'side']) { const a = R.EXPRESSION_ART[doll][v]; assert.ok(a && a.cell.length === 2 && a.at.length === 2 && a.scale > 0) }
+  for (const doll of DOLLS) for (const v of ['front', 'side']) {
+    const a = R.EXPRESSION_ART[doll][v]; if (!a) continue;
+    assert.ok(a.cell.length === 2 && a.at.length === 2 && a.scale > 0);
+    for (const f of [a.file, a.lips]) assert.ok(existsSync(new URL(f, dist)), f + ' exists');
+  }
+  assert.ok(R.EXPRESSION_ART.adult.front && R.EXPRESSION_ART.little.front, 'both dolls have front heads');
+  for (const name of R.EXPRESSIONS) assert.ok(['face', 'eyes', 'mouth'].includes(R.EXPRESSION_REGION[name]), name);
+  // channels: a blink while talking keeps both; talking follows the jaw; the Grown-up's smile stays her own
+  const T = (f, d = 'little') => R.expressionTargets({ blink: [0, 0], jaw: 0, smile: 0, wide: 0, glance: 0, laugh: 0, surprise: 0, jawMax: 4, ...f }, d);
+  assert.deepEqual([T({}).eye, T({}).mouth], [null, null]);
+  assert.deepEqual([T({ blink: [1, 1], jaw: 3 }).eye, T({ blink: [1, 1], jaw: 3 }).mouth], ['blink', 'talk-ah']);
+  assert.equal(T({ blink: [.3, .3] }).eye, 'half-closed');
+  assert.equal(T({ jaw: 1.2 }).mouth, 'talk-eh'); assert.equal(T({ jaw: 1.2, wide: -1 }).mouth, 'talk-oh');
+  assert.equal(T({ smile: 1 }).mouth, 'big-smile'); assert.equal(T({ smile: 1 }, 'adult').mouth, null);
+  assert.equal(T({ glance: -1 }).eye, 'look-left'); assert.equal(T({ laugh: 1 }).mouth, 'laugh');
   const base = { blink: [0, 0], jaw: 0, smile: 0, wide: 0, glance: 0, laugh: 0, surprise: 0, jawMax: 4 };
   assert.equal(R.expressionFor(base), 'neutral');
   assert.equal(R.expressionFor({ ...base, blink: [1, 1] }), 'blink');
