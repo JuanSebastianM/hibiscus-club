@@ -60,7 +60,7 @@ const Decorator=(()=>{
       const owned=new Set(state.house.owned);
       house={at:state.house.at,owned,done:state.house.done.slice(),goals:state.house.goals.slice(),rooms:{}};
       for(const r of DECOR.rooms){const s=state.house.rooms[r.id];
-        house.rooms[r.id]={w:s.w,f:s.f,b:s.b||null,pieces:L.readPieces(s.p,r.id,id=>owned.has(id)).map(withUid)};}
+        house.rooms[r.id]={w:s.w,f:s.f,b:typeof s.b==='string'?s.b:null,pieces:L.readPieces(s.p,s.b||r.id,id=>owned.has(id)).map(withUid)};}
     });
     ready.catch(()=>{ready=null});
     return ready;
@@ -104,6 +104,10 @@ const Decorator=(()=>{
   /* ---------- the house model ---------- */
   const cur=()=>house.rooms[house.at];
   const pieces=()=>cur().pieces;
+  /* Where a room's pieces stand: its painted scheme's geometry, or the procedural room's.
+     (A room's `b` is a scheme id when painted; '' or null when it has paint and flooring.) */
+  const whereOf=id=>house.rooms[id].b||id;
+  const W=()=>whereOf(house.at);
   const owns=id=>!L.price(id)||house.owned.has(id);
   const furnitureCount=list=>list.filter(p=>!L.isDoll(p.id)).length;
   function snapshot(room=cur()){return {w:room.w,f:room.f,b:room.b,p:room.pieces.map(p=>({...p,hostIx:p.host?room.pieces.indexOf(p.host):-1}))}}
@@ -118,7 +122,7 @@ const Decorator=(()=>{
   /* Writes the house to the save (try-on pieces are never written) and pays any new rewards. */
   function save(){
     const out={v:1,at:house.at,rooms:{},owned:[...house.owned],done:house.done.slice(),goals:house.goals.slice()};
-    for(const r of DECOR.rooms){const s=house.rooms[r.id];L.settle(s.pieces,r.id);out.rooms[r.id]={w:s.w,f:s.f,...(s.b?{b:s.b}:{}),p:L.writePieces(s.pieces)}}
+    for(const r of DECOR.rooms){const s=house.rooms[r.id];L.settle(s.pieces,whereOf(r.id));out.rooms[r.id]={w:s.w,f:s.f,...(typeof s.b==='string'?{b:s.b}:{}),p:L.writePieces(s.pieces)}}
     state.house=out;persist();
   }
   function commit(msg){save();rewards();refresh();if(msg)say(msg)}
@@ -184,7 +188,7 @@ const Decorator=(()=>{
       case 'floor':return group(t('house.group.floor'),cards(byCat('floor')))+`<p class="group-hint">${t('house.hint.floor')}</p>`;
       case 'paint':{const r=cur(),bds=DECOR.backdrops.filter(b=>b.room===house.at);
         const sw=(kind,id,pressed)=>`<button class="chip dec-swatch" data-dec="${kind}" data-value="${id}" data-fid="${kind}-${id}" aria-pressed="${pressed}"><span class="dec-swatch-pic" style="background-image:url('${DecorPaint.swatch(kind==='set-wall'?'wall':'floor',id)}')"></span><span class="chip-name">${esc(t('house.'+(kind==='set-wall'?'wall':'floor')+'.'+id))}</span></button>`;
-        return (bds.length?group(t('house.group.schemes'),`<div class="chip-grid">${bds.map(b=>`<button class="chip dec-swatch" data-dec="set-scheme" data-value="${b.id}" data-fid="scheme-${b.id}" aria-pressed="${r.b===b.id}"><span class="dec-swatch-pic" style="background:${b.swatch||'#fff'}"></span><span class="chip-name">${esc(t('house.scheme.'+b.id))}</span></button>`).join('')}</div>`):'')+
+        return (bds.length?group(t('house.group.schemes'),`<div class="dec-schemes">${bds.map(b=>`<button class="dec-scheme" data-dec="set-scheme" data-value="${b.id}" data-fid="scheme-${b.id}" aria-pressed="${r.b===b.id}"><img src="${b.thumb}" alt="" width="192" height="144" loading="lazy" decoding="async" draggable="false" style="background:${b.swatch||'#fff'}"><span class="chip-name">${esc(t('house.scheme.'+b.id))}</span></button>`).join('')}</div>`)+`<p class="group-hint">${t('house.hint.schemes')}</p>`:'')+
           group(t(def.outdoor?'house.group.wallOut':'house.group.wall'),`<div class="chip-grid">${def.walls.map(id=>sw('set-wall',id,!r.b&&r.w===id)).join('')}</div>`)+
           group(t(def.outdoor?'house.group.floorOut':'house.group.floorIn'),`<div class="chip-grid">${def.floors.map(id=>sw('set-floor',id,!r.b&&r.f===id)).join('')}</div>`);}
       case 'friends':{const dolls=[state.doll,state.doll==='adult'?'little':'adult'];
@@ -201,8 +205,8 @@ const Decorator=(()=>{
     const i=it(p.id);
     if(p.host)return t('house.where.on',{name:nameOf(p.host.id)});
     const across=p.x<ROOM.W*.36?'left':p.x>ROOM.W*.64?'right':'middle';
-    if(i.placement==='wall'){const z=L.wallZone(house.at),v=(p.y-z.y0)/(z.y1-z.y0);return t('house.where.wall',{across:t('house.across.'+across),height:t('house.height.'+(v<.4?'high':v>.7?'low':'mid'))})}
-    const tt=L.depthT(p.y);
+    if(i.placement==='wall'){const z=L.wallZone(W()),v=(p.y-z.y0)/(z.y1-z.y0);return t('house.where.wall',{across:t('house.across.'+across),height:t('house.height.'+(v<.4?'high':v>.7?'low':'mid'))})}
+    const tt=L.depthT(p.y,W());
     return t(i.placement==='rug'?'house.where.rug':'house.where.floor',{across:t('house.across.'+across),depth:t('house.depth.'+(tt<.34?'back':tt>.68?'front':'middle'))});
   }
   function listPanel(){
@@ -275,16 +279,30 @@ const Decorator=(()=>{
   }
 
   /* ---------- drawing ---------- */
-  function backdropImg(r){
-    const b=r.b&&DECOR.backdrops.find(x=>x.room===house.at&&x.id===r.b);if(!b)return null;
-    let s=sprites.get('backdrop:'+b.file);
-    if(!s){s={img:null};sprites.set('backdrop:'+b.file,s);image(b.file).then(i=>{s.img=i;bgCache.clear();paintBg()}).catch(()=>{})}
-    return s.img;
+  /* Painted backdrops: the full picture (only for a room being shown or photographed) and the small
+     thumbnail (room cards, and a stand-in while the picture loads). Loaded on first use, then kept. */
+  const backdrops=new Map();
+  function backdropPic(id,full){
+    const b=L.backdrop(id);if(!b)return null;
+    const key=(full?'full:':'thumb:')+id;let s=backdrops.get(key);
+    if(!s){s={img:null};backdrops.set(key,s);
+      s.p=image(full?b.file:b.thumb).then(i=>{s.img=i;for(const k of [...bgCache.keys()])if(k.includes('|'+id))bgCache.delete(k);paintBg();drawCardsSoon()}).catch(()=>{});}
+    return s;
   }
-  function roomBg(roomId,r){
-    const bd=r===cur()?backdropImg(r):null,key=[roomId,r.w,r.f,bd?r.b:''].join('|');
+  /* The empty room as a 1536 x 1152 canvas: procedural paint and floor, or the painted picture
+     (`full` false: from its thumbnail, for the room cards). */
+  function roomBg(roomId,r,full=r===cur()){
+    let bd=null,tag='';
+    if(r.b&&L.backdrop(r.b)){
+      const big=full?backdropPic(r.b,true).img:null,small=backdropPic(r.b,false).img;
+      bd=big||small;tag=(big?'full':small?'thumb':'none')+'|'+r.b;
+    }
+    const key=[roomId,r.w,r.f,tag].join('|');
     let c=bgCache.get(key);
-    if(!c){c=document.createElement('canvas');c.width=ROOM.W;c.height=ROOM.H;DecorPaint.room(c.getContext('2d'),roomId,r.w,r.f,bd);bgCache.set(key,c);if(bgCache.size>16)bgCache.delete(bgCache.keys().next().value)}
+    if(!c){c=document.createElement('canvas');c.width=ROOM.W;c.height=ROOM.H;const g=c.getContext('2d');
+      if(r.b&&!bd){g.fillStyle=L.backdrop(r.b).swatch||'#f4ebe6';g.fillRect(0,0,ROOM.W,ROOM.H)}
+      else DecorPaint.room(g,roomId,r.w,r.f,bd);
+      bgCache.set(key,c);if(bgCache.size>16)bgCache.delete(bgCache.keys().next().value)}
     return c;
   }
   function paintBg(){if(!ui)return;const g=ui.bg.getContext('2d');g.clearRect(0,0,ROOM.W,ROOM.H);g.drawImage(roomBg(house.at,cur()),0,0)}
@@ -300,31 +318,44 @@ const Decorator=(()=>{
     if(pendingMove){const m=pendingMove;pendingMove=null;moveTo(m)}
     const g=ui.fg.getContext('2d'),k=ui.fg.width/ROOM.W;
     g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,ui.fg.width,ui.fg.height);g.setTransform(k,0,0,k,0,0);
-    drawPieces(g,pieces(),false,k);
+    drawPieces(g,pieces(),false,k,null,W());
     if(sel&&pieces().includes(sel))drawSelection(g,sel,k);
     if(frameHook)frameHook(ts);
   }
-  /* Draws pieces in depth order with soft contact shadows. `thumbs` uses the small pictures (room cards). */
-  function drawPieces(g,list,thumbs,k=1,imgOf=null){
+  /* Draws pieces in depth order with soft contact shadows. `thumbs` uses the small pictures (room
+     cards); `where` is the room's geometry (see whereOf). */
+  function drawPieces(g,list,thumbs,k=1,imgOf=null,where){
     g.imageSmoothingEnabled=true;g.imageSmoothingQuality=thumbs?'medium':'high';
-    const order=L.sortPieces(list),pic=p=>imgOf?imgOf(p):thumbs?thumbImg(p.id):sprite(p.id).img;
+    const order=L.sortPieces(list),pic=p=>imgOf?imgOf(p):thumbs?thumbImg(p.id):sprite(p.id).img,geo=L.geo(where);
     let cast=false;
     for(const p of order){
       const i=it(p.id);if(!i)continue;
       // after the wall pieces: tall pieces standing against the back wall cast a faint shadow on it
-      if(!cast&&i.placement!=='wall'){cast=true;wallCast(g,order,pic)}
-      const img=pic(p),b=L.box(p);
+      if(!cast&&i.placement!=='wall'){cast=true;wallCast(g,order,pic,where)}
+      const img=pic(p),b=L.box(p,where);
       if(i.placement==='wall')mountShadow(g,p,b,img);
       else if(i.placement==='rug')rugShadow(g,p,b,img);
-      else groundShadow(g,p,i,b,img);
+      else groundShadow(g,p,i,b,img,where);
       if(!img)continue;
       if(p.trial)g.globalAlpha=.9;
-      if(p.f){g.save();g.translate(b.x+b.w,b.y);g.scale(-1,1);g.drawImage(img,0,0,b.w,b.h);g.restore()}
+      if(i.placement==='rug'&&geo.painted)drawRug(g,p,b,img,where);
+      else if(p.f){g.save();g.translate(b.x+b.w,b.y);g.scale(-1,1);g.drawImage(img,0,0,b.w,b.h);g.restore()}
       else g.drawImage(img,b.x,b.y,b.w,b.h);
       g.globalAlpha=1;
       if(p.trial&&!thumbs){g.save();g.setLineDash([10/k,7/k]);g.strokeStyle='#dba92a';g.lineWidth=3/k;g.strokeRect(b.x,b.y,b.w,b.h);g.restore()}
     }
-    if(!cast)wallCast(g,order,pic);
+    if(!cast)wallCast(g,order,pic,where);
+  }
+  /* A rug in a painted room lies flat in that room's perspective: drawn in thin bands, each as wide
+     as the floor's scale at its depth (narrower toward the back wall). */
+  function drawRug(g,p,b,img,where){
+    const n=28,s0=L.depthScale(p.y,where),cx=b.x+b.w/2,sh=img.height/n,bh=b.h/n;
+    g.save();if(p.f){g.translate(2*cx,0);g.scale(-1,1)}
+    for(let j=0;j<n;j++){
+      const y=b.y+j*bh,wj=b.w*L.depthScale(y+bh/2,where)/s0;
+      g.drawImage(img,0,j*sh,img.width,sh+.5,cx-wj/2,y,wj,bh+.6);
+    }
+    g.restore();
   }
   /* A blurred silhouette of a sprite (made once per picture, at most ~200 px) for shadows. */
   const silhouettes=new WeakMap();
@@ -346,48 +377,52 @@ const Decorator=(()=>{
   }
   /* Grounding for anything that stands: a soft pool of shade over the whole footprint (wider and
      lighter outward), and the darker, tighter shadow of the piece's own base right at its feet.
-     The light comes from the upper left, as in the art, so shade leans a little to the right. */
-  function groundShadow(g,p,i,b,img){
-    const f=L.footprint(p),fw=Math.max(8,f.r-f.l),fd=Math.max(4,f.front-f.rear),lean=fw*.04;
+     Shade leans the way the room's light falls: a little to the right in the procedural rooms (the
+     art is lit from the upper left), and as measured from each painting (its windows and sun). */
+  function groundShadow(g,p,i,b,img,where){
+    const light=L.geo(where).light;
+    const f=L.footprint(p,where),fw=Math.max(8,f.r-f.l),fd=Math.max(4,f.front-f.rear),lean=fw*light;
     const cx=(f.l+f.r)/2+lean,cy=(f.front+f.rear)/2+1,rx=fw*.56+8,ry=fd*.5+Math.max(6,fw*.05);
     g.save();g.translate(cx,cy);g.scale(1,ry/rx);
     const gr=g.createRadialGradient(0,0,0,0,0,rx);gr.addColorStop(0,'rgba(60,30,55,.32)');gr.addColorStop(.55,'rgba(60,30,55,.18)');gr.addColorStop(1,'rgba(60,30,55,0)');
     g.fillStyle=gr;g.beginPath();g.arc(0,0,rx,0,Math.PI*2);g.fill();g.restore();
     if(!img)return;
     // contact: only the base of the silhouette (from just above the rear feet down)
-    const top=f.rear-Math.min(b.h*.08,30);
-    // the base, laid flat on the floor toward the lower right (light from the upper left)
+    const top=f.rear-Math.min(b.h*.08,30),side=Math.sign(light)||0;
+    // the base, laid flat on the floor away from the light
     g.save();g.beginPath();g.rect(b.x-b.w,f.rear-6,b.w*3,b.b-f.rear+60);g.clip();
     g.translate(0,f.front);g.scale(1,.42);g.translate(0,-f.front);
-    drawSil(g,p,b,img,b.w*.035+3,fd*.2+6,.42);
+    drawSil(g,p,b,img,b.w*light*.875+3*side,fd*.2+6,.42);
     g.restore();
     // and the dark contact right at the feet
     g.save();g.beginPath();g.rect(b.x-b.w,top,b.w*3,b.b-top+40);g.clip();
-    drawSil(g,p,b,img,b.w*.012+1.5,2.5,.85);
+    drawSil(g,p,b,img,b.w*light*.3+1.5*side,2.5,.85);
     g.restore();
   }
   function rugShadow(g,p,b,img){if(img)drawSil(g,p,b,img,1.5,3,.22)}
   function mountShadow(g,p,b,img){if(img)drawSil(g,p,b,img,Math.max(3,b.w*.018),Math.max(4,b.h*.025),.3)}
-  /* Tall pieces whose back is against the back wall throw a faint shadow up and to the right onto it. */
-  function wallCast(g,order,pic){
-    const {back}=ROOM;
+  /* Tall pieces whose back is against the back wall throw a faint shadow up and to the side onto it
+     (not on a painted patio, whose back is open arches and garden). */
+  function wallCast(g,order,pic,where){
+    const geo=L.geo(where),back=geo.back;if(geo.painted&&geo.outdoor)return;
+    const reach=70*(geo.front-back.y1)/468,dir=Math.sign(geo.light)||1;
     for(const p of order){
       const i=it(p.id);if(!i||i.placement==='wall'||i.placement==='rug'||p.host)continue;
-      const f=L.footprint(p),b=L.box(p),near=f.rear-back.y1;
-      if(near>70||b.y>back.y1-60)continue;
+      const f=L.footprint(p,where),b=L.box(p,where),near=f.rear-back.y1;
+      if(near>reach||b.y>back.y1-60)continue;
       const img=pic(p);if(!img)continue;
       g.save();g.beginPath();g.rect(back.x0,0,back.x1-back.x0,back.y1);g.clip();
-      drawSil(g,p,b,img,b.w*.05+6,-Math.max(4,b.h*.02),.16*(1-near/70));
+      drawSil(g,p,b,img,dir*(b.w*.05+6),-Math.max(4,b.h*.02),.16*(1-near/reach));
       g.restore();
     }
   }
   const HANDLE=19; // css px radius of the on-item handles
   function handles(p,k){
-    const b=L.box(p),cssK=k/(Math.min(2,devicePixelRatio||1)),r=HANDLE/cssK;
+    const b=L.box(p,W()),cssK=k/(Math.min(2,devicePixelRatio||1)),r=HANDLE/cssK;
     return {r,remove:{x:Math.min(b.r,ROOM.W-r-4),y:Math.max(b.y,r+4)},size:{x:Math.min(b.r,ROOM.W-r-4),y:Math.min(b.b,ROOM.H-r-4)}};
   }
   function drawSelection(g,p,k){
-    const b=L.box(p),hd=handles(p,k),lw=2.5*hd.r/HANDLE;
+    const b=L.box(p,W()),hd=handles(p,k),lw=2.5*hd.r/HANDLE;
     g.save();
     g.strokeStyle='#fff';g.lineWidth=lw*2.4;g.setLineDash([]);g.strokeRect(b.x,b.y,b.w,b.h);
     g.strokeStyle='#a4245e';g.lineWidth=lw;g.setLineDash([lw*4,lw*3]);g.strokeRect(b.x,b.y,b.w,b.h);g.setLineDash([]);
@@ -404,7 +439,7 @@ const Decorator=(()=>{
     main.querySelectorAll('canvas[data-thumb-room]').forEach(c=>{
       const id=c.dataset.thumbRoom,r=house.rooms[id],g=c.getContext('2d'),k=c.width/ROOM.W;
       g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,c.width,c.height);g.setTransform(k,0,0,k,0,0);
-      g.drawImage(roomBg(id,r),0,0);drawPieces(g,r.pieces.filter(p=>!p.trial),true,k);
+      g.drawImage(roomBg(id,r,false),0,0);drawPieces(g,r.pieces.filter(p=>!p.trial),true,k,null,whereOf(id));
     });
   }
 
@@ -412,7 +447,7 @@ const Decorator=(()=>{
   function roomPoint(e){const r=ui.fg.getBoundingClientRect();return {x:(e.clientX-r.left)*ROOM.W/r.width,y:(e.clientY-r.top)*ROOM.H/r.height}}
   function hitPiece(pt){
     for(const p of L.sortPieces(pieces()).reverse()){
-      const b=L.box(p);if(pt.x<b.x||pt.x>b.r||pt.y<b.y||pt.y>b.b)continue;
+      const b=L.box(p,W());if(pt.x<b.x||pt.x>b.r||pt.y<b.y||pt.y>b.b)continue;
       const m=sprite(p.id).mask;if(!m)return p;
       let u=(pt.x-b.x)/b.w;if(p.f)u=1-u;const v=(pt.y-b.y)/b.h;
       if(m.a[Math.min(m.h-1,Math.floor(v*m.h))*m.w+Math.min(m.w-1,Math.floor(u*m.w))]>40)return p;
@@ -447,16 +482,16 @@ const Decorator=(()=>{
   /* Applies the latest pointer position once per frame. */
   function moveTo(pt){
     if(!drag)return;const p=drag.p;
-    if(drag.mode==='size'){p.s=Math.round(Math.max(L.SCALE.min,Math.min(L.SCALE.max,drag.s0*Math.hypot(pt.x-p.x,pt.y-p.y)/drag.d0))*100)/100;L.constrain(p,house.at);return}
+    if(drag.mode==='size'){p.s=Math.round(Math.max(L.SCALE.min,Math.min(L.SCALE.max,drag.s0*Math.hypot(pt.x-p.x,pt.y-p.y)/drag.d0))*100)/100;L.constrain(p,W());return}
     placeAt(p,pt.x-drag.dx,pt.y-drag.dy);
   }
   /* Moves a piece to a room point: a surface piece snaps onto a tabletop under it, everything else
      stays where its kind belongs. Pieces resting on a moved host travel with it. */
   function placeAt(p,x,y){
     const ox=p.x,oy=p.y,i=it(p.id);
-    if(i.placement==='surface'){const h=L.hostAt(x,y,pieces(),p);p.host=h&&!pieces().some(q=>q.host===p)?h:null}
-    p.x=x;p.y=y;L.constrain(p,house.at);
-    for(const q of pieces())if(q.host===p){q.x+=p.x-ox;L.constrain(q,house.at)}
+    if(i.placement==='surface'){const h=L.hostAt(x,y,pieces(),p,W());p.host=h&&!pieces().some(q=>q.host===p)?h:null}
+    p.x=x;p.y=y;L.constrain(p,W());
+    for(const q of pieces())if(q.host===p){q.x+=p.x-ox;L.constrain(q,W())}
     void oy;
   }
   function up(e){
@@ -516,13 +551,13 @@ const Decorator=(()=>{
     remember();
     let p;
     if(at){p={id,x:0,y:0,s:1,f:false,z:0,host:null,trial:false};
-      const i=it(id),b0=(()=>{p.x=at.x;p.y=at.y;return L.box(p)})();
+      const i=it(id),b0=(()=>{p.x=at.x;p.y=at.y;return L.box(p,W())})();
       // drop point = the middle of the picture: put its floor point there instead
       placeAt(p,at.x,at.y+(i.placement==='wall'||i.placement==='rug'?(i.anchor[1]-.5)*b0.h:b0.h*.45));
     }else{
-      p=L.findSpot(id,pieces(),house.at);
+      p=L.findSpot(id,pieces(),W());
       if(it(id).placement==='surface'){const host=(sel&&DECOR.surfaces[sel.id]&&!sel.host?sel:null)||L.sortPieces(pieces()).find(q=>DECOR.surfaces[q.id]&&!q.host&&!pieces().some(r=>r.host===q));
-        if(host){const s=L.surfaceOf(host);p.host=host;p.x=(s.x0+s.x1)/2;L.constrain(p,house.at)}}
+        if(host){const s=L.surfaceOf(host,W());p.host=host;p.x=(s.x0+s.x1)/2;L.constrain(p,W())}}
     }
     p.trial=!doll&&!owns(id);
     withUid(p);pieces().push(p);sel=p;sprite(id);
@@ -533,7 +568,7 @@ const Decorator=(()=>{
   function removeSel(){
     if(!sel)return;const p=sel;remember();
     const room=cur();room.pieces=room.pieces.filter(q=>q!==p);
-    for(const q of room.pieces)if(q.host===p){q.host=null;q.y=p.y+4;L.constrain(q,house.at)}
+    for(const q of room.pieces)if(q.host===p){q.host=null;q.y=p.y+4;L.constrain(q,W())}
     sel=null;commit(t('house.removedSay',{name:nameOf(p.id)}));
     ui?.stage.focus({preventScroll:true});
   }
@@ -541,17 +576,17 @@ const Decorator=(()=>{
     const p=sel;if(!p||!pieces().includes(p))return;
     const i=it(p.id);
     switch(kind){
-      case 'flip':if(!i.mirror)return;remember();p.f=!p.f;L.constrain(p,house.at);commit(t('house.flippedSay',{name:nameOf(p.id)}));break;
+      case 'flip':if(!i.mirror)return;remember();p.f=!p.f;L.constrain(p,W());commit(t('house.flippedSay',{name:nameOf(p.id)}));break;
       case 'smaller':case 'bigger':{const s=Math.round((p.s+(kind==='bigger'?L.SCALE.step:-L.SCALE.step))*100)/100;
         if(s<L.SCALE.min-.001||s>L.SCALE.max+.001){say(t(kind==='bigger'?'house.maxSize':'house.minSize'));return}
-        {const was=p.s;remember();p.s=s;L.constrain(p,house.at);if(Math.abs(p.s-was)<.001){hs().undo.pop();say(t(kind==="bigger"?"house.maxSize":"house.minSize"));return}}for(const q of pieces())if(q.host===p)L.constrain(q,house.at);
+        {const was=p.s;remember();p.s=s;L.constrain(p,W());if(Math.abs(p.s-was)<.001){hs().undo.pop();say(t(kind==="bigger"?"house.maxSize":"house.minSize"));return}}for(const q of pieces())if(q.host===p)L.constrain(q,W());
         commit(t('house.sizeSay',{name:nameOf(p.id),percent:Math.round(p.s*100)}));break}
-      case 'forward':case 'back':{const snap=snapshot();if(!L.reorder(p,pieces(),kind==='forward'?1:-1)){say(t(kind==='forward'?'house.frontMost':'house.backMost',{name:nameOf(p.id)}));return}
+      case 'forward':case 'back':{const snap=snapshot();if(!L.reorder(p,pieces(),kind==='forward'?1:-1,W())){say(t(kind==='forward'?'house.frontMost':'house.backMost',{name:nameOf(p.id)}));return}
         const h=hs();h.undo.push(snap);h.redo.length=0;commit(t(kind==='forward'?'house.forwardSay':'house.backSay',{name:nameOf(p.id)}));break}
       case 'copy':{if(L.isDoll(p.id))return;if(furnitureCount(pieces())>=DECOR.cap){say(t('house.cap',{count:DECOR.cap}));return}
         remember();const q=withUid({...p,x:p.x+40,y:p.y+(i.placement==='wall'?0:24),host:null,z:p.z});
         if(p.host){q.host=p.host}
-        L.constrain(q,house.at);pieces().push(q);sel=q;
+        L.constrain(q,W());pieces().push(q);sel=q;
         if(!q.trial){const c=i.room;if(CATS.includes(c))track('decor-place',c)}
         commit(t('house.copySay',{name:nameOf(p.id)}));break}
       case 'remove':removeSel();break;
@@ -578,21 +613,25 @@ const Decorator=(()=>{
     const names=[];
     for(const r of Object.values(house?.rooms||{})){const gone=r.pieces.filter(p=>p.trial);if(!gone.length)continue;
       gone.forEach(p=>names.push(nameOf(p.id)));r.pieces=r.pieces.filter(p=>!p.trial);
-      for(const q of r.pieces)if(q.host&&!r.pieces.includes(q.host)){q.y=q.host.y+4;q.host=null;L.constrain(q,DECOR.rooms.find(x=>house.rooms[x.id]===r).id)}}
+      for(const q of r.pieces)if(q.host&&!r.pieces.includes(q.host)){q.y=q.host.y+4;q.host=null;L.constrain(q,r.b||DECOR.rooms.find(x=>house.rooms[x.id]===r).id)}}
     if(sel&&sel.trial)sel=null;
     return names.length?t('house.droppedSay',{names:I18N.list([...new Set(names)])}):'';
   }
+  /* A new wall, floor or painted scheme. Paint or flooring over a painted room turns it back into the
+     procedural room (b = ''); a change of geometry carries every piece across (L.regeo), and Undo
+     brings back the old look with every piece where it was. */
   function setTreatment(kind,id){
-    const r=cur(),def=L.roomDef(house.at);
-    if(kind==='set-wall'&&def.walls.includes(id)&&(r.w!==id||r.b)){remember();r.w=id;r.b=null}
-    else if(kind==='set-floor'&&def.floors.includes(id)&&(r.f!==id||r.b)){remember();r.f=id;r.b=null}
-    else if(kind==='set-scheme'&&DECOR.backdrops.some(b=>b.room===house.at&&b.id===id)&&r.b!==id){remember();r.b=id}
+    const r=cur(),def=L.roomDef(house.at),from=W();
+    if(kind==='set-wall'&&def.walls.includes(id)&&(r.w!==id||r.b)){remember();r.w=id;r.b=''}
+    else if(kind==='set-floor'&&def.floors.includes(id)&&(r.f!==id||r.b)){remember();r.f=id;r.b=''}
+    else if(kind==='set-scheme'&&L.schemes(house.at).some(b=>b.id===id)&&r.b!==id){remember();r.b=id}
     else return;
-    paintBg();commit(t(kind==='set-floor'?'house.floorSay':'house.wallSay',{name:t(kind==='set-scheme'?'house.scheme.'+id:kind==='set-wall'?'house.wall.'+id:'house.floor.'+id)}));
+    const to=W();if(to!==from){L.regeo(r.pieces,from,to);L.settle(r.pieces,to)}
+    paintBg();commit(kind==='set-scheme'?t('house.schemeSay',{name:t('house.scheme.'+id)}):t(kind==='set-floor'?'house.floorSay':'house.wallSay',{name:t(kind==='set-wall'?'house.wall.'+id:'house.floor.'+id)}));
   }
   function surpriseMe(){
     const keepDolls=pieces().filter(p=>L.isDoll(p.id));
-    const next=L.surprise(house.at,id=>owns(id));
+    const next=L.surprise(W(),id=>owns(id));
     if(!next.length){say(t('house.surpriseNone'));return}
     remember();dropTrials();
     cur().pieces=[...next.map(withUid),...keepDolls];sel=null;
@@ -602,8 +641,10 @@ const Decorator=(()=>{
     if(state.sparkle)try{const r=ui.stage.getBoundingClientRect();HibiscusFx.burst(r.left+r.width/2,r.top+r.height/2,1)}catch{}
   }
   function startOver(){
-    remember();const r=cur(),def=L.roomDef(house.at);
-    r.pieces=r.pieces.filter(p=>L.isDoll(p.id));r.w=def.walls[0];r.f=def.floors[0];r.b=null;sel=null;
+    remember();const r=cur(),def=L.roomDef(house.at),from=W();
+    // back to the room's starting look (its first painted scheme); the characters stay
+    r.pieces=r.pieces.filter(p=>L.isDoll(p.id));r.w=def.walls[0];r.f=def.floors[0];r.b=L.defaultScheme(house.at);sel=null;
+    if(W()!==from)L.regeo(r.pieces,from,W());
     paintBg();commit(t('house.resetSay',{room:theRoom(house.at)}));
   }
   function toggleFriend(id){
@@ -654,7 +695,7 @@ const Decorator=(()=>{
   }
   function putBack(){
     const names=I18N.list(trialBill().ids.map(nameOf));
-    remember();cur().pieces=pieces().filter(p=>!p.trial);for(const q of pieces())if(q.host&&!pieces().includes(q.host)){q.y=q.host.y+4;q.host=null;L.constrain(q,house.at)}
+    remember();cur().pieces=pieces().filter(p=>!p.trial);for(const q of pieces())if(q.host&&!pieces().includes(q.host)){q.y=q.host.y+4;q.host=null;L.constrain(q,W())}
     if(sel&&sel.trial)sel=null;
     commit(t('house.putBackSay',{names}));
   }
@@ -684,7 +725,7 @@ const Decorator=(()=>{
       const p=sel,i=it(p.id);let tx=p.x+d[0],ty=p.y+d[1];
       if(p.host&&d[1]){ // up/down lifts a piece off its tabletop
         ty=d[1]>0?p.host.y+20:p.y-80;p.host=null}
-      else if(i.placement==='surface'&&!p.host&&d[1]<0){const h=L.hostAt(tx,ty-60,pieces(),p);if(h&&L.surfaceOf(h).y<p.y){ty=L.surfaceOf(h).y}}
+      else if(i.placement==='surface'&&!p.host&&d[1]<0){const h=L.hostAt(tx,ty-60,pieces(),p,W());if(h&&L.surfaceOf(h,W()).y<p.y){ty=L.surfaceOf(h,W()).y}}
       placeAt(p,tx,ty);paint();
       clearTimeout(sayTimer);sayTimer=setTimeout(()=>{finishKeyMove();say(t('house.movedSay',{name:nameOf(p.id),where:placeWord(p)}))},450);
       return;
@@ -733,7 +774,9 @@ const Decorator=(()=>{
   /* ---------- room photo (PNG download, and a page in the scrapbook) ---------- */
   async function renderRoom(roomId,room,looks){
     const c=document.createElement('canvas');c.width=ROOM.W;c.height=ROOM.H;const g=c.getContext('2d');
-    g.drawImage(roomBg(roomId,room),0,0);
+    // a painted room: wait for its full picture (downloaded only now, for a room not on screen)
+    if(room.b&&L.backdrop(room.b))await backdropPic(room.b,true).p;
+    g.drawImage(roomBg(roomId,room,true),0,0);
     const list=room.pieces.filter(p=>!p.trial);
     await Promise.all(list.map(p=>{
       if(L.isDoll(p.id)){const doll=p.id.slice(1),look=looks?.[doll]||state.looks[doll];const key=lookKey({...look,doll});
@@ -745,7 +788,7 @@ const Decorator=(()=>{
     const saved=new Map();
     for(const p of list)if(L.isDoll(p.id)&&looks?.[p.id.slice(1)]){const doll=p.id.slice(1);saved.set(doll,lookKey({...looks[doll],doll}))}
     g.imageSmoothingQuality='high';
-    drawPieces(g,list,false,1,p=>L.isDoll(p.id)?dollSprites.get(saved.get(p.id.slice(1))||dollKey(p.id.slice(1)))?.img:sprites.get(p.id)?.img);
+    drawPieces(g,list,false,1,p=>L.isDoll(p.id)?dollSprites.get(saved.get(p.id.slice(1))||dollKey(p.id.slice(1)))?.img:sprites.get(p.id)?.img,room.b||roomId);
     return c;
   }
   /* The postcard: the room on paper in a striped frame, like the doll postcards, with a caption. */
@@ -785,7 +828,9 @@ const Decorator=(()=>{
   async function paintRoomPhoto(canvas,photo){
     await load();
     const s=photo.room||{},roomId=L.ROOM_IDS.includes(s.r)?s.r:'bedroom',def=L.roomDef(roomId);
-    const room={w:def.walls.includes(s.w)?s.w:def.walls[0],f:def.floors.includes(s.f)?s.f:def.floors[0],b:null,pieces:L.readPieces(s.p,roomId,()=>true)};
+    // older snapshots have no painted scheme (b): they are drawn in the procedural room as before
+    const b=L.backdrop(s.b)?.room===roomId?s.b:null;
+    const room={w:def.walls.includes(s.w)?s.w:def.walls[0],f:def.floors.includes(s.f)?s.f:def.floors[0],b,pieces:L.readPieces(s.p,b||roomId,()=>true)};
     const looks={};for(const d of ['adult','little'])if(s.looks&&s.looks[d])looks[d]=readLook(s.looks[d],d);
     const pc=postcard(await renderRoom(roomId,room,looks),roomId,photo.doll);
     canvas.width=pc.width;canvas.height=pc.height;canvas.getContext('2d').drawImage(pc,0,0);
@@ -812,8 +857,8 @@ const Decorator=(()=>{
   function heading2(){return heading()}
   /* test hooks for the verification scripts (no effect on play) */
   const debug={get house(){return house},get sel(){return sel},set sel(p){sel=p;refreshSel();paint()},pieces:()=>pieces(),setRoom,add,act,undo,surpriseMe,startOver,frame:fn=>{frameHook=fn},paint,
-    box:p=>L.box(p),
-    grab:id=>{const p=pieces().find(q=>q.id===id);if(!p)return null;const b=L.box(p);
+    box:p=>L.box(p,W()),
+    grab:id=>{const p=pieces().find(q=>q.id===id);if(!p)return null;const b=L.box(p,W());
       for(const v of [.6,.5,.7,.4,.8,.3,.9])for(const u of [.5,.4,.6,.3,.7,.2,.8]){const pt={x:b.x+u*b.w,y:b.y+v*b.h};if(hitPiece(pt)===p){const r=ui.fg.getBoundingClientRect();return {x:r.left+pt.x*r.width/ROOM.W,y:r.top+pt.y*r.height/ROOM.H}}}return null},
     toScreen:(x,y)=>{const r=ui.fg.getBoundingClientRect();return {x:r.left+x*r.width/ROOM.W,y:r.top+y*r.height/ROOM.H}}};
   return {load,html,leave,relocalize,paintRoomPhoto,debug};
