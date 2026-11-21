@@ -336,6 +336,8 @@ The living characters were checked in Chromium (software WebGL) with contact she
 
 Sunny Cove and Breezy Park were checked the same way in Chromium at 1440 × 960 and 375 × 812 in both languages: the map with the new pins (Sunny Cove's label beside its pin on phones), each place with both characters and its resident, conversations with Sol and Teo (their real talking mouths, also zoomed), frame bursts and difference images of both living scenes (motion only in the sea, surf, sailboat, palms, garlands, clouds, fountain pool and jets, hanging kites, flowers and particles; the lifeguard chair, umbrellas, sandcastle kit, booth and paving stay still), all four new stories played to the end for both characters from an older save (22 and 18 stars, paid once), a day of errands touching both new places, all six treasures by mouse and keyboard, crafted older saves (fresh, mid-story with a three-place day record, everything done, pre-0.2 stages), every place reached from the map by keyboard, no horizontal overflow and no console errors.
 
+The second wardrobe was checked in Chromium on lab contact sheets of every new outfit and shoe on its doll in all four views (zoomed on shoulders, hems and feet, with long and short hairstyles and a necklace), turnarounds, puppet walk frames for each garment kind, and the real game at 1440 × 960 and 375 × 812 in English and Spanish: the studio's outfit and shoe tabs and theme filters on both characters, trying on and buying a paid outfit, turning her round, Surprise me many times, the photo booth, a postcard in the Scrapbook, the runway, a walk-in place and both characters as Dream House friends, with no console errors and no horizontal overflow.
+
 ## License
 
 Hibiscus Club is released under the [MIT License](LICENSE).
