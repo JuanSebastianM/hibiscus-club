@@ -463,7 +463,7 @@ const DecorLogic=(()=>{
     let under=[];
     if(g.painted){
       let soft=segs;const spans=[];
-      for(const o of g.openings.filter(o=>o.kind==='window'&&o.y1>yb-260)){const k=(o.x1-o.x0)*.22;soft=cut(soft,o.x0+k,o.x1-k);spans.push([o.x0+k,o.x1-k,yb-o.y1+(o.y1-o.y0)*.35])}
+      for(const o of g.openings.filter(o=>o.kind==='window'&&o.y1>yb-260)){const k=(o.x1-o.x0)*.22;soft=cut(soft,o.x0+k,o.x1-k);spans.push([o.x0+k,o.x1-k,yb-o.y1+(o.y1-o.y0)*.2])}
       const need=rows[0]?rows[0].reduce((s,e)=>s+e.w,0)+30:0;
       if(soft.length>segs.length&&soft.some(([a,b])=>b-a>=need)){segs=soft;under=spans}
     }
