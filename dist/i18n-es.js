@@ -917,7 +917,7 @@ I18N.add('es',{
   'house.surpriseSay':{one:'¡Tarán! Así quedó {room}, con {count} pieza.',other:'¡Tarán! Así quedó {room}, con {count} piezas. Deshacer trae de vuelta lo de antes.'},
   'house.surpriseNone':'Todavía no hay nada que acomodar aquí.',
   'house.resetTitle':'¿Vaciar {room} y empezar de nuevo?',
-  'house.resetText':'Todas las piezas se guardan y las paredes y el piso vuelven a ser sencillos. Con Deshacer puedes recuperar todo.',
+  'house.resetText':'Todas las piezas se guardan y el cuarto vuelve a su primer estilo pintado. Con Deshacer puedes recuperar todo.',
   'house.resetYes':'Empezar de nuevo',
   'house.resetNo':'Dejarlo así',
   'house.resetSay':'Ya no hay nada en {room}. Deshacer trae todo de vuelta.',

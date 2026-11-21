@@ -824,7 +824,7 @@ const I18N=(()=>{
     'house.surpriseSay':{one:'Ta-da! A fresh look for {room} with {count} piece.',other:'Ta-da! A fresh look for {room} with {count} pieces. Undo brings back the old one.'},
     'house.surpriseNone':'Nothing to arrange here yet.',
     'house.resetTitle':'Empty {room} and start over?',
-    'house.resetText':'Every piece goes back and the walls and floor turn plain again. Undo can still bring it all back.',
+    'house.resetText':'Every piece goes back and the room returns to its first painted look. Undo can still bring it all back.',
     'house.resetYes':'Start over',
     'house.resetNo':'Keep it',
     'house.resetSay':'Everything is out of {room}. Undo brings it all back.',
