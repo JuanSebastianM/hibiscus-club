@@ -359,7 +359,8 @@ const DecorLogic=(()=>{
     const cost=c=>{constrain(c,where);const b=box(c,where);let o=0;
       for(const q of others){if(layer(q)!==layer(c)&&!(it.placement==='wall'&&layer(q)===2))continue;const a=box(q,where);
         const w=Math.max(0,Math.min(a.r,b.r)-Math.max(a.x,b.x)),h=Math.max(0,Math.min(a.b,b.b)-Math.max(a.y,b.y));
-        const depthNear=layer(c)===2?Math.max(0,1-Math.abs(baseY(q)-c.y)/(depth*.47)):1;o+=w*h*(layer(q)===layer(c)?1:.35)*depthNear}
+        // (a painted floor is shallow on screen: a piece further forward hides one behind it, so any overlap counts)
+        const depthNear=layer(c)===2?Math.max(g.painted?.5:0,1-Math.abs(baseY(q)-c.y)/(depth*.47)):1;o+=w*h*(layer(q)===layer(c)?1:.35)*depthNear}
       return o/(b.w*b.h)+inClear(c,where)*.6;
     };
     const cands=[];
