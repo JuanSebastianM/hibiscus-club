@@ -435,18 +435,34 @@ for(const doll of ['adult','little']){
    - dx, dy: shift (doll px); kx, ky: scale about `at` (doll px, default the head's centre) where her
      head is shaped differently from the proof's;
    - layer: 'arms' = in front of the body except where it hangs over the arms (front view, ARMS_CLEAR),
-     'side' = head region in front, lengths behind the back and shoulders (FRONT_SIDE, mirrored for
-     the right view), 'top' = all in front, or a list of doll-local shapes drawn in front;
+     'side' = in front of head, neck and back but behind the near arm and shoulder (side views, the
+     view's arm polygon), 'neck' = only the head region in front, lengths behind the neck and back
+     (FRONT_SIDE, mirrored for the right view), 'top' = all in front, or a list of doll-local shapes
+     drawn in front. The sprites only hold what shows on the proof, so the head never needs masking;
    - earsUnder: the style covers her ears (earrings drawn under it);
    - clip {x, y, rot, scale, behind, hide}: where a hair accessory sits (on the hair, per view);
-   - soften / shade / cut / cutDoll as in portrait.js hairLayers.
-   Defaults (HAIR_DEFAULT): front 'arms' when the style reaches below her shoulders, else 'top'; side
+   - soften / shade / scalp / cut / cutDoll as in portrait.js hairLayers;
+   - k / kx / ky with at: see above.
+   Defaults: front 'arms' when the style reaches below her shoulders, else 'top'; side
    views 'side'; back 'top'; clips at the head's default spot of the view. */
 const HEAD_C={adult:{front:[200,62],back:[200,62],left:[90,62],right:[91,62]},little:{front:[203,105],back:[203,105],left:[110,105],right:[99,105]}};
 const SHOULDER_Y={adult:178,little:236};
 const CLIP_AT={adult:{front:{x:162,y:32,rot:-25},left:{x:122,y:24,behind:true},right:{x:59,y:24},back:{x:238,y:34,rot:20,scale:.85}},
   little:{front:{x:138,y:58,rot:-20},left:{x:140,y:50,behind:true},right:{x:67,y:50},back:{x:264,y:58,rot:15,scale:.85}}};
+/* HAIR_TUNE[id][doll] = {all: tune for every view, front|left|right|back: per view (wins)} */
+const UNDER={all:{earsUnder:true}};
 const HAIR_TUNE={
+  'long-waves':{adult:UNDER},'half-up-curls':{adult:UNDER},'sleek-curtain-bangs':{adult:UNDER},'flip-bob':{adult:UNDER},
+  'space-buns':{adult:UNDER},'crimped-twists':{adult:UNDER},
+  /* drawn differently from its proof (a fuller bob, its swoop lower on the forehead): raised to the
+     proof's hairline; seen from the right her forehead is flatter than the proof's, so the sheer
+     hairline in front of it is moved onto her forehead */
+  'curly-bob':{little:{all:{earsUnder:true,dy:-8},right:{dx:4}}},
+  /* her skull is a little rounder at the back than the toddler proofs': in profile these short styles
+     grow 2-2.5% about the forehead so no scalp peeks out behind them */
+  'pixie-sweep':{little:{left:{k:1.025,at:[40,130]},right:{k:1.025,at:[167,130]}}},
+  'chin-bob-bangs':{little:{all:{earsUnder:true},left:{k:1.02,at:[40,130]},right:{k:1.02,at:[167,130]}}},
+  'wavy-crop':{little:{all:{earsUnder:true},left:{k:1.02,at:[40,130]},right:{k:1.02,at:[167,130]}}}
 };
 const mirrorShapes=(list,M)=>list.map(s=>s.poly?{...s,poly:s.poly.map(([x,y])=>[M-x,y])}:s);
 for(const it of items)if(it.category==='hair'){
@@ -454,7 +470,7 @@ for(const it of items)if(it.category==='hair'){
   for(const doll of it.dolls){
     const fits=HAIR_FIT[it.id]?.[doll];if(!fits)continue;
     for(const view of HAIR_VIEWS){
-      const f=fits[view],t=HAIR_TUNE[it.id]?.[doll]?.[view]||{};if(!f||t.skip)continue;
+      const f=fits[view],tn=HAIR_TUNE[it.id]?.[doll]||{},t={...tn.all,...tn[view]};if(!f||t.skip)continue;
       const [ax,ay]=t.at||HEAD_C[doll][view],kx=t.kx??t.k??1,ky=t.ky??t.k??1;
       const fit={x:ax+(f.x-ax)*kx+(t.dx||0),y:ay+(f.y-ay)*ky+(t.dy||0),w:f.w*kx,h:f.h*ky};
       if(f.rot||t.rot)fit.rot=(f.rot||0)+(t.rot||0);
@@ -464,7 +480,7 @@ for(const it of items)if(it.category==='hair'){
       else if(layer==='neck')fit.front=view==='right'?mirrorShapes(FRONT_SIDE[doll],MIRROR[doll]):FRONT_SIDE[doll];
       else if(Array.isArray(layer))fit.front=layer;
       fit.clip={...CLIP_AT[doll][view],...t.clip};
-      for(const k of ['earsUnder','soften','shade','cut','cutDoll'])if(t[k]!==undefined)fit[k]=t[k];
+      for(const k of ['earsUnder','soften','shade','scalp','cut','cutDoll'])if(t[k]!==undefined)fit[k]=t[k];
       (it.fit[doll]??={})[view]=fit;
     }
   }

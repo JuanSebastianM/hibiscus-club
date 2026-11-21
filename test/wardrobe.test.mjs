@@ -100,3 +100,12 @@ test('bought keys of options that are free now stay owned; junk is dropped', () 
   assert.equal(Shop.owned('item:curly-buns'), true);
   assert.equal(Shop.owned('item:butterfly-clip'), false);
 });
+
+test('at most two hairstyles per character cost stars, and her default is free', () => {
+  const { CATALOG, Shop } = loadWardrobe();
+  for (const doll of ['adult', 'little']) {
+    const paid = CATALOG.hairStyles[doll].filter(id => Shop.price('item:' + id) > 0);
+    assert.ok(paid.length <= 2, `${doll}: ${paid}`);
+    assert.equal(Shop.price('item:' + CATALOG.defaults[doll].hair), 0);
+  }
+});

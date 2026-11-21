@@ -355,7 +355,8 @@ function shoeLayers(doll,view,id,tintId){
    shapes where the style passes behind the body (e.g. the near arm in a side view, feathered);
    fit.cut = sprite polys removed;
    fit.cutDoll = doll-local shapes removed; fit.soften = feathered hairline over skin (opt-in, see
-   softenHairline); fit.shade = contact shadow options or false. */
+   softenHairline); fit.shade = contact shadow (opt-in, see hairShade); fit.scalp=false turns off
+   the scalp shown through partings (scalpShow). */
 function hairLayers(doll,view,id,colorId){
   const item=catalogItem(id),fit=item?.fit?.[doll]?.[view];
   if(!fit)return Promise.reject(new Error('Hair '+id+' does not fit '+doll+' '+view));
@@ -444,10 +445,11 @@ function softenHairline(full,base,[ox,oy],opts={}){
 }
 /* Contact shadow of the hair: a soft, slightly lowered blur of the front hair layer, outside the hair
    itself, drawn source-atop over the body and outfit (portrait composeDoll), so the hair sits on the
-   forehead, temples, neck and shoulders instead of floating above them. opts = fit.shade:
-   {blur, dy, alpha} or false. */
-function hairShade(front,opts={}){
-  if(opts===false)return null;
+   forehead, temples, neck and shoulders instead of floating above them. Opt-in (the styles painted on
+   the head carry their own shading, so none uses it now): opts = fit.shade
+   {blur, dy, alpha}. */
+function hairShade(front,opts){
+  if(!opts)return null;
   const W=front.width,H=front.height,c=makeCanvas(W,H),g=c.getContext('2d');
   g.shadowColor=`rgba(58,26,20,${opts.alpha??.34})`;g.shadowBlur=(opts.blur??4)*2;g.shadowOffsetX=W;g.shadowOffsetY=opts.dy??1.5;
   g.drawImage(front,-W,0);

@@ -37,10 +37,11 @@ const q=new URLSearchParams(location.search);
  CATALOG.items[it.id]=it;CATALOG.itemList.push(it);}
 /* noscalp=1: hair styles without the scalp shown through partings (portrait.js scalpShow), to compare against the sprite alone. */
 if(q.get('noscalp'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])it.fit[d][v].scalp=false;
-/* nudge=id:doll:view:dx:dy[:k],... tries a hair correction before writing it into HAIR_TUNE (k scales
-   about the fit's centre). */
-for(const n of (q.get('nudge')||'').split(',').filter(Boolean)){const [id,d,v,dx,dy,k=1]=n.split(':');const f=CATALOG.items[id].fit[d][v];
-  const cx=f.x+f.w/2,cy=f.y+f.h/2;f.w*=+k;f.h*=+k;f.x=cx-f.w/2+(+dx);f.y=cy-f.h/2+(+dy);}
+if(q.get('noshade'))for(const it of CATALOG.itemList)if(it.category==='hair')for(const d in it.fit)for(const v in it.fit[d])it.fit[d][v].shade=false;
+/* nudge=id:doll:view:dx:dy[:k[:ax:ay]],... tries a hair correction before writing it into HAIR_TUNE (k scales
+   about doll point ax,ay, default the fit's centre). */
+for(const n of (q.get('nudge')||'').split(',').filter(Boolean)){const [id,d,v,dx,dy,k=1,ax,ay]=n.split(':');const f=CATALOG.items[id].fit[d][v];
+  const cx=ax===undefined?f.x+f.w/2:+ax,cy=ay===undefined?f.y+f.h/2:+ay;f.x=cx+(f.x-cx)*k+(+dx);f.y=cy+(f.y-cy)*k+(+dy);f.w*=+k;f.h*=+k;}
 const out=document.querySelector('#out');
 const sheetName=q.get('sheet')||'outfits';
 const only=q.get('ids')?q.get('ids').split(','):null;

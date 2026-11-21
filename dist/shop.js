@@ -14,6 +14,8 @@ const Shop=(()=>{
     'item:lilac-satin-bow-dress':20,'item:star-pajamas':25,
     // shoes, hair, jewelry, hair accessories
     'item:lilac-mary-jane-heels':12,'item:half-up-curls':15,
+    // hair: at most two styles per character cost stars (see the wardrobe test)
+    'item:space-buns':15,'item:short-braids':12,'item:top-ponytail':12,
     'item:butterfly-necklace':12,'tint:gold-hoops:rose-gold':6,'item:butterfly-clip':10,
     // fantasy hair colours
     'hair-color:bubblegum':20,'hair-color:lilac':20,

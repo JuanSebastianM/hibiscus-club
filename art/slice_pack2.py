@@ -869,7 +869,8 @@ def check_ids():
             seen.add(iid)
             if iid in old and iid not in REDRAWN:
                 raise SystemExit(f"{iid} collides with an existing id")
-            if iid in REDRAWN and old.get(iid, {}).get("category") != cat:
+            # (the first art of a redrawn id may since have been retired from the old manifests)
+            if iid in REDRAWN and iid in old and old[iid].get("category") != cat:
                 raise SystemExit(f"{iid}: redrawn id missing or category mismatch")
     missing = seen - set(NAMES)
     if missing:
