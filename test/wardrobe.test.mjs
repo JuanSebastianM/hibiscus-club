@@ -164,6 +164,22 @@ test('every new shoe has art and a fit in all four views; open shoes have both l
   for (const id of ['jelly-sandals', 'flower-flip-flops', 'wedge-sandals']) assert.equal(CATALOG.items[id].openToe, true, `${id} shows the toes`);
 });
 
+test('only the open shoes carry an over layer ({part}); the first wardrobe keeps its polygon `over` bands', () => {
+  // portrait.js shoeLayers draws a shoe in two layers only when its `over` names a sprite part; the first
+  // wardrobe's `over` is a list of polygons (an ankle strap's front band) and must keep the old drawing
+  const { CATALOG } = loadWardrobe();
+  const layered = new Set(['jelly-sandals', 'flower-flip-flops', 'wedge-sandals', 'toddler-sandals', 'jelly-shoes']);
+  for (const it of CATALOG.itemList.filter(i => i.category === 'shoes')) for (const doll of it.dolls) for (const view of CATALOG.views) {
+    const f = it.fit[doll]?.[view];if (!f) continue;
+    for (const s of [f.left, f.right, f.near].filter(Boolean)) {
+      if (layered.has(it.id)) assert.ok(typeof s.over?.part === 'string', `${it.id} ${view} over layer`);
+      else assert.ok(s.over === undefined || Array.isArray(s.over), `${it.id} ${view}: over stays polygons`);
+    }
+  }
+  assert.ok(Array.isArray(CATALOG.items['black-platform-sandals'].fit.adult.front.left.over));
+  assert.ok(read('portrait.js').includes('fit.left?.over?.part'), 'shoeLayers tells the two apart by over.part');
+});
+
 test('every new item has an English and a Spanish name, and its colourways are named in both', () => {
   const ctx = loadWardrobe(), en = [...ctx.I18N.keys('en')], es = [...ctx.I18N.keys('es')];
   for (const id of [...Object.values(NEW_OUTFITS), ...Object.values(NEW_SHOES)].flat()) {

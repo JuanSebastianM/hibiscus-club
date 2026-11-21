@@ -339,11 +339,11 @@ function shoeLayers(doll,view,id,tintId){
       }
       fg.save();fg.setTransform(1,0,0,1,0,0);fg.drawImage(t,0,0);fg.restore();
     };
-    if(fit.near?.over){ // open shoe, side view
+    if(fit.near?.over?.part){ // open shoe, side view
       layered(await itemSprite(item,view,fit.near.part,tintId),await itemSprite(item,view,fit.near.over.part,tintId),fit.near);
       return {back,front,mask};
     }
-    if(fit.left?.over||fit.right?.over){ // open shoes, front and back views
+    if(fit.left?.over?.part||fit.right?.over?.part){ // open shoes, front and back views
       for(const side of ['left','right']){const f=fit[side];if(!f)continue;
         layered(await itemSprite(item,view,f.part,tintId),await itemSprite(item,view,f.over.part,tintId),f)}
       return {back,front,mask};
