@@ -254,6 +254,10 @@ function walkToTarget(target){
     if(target==='person'){
       const p=lifePlayer();p.talks[p.scene]++;
       track('chat',d.id);greet();
+      // a living walker waves hello first (the conversation opens over her a moment later); a finished
+      // greeting errand cheers instead
+      const w=worldView;
+      if(w?.puppet?.active&&!w.puppet.emoteQ){walkerDo('wave');setTimeout(()=>{if(worldView===w&&!document.querySelector("#encounter")?.open)openEncounter(target)},1000);return}
     }
     openEncounter(target);
   },target==='person'?t('life.walkingTo',{resident:d.resident}):d.walkSpot);

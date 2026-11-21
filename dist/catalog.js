@@ -473,7 +473,7 @@ const HAIR_TUNE={
   'side-ponytail':{adult:{front:{under:{y0:28,y1:150},scalp:false,holeFill:[{ellipse:[260,93,7,14]}]}}},
   /* round 2 redraw: a fine flyaway strand runs just outside the crown; the gap under it is background,
      not scalp (scalpShow would paint it as a bald rim) */
-  'curly-bob':{little:{front:{scalp:false},back:{scalp:false}}},
+  'curly-bob':{little:{all:{scalp:false}}},
   /* its baby curls cross the brows on purpose (as on the proof): the face is not opened through them */
   'ringlet-pigtails':{little:{front:{open:false}}},
   /* her skull is a little rounder at the back than the toddler proofs': in profile these short styles

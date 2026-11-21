@@ -238,8 +238,15 @@ const HibiscusPuppet=(()=>{
     fr[B.neck]=smooth(p.neck[1]+(rg.resident?5:10),p.neck[1]-(rg.resident?5:10),y);
     fr[B.head]=smooth(p.head[1]+(rg.resident?4:10),p.head[1]-(rg.resident?4:8),y);
   }
-  function chainFor(rg,kind,x,y,limb,fan=false){
+  function chainFor(rg,kind,x,y,limb,fan=false,pc=null){
     const fr=new Float32Array(NB),p=rg.px,P=[x,y];
+    if(kind==='posed'){ // a raised arm: rigid with the chest at its shoulder, then its own arm, forearm, hand
+      const J=pc.joints,i=limb;torsoFr(rg,J.sh[1],fr);
+      fr[B['arm'+i]]=1;
+      fr[B['fore'+i]]=smooth(-5,5,segDist(P,J.sh,J.el)-Math.min(segDist(P,J.el,J.wr),segDist(P,J.wr,J.hand)));
+      fr[B['hand'+i]]=fr[B['fore'+i]]*smooth(-6,6,dot(P,J.wr,unit(J.el,J.wr)));
+      return fr;
+    }
     torsoFr(rg,y,fr);
     if(kind==='hair'||kind==='headItem'){
       fr[B.spine]=fr[B.chest]=fr[B.neck]=1;
@@ -446,13 +453,24 @@ const HibiscusPuppet=(()=>{
     const {lab,armMask}=await baseLabels(rg,dv,!fan);await later();
     const kindOutfit=R.outfitKind(layers.shot.outfit),outfitFit=catalogItem(layers.shot.outfit)?.fit?.[layers.doll]?.[view]||{};
     const armIdx=layers.layers.findIndex(l=>l.kind==='arm');
-    const groups={hairB:[],far:[],torso:[],legs:[],skirt:[],arms:[],over:[],hairF:[]};
+    const groups={hairB:[],far:[],torso:[],legs:[],skirt:[],arms:[],over:[],raised:[],hairF:[]};
+    // raised-arm emotes (front view, outfits that can show them): the posed pictures, loaded now
+    const poseSpec=view==='front'&&R.raisedOK(layers.shot.outfit)?R.POSE_ARMS[layers.doll]:null;
+    const poseImgs=poseSpec&&Promise.all(Object.entries(poseSpec).map(([name,s])=>asset(s.file).then(img=>[name,s,img]))).catch(e=>{if(config.debug)console.warn(e);return null});
+    const capSrc=[]; // puffed / tee sleeves (outfit pixels labelled L_PUFF): they follow a raised arm as a cap
+    let posed=null;
     let overlaySrc=null,headPiece=null;
     const armR=layers.doll==='little'?27:26,sleeveR=layers.doll==='little'?24:22,px=rg.px;
     // x of arm a's axis (shoulder, elbow, wrist, hand) at canvas row y
     const armAxisX=(a,y)=>{const ch=[px['sh'+a],px['el'+a],px['wr'+a],px['hand'+a]];if(y<=ch[0][1])return ch[0][0];
       for(let k=1;k<ch.length;k++)if(y<=ch[k][1]){const [p,q]=[ch[k-1],ch[k]];return p[0]+(q[0]-p[0])*(y-p[1])/(q[1]-p[1])}return ch[3][0]};
     const armNear=armMask&&dilate(armMask,W,H,1),overArm=armMask&&dilate(armMask,W,H,4);
+    // front view: beyond arm a's cut line (shoulder to armpit), i.e. the standing upper arm's side of it
+    const beyondCut=(a,i,out=0)=>{if(rg.side)return false;const x=i%W,y=Math.floor(i/W),[top,pit]=rg.armCut[a];if(y<top[1]-30||y>pit[1])return false;
+      const edge=(y<top[1]?top[0]:top[0]+(pit[0]-top[0])*(y-top[1])/(pit[1]-top[1]))+(a?out:-out);return a?x>edge:x<edge};
+    // the sleeve of arm a: what lies on its side within about half the upper arm of its shoulder (a puffed
+    // sleeve's label reaches to the elbow, where a skirt or a waistband may lie too)
+    const capNear=(a,i)=>{const S=px['sh'+a],E=px['el'+a];return (i%W<px.root[0])===!a&&Math.hypot(i%W-S[0],Math.floor(i/W)-S[1])<.6*Math.hypot(E[0]-S[0],E[1]-S[1])};
     // side views: how far the torso reaches under the top of the leg (deeper at the back: the seat)
     const shoulderBelow=Math.max(rg.armCut?rg.armCut[0][1][1]:0,rg.armCut?rg.armCut[1][1][1]:0);
     const hipBand=new Float32Array(W);
@@ -512,6 +530,12 @@ const HibiscusPuppet=(()=>{
       }
       if(L.kind==='body')for(let y=0;y<Math.ceil(rg.neckCut);y++)for(let x=0;x<W;x++){const i=y*W+x;if(lb[i]===L_TORSO)lb[i]=L_HEAD}
       if(L.kind==='arm')lb.fill(L_ARM0);
+      // a puffed sleeve's hem on each side: the lowest garment pixel outward of the arm's axis near the
+      // shoulder; below it what lies beyond the cut line is the bodice (or a sliver between arm and body)
+      const hem=[H,H];
+      if(poseSpec&&sleeves==='puff'&&L.kind!=='body')for(const a of [0,1]){let m=-1;
+        for(let y=ex[1];y<=ex[3];y++)for(let x=ex[0];x<=ex[2];x++){const i=y*W+x;if(d[i*4+3]>128&&capNear(a,i)&&(x-armAxisX(a,y))*(a?1:-1)>3&&y>m)m=y}
+        hem[a]=m<0?-1:m+10}
       for(const P of ORDER){
         // side views: the torso keeps the top of the thigh under the leg, so a swinging leg never
         // opens a hole at the hip (at rest the leg piece covers it exactly)
@@ -519,11 +543,26 @@ const HibiscusPuppet=(()=>{
         const member=P!==L_TORSO?i=>lb[i]===P:rg.side?i=>lb[i]===P||(lb[i]===L_LEG0&&Math.floor(i/W)<hipBand[i%W])
           :fan?i=>lb[i]===P:i=>lb[i]===P||((lb[i]===L_ARM0||lb[i]===L_ARM1)&&Math.floor(i/W)<shoulderBelow);
         const kind=P===L_ARM0||P===L_ARM1?'arm':P===L_LEG0||P===L_LEG1?'leg':P===L_SKIRT?'skirt':'torso';
-        const pc=makePiece(d,ex,member,{kind,limb:P===L_ARM1||P===L_LEG1?1:0,fan:fan&&kind==='arm',layer:L.kind,grid:P===L_HEAD?config.headGrid:config.grid,face:P===L_HEAD&&!!rg.face});
-        if(!pc)continue;
-        groups[GROUP_OF[P]].push(pc);
-        if(P===L_HEAD&&rg.face){overlaySrc=canvas;headPiece=pc;groups.torso.push({overlay:true})}
+        const spec={kind,limb:P===L_ARM1||P===L_LEG1?1:0,fan:fan&&kind==='arm',layer:L.kind,grid:P===L_HEAD?config.headGrid:config.grid,face:P===L_HEAD&&!!rg.face};
+        // with raised arms the shoulder the torso keeps under each arm, and each puffed sleeve, are pieces
+        // of their own (they give way to the posed arm); at rest they draw exactly what one piece drew
+        // (the shoulder: arm pixels above the armpit, and the upper arm between the ball joint's disc and the
+        // armpit, which the torso keeps)
+        // (for the outfit only where a puffed sleeve hangs there: a bodice reaching under the arm stays)
+        const cut=L.kind==='body'?beyondCut:sleeves==='puff'?(a,i)=>beyondCut(a,i,7)&&Math.floor(i/W)<=hem[a]:()=>false,
+          sleeveOf=(a,i)=>capNear(a,i)&&Math.floor(i/W)<=hem[a];
+        const variants=!poseSpec?[[member,spec]]:P===L_TORSO?[[i=>lb[i]===P&&!cut(0,i)&&!cut(1,i),spec],
+          ...[0,1].map(a=>[i=>lb[i]===(a?L_ARM1:L_ARM0)&&Math.floor(i/W)<shoulderBelow||lb[i]===P&&cut(a,i),{...spec,shoulderOf:a}])]
+          :P===L_PUFF?[[i=>lb[i]===P&&!sleeveOf(0,i)&&!sleeveOf(1,i),spec],...[0,1].map(a=>[i=>lb[i]===P&&sleeveOf(a,i),{...spec,puffSide:a}])]:[[member,spec]];
+        if(poseSpec&&P===L_PUFF&&sleeves==='puff'&&['outfit','over'].includes(L.kind))capSrc.push({d,lb,hem});
+        for(const [mem,sp] of variants){
+          const pc=makePiece(d,ex,mem,sp);
+          if(!pc)continue;
+          groups[GROUP_OF[P]].push(pc);
+          if(P===L_HEAD&&rg.face){overlaySrc=canvas;headPiece=pc;groups.torso.push({overlay:true})}
+        }
       }
+      if(poseSpec&&L.kind==='body'){const imgs=await poseImgs;if(imgs)posed=raisedPieces(imgs,groups,rg,dv,layers.shot)}
       if(sleeve){const pc=makePiece(sleeve.data,ex,i=>sleeve.test(i),{kind:'arm',limb:0,layer:'sleeve',grid:config.grid});if(pc)groups.arms.unshift(pc)}
       await later();
     }
@@ -538,11 +577,64 @@ const HibiscusPuppet=(()=>{
       }
     }
     // front and back: a flared skirt lies over the hands (as in the still picture); side views: the near arm is in front
-    const order=[...groups.hairB,...groups.far,...groups.torso,...groups.legs,...(rg.side?[...groups.skirt,...groups.arms]:[...groups.arms,...groups.skirt]),...groups.over,...groups.hairF];
+    if(posed)raisedCaps(posed,groups,rg,capSrc,beyondCut,capNear);
+    const order=[...groups.hairB,...groups.far,...groups.torso,...groups.legs,...(rg.side?[...groups.skirt,...groups.arms]:[...groups.arms,...groups.skirt]),...groups.over,...groups.raised,...groups.hairF];
     // drawn expression heads (puppet-rig.js EXPRESSION_ART), when a sheet exists for this doll and view
     const expr=headPiece&&await expressionHeads(layers.doll,view,headPiece,layers.shot).catch(e=>{if(config.debug)console.warn(e);return null});
     if(expr){headPiece.expr=expr;overlaySrc=null}
-    return finishModel(rg,order,overlaySrc,{farOffset,look:layers.shot,doll:layers.doll,expr:!!expr,exprNames:expr?new Set(Object.keys(expr)):null});
+    return finishModel(rg,order,overlaySrc,{farOffset,look:layers.shot,doll:layers.doll,expr:!!expr,exprNames:expr?new Set(Object.keys(expr)):null,
+      raised:posed?new Set(posed.map(p=>p.name)):null});
+  }
+  /* Raised arms (puppet-rig.js POSE_ARMS, RAISED_ARM_EMOTES): each posed picture is laid on the doll
+     canvas and cut per arm into the shoulder (within ROOT_R of its posed shoulder joint), drawn with the
+     body under the outfit, so straps and armholes lie over it, and the rest of the arm, drawn over
+     everything but the hair in front (a hand on the hip lies over the skirt). Returns
+     [{name, arms:[{a, J}]}] for the sleeve caps. */
+  function raisedPieces(imgs,groups,rg,dv,shot){
+    const [ox,oy]=dv.origin,rootR=rg.legLength*.085,out=[];
+    for(const [name,s,img] of imgs){
+      const c=mk(W,H),g=g2(c);g.drawImage(img,s.at[0]+ox,s.at[1]+oy,s.size[0],s.size[1]);
+      const im=g.getImageData(0,0,W,H),d=im.data;
+      // her nail polish on the nails the pose shows (as bodyLayer paints the standing hands)
+      const polish=CATALOG.makeup.nails.find(o=>o.id===shot.nails)?.color;
+      if(polish&&s.nails){applyColor(d,shapeMask(W,H,s.nails.map(([x,y,...r])=>({ellipse:[x+ox,y+oy,...r]})),.7),hexRgb(polish),.9,'color',{ref:dv.nails?.ref||200,contrast:.8,gloss:225,lift:1})}
+      const box=[Math.max(0,s.at[0]+ox|0),Math.max(0,s.at[1]+oy|0),Math.min(W-1,Math.ceil(s.at[0]+ox+s.size[0])),Math.min(H-1,Math.ceil(s.at[1]+oy+s.size[1]))];
+      const arms=[];
+      for(const [k,j] of Object.entries(s.arms)){
+        const a=+k,J={};for(const [n,p] of Object.entries(j))J[n]=[p[0]+ox,p[1]+oy];
+        const side=i=>(i%W<rg.px.root[0])===!a,[top,pit]=rg.armCut[a];
+        // under the outfit: round the shoulder, and on the torso side of the arm's cut line (chest and armpit)
+        const near=i=>{const x=i%W,y=Math.floor(i/W);if(Math.hypot(x-J.sh[0],y-J.sh[1])<rootR)return true;if(y<top[1]-30||y>pit[1]+30)return false;
+          const e=y<top[1]?top[0]:y>pit[1]?pit[0]:top[0]+(pit[0]-top[0])*(y-top[1])/(pit[1]-top[1]);return a?x<e+3:x>e-3};
+        const spec={kind:'posed',raise:name,limb:a,joints:J,grid:config.grid,layer:'pose'};
+        const root=makePiece(d,box,i=>side(i)&&near(i),{...spec,part:'root'}),rest=makePiece(d,box,i=>side(i)&&!near(i),{...spec,part:'arm'});
+        if(root)groups.torso.push(root);if(rest)groups.raised.push(rest);
+        arms.push({a,J});
+      }
+      out.push({name,arms});
+    }
+    return out;
+  }
+  /* A puffed or tee sleeve follows the raised arm: its pixels (L_PUFF near that shoulder, and what of the
+     garment lies beyond the arm's cut line) turned rigidly with the upper arm about the posed shoulder
+     joint, drawn over the posed arm. */
+  function raisedCaps(posed,groups,rg,capSrc,beyondCut,capNear){
+    if(!capSrc.length)return;
+    const px=rg.px;
+    for(const {name,arms} of posed)for(const {a,J} of arms){
+      const src=mk(W,H),sg=g2(src),im=sg.createImageData(W,H);
+      for(const {d,lb,hem} of capSrc)for(let i=0;i<W*H;i++){if(!(lb[i]===L_PUFF&&capNear(a,i)||lb[i]===L_TORSO&&beyondCut(a,i))||Math.floor(i/W)>hem[a]||!d[i*4+3])continue;
+        const o=i*4,al=d[o+3]/255,ia=im.data[o+3]/255,na=al+ia*(1-al);if(!na)continue;
+        for(let c=0;c<3;c++)im.data[o+c]=(d[o+c]*al+im.data[o+c]*ia*(1-al))/na;im.data[o+3]=na*255}
+      sg.putImageData(im,0,0);
+      // the shoulder joint does not move when the arm lifts: the sleeve turns about the posed shoulder by
+      // the angle between the standing and the posed upper arm seen from it
+      const S=J.sh,E=px['el'+a],rot=Math.atan2(J.el[1]-S[1],J.el[0]-S[0])-Math.atan2(E[1]-S[1],E[0]-S[0]);
+      const c=mk(W,H),g=g2(c);g.imageSmoothingQuality='high';g.translate(S[0],S[1]);g.rotate(rot);g.translate(-S[0],-S[1]);g.drawImage(src,0,0);
+      const d=g.getImageData(0,0,W,H).data,box=alphaBox(d);
+      const pc=box&&makePiece(d,box,()=>true,{kind:'posed',raise:name,limb:a,joints:J,grid:config.grid,layer:'pose',part:'cap'},true);
+      if(pc)groups.raised.push(pc);
+    }
   }
   /* Drawn heads (puppet-rig.js EXPRESSION_ART, built by art/build_faces.py): for each expression the
      bare base head gets the drawn cell blended in (its alpha is the region mask), then the game's own
@@ -642,7 +734,7 @@ const HibiscusPuppet=(()=>{
     for(let v=0;v<n;v++){
       const x=m.pos[v*2],y=m.pos[v*2+1];
       uv[v*2]=(x-bx)/bw;uv[v*2+1]=(y-by)/bh;
-      pack(chainFor(rg,pc.kind,x,y,pc.limb||0,!!pc.fan),bones,frs,v);
+      pack(chainFor(rg,pc.kind,x,y,pc.limb||0,!!pc.fan,pc),bones,frs,v);
       if(face){
         const below=m.below[v]===1;
         ['jaw','smile','wide','squint'].forEach((k,j)=>{const [dx,dy]=R.faceDisplace(rg.face,{[k]:1},x,y,below);face[v*8+j*2]=dx;face[v*8+j*2+1]=dy});
@@ -719,8 +811,12 @@ void main(){
       geo.setIndex(new T.BufferAttribute(src.index,1));geo.boundingSphere=new T.Sphere(new T.Vector3(),1e5);
       const shade=pc.far&&!pc.farShoe;
       const dbg=config.debugPieces&&({arm:[1,.55,.55],leg:[.55,.7,1],skirt:[.6,1,.6],hair:[1,1,.5],headItem:[1,.6,1],torso:pc.face?[1,.85,.6]:[1,1,1]}[pc.kind]);
+      // a raised arm turns about its own posed shoulder, elbow and wrist: its own pivots and bone values
+      let own=null;
+      if(pc.raise){const a=pc.limb,J=pc.joints;own={uJ:{value:shared.uJ.value.map(v=>v.clone())},uP:{value:shared.uP.value.map(v=>v.clone())}};
+        own.uJ.value[B['arm'+a]].set(...J.sh);own.uJ.value[B['fore'+a]].set(...J.el);own.uJ.value[B['hand'+a]].set(...J.wr)}
       const mat=new T.RawShaderMaterial({glslVersion:T.GLSL3,vertexShader:VERT,fragmentShader:pc.expr?FRAG_EXPR:FRAG,
-        uniforms:{...shared,map:{value:tex},mask:{value:mtex},...(pc.expr?{mapE0:{value:tex},mapE1:{value:tex},mapM0:{value:tex},mapM1:{value:tex},uW:{value:new T.Vector4()}}:{}),uTint:{value:dbg?new T.Vector4(...dbg,1):new T.Vector4(shade?.74:1,shade?.68:1,shade?.76:1,1)},uShift:{value:new T.Vector2(...(pc.shift||[0,0]))}},
+        uniforms:{...shared,...own,map:{value:tex},mask:{value:mtex},...(pc.expr?{mapE0:{value:tex},mapE1:{value:tex},mapM0:{value:tex},mapM1:{value:tex},uW:{value:new T.Vector4()}}:{}),uTint:{value:dbg?new T.Vector4(...dbg,1):new T.Vector4(shade?.74:1,shade?.68:1,shade?.76:1,1)},uShift:{value:new T.Vector2(...(pc.shift||[0,0]))}},
         transparent:true,depthTest:false,depthWrite:false,side:T.DoubleSide,
         blending:T.CustomBlending,blendEquation:T.AddEquation,blendSrc:T.OneFactor,blendDst:T.OneMinusSrcAlphaFactor,blendSrcAlpha:T.OneFactor,blendDstAlpha:T.OneMinusSrcAlphaFactor});
       const mesh=new T.Mesh(geo,mat);mesh.frustumCulled=false;mesh.renderOrder=i;mesh.userData.piece=pc;
@@ -815,6 +911,13 @@ void main(){
     }
     prefetch(views){if(this.kind==='doll'&&supported())for(const v of views)modelFor(this.opts,v).catch(()=>{})}
     emote(name){if(this.dead)return;this.emoteQ={name,t:0};kick()}
+    /* the clip played for an emote: R.emoteFor, and the arm-safe version when this model has no posed
+       arms for it (side views, sleeves that cannot show them, art that did not load) or she carries
+       something in her hand (R.holdsItem) */
+    played(name){
+      const p=this.kind==='doll'?R.emoteFor(name,this.opts.shot?.outfit,this.view):name;
+      return R.RAISED[p]&&p===name&&(!this.model?.raised?.has(R.RAISED[p])||R.holdsItem(this.opts.shot))?R.ARM_SAFE[name]||name:p;
+    }
     talk(seconds){this.talkUntil=Math.max(this.talkUntil,this.t+seconds);kick()}
     /* walk in place at the natural pace for a while (the runway: the page moves the canvas) */
     strut(seconds){this.strutUntil=this.t+seconds;kick()}
@@ -864,7 +967,9 @@ void main(){
       else if(!w.on)w.phase=Math.round(w.phase*2)/2; // settle on a double-support phase
       this.talkW=clamp(this.talkW+(this.t<this.talkUntil?dt/.15:-dt/.2),0,1);
       if(this.talkW>0)R.addPose(pose,R.talkPose(this.t,ctx),this.talkW);
-      if(this.emoteQ){const e=this.emoteQ;e.t+=dt;const r=R.emotePose(R.emoteFor(e.name,this.opts.shot?.outfit,this.view),e.t,ctx);R.addPose(pose,r.pose,1);if(r.done)this.emoteQ=null}
+      if(this.emoteQ){const e=this.emoteQ;e.t+=dt;
+        if(e.view!==this.view||e.model!==this.model){e.view=this.view;e.model=this.model;e.played=this.played(e.name)}
+        const r=R.emotePose(e.played,e.t,ctx);R.addPose(pose,r.pose,1);if(r.pose.raise)pose.raise=r.pose.raise;if(r.done)this.emoteQ=null}
       // follow-through: hair lags the head, the skirt lags the hips
       const head=pose.bones[B.head],hips=pose.bones[B.hips];
       const hv=(hips.x-this.prevHipsX)/Math.max(dt,1e-3);this.prevHipsX=hips.x;
@@ -907,6 +1012,19 @@ void main(){
       for(const mesh of gpu.meshes){const pc=mesh.userData.piece;
         if(pc.far&&!pc.farShoe){mesh.material.uniforms.uTint.value.w=pose.farAlpha;mesh.visible=pose.farAlpha>.01}
         if(pc.overlay)mesh.visible=false;}
+      // raised arms: the posed arm fades in over the standing one (arm pieces, the shoulder the torso keeps
+      // under it, a puffed sleeve), which fades out
+      if(m.raised){const rz=pose.raise,B_=B;
+        for(const mesh of gpu.meshes){const pc=mesh.userData.piece,U=mesh.material.uniforms;
+          if(pc.raise){const w=rz&&rz.pose===pc.raise?rz.w[pc.limb]:0;U.uTint.value.w=w;mesh.visible=w>.004;
+            if(mesh.visible){const a=pc.limb,P=U.uP.value;for(let b=0;b<NB;b++)P[b].copy(S.uP.value[b]);
+              P[B_['arm'+a]].set(rz.arm[a],0,0,0);P[B_['fore'+a]].set(rz.fore[a],0,0,0);P[B_['hand'+a]].set(rz.hand[a],0,0,0)}
+            continue}
+          const a=pc.kind==='arm'?pc.limb:pc.shoulderOf??pc.puffSide;
+          if(a===undefined)continue;
+          const w=rz?rz.w[a]:0;U.uTint.value.w=1-w;mesh.visible=w<.996;
+        }
+      }
       if(m.overlay&&gpu.overlayTex){
         const fd=m.rig.face,disp=(x,y,below)=>{const a=R.faceDisplace(fd,{jaw:below?f.jaw:0,smile:f.smile,wide:f.wide,squint:f.squint},x,y,below);return a};
         const vis=m.overlay.draw(f,disp);
