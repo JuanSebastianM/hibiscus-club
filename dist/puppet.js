@@ -944,7 +944,7 @@ void main(){
 
   return {
     /* create(canvas, opts) -> puppet, or null when puppets are off. opts: shot + view (doll) or
-       resident ('mara' | 'rosa' | 'kit' | 'sol' | 'teo'); layout(p) -> {size:[w,h] canvas px to set, crop:[x,y,w,h]
+       resident ('mara' | 'rosa' | 'kit' | 'sol' | 'teo' | 'gigi' | 'nina'); layout(p) -> {size:[w,h] canvas px to set, crop:[x,y,w,h]
        of the doll canvas, dest:[x,y,w,h] in the canvas, clip, back (canvas drawn first), front
        (drawn last)}; onActive(on): true when it starts drawing, false when the page must show the
        still picture again; energy (idle amplitude 0..1); seed. */
