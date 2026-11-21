@@ -588,7 +588,17 @@ for(const [id,w] of Object.entries(WEAR)){
 }
 
 const byId={};
-for(const it of items){it.name=it.name||names[it.id]||'';it.price=0;it.tints=it.tints||[original];byId[it.id]=it;}
+/* Outfit themes: the studio's rack filters (makeover.js) and nothing else; i18n keys rack.<theme>. */
+const THEMES=['beach','sporty','party','cozy','everyday'];
+const THEME_OF={'hibiscus-flares':'everyday','lilac-satin-bow-dress':'party','denim-jacket-skirt':'everyday','green-hibiscus-sundress':'beach',
+  'black-flares-set':'party','pink-velour-cargo':'cozy','yellow-dot-dress':'everyday','lilac-cord-pinafore':'everyday',
+  'pink-gingham-bow-dress':'everyday','denim-overalls':'everyday','mint-cardigan-dress':'everyday','star-pajamas':'cozy',
+  'sarong-swimsuit':'beach','tankini-board-shorts':'beach','crochet-cover-up':'beach','aqua-velour-tracksuit':'sporty',
+  'tennis-dress':'sporty','baby-tee-cargo':'everyday','sequin-halter-dress':'party','butterfly-satin-skirt':'party',
+  'puffer-vest-slip-dress':'cozy','plaid-knit-vest-set':'everyday','hoodie-dress-leg-warmers':'cozy','denim-overall-dress':'everyday',
+  'ruffle-swimsuit':'beach','rash-guard-set':'beach','beach-poncho':'beach','rainbow-tutu-tee':'party','dino-romper':'everyday',
+  'raincoat-set':'everyday','tulle-party-dress':'party','bear-onesie':'cozy','ballet-wrap-set':'sporty'};
+for(const it of items){it.name=it.name||names[it.id]||'';it.price=0;it.tints=it.tints||[original];if(it.category==='outfit')it.theme=THEME_OF[it.id]||'everyday';byId[it.id]=it;}
 const makeup={
   lips:[{id:'none',name:'Natural',dolls:['adult','little']},
     {id:'rose-nude',name:'Rose Nude',color:'#c9787a',strength:.55,dolls:['adult']},
@@ -644,7 +654,7 @@ const legacy={
   gem:['none','heart','star-freckles']
 };
 return {version:2,faceOpen:FACE_OPEN,views:['front','left','right','back'],dolls,items:byId,itemList:items,hairStyles:HAIR_STYLES,makeup,hairColors,defaults,legacy,
-  categories:['outfit','shoes','hair','earrings','necklace','clip'],
+  categories:['outfit','shoes','hair','earrings','necklace','clip'],themes:THEMES,
   optional:['shoes','earrings','necklace','clip']};
 })();
 

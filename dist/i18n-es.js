@@ -81,6 +81,9 @@ I18N.add('es',{
   'brief.midnight':'Malecón de medianoche',
   'brief.homecoming':'Regreso a la isla',
   'brief.bob':'Fiesta de melenitas',
+  'brief.splash':'Fiesta de chapuzones',
+  'brief.rainy':'Día lluvioso y calientito',
+  'brief.school':'Primer día de clases',
 
   /* ---- cabina de fotos ---- */
   'booth.sub':'Enmarca tu retrato y guárdalo en tu álbum.',
@@ -209,6 +212,13 @@ I18N.add('es',{
   'view.back':'Espalda',
   'view.group':'Darle la vuelta',
   'group.outfits':'Conjuntos',
+  'rack.label':'Mostrar conjuntos de',
+  'rack.all':'Todos',
+  'rack.beach':'Playa',
+  'rack.sporty':'Deportivos',
+  'rack.party':'Fiesta',
+  'rack.cozy':'Cómodos',
+  'rack.everyday':'Diario',
   'group.shoes':'Zapatos',
   'group.earrings':'Aretes',
   'group.necklaces':'Collares',
