@@ -12,7 +12,7 @@
           479,
           595
         ],
-        "sprite": "../../../dist/assets/pack2/hair/long-waves-front.webp",
+        "sprite": "../../sprites/pack2/hair/long-waves-front.webp",
         "sprite_box": [
           164,
           10,
@@ -82,7 +82,7 @@
           334,
           592
         ],
-        "sprite": "../../../dist/assets/pack2/hair/long-waves-right.webp",
+        "sprite": "../../sprites/pack2/hair/long-waves-right.webp",
         "sprite_box": [
           745,
           10,
@@ -152,7 +152,7 @@
           334,
           592
         ],
-        "sprite": "../../../dist/assets/pack2/hair/long-waves-left.webp",
+        "sprite": "../../sprites/pack2/hair/long-waves-left.webp",
         "sprite_box": [
           1335,
           10,
@@ -222,7 +222,7 @@
           479,
           592
         ],
-        "sprite": "../../../dist/assets/pack2/hair/long-waves-back.webp",
+        "sprite": "../../sprites/pack2/hair/long-waves-back.webp",
         "sprite_box": [
           1839,
           10,
@@ -294,7 +294,7 @@
           456,
           602
         ],
-        "sprite": "../../../dist/assets/pack2/hair/side-ponytail-front.webp",
+        "sprite": "../../sprites/pack2/hair/side-ponytail-front.webp",
         "sprite_box": [
           177,
           598,
@@ -364,7 +364,7 @@
           386,
           599
         ],
-        "sprite": "../../../dist/assets/pack2/hair/side-ponytail-left.webp",
+        "sprite": "../../sprites/pack2/hair/side-ponytail-left.webp",
         "sprite_box": [
           746,
           600,
@@ -434,7 +434,7 @@
           384,
           599
         ],
-        "sprite": "../../../dist/assets/pack2/hair/side-ponytail-right.webp",
+        "sprite": "../../sprites/pack2/hair/side-ponytail-right.webp",
         "sprite_box": [
           1284,
           600,
@@ -504,7 +504,7 @@
           463,
           594
         ],
-        "sprite": "../../../dist/assets/pack2/hair/side-ponytail-back.webp",
+        "sprite": "../../sprites/pack2/hair/side-ponytail-back.webp",
         "sprite_box": [
           1907,
           605,
@@ -576,7 +576,7 @@
           467,
           590
         ],
-        "sprite": "../../../dist/assets/pack2/hair/half-up-curls-front.webp",
+        "sprite": "../../sprites/pack2/hair/half-up-curls-front.webp",
         "sprite_box": [
           165,
           1206,
@@ -646,7 +646,7 @@
           386,
           598
         ],
-        "sprite": "../../../dist/assets/pack2/hair/half-up-curls-left.webp",
+        "sprite": "../../sprites/pack2/hair/half-up-curls-left.webp",
         "sprite_box": [
           725,
           1198,
@@ -716,7 +716,7 @@
           385,
           597
         ],
-        "sprite": "../../../dist/assets/pack2/hair/half-up-curls-right.webp",
+        "sprite": "../../sprites/pack2/hair/half-up-curls-right.webp",
         "sprite_box": [
           1296,
           1199,
@@ -786,7 +786,7 @@
           470,
           590
         ],
-        "sprite": "../../../dist/assets/pack2/hair/half-up-curls-back.webp",
+        "sprite": "../../sprites/pack2/hair/half-up-curls-back.webp",
         "sprite_box": [
           1825,
           1206,
@@ -858,7 +858,7 @@
           507,
           573
         ],
-        "sprite": "../../../dist/assets/pack2/hair/sleek-curtain-bangs-front.webp",
+        "sprite": "../../sprites/pack2/hair/sleek-curtain-bangs-front.webp",
         "sprite_box": [
           184,
           29,
@@ -928,7 +928,7 @@
           359,
           574
         ],
-        "sprite": "../../../dist/assets/pack2/hair/sleek-curtain-bangs-left.webp",
+        "sprite": "../../sprites/pack2/hair/sleek-curtain-bangs-left.webp",
         "sprite_box": [
           755,
           28,
@@ -998,7 +998,7 @@
           359,
           574
         ],
-        "sprite": "../../../dist/assets/pack2/hair/sleek-curtain-bangs-right.webp",
+        "sprite": "../../sprites/pack2/hair/sleek-curtain-bangs-right.webp",
         "sprite_box": [
           1297,
           28,
@@ -1068,7 +1068,7 @@
           505,
           573
         ],
-        "sprite": "../../../dist/assets/pack2/hair/sleek-curtain-bangs-back.webp",
+        "sprite": "../../sprites/pack2/hair/sleek-curtain-bangs-back.webp",
         "sprite_box": [
           1871,
           29,
@@ -1140,7 +1140,7 @@
           507,
           573
         ],
-        "sprite": "../../../dist/assets/pack2/hair/flip-bob-front.webp",
+        "sprite": "../../sprites/pack2/hair/flip-bob-front.webp",
         "sprite_box": [
           175,
           626,
@@ -1210,7 +1210,7 @@
           360,
           574
         ],
-        "sprite": "../../../dist/assets/pack2/hair/flip-bob-left.webp",
+        "sprite": "../../sprites/pack2/hair/flip-bob-left.webp",
         "sprite_box": [
           754,
           625,
@@ -1280,7 +1280,7 @@
           360,
           574
         ],
-        "sprite": "../../../dist/assets/pack2/hair/flip-bob-right.webp",
+        "sprite": "../../sprites/pack2/hair/flip-bob-right.webp",
         "sprite_box": [
           1296,
           625,
@@ -1350,7 +1350,7 @@
           505,
           573
         ],
-        "sprite": "../../../dist/assets/pack2/hair/flip-bob-back.webp",
+        "sprite": "../../sprites/pack2/hair/flip-bob-back.webp",
         "sprite_box": [
           1863,
           626,
@@ -1422,7 +1422,7 @@
           507,
           573
         ],
-        "sprite": "../../../dist/assets/pack2/hair/long-braids-front.webp",
+        "sprite": "../../sprites/pack2/hair/long-braids-front.webp",
         "sprite_box": [
           207,
           1223,
@@ -1492,7 +1492,7 @@
           315,
           573
         ],
-        "sprite": "../../../dist/assets/pack2/hair/long-braids-left.webp",
+        "sprite": "../../sprites/pack2/hair/long-braids-left.webp",
         "sprite_box": [
           752,
           1223,
@@ -1562,7 +1562,7 @@
           314,
           573
         ],
-        "sprite": "../../../dist/assets/pack2/hair/long-braids-right.webp",
+        "sprite": "../../sprites/pack2/hair/long-braids-right.webp",
         "sprite_box": [
           1341,
           1223,
@@ -1632,7 +1632,7 @@
           505,
           573
         ],
-        "sprite": "../../../dist/assets/pack2/hair/long-braids-back.webp",
+        "sprite": "../../sprites/pack2/hair/long-braids-back.webp",
         "sprite_box": [
           1895,
           1223,
@@ -1707,7 +1707,7 @@
           486,
           588
         ],
-        "sprite": "../../../dist/assets/pack2/hair/high-bun-tendrils-front.webp",
+        "sprite": "../../sprites/pack2/hair/high-bun-tendrils-front.webp",
         "sprite_box": [
           238,
           14,
@@ -1777,7 +1777,7 @@
           341,
           587
         ],
-        "sprite": "../../../dist/assets/pack2/hair/high-bun-tendrils-left.webp",
+        "sprite": "../../sprites/pack2/hair/high-bun-tendrils-left.webp",
         "sprite_box": [
           781,
           15,
@@ -1847,7 +1847,7 @@
           343,
           588
         ],
-        "sprite": "../../../dist/assets/pack2/hair/high-bun-tendrils-right.webp",
+        "sprite": "../../sprites/pack2/hair/high-bun-tendrils-right.webp",
         "sprite_box": [
           1314,
           14,
@@ -1917,7 +1917,7 @@
           482,
           588
         ],
-        "sprite": "../../../dist/assets/pack2/hair/high-bun-tendrils-back.webp",
+        "sprite": "../../sprites/pack2/hair/high-bun-tendrils-back.webp",
         "sprite_box": [
           1910,
           14,
@@ -1989,7 +1989,7 @@
           491,
           578
         ],
-        "sprite": "../../../dist/assets/pack2/hair/space-buns-front.webp",
+        "sprite": "../../sprites/pack2/hair/space-buns-front.webp",
         "sprite_box": [
           161,
           621,
@@ -2062,7 +2062,7 @@
           378,
           575
         ],
-        "sprite": "../../../dist/assets/pack2/hair/space-buns-left.webp",
+        "sprite": "../../sprites/pack2/hair/space-buns-left.webp",
         "sprite_box": [
           776,
           624,
@@ -2132,7 +2132,7 @@
           377,
           575
         ],
-        "sprite": "../../../dist/assets/pack2/hair/space-buns-right.webp",
+        "sprite": "../../sprites/pack2/hair/space-buns-right.webp",
         "sprite_box": [
           1282,
           624,
@@ -2202,7 +2202,7 @@
           489,
           578
         ],
-        "sprite": "../../../dist/assets/pack2/hair/space-buns-back.webp",
+        "sprite": "../../sprites/pack2/hair/space-buns-back.webp",
         "sprite_box": [
           1841,
           621,
@@ -2274,7 +2274,7 @@
           494,
           557
         ],
-        "sprite": "../../../dist/assets/pack2/hair/crimped-twists-front.webp",
+        "sprite": "../../sprites/pack2/hair/crimped-twists-front.webp",
         "sprite_box": [
           155,
           1239,
@@ -2347,7 +2347,7 @@
           389,
           557
         ],
-        "sprite": "../../../dist/assets/pack2/hair/crimped-twists-left.webp",
+        "sprite": "../../sprites/pack2/hair/crimped-twists-left.webp",
         "sprite_box": [
           779,
           1239,
@@ -2420,7 +2420,7 @@
           387,
           557
         ],
-        "sprite": "../../../dist/assets/pack2/hair/crimped-twists-right.webp",
+        "sprite": "../../sprites/pack2/hair/crimped-twists-right.webp",
         "sprite_box": [
           1272,
           1239,
@@ -2493,7 +2493,7 @@
           491,
           557
         ],
-        "sprite": "../../../dist/assets/pack2/hair/crimped-twists-back.webp",
+        "sprite": "../../sprites/pack2/hair/crimped-twists-back.webp",
         "sprite_box": [
           1829,
           1239,
@@ -2565,7 +2565,7 @@
           525,
           578
         ],
-        "sprite": "../../../dist/assets/pack2/hair/ringlet-pigtails-front.webp",
+        "sprite": "../../sprites/pack2/hair/ringlet-pigtails-front.webp",
         "sprite_box": [
           105,
           24,
@@ -2635,7 +2635,7 @@
           378,
           583
         ],
-        "sprite": "../../../dist/assets/pack2/hair/ringlet-pigtails-left.webp",
+        "sprite": "../../sprites/pack2/hair/ringlet-pigtails-left.webp",
         "sprite_box": [
           726,
           19,
@@ -2705,7 +2705,7 @@
           379,
           583
         ],
-        "sprite": "../../../dist/assets/pack2/hair/ringlet-pigtails-right.webp",
+        "sprite": "../../sprites/pack2/hair/ringlet-pigtails-right.webp",
         "sprite_box": [
           1286,
           19,
@@ -2775,7 +2775,7 @@
           532,
           578
         ],
-        "sprite": "../../../dist/assets/pack2/hair/ringlet-pigtails-back.webp",
+        "sprite": "../../sprites/pack2/hair/ringlet-pigtails-back.webp",
         "sprite_box": [
           1757,
           25,
@@ -2847,7 +2847,7 @@
           594,
           566
         ],
-        "sprite": "../../../dist/assets/pack2/hair/curly-buns-front.webp",
+        "sprite": "../../sprites/pack2/hair/curly-buns-front.webp",
         "sprite_box": [
           65,
           633,
@@ -2917,7 +2917,7 @@
           402,
           585
         ],
-        "sprite": "../../../dist/assets/pack2/hair/curly-buns-left.webp",
+        "sprite": "../../sprites/pack2/hair/curly-buns-left.webp",
         "sprite_box": [
           728,
           614,
@@ -2987,7 +2987,7 @@
           400,
           583
         ],
-        "sprite": "../../../dist/assets/pack2/hair/curly-buns-right.webp",
+        "sprite": "../../sprites/pack2/hair/curly-buns-right.webp",
         "sprite_box": [
           1261,
           616,
@@ -3057,7 +3057,7 @@
           598,
           562
         ],
-        "sprite": "../../../dist/assets/pack2/hair/curly-buns-back.webp",
+        "sprite": "../../sprites/pack2/hair/curly-buns-back.webp",
         "sprite_box": [
           1732,
           637,
@@ -3129,7 +3129,7 @@
           594,
           577
         ],
-        "sprite": "../../../dist/assets/pack2/hair/curly-bob-front.webp",
+        "sprite": "../../sprites/pack2/hair/curly-bob-front.webp",
         "sprite_box": [
           70,
           1190,
@@ -3203,7 +3203,7 @@
           460,
           565
         ],
-        "sprite": "../../../dist/assets/pack2/hair/curly-bob-left.webp",
+        "sprite": "../../sprites/pack2/hair/curly-bob-left.webp",
         "sprite_box": [
           699,
           1197,
@@ -3276,7 +3276,7 @@
           461,
           566
         ],
-        "sprite": "../../../dist/assets/pack2/hair/curly-bob-right.webp",
+        "sprite": "../../sprites/pack2/hair/curly-bob-right.webp",
         "sprite_box": [
           1225,
           1197,
@@ -3349,7 +3349,7 @@
           580,
           576
         ],
-        "sprite": "../../../dist/assets/pack2/hair/curly-bob-back.webp",
+        "sprite": "../../sprites/pack2/hair/curly-bob-back.webp",
         "sprite_box": [
           1739,
           1194,
@@ -3424,7 +3424,7 @@
           445,
           575
         ],
-        "sprite": "../../../dist/assets/pack2/hair/tiny-pigtails-front.webp",
+        "sprite": "../../sprites/pack2/hair/tiny-pigtails-front.webp",
         "sprite_box": [
           92,
           27,
@@ -3494,7 +3494,7 @@
           359,
           576
         ],
-        "sprite": "../../../dist/assets/pack2/hair/tiny-pigtails-left.webp",
+        "sprite": "../../sprites/pack2/hair/tiny-pigtails-left.webp",
         "sprite_box": [
           740,
           26,
@@ -3566,7 +3566,7 @@
           361,
           576
         ],
-        "sprite": "../../../dist/assets/pack2/hair/tiny-pigtails-right.webp",
+        "sprite": "../../sprites/pack2/hair/tiny-pigtails-right.webp",
         "sprite_box": [
           1300,
           26,
@@ -3636,7 +3636,7 @@
           445,
           575
         ],
-        "sprite": "../../../dist/assets/pack2/hair/tiny-pigtails-back.webp",
+        "sprite": "../../sprites/pack2/hair/tiny-pigtails-back.webp",
         "sprite_box": [
           1884,
           27,
@@ -3708,7 +3708,7 @@
           446,
           529
         ],
-        "sprite": "../../../dist/assets/pack2/hair/pixie-sweep-front.webp",
+        "sprite": "../../sprites/pack2/hair/pixie-sweep-front.webp",
         "sprite_box": [
           134,
           671,
@@ -3778,7 +3778,7 @@
           348,
           525
         ],
-        "sprite": "../../../dist/assets/pack2/hair/pixie-sweep-left.webp",
+        "sprite": "../../sprites/pack2/hair/pixie-sweep-left.webp",
         "sprite_box": [
           729,
           675,
@@ -3850,7 +3850,7 @@
           348,
           524
         ],
-        "sprite": "../../../dist/assets/pack2/hair/pixie-sweep-right.webp",
+        "sprite": "../../sprites/pack2/hair/pixie-sweep-right.webp",
         "sprite_box": [
           1313,
           676,
@@ -3920,7 +3920,7 @@
           445,
           528
         ],
-        "sprite": "../../../dist/assets/pack2/hair/pixie-sweep-back.webp",
+        "sprite": "../../sprites/pack2/hair/pixie-sweep-back.webp",
         "sprite_box": [
           1927,
           672,
@@ -3994,7 +3994,7 @@
           444,
           579
         ],
-        "sprite": "../../../dist/assets/pack2/hair/top-ponytail-front.webp",
+        "sprite": "../../sprites/pack2/hair/top-ponytail-front.webp",
         "sprite_box": [
           128,
           1217,
@@ -4064,7 +4064,7 @@
           369,
           575
         ],
-        "sprite": "../../../dist/assets/pack2/hair/top-ponytail-left.webp",
+        "sprite": "../../sprites/pack2/hair/top-ponytail-left.webp",
         "sprite_box": [
           742,
           1221,
@@ -4134,7 +4134,7 @@
           371,
           576
         ],
-        "sprite": "../../../dist/assets/pack2/hair/top-ponytail-right.webp",
+        "sprite": "../../sprites/pack2/hair/top-ponytail-right.webp",
         "sprite_box": [
           1290,
           1220,
@@ -4204,7 +4204,7 @@
           445,
           579
         ],
-        "sprite": "../../../dist/assets/pack2/hair/top-ponytail-back.webp",
+        "sprite": "../../sprites/pack2/hair/top-ponytail-back.webp",
         "sprite_box": [
           1924,
           1217,
@@ -4278,7 +4278,7 @@
           457,
           537
         ],
-        "sprite": "../../../dist/assets/pack2/hair/chin-bob-bangs-front.webp",
+        "sprite": "../../sprites/pack2/hair/chin-bob-bangs-front.webp",
         "sprite_box": [
           108,
           65,
@@ -4348,7 +4348,7 @@
           385,
           537
         ],
-        "sprite": "../../../dist/assets/pack2/hair/chin-bob-bangs-left.webp",
+        "sprite": "../../sprites/pack2/hair/chin-bob-bangs-left.webp",
         "sprite_box": [
           731,
           65,
@@ -4418,7 +4418,7 @@
           385,
           537
         ],
-        "sprite": "../../../dist/assets/pack2/hair/chin-bob-bangs-right.webp",
+        "sprite": "../../sprites/pack2/hair/chin-bob-bangs-right.webp",
         "sprite_box": [
           1276,
           65,
@@ -4488,7 +4488,7 @@
           457,
           537
         ],
-        "sprite": "../../../dist/assets/pack2/hair/chin-bob-bangs-back.webp",
+        "sprite": "../../sprites/pack2/hair/chin-bob-bangs-back.webp",
         "sprite_box": [
           1897,
           65,
@@ -4560,7 +4560,7 @@
           459,
           540
         ],
-        "sprite": "../../../dist/assets/pack2/hair/wavy-crop-front.webp",
+        "sprite": "../../sprites/pack2/hair/wavy-crop-front.webp",
         "sprite_box": [
           107,
           1256,
@@ -4630,7 +4630,7 @@
           382,
           538
         ],
-        "sprite": "../../../dist/assets/pack2/hair/wavy-crop-left.webp",
+        "sprite": "../../sprites/pack2/hair/wavy-crop-left.webp",
         "sprite_box": [
           737,
           1258,
@@ -4700,7 +4700,7 @@
           380,
           537
         ],
-        "sprite": "../../../dist/assets/pack2/hair/wavy-crop-right.webp",
+        "sprite": "../../sprites/pack2/hair/wavy-crop-right.webp",
         "sprite_box": [
           1273,
           1259,
@@ -4770,7 +4770,7 @@
           457,
           541
         ],
-        "sprite": "../../../dist/assets/pack2/hair/wavy-crop-back.webp",
+        "sprite": "../../sprites/pack2/hair/wavy-crop-back.webp",
         "sprite_box": [
           1899,
           1255,
@@ -4842,7 +4842,7 @@
           468,
           551
         ],
-        "sprite": "../../../dist/assets/pack2/hair/short-braids-front.webp",
+        "sprite": "../../sprites/pack2/hair/short-braids-front.webp",
         "sprite_box": [
           110,
           649,
@@ -4912,7 +4912,7 @@
           391,
           548
         ],
-        "sprite": "../../../dist/assets/pack2/hair/short-braids-left.webp",
+        "sprite": "../../sprites/pack2/hair/short-braids-left.webp",
         "sprite_box": [
           736,
           651,
@@ -4982,7 +4982,7 @@
           389,
           550
         ],
-        "sprite": "../../../dist/assets/pack2/hair/short-braids-right.webp",
+        "sprite": "../../sprites/pack2/hair/short-braids-right.webp",
         "sprite_box": [
           1270,
           650,
@@ -5052,7 +5052,7 @@
           464,
           551
         ],
-        "sprite": "../../../dist/assets/pack2/hair/short-braids-back.webp",
+        "sprite": "../../sprites/pack2/hair/short-braids-back.webp",
         "sprite_box": [
           1829,
           649,
@@ -5124,7 +5124,7 @@
           546,
           567
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/jelly-sandals-front.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/jelly-sandals-front.webp",
         "sprite_box": [
           51,
           66,
@@ -5221,7 +5221,7 @@
           533,
           434
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/jelly-sandals-left.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/jelly-sandals-left.webp",
         "sprite_box": [
           644,
           205,
@@ -5294,7 +5294,7 @@
           533,
           434
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/jelly-sandals-right.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/jelly-sandals-right.webp",
         "sprite_box": [
           1215,
           204,
@@ -5367,7 +5367,7 @@
           541,
           463
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/jelly-sandals-back.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/jelly-sandals-back.webp",
         "sprite_box": [
           1800,
           181,
@@ -5466,7 +5466,7 @@
           550,
           566
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/flower-flip-flops-front.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/flower-flip-flops-front.webp",
         "sprite_box": [
           49,
           774,
@@ -5563,7 +5563,7 @@
           534,
           411
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/flower-flip-flops-left.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/flower-flip-flops-left.webp",
         "sprite_box": [
           645,
           877,
@@ -5635,7 +5635,7 @@
           533,
           411
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/flower-flip-flops-right.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/flower-flip-flops-right.webp",
         "sprite_box": [
           1214,
           880,
@@ -5708,7 +5708,7 @@
           543,
           454
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/flower-flip-flops-back.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/flower-flip-flops-back.webp",
         "sprite_box": [
           1799,
           848,
@@ -5807,7 +5807,7 @@
           549,
           551
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/wedge-sandals-front.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/wedge-sandals-front.webp",
         "sprite_box": [
           49,
           1235,
@@ -5904,7 +5904,7 @@
           535,
           522
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/wedge-sandals-left.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/wedge-sandals-left.webp",
         "sprite_box": [
           644,
           1309,
@@ -5974,7 +5974,7 @@
           534,
           522
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/wedge-sandals-right.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/wedge-sandals-right.webp",
         "sprite_box": [
           1213,
           1308,
@@ -6044,7 +6044,7 @@
           539,
           549
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-adult/wedge-sandals-back.webp",
+        "sprite": "../../sprites/pack2/shoes-adult/wedge-sandals-back.webp",
         "sprite_box": [
           1801,
           1293,
@@ -6140,7 +6140,7 @@
           525,
           388
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/toddler-sandals-front.webp",
+        "sprite": "../../sprites/pack2/shoes-little/toddler-sandals-front.webp",
         "sprite_box": [
           40,
           117,
@@ -6234,7 +6234,7 @@
           514,
           357
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/toddler-sandals-left.webp",
+        "sprite": "../../sprites/pack2/shoes-little/toddler-sandals-left.webp",
         "sprite_box": [
           645,
           172,
@@ -6304,7 +6304,7 @@
           515,
           356
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/toddler-sandals-right.webp",
+        "sprite": "../../sprites/pack2/shoes-little/toddler-sandals-right.webp",
         "sprite_box": [
           1232,
           173,
@@ -6374,7 +6374,7 @@
           517,
           356
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/toddler-sandals-back.webp",
+        "sprite": "../../sprites/pack2/shoes-little/toddler-sandals-back.webp",
         "sprite_box": [
           1832,
           155,
@@ -6470,7 +6470,7 @@
           530,
           396
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/jelly-shoes-front.webp",
+        "sprite": "../../sprites/pack2/shoes-little/jelly-shoes-front.webp",
         "sprite_box": [
           38,
           705,
@@ -6567,7 +6567,7 @@
           529,
           348
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/jelly-shoes-left.webp",
+        "sprite": "../../sprites/pack2/shoes-little/jelly-shoes-left.webp",
         "sprite_box": [
           634,
           763,
@@ -6640,7 +6640,7 @@
           529,
           348
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/jelly-shoes-right.webp",
+        "sprite": "../../sprites/pack2/shoes-little/jelly-shoes-right.webp",
         "sprite_box": [
           1230,
           762,
@@ -6713,7 +6713,7 @@
           524,
           364
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/jelly-shoes-back.webp",
+        "sprite": "../../sprites/pack2/shoes-little/jelly-shoes-back.webp",
         "sprite_box": [
           1828,
           742,
@@ -6812,7 +6812,7 @@
           531,
           383
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/bunny-slippers-front.webp",
+        "sprite": "../../sprites/pack2/shoes-little/bunny-slippers-front.webp",
         "sprite_box": [
           37,
           1323,
@@ -6906,7 +6906,7 @@
           505,
           377
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/bunny-slippers-left.webp",
+        "sprite": "../../sprites/pack2/shoes-little/bunny-slippers-left.webp",
         "sprite_box": [
           656,
           1320,
@@ -6976,7 +6976,7 @@
           504,
           377
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/bunny-slippers-right.webp",
+        "sprite": "../../sprites/pack2/shoes-little/bunny-slippers-right.webp",
         "sprite_box": [
           1231,
           1320,
@@ -7046,7 +7046,7 @@
           520,
           383
         ],
-        "sprite": "../../../dist/assets/pack2/shoes-little/bunny-slippers-back.webp",
+        "sprite": "../../sprites/pack2/shoes-little/bunny-slippers-back.webp",
         "sprite_box": [
           1831,
           1309,

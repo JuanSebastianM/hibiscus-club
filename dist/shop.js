@@ -10,8 +10,12 @@ const Shop=(()=>{
   /* Most of the wardrobe is free; a few clearly special pieces are star rewards (about a quarter or
      less of each category). Every other option, including every colourway, is free. */
   const explicit={
-    // one outfit per character
+    // outfits: the first one per character, and three showpieces each from the second wardrobe
     'item:lilac-satin-bow-dress':20,'item:star-pajamas':25,
+    'item:sequin-halter-dress':22,'item:aqua-velour-tracksuit':18,'item:puffer-vest-slip-dress':16,
+    'item:tulle-party-dress':20,'item:bear-onesie':18,'item:ballet-wrap-set':16,
+    // the second wardrobe's showpiece shoes: two for the Grown-up, one for Little Me
+    'item:platform-boots':14,'item:wedge-sandals':12,'item:light-up-sneakers':12,
     // shoes, hair, jewelry, hair accessories
     'item:lilac-mary-jane-heels':12,'item:half-up-curls':15,
     // hair: at most two styles per character cost stars (see the wardrobe test)
@@ -76,6 +80,12 @@ const Shop=(()=>{
   /* ---------- colour families for coordinated surprises ---------- */
   const baseFamily={'hibiscus-flares':'pink','lilac-satin-bow-dress':'lilac','denim-jacket-skirt':'blue','green-hibiscus-sundress':'mint','black-flares-set':'neutral','pink-velour-cargo':'pink',
     'yellow-dot-dress':'gold','lilac-cord-pinafore':'lilac','pink-gingham-bow-dress':'pink','denim-overalls':'blue','mint-cardigan-dress':'mint','star-pajamas':'pink',
+    'sarong-swimsuit':'lilac','tankini-board-shorts':'blue','crochet-cover-up':'warm','aqua-velour-tracksuit':'blue','tennis-dress':'lilac',
+    'baby-tee-cargo':'gold','sequin-halter-dress':'warm','butterfly-satin-skirt':'lilac','puffer-vest-slip-dress':'warm','plaid-knit-vest-set':'pink',
+    'hoodie-dress-leg-warmers':'pink','denim-overall-dress':'blue','ruffle-swimsuit':'pink','rash-guard-set':'mint','beach-poncho':'lilac',
+    'rainbow-tutu-tee':'pink','dino-romper':'mint','raincoat-set':'gold','tulle-party-dress':'pink','bear-onesie':'warm','ballet-wrap-set':'pink',
+    'jelly-sandals':'blue','flower-flip-flops':'warm','wedge-sandals':'lilac','platform-boots':'pink','fuzzy-slippers':'mint','ribbon-ballet-flats':'pink',
+    'toddler-sandals':'neutral','jelly-shoes':'pink','bunny-slippers':'neutral','light-up-sneakers':'lilac','cowboy-boots':'warm','ballet-slippers':'warm',
     'black-platform-sandals':'neutral','lilac-mary-jane-heels':'lilac','pink-chunky-sneakers':'pink','red-mary-janes':'warm','white-velcro-sneakers':'neutral','strawberry-rain-boots':'warm',
     'gold-hoops':'gold','pearl-studs':'neutral','heart-studs':'pink','star-studs':'gold','pearl-starfish-necklace':'neutral','butterfly-necklace':'lilac',
     'hibiscus-clip':'pink','butterfly-clip':'lilac','red-bow':'warm','peach-blossom':'warm','satin-bow':'pink','gold-star':'gold'};
@@ -182,7 +192,7 @@ const Shop=(()=>{
     return img(key,async()=>{
       if(it.stud){const c=makeCanvas(T,T),g=c.getContext('2d');drawStud(g,it.stud,T*.32,T*.5,T*.13);drawStud(g,it.stud,T*.68,T*.5,T*.13);return c}
       if(it.proc){const c=makeCanvas(T,T),g=c.getContext('2d');drawCharm(g,it.proc,T/2,T/2,T*({1:.44,2:.62,3:.5}[it.proc]||.45),-.19);return c}
-      const src=it.art?.front?.main;if(!src)throw new Error('no art');
+      const src=it.thumb||it.art?.front?.main;if(!src)throw new Error('no art');
       let c=fitInto(await asset(src),T,it.category==='hair'?.04:.08);
       const tint=(it.tints||[]).find(t=>t.id===tintId);
       if(tint&&tint.id!=='original')c=tintCanvas(c,tint);

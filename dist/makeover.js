@@ -87,6 +87,17 @@ function itemCards(field,shown,{tinted=true,hair=false}={}){
   return catalogOptions(field,state.doll).map(it=>itemCard(field,it.id,it.name,
     Shop.itemImg(it.id,tinted&&shown[field]===it.id?shown[field+'Tint']:'original',hair?shown.hairColor:null),shown));
 }
+/* The outfit rack grows long on a phone: a row of theme filters (only themes the doll has) narrows it.
+   The filter is per visit; the outfit she has on always stays in the list. */
+let rackTheme='all';
+function outfitRack(shown){
+  const all=catalogOptions('outfit',state.doll),themes=CATALOG.themes.filter(th=>all.some(it=>it.theme===th));
+  if(rackTheme!=='all'&&!themes.includes(rackTheme))rackTheme='all';
+  const pick=['all',...themes].map(th=>`<button class="rack-filter" data-fid="rack-${th}" data-rack="${th}" aria-pressed="${th===rackTheme}">${t('rack.'+th)}</button>`).join('');
+  const list=all.filter(it=>rackTheme==='all'||it.theme===rackTheme||it.id===shown.outfit);
+  return `<div class="rack-filters" role="group" aria-label="${t('rack.label')}">${pick}</div>`+
+    cardGrid(list.map(it=>itemCard('outfit',it.id,it.name,Shop.itemImg(it.id,shown.outfit===it.id?shown.outfitTint:'original'),shown)));
+}
 function tintGroup(field,shown){
   const id=shown[field],tints=tintOptions(id);
   if(id==='none'||tints.length<2)return '';
@@ -125,7 +136,7 @@ function activeTab(room){
 function tabBody(room,tab,shown){
   const d=state.doll;
   switch(tab.id){
-    case 'outfits':return group(t('group.outfits'),cardGrid(itemCards('outfit',shown)))+tintGroup('outfit',shown);
+    case 'outfits':return group(t('group.outfits'),outfitRack(shown))+tintGroup('outfit',shown);
     case 'shoes':return group(t('group.shoes'),cardGrid([...itemCards('shoes',shown),noneCard('shoes',t('none.shoes'),shown)]))+tintGroup('shoes',shown);
     case 'jewelry':return (catalogOptions('earrings',d).length?group(t('group.earrings'),cardGrid([...itemCards('earrings',shown),noneCard('earrings',t('none.earrings'),shown)],'compact'))+tintGroup('earrings',shown):'')+
       (catalogOptions('necklace',d).length?group(t('group.necklaces'),cardGrid([...itemCards('necklace',shown),noneCard('necklace',t('none.necklace'),shown)],'compact')):'');
@@ -344,6 +355,7 @@ function makeoverClick(b,d){
   if(d.doll){switchDoll(d.doll);return true}
   if(d.tab){roomTab[route]=d.tab;refreshRoom();return true}
   if(d.pick){choose(d.pick,d.value);return true}
+  if(d.rack){rackTheme=d.rack;refreshRoom('rack-'+d.rack);return true}
   if(d.view){stageView=d.view;refreshRoom();return true}
   if(d.fav){wearFavorite(d.fav);return true}
   if(d.unfav){const dialog=document.querySelector('#remove-favorite');dialog.dataset.id=d.unfav;dialog.showModal();return true}

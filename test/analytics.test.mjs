@@ -110,9 +110,9 @@ test('Worker validation rejects anything outside the allowlists', () => {
 
 test('island adventure events carry fixed values only (never a player name)', () => {
   const ev = (e, d) => ({ e, d, c: 'little', l: 'es' });
-  for (const [e, d] of [['daily', 'deliver'], ['daily', 'tidy'], ['findable', 'market'], ['tutorial', 'done'], ['tutorial', 'skipped'], ['name', 'yes'], ['name', 'no'], ['errand', 'story-4'], ['errand', 'story-6'], ['district', 'pavilion'], ['district', 'beach'], ['chat', 'park'], ['findable', 'beach']])
+  for (const [e, d] of [['daily', 'deliver'], ['daily', 'tidy'], ['findable', 'market'], ['tutorial', 'done'], ['tutorial', 'skipped'], ['name', 'yes'], ['name', 'no'], ['errand', 'story-4'], ['errand', 'story-6'], ['errand', 'story-8'], ['district', 'pavilion'], ['district', 'beach'], ['chat', 'park'], ['findable', 'beach'], ['district', 'icecream'], ['district', 'treehouse'], ['chat', 'treehouse'], ['findable', 'icecream'], ['photo', 'treehouse']])
     assert.ok(checkEvent(ev(e, d)), `${e} ${d}`);
-  for (const bad of [ev('name', 'Coral'), ev('name', 'yes '), { ...ev('name', 'yes'), name: 'Coral' }, ev('daily', 'story-1'), ev('findable', 'studio'), ev('tutorial', 'later'), ev('errand', 'story-7'), ev('district', 'icecream'), ev('district', 'treehouse')])
+  for (const bad of [ev('name', 'Coral'), ev('name', 'yes '), { ...ev('name', 'yes'), name: 'Coral' }, ev('daily', 'story-1'), ev('findable', 'studio'), ev('tutorial', 'later'), ev('errand', 'story-9'), ev('district', 'volcano'), ev('photo', 'jungle')])
     assert.equal(checkEvent(bad), null, JSON.stringify(bad));
   const ctx = loadClient(), A = ctx.HibiscusAnalytics;
   A.init(true, () => ({ c: 'adult', l: 'en' }));

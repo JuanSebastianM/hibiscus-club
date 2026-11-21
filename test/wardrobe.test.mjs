@@ -109,3 +109,121 @@ test('at most two hairstyles per character cost stars, and her default is free',
     assert.equal(Shop.price('item:' + CATALOG.defaults[doll].hair), 0);
   }
 });
+
+// ----- the second wardrobe (art/fit_wear.py) -----
+const NEW_OUTFITS = {
+  adult: ['sarong-swimsuit', 'tankini-board-shorts', 'crochet-cover-up', 'aqua-velour-tracksuit', 'tennis-dress', 'baby-tee-cargo',
+    'sequin-halter-dress', 'butterfly-satin-skirt', 'puffer-vest-slip-dress', 'plaid-knit-vest-set', 'hoodie-dress-leg-warmers', 'denim-overall-dress'],
+  little: ['ruffle-swimsuit', 'rash-guard-set', 'beach-poncho', 'rainbow-tutu-tee', 'dino-romper', 'raincoat-set', 'tulle-party-dress',
+    'bear-onesie', 'ballet-wrap-set']
+};
+const NEW_SHOES = {
+  adult: ['jelly-sandals', 'flower-flip-flops', 'wedge-sandals', 'platform-boots', 'fuzzy-slippers', 'ribbon-ballet-flats'],
+  little: ['toddler-sandals', 'jelly-shoes', 'bunny-slippers', 'light-up-sneakers', 'cowboy-boots', 'ballet-slippers']
+};
+const exists = p => { try { readFileSync(new URL(p, dist)); return true } catch { return false } };
+
+test('every new outfit has art and a fit in all four views on its own doll only', () => {
+  const { CATALOG, catalogOptions } = loadWardrobe();
+  for (const [doll, ids] of Object.entries(NEW_OUTFITS)) for (const id of ids) {
+    const it = CATALOG.items[id];
+    assert.ok(it && it.category === 'outfit', id);
+    assert.deepEqual([...it.dolls], [doll], `${id} is for ${doll} only`);
+    assert.ok(catalogOptions('outfit', doll).includes(it), `${id} offered to ${doll}`);
+    assert.ok(CATALOG.themes.includes(it.theme), `${id} theme`);
+    assert.ok(exists(it.thumb), `${id} card picture`);
+    for (const view of CATALOG.views) {
+      const f = it.fit[doll][view];
+      assert.ok(f && f.pieces.length, `${id} ${view} fit`);
+      for (const p of f.pieces) {
+        const src = p.part === 'main' ? it.art[view].main : it.art[view].parts[p.part];
+        assert.ok(src && exists(src), `${id} ${view} ${p.part} sprite`);
+        assert.ok(p.warp ? p.warp.every(r => r.length === 6 && r.every(Number.isFinite)) : [p.x, p.y, p.w].every(Number.isFinite), `${id} ${view} ${p.part} placement`);
+      }
+      assert.ok(f.skin?.length, `${id} ${view}: the bodysuit is repainted wherever the outfit lets it show`);
+    }
+  }
+});
+
+test('every new shoe has art and a fit in all four views; open shoes have both layers', () => {
+  const { CATALOG, catalogOptions } = loadWardrobe();
+  for (const [doll, ids] of Object.entries(NEW_SHOES)) for (const id of ids) {
+    const it = CATALOG.items[id];
+    assert.ok(it && it.category === 'shoes' && catalogOptions('shoes', doll).includes(it), id);
+    assert.deepEqual([...it.dolls], [doll]);
+    for (const view of CATALOG.views) {
+      const f = it.fit[doll][view], feet = view === 'left' || view === 'right' ? [f.near] : [f.left, f.right];
+      for (const s of feet) {
+        assert.ok(s && [s.x, s.y, s.w].every(Number.isFinite), `${id} ${view} placement`);
+        const src = s.part === 'main' ? it.art[view].main : it.art[view].parts[s.part];
+        assert.ok(src && exists(src), `${id} ${view} ${s.part}`);
+        if (s.over) assert.ok(exists(it.art[view].parts[s.over.part]) && Number.isFinite(s.over.w), `${id} ${view} over layer`);
+      }
+    }
+  }
+  for (const id of ['jelly-sandals', 'flower-flip-flops', 'wedge-sandals']) assert.equal(CATALOG.items[id].openToe, true, `${id} shows the toes`);
+});
+
+test('only the open shoes carry an over layer ({part}); the first wardrobe keeps its polygon `over` bands', () => {
+  // portrait.js shoeLayers draws a shoe in two layers only when its `over` names a sprite part; the first
+  // wardrobe's `over` is a list of polygons (an ankle strap's front band) and must keep the old drawing
+  const { CATALOG } = loadWardrobe();
+  const layered = new Set(['jelly-sandals', 'flower-flip-flops', 'wedge-sandals', 'toddler-sandals', 'jelly-shoes']);
+  for (const it of CATALOG.itemList.filter(i => i.category === 'shoes')) for (const doll of it.dolls) for (const view of CATALOG.views) {
+    const f = it.fit[doll]?.[view];if (!f) continue;
+    for (const s of [f.left, f.right, f.near].filter(Boolean)) {
+      if (layered.has(it.id)) assert.ok(typeof s.over?.part === 'string', `${it.id} ${view} over layer`);
+      else assert.ok(s.over === undefined || Array.isArray(s.over), `${it.id} ${view}: over stays polygons`);
+    }
+  }
+  assert.ok(Array.isArray(CATALOG.items['black-platform-sandals'].fit.adult.front.left.over));
+  assert.ok(read('portrait.js').includes('fit.left?.over?.part'), 'shoeLayers tells the two apart by over.part');
+});
+
+test('every new item has an English and a Spanish name, and its colourways are named in both', () => {
+  const ctx = loadWardrobe(), en = [...ctx.I18N.keys('en')], es = [...ctx.I18N.keys('es')];
+  for (const id of [...Object.values(NEW_OUTFITS), ...Object.values(NEW_SHOES)].flat()) {
+    assert.ok(en.includes('catalog.item.' + id) && es.includes('catalog.item.' + id), id);
+    for (const t of ctx.CATALOG.items[id].tints) {
+      const key = 'catalog.tint.' + t.id;
+      assert.ok(en.includes(key) && es.includes(key), `${id} ${t.id}`);
+    }
+  }
+  for (const th of ['all', ...ctx.CATALOG.themes]) assert.ok(en.includes('rack.' + th) && es.includes('rack.' + th), th);
+});
+
+test('at most three new outfits and two new shoes per character cost stars, the rest is free', () => {
+  const { Shop } = loadWardrobe();
+  for (const doll of ['adult', 'little']) {
+    const outfits = NEW_OUTFITS[doll].filter(id => Shop.price('item:' + id) > 0);
+    const shoes = NEW_SHOES[doll].filter(id => Shop.price('item:' + id) > 0);
+    assert.ok(outfits.length <= 3 && outfits.length >= 1, `${doll} outfits: ${outfits}`);
+    assert.ok(shoes.length <= 2 && shoes.length >= 1, `${doll} shoes: ${shoes}`);
+    for (const id of [...outfits, ...shoes]) assert.ok(Shop.price('item:' + id) >= 6 && Shop.price('item:' + id) <= 25, id);
+  }
+});
+
+test('the style challenges in game.js stay achievable by both characters with free options', () => {
+  const { catalogOptions, Shop, CATALOG } = loadWardrobe();
+  const src = read('game.js'), at = src.indexOf('const briefs=[');
+  const briefs = vm.runInNewContext('(' + src.slice(at + 'const briefs='.length, src.indexOf('];', at) + 1) + ')');
+  assert.ok(briefs.length >= 11);
+  for (const b of briefs) for (const doll of ['adult', 'little']) for (const [field, v] of Object.entries(b.need)) {
+    const id = typeof v === 'string' ? v : v[doll];
+    if (['outfit', 'shoes', 'hair', 'earrings', 'necklace', 'clip'].includes(field)) {
+      assert.ok(catalogOptions(field, doll).some(i => i.id === id), `${b.key} ${doll} ${id}`);
+      assert.equal(Shop.price('item:' + id), 0, `${b.key} ${doll} ${id} is free`);
+    } else if (field === 'hairColor') assert.ok(CATALOG.hairColors.some(h => h.id === id));
+  }
+});
+
+test('old looks are read as before: the first wardrobe and the defaults are unchanged', () => {
+  const { readLook, CATALOG } = loadWardrobe();
+  for (const doll of ['adult', 'little']) {
+    const d = CATALOG.defaults[doll];
+    assert.deepEqual({ ...readLook(d, doll) }, { ...d });
+    assert.equal(readLook({ ...d, outfit: doll === 'adult' ? 'ruffle-swimsuit' : 'sarong-swimsuit' }, doll).outfit, d.outfit, 'the other doll\'s outfit falls back');
+  }
+  assert.equal(readLook({ outfit: 'denim-jacket-skirt', shoes: 'lilac-mary-jane-heels' }, 'adult').outfit, 'denim-jacket-skirt');
+  assert.equal(readLook({ outfit: 1, clip: 1, gem: 1 }, 'little').outfit, 'pink-gingham-bow-dress');
+});

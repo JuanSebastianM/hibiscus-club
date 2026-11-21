@@ -942,8 +942,106 @@
      "keyNote": "warm yellow glass"
     }
    ],
-   "overlays": {},
-   "registration": {},
+   "overlays": {
+    "foliage": "assets/scenes/fx/icecream-foliage.webp",
+    "lights": "assets/scenes/fx/icecream-lights.webp",
+    "sky": "assets/scenes/fx/icecream-sky.webp"
+   },
+   "registration": {
+    "foliage_source": {
+     "mean_abs_diff_at_0": 15.47,
+     "p99_max_channel_diff": 112,
+     "opaque_px": 747383,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 15.47
+    },
+    "foliage_mismatch_cut_px": 6507,
+    "foliage_cleaned": {
+     "mean_abs_diff_at_0": 14.68,
+     "p99_max_channel_diff": 92,
+     "opaque_px": 733826,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 14.68
+    },
+    "foliage_crop": {
+     "mean_abs_diff_at_0": 12.35,
+     "p99_max_channel_diff": 74,
+     "opaque_px": 120436,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 12.35
+    },
+    "lights_source": {
+     "mean_abs_diff_at_0": 12.64,
+     "p99_max_channel_diff": 79,
+     "opaque_px": 191473,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 12.64
+    },
+    "lights_mismatch_cut_px": 0,
+    "lights_cleaned": {
+     "mean_abs_diff_at_0": 12.64,
+     "p99_max_channel_diff": 79,
+     "opaque_px": 191473,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 12.64
+    },
+    "lights_crop": {
+     "mean_abs_diff_at_0": 10.34,
+     "p99_max_channel_diff": 58,
+     "opaque_px": 31102,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 10.34
+    },
+    "sky_source": {
+     "mean_abs_diff_at_0": 22.33,
+     "p99_max_channel_diff": 147,
+     "opaque_px": 273274,
+     "best_shift": [
+      0,
+      -1
+     ],
+     "mean_abs_diff_best": 22.26
+    },
+    "sky_mismatch_cut_px": 104219,
+    "sky_cleaned": {
+     "mean_abs_diff_at_0": 4.36,
+     "p99_max_channel_diff": 68,
+     "opaque_px": 146745,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 4.36
+    },
+    "sky_crop": {
+     "mean_abs_diff_at_0": 4.35,
+     "p99_max_channel_diff": 62,
+     "opaque_px": 32213,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 4.35
+    }
+   },
    "lights": [
     {
      "at": [
@@ -1141,7 +1239,21 @@
     "Perspective is the strongest of the four: the cobbles converge toward a vanishing point near (0.62, 0.5) and the kerb runs diagonally, so a character walking up to y~0.72 should be scaled down ~15-20% or it will look too big next to the shop doors.",
     "Clutter: the kerb step and planter box at x 0.25-0.42, y 0.65-0.72; nothing on the plaza itself.",
     "No baked text (shop signs are shells, no letters) and no people."
-   ]
+   ],
+   "overlayBytes": {
+    "foliage": {
+     "full": 132666,
+     "half": 47208
+    },
+    "lights": {
+     "full": 82068,
+     "half": 29568
+    },
+    "sky": {
+     "full": 85830,
+     "half": 31230
+    }
+   }
   },
   "treehouse": {
    "source": "art/source/pack2/06-island-places/scene-treehouse.webp",
@@ -1154,7 +1266,7 @@
    ],
    "jpeg": {
     "quality": 70,
-    "bytes": 212372
+    "bytes": 210188
    },
    "poi": {
     "name": "treasure chest",
@@ -1385,8 +1497,114 @@
      ]
     }
    ],
-   "overlays": {},
-   "registration": {},
+   "overlays": {
+    "foliage": "assets/scenes/fx/treehouse-foliage.webp",
+    "sky": "assets/scenes/fx/treehouse-sky.webp",
+    "water": "assets/scenes/fx/treehouse-water.webp"
+   },
+   "registration": {
+    "foliage_source": {
+     "mean_abs_diff_at_0": 11.99,
+     "p99_max_channel_diff": 96,
+     "opaque_px": 1500678,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 11.99
+    },
+    "foliage_mismatch_cut_px": 19584,
+    "foliage_cleaned": {
+     "mean_abs_diff_at_0": 11.25,
+     "p99_max_channel_diff": 72,
+     "opaque_px": 1470811,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 11.25
+    },
+    "foliage_crop": {
+     "mean_abs_diff_at_0": 10.46,
+     "p99_max_channel_diff": 65,
+     "opaque_px": 240711,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 10.46
+    },
+    "sky_source": {
+     "mean_abs_diff_at_0": 31.73,
+     "p99_max_channel_diff": 172,
+     "opaque_px": 140589,
+     "best_shift": [
+      1,
+      -2
+     ],
+     "mean_abs_diff_best": 31.56
+    },
+    "sky_mismatch_cut_px": 71775,
+    "sky_cleaned": {
+     "mean_abs_diff_at_0": 3.51,
+     "p99_max_channel_diff": 60,
+     "opaque_px": 61602,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 3.51
+    },
+    "sky_crop": {
+     "mean_abs_diff_at_0": 3.42,
+     "p99_max_channel_diff": 49,
+     "opaque_px": 13573,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 3.42
+    },
+    "water_source": {
+     "mean_abs_diff_at_0": 13.58,
+     "p99_max_channel_diff": 119,
+     "opaque_px": 152848,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 13.58
+    },
+    "water_mismatch_cut_px": 21784,
+    "water_cleaned": {
+     "mean_abs_diff_at_0": 9.1,
+     "p99_max_channel_diff": 55,
+     "opaque_px": 118747,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 9.1
+    },
+    "water_crop": {
+     "mean_abs_diff_at_0": 7.76,
+     "p99_max_channel_diff": 48,
+     "opaque_px": 25996,
+     "best_shift": [
+      0,
+      0
+     ],
+     "mean_abs_diff_best": 7.76
+    }
+   },
+   "grade": {
+    "gamma": 0.86,
+    "gain": [
+     1.07,
+     1.0,
+     0.98
+    ]
+   },
    "lights": [
     {
      "at": [
@@ -1424,7 +1642,21 @@
     "Clutter on the walk floor: ferns in the bottom-left corner (x<0.18) and a large plant clump bottom-right (x>0.86, y>0.6); grass tufts and small flowers dot the path.",
     "Style mismatch: much darker and greener, dense jungle detail, no pink paving or rail; it reads as a different painter next to boardwalk/market/pavilion. A light pink-gold grade (or the scene's ambient tint) would help.",
     "Rainbow and waterfall are painted in (could be animated). No text or people."
-   ]
+   ],
+   "overlayBytes": {
+    "foliage": {
+     "full": 255442,
+     "half": 89476
+    },
+    "sky": {
+     "full": 28990,
+     "half": 10760
+    },
+    "water": {
+     "full": 29992,
+     "half": 10540
+    }
+   }
   }
  },
  "note": "Generated by art/crop_scenes_pack2.py. Coordinates are normalized to the 1152x720 crop. crop = window in the source [x0, y0, x1, y1] px. floor = highest y a character's feet can reach. resident/approach = feet positions. animate = suggested living-scene layers in the spirit of dist/scene-data.js (shapes only; keys/motion to tune)."

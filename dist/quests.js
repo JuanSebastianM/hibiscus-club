@@ -1,4 +1,4 @@
-/* The island adventure's data and rules: the three walk-in districts, each character's story errands,
+/* The island adventure's data and rules: the seven walk-in districts, each character's story errands,
    the daily errands and sparkles, the save format of `state.life`, and "what to do next". No DOM here:
    island-life.js draws the scenes, game.js the map. All display text is in i18n.js / i18n-es.js:
    district.<id>.*, story.<doll>.<n>.*, daily.*, quest.*, chat.*.
@@ -10,7 +10,7 @@ const districts = [
     spots:[[.12,.78],[.24,.9],[.31,.73],[.35,.82],[.57,.92],[.69,.84],[.92,.82],[.15,.93],[.77,.93],[.88,.9]]},
   {id:'market',resident:'Rosa',icon:'flower',person:[.57,.73],object:[.82,.54],approach:[.82,.75],floor:.73,color:'#8ebd89',sparkle:'petal',
     spots:[[.1,.8],[.2,.92],[.3,.77],[.36,.88],[.6,.91],[.7,.82],[.92,.86],[.13,.88],[.77,.93],[.47,.8]]},
-  {id:'pavilion',resident:'Kit',icon:'music',person:[.58,.70],object:[.28,.48],approach:[.28,.64],floor:.63,color:'#aa92c9',sparkle:'star',
+  {id:'pavilion',resident:'Kit',icon:'music',person:[.58,.70],object:[.28,.48],approach:[.28,.64],floor:.63,color:'#aa92c9',sparkle:'star',postcard:.74,
     spots:[[.1,.7],[.18,.86],[.34,.72],[.3,.92],[.6,.9],[.72,.78],[.9,.74],[.86,.9],[.45,.68],[.12,.93]]},
   /* Pack-2 places (art/scenes-pack2.json). `floorLine` is the highest the feet may go across the scene
      ([x, y] points, straight between them) and `xMin` / `xMax` the sides, where scenery stands in the way. */
@@ -19,12 +19,22 @@ const districts = [
     spots:[[.1,.8],[.2,.92],[.3,.74],[.38,.85],[.45,.66],[.47,.93],[.69,.655],[.92,.72],[.15,.72],[.27,.86]]},
   {id:'park',resident:'Teo',icon:'kite',person:[.56,.87],personSize:30.5,object:[.79,.56],approach:[.71,.9],floor:.75,color:'#e27fa3',sparkle:'clover',findIcon:'bow',
     floorLine:[[0,.75],[.55,.75],[.62,.81],[1,.83]],xMin:.2,xMax:.9,
-    spots:[[.24,.8],[.3,.93],[.37,.77],[.45,.79],[.66,.9],[.72,.84],[.86,.9],[.4,.94],[.27,.86],[.78,.93]]}
+    spots:[[.24,.8],[.3,.93],[.37,.77],[.45,.79],[.66,.9],[.72,.84],[.86,.9],[.4,.94],[.27,.86],[.78,.93]]},
+  /* Sundae Street and Treetop Hideout. `depth` [y0, scale0, y1, scale1] is how big the characters are drawn at
+     two depths (see depthAt): the ice-cream street's cobbles run steeply to the far kerb, so she shrinks
+     faster going back there. The cart and the chest stand on the floor, so the floor line goes round them. */
+  {id:'icecream',resident:'Gigi',icon:'cone',person:[.6,.79],personSize:26,object:[.855,.62],approach:[.68,.9],floor:.71,color:'#ef8f7a',sparkle:'sugar',findIcon:'heart',postcard:.36,
+    floorLine:[[0,.76],[.25,.74],[.45,.72],[.55,.71],[.68,.72],[.72,.89],[1,.89]],depth:[.72,.78,.94,1.15],
+    spots:[[.08,.8],[.18,.9],[.3,.79],[.38,.88],[.45,.76],[.5,.93],[.68,.76],[.76,.92],[.88,.93],[.22,.83]]},
+  {id:'treehouse',resident:'Nina',icon:'chest',person:[.64,.87],personSize:30.5,object:[.235,.655],approach:[.36,.89],floor:.77,color:'#5f9e5a',sparkle:'coin',findIcon:'feather',postcard:.4,
+    floorLine:[[0,.885],[.32,.885],[.36,.81],[.6,.815],[.66,.79],[.8,.77],[1,.77]],xMin:.18,xMax:.86,
+    spots:[[.22,.92],[.3,.9],[.4,.84],[.45,.93],[.5,.82],[.72,.8],[.8,.85],[.83,.93],[.7,.92],[.36,.93]]}
 ].map(d=>I18N.localize(d,'district.'+d.id,['name','role','spot','walkSpot','friend','new','greeting','topic','answer','objectLine','sparkleName','tokenName']));
 const DISTRICT_IDS=districts.map(d=>d.id);
 const districtOf=id=>districts.find(d=>d.id===id);
-/* Postcard scenery: the studio and the first three places (a saved look's backdrop is 0..3, catalog.js). */
-const SCENERY_PLACES=3;
+/* Postcard scenery: the studio and every walk-in place (a saved look's backdrop is 0..7, catalog.js). A place's
+   `postcard` is where its picture is cropped for a portrait (0 = left edge, 1 = right; .52 if unset). */
+const SCENERY_PLACES=districts.length;
 const sceneryNames=()=>[t('scenery.studio'),...districts.slice(0,SCENERY_PLACES).map(d=>d.name)];
 /* The highest the feet may go at x in a district: its floor line, else its flat floor. */
 function floorAt(d,x){
@@ -32,6 +42,12 @@ function floorAt(d,x){
   if(x<=L[0][0])return L[0][1];
   for(let i=1;i<L.length;i++)if(x<=L[i][0]){const [x0,y0]=L[i-1],[x1,y1]=L[i];return y0+(y1-y0)*(x-x0)/((x1-x0)||1)}
   return L[L.length-1][1];
+}
+/* How big a character is drawn with her feet at y (1 = full size): the same gentle perspective in every place,
+   unless the place sets its own `depth` [y0, s0, y1, s1]. */
+function depthAt(d,y){
+  const D=d&&d.depth;if(!D)return .83+(y-.60)*.94;
+  return D[1]+(y-D[0])*(D[3]-D[1])/(D[2]-D[0]);
 }
 const cleanName=name=>typeof name==='string'?Array.from(name.trim().replace(/[\u0000-\u001f\u007f]/g,'')).slice(0,24).join(''):'';
 const escapeText=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -48,7 +64,10 @@ const STORIES={
     {giver:'pavilion',reward:12,steps:[{at:'boardwalk',target:'person'},{at:'market',target:'object',item:1},{at:'market',target:'person',item:1},{at:'pavilion',target:'object'},{at:'pavilion',target:'person'}]},
     // Sunny Cove and Breezy Park (added later: new stories go at the end, so saved stages keep their places)
     {giver:'beach',reward:10,steps:[{at:'beach',target:'object'},{at:'pavilion',target:'person'},{at:'boardwalk',target:'person',item:1},{at:'beach',target:'person'}]},
-    {giver:'park',reward:12,steps:[{at:'park',target:'object',item:1},{at:'market',target:'object',item:1},{at:'beach',target:'person',item:1},{at:'park',target:'person'}]}
+    {giver:'park',reward:12,steps:[{at:'park',target:'object',item:1},{at:'market',target:'object',item:1},{at:'beach',target:'person',item:1},{at:'park',target:'person'}]},
+    // Sundae Street and Treetop Hideout (added after those)
+    {giver:'icecream',reward:10,steps:[{at:'icecream',target:'object'},{at:'market',target:'person',item:1},{at:'treehouse',target:'person',item:1},{at:'icecream',target:'person'}]},
+    {giver:'treehouse',reward:12,steps:[{at:'treehouse',target:'object',item:1},{at:'pavilion',target:'object',item:1},{at:'icecream',target:'person',item:1},{at:'treehouse',target:'person'}]}
   ],
   little:[
     {giver:'market',reward:6,steps:[{at:'market',target:'object',item:1},{at:'market',target:'person'}]},
@@ -56,7 +75,9 @@ const STORIES={
     {giver:'pavilion',reward:8,steps:[{at:'market',target:'object',item:1},{at:'boardwalk',target:'person',item:1},{at:'pavilion',target:'person'}]},
     {giver:'pavilion',reward:10,steps:[{at:'boardwalk',target:'person',item:1},{at:'market',target:'person',item:1},{at:'pavilion',target:'object'},{at:'pavilion',target:'person'}]},
     {giver:'beach',reward:8,steps:[{at:'beach',target:'object'},{at:'boardwalk',target:'person',item:1},{at:'park',target:'object',item:1},{at:'beach',target:'person'}]},
-    {giver:'park',reward:10,steps:[{at:'market',target:'person',item:1},{at:'beach',target:'object',item:1},{at:'park',target:'person'},{at:'park',target:'object'}]}
+    {giver:'park',reward:10,steps:[{at:'market',target:'person',item:1},{at:'beach',target:'object',item:1},{at:'park',target:'person'},{at:'park',target:'object'}]},
+    {giver:'icecream',reward:8,steps:[{at:'icecream',target:'object',item:1},{at:'treehouse',target:'person',item:1},{at:'treehouse',target:'object',item:1},{at:'icecream',target:'person'}]},
+    {giver:'treehouse',reward:10,steps:[{at:'treehouse',target:'object',item:1},{at:'park',target:'person',item:1},{at:'icecream',target:'object',item:1},{at:'treehouse',target:'person'}]}
   ]
 };
 for(const doll of ['adult','little'])STORIES[doll].forEach((story,i)=>{
@@ -72,10 +93,13 @@ const DAILY_REWARD={deliver:4,find:3,greet:3,compliment:2,tidy:2};
 const DAILY_TYPES=Object.keys(DAILY_REWARD);
 /* SPARKLES_PER_PLACE is the stride of a place's treasures in the `found` bits (place * 2 + k); TREASURES
    is how many hide each day across all the places. */
-const DAILY_COUNT=3,SPARKLES_PER_PLACE=2,FIND_COUNT=3,TREASURES=6,GREET_COUNT=3;
-/* Daily plans are versioned. Version 1 (three places) is kept exactly for a day record saved before the
-   two new places opened, so an errand half done that day stays the same errand; every new day is version 2. */
-const DAILY_VERSION=2;
+const DAILY_COUNT=3,SPARKLES_PER_PLACE=2,FIND_COUNT=3,GREET_COUNT=3;
+/* Daily plans are versioned, so a day record keeps the plan it was saved with (an errand half done that day
+   stays the same errand) and every new day uses the newest. Per version: how many places the plan spreads
+   over and how many treasures hide in them. Version 1 (three places) and 2 (five) are kept exactly; version 3
+   covers all seven places with one treasure in each. */
+const DAILY_VERSIONS={1:{places:3,treasures:6},2:{places:5,treasures:6},3:{places:7,treasures:7}};
+const DAILY_VERSION=3;
 const DAY_RE=/^\d{4}-\d{2}-\d{2}$/;
 function dayKey(date=new Date()){
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
@@ -103,24 +127,26 @@ const dailyCache=new Map();
 function dailyPlan(day,doll,version=DAILY_VERSION){
   const key=day+'|'+doll+(version===1?'':'|v'+version);
   if(dailyCache.has(key))return dailyCache.get(key);
-  const plan=version===1?dailyPlanV1(day,doll):dailyPlanV2(day,doll,key);
+  const plan=version===1?dailyPlanV1(day,doll):dailyPlanV2(day,doll,key,version);
   dailyCache.set(key,plan);
   return plan;
 }
-function dailyPlanV2(day,doll,key){
-  const rand=seededRandom('hibiscus|'+key),pick=n=>Math.floor(rand()*n),N=districts.length;
+/* Versions 2 and up: spread over the version's first N places (the rest get nothing that day). */
+function dailyPlanV2(day,doll,key,version){
+  const rand=seededRandom('hibiscus|'+key),pick=n=>Math.floor(rand()*n),{places:N,treasures:TREASURES}=DAILY_VERSIONS[version];
   const errands=shuffled(DAILY_TYPES,rand).slice(0,DAILY_COUNT).map(type=>{
     const e={type,reward:DAILY_REWARD[type]};
     if(type==='deliver'){e.from=pick(N);e.to=(e.from+1+pick(N-1))%N;e.item=pick(3)}
-    else if(type==='greet')e.who=shuffled(districts.map((_,i)=>i),rand).slice(0,GREET_COUNT).sort((x,y)=>x-y);
+    else if(type==='greet')e.who=shuffled(districts.slice(0,N).map((_,i)=>i),rand).slice(0,GREET_COUNT).sort((x,y)=>x-y);
     else e.at=pick(N);
     return e;
   });
-  const spots=districts.map(d=>shuffled(d.spots,rand)),extra=pick(N);
+  const spots=districts.slice(0,N).map(d=>shuffled(d.spots,rand)),extra=pick(N);
   const count=i=>Math.min(SPARKLES_PER_PLACE,Math.floor(TREASURES/N)+(i===extra?TREASURES%N:0));
-  return {day,doll,version:2,errands,
-    sparkles:spots.map((s,i)=>s.slice(0,count(i))),
-    tokens:spots.map(s=>s.slice(SPARKLES_PER_PLACE,SPARKLES_PER_PLACE+FIND_COUNT))};
+  const none=districts.slice(N).map(()=>[]);
+  return {day,doll,version,errands,
+    sparkles:[...spots.map((s,i)=>s.slice(0,count(i))),...none],
+    tokens:[...spots.map(s=>s.slice(SPARKLES_PER_PLACE,SPARKLES_PER_PLACE+FIND_COUNT)),...none]};
 }
 /* Version 1, unchanged: the three first places, two treasures each, all three residents greeted. */
 function dailyPlanV1(day,doll){
@@ -159,8 +185,8 @@ function today(p=lifePlayer()){
 const smallCount=(n,max)=>Number.isInteger(n)&&n>=0&&n<=max?n:0;
 function readDaily(raw){
   const ok=raw&&typeof raw==='object'&&DAY_RE.test(raw.day);
-  // a record without `v` was saved before the new places opened: that day keeps the version 1 plan
-  const v=ok&&raw.v===DAILY_VERSION?DAILY_VERSION:1,places=v===1?3:districts.length;
+  // a record without `v` was saved before Sunny Cove and Breezy Park opened: that day keeps the version 1 plan
+  const v=ok&&DAILY_VERSIONS[raw.v]&&Number.isInteger(raw.v)?raw.v:1,places=DAILY_VERSIONS[v].places;
   return {day:ok?raw.day:'',v,prog:Array.from({length:DAILY_COUNT},(_,i)=>ok?smallCount(raw.prog?.[i],(1<<places)-1):0),found:ok?smallCount(raw.found,(1<<(SPARKLES_PER_PLACE*places))-1):0};
 }
 /* `state.life[doll]`: name, scene (district index), x/y (normalized position), topics (asked each resident

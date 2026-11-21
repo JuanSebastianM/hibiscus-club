@@ -9,7 +9,8 @@ const places = [
   {id:'house',icon:'home',color:'#ec6a63',x:52,y:11} // Dream House, up on the hill (decorator.js)
 ].map(p=>Object.defineProperty(p,'name',{get(){return t('place.'+p.id)},enumerable:true}));
 const walkPins={boardwalk:{x:62,y:74},market:{x:25,y:65},pavilion:{x:49,y:41},
-  beach:{x:31,y:90,side:true},park:{x:87,y:33}}; // Sunny Cove on the south-west sand, Breezy Park on the green east of the salon
+  beach:{x:31,y:90,side:true},park:{x:87,y:33}, // Sunny Cove on the south-west sand, Breezy Park on the green east of the salon
+  icecream:{x:64,y:51},treehouse:{x:37,y:14}}; // Sundae Street on the flowery terrace west of the arcade, Treetop Hideout in the trees by the waterfall
 const stampIds=[...districts.map(d=>d.id),...places.map(p=>p.id)];
 const dollNames={get adult(){return t('doll.adult')},get little(){return t('doll.little')}};
 const saveKey='hibiscus-club-v1';
@@ -114,7 +115,11 @@ const briefs=[
   {key:'rosy',need:{blush:'rose',gem:'heart'}},
   {key:'midnight',need:{hairColor:'jet',clip:'gold-star'}},
   {key:'homecoming',need:{outfit:{adult:'hibiscus-flares',little:'yellow-dot-dress'},clip:'satin-bow'}},
-  {key:'bob',need:{hair:'curly-bob',earrings:'heart-studs'}}
+  {key:'bob',need:{hair:{adult:'flip-bob',little:'curly-bob'},earrings:'heart-studs'}}, // curly-bob is Little Me's only
+  // second wardrobe (free pieces); not in the play-statistics list (worker/events.js), so not counted
+  {key:'splash',need:{outfit:{adult:'tankini-board-shorts',little:'ruffle-swimsuit'},shoes:{adult:'flower-flip-flops',little:'jelly-shoes'}},stat:false},
+  {key:'rainy',need:{outfit:{adult:'hoodie-dress-leg-warmers',little:'raincoat-set'},shoes:{adult:'fuzzy-slippers',little:'cowboy-boots'}},stat:false},
+  {key:'school',need:{outfit:{adult:'plaid-knit-vest-set',little:'dino-romper'},shoes:{adult:'ribbon-ballet-flats',little:'ballet-slippers'}},stat:false}
 ];
 const brief=()=>briefs[state.missions%briefs.length];
 const briefPlan={outfit:['wardrobe','outfits'],shoes:['wardrobe','shoes'],earrings:['wardrobe','jewelry'],necklace:['wardrobe','jewelry'],
@@ -298,7 +303,7 @@ function takePhoto(){
   shot.id=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
   state.photos.unshift(shot);
   const b=brief(),won=briefMet(b,shot);
-  if(won){state.missions++;state.stars+=10;track('challenge',b.key);}
+  if(won){state.missions++;state.stars+=10;if(b.stat!==false)track('challenge',b.key);}
   track('photo',['studio',...districts.map(d=>d.id)][shot.backdrop]||'studio');
   persist();draw();tone(true);say(t(won?'booth.savedWon':'booth.saved'));
 }

@@ -1,9 +1,10 @@
-"""Game-ready sprites for the two pack-2 residents (Sol the lifeguard, Teo the gardener).
+"""Game-ready sprites for the pack-2 residents (Sol the lifeguard, Teo the gardener, Gigi the ice-cream
+seller, Nina the young explorer).
 
-Reads art/source/pack2/06-island-places/resident-{lifeguard,gardener}{,-talk,-smile}.webp (1536 x 2730; the
-gardener's smile is 756 x 1344 and is brought to the same size first: all three frames of each resident
-register at shift 0) and writes dist/assets/scenes/<id>.png plus <id>-talk.png and <id>-smile.png, 176 x 432
-like mara.png: the feet on the same baseline (y 428), the body centred on x 88, scaled to the height below.
+Reads art/source/pack2/06-island-places/resident-{lifeguard,gardener,icecream,explorer}{,-talk,-smile}.webp
+(1536 x 2730; the gardener's and the explorer's smiles are 756 x 1344 and are brought to the same size first:
+all three frames of each resident register at shift 0) and writes dist/assets/scenes/<id>.png plus <id>-talk.png and <id>-smile.png, 176 x 432
+like mara.png: the feet on the same baseline (y 428), centred on x 88 (unless the resident says otherwise), scaled to the height below.
 Downscaling is done on premultiplied colour so the alpha edges carry no dark or light fringe.
 
 The talk and smile frames are full sprites in the same registration; puppet.js uses only their lower face
@@ -23,6 +24,11 @@ RESIDENTS = {
     # Teo's straw hat brings him up to the others.
     'sol': ('lifeguard', 410),
     'teo': ('gardener', 421),
+    # Gigi is a young woman, Mara's height with her visor; Nina is a young explorer, a little shorter than
+    # Sol even in her bucket hat.
+    # Gigi's ponytail swings out to her left, so her feet stand at x 100 (not 88) to keep it in the frame.
+    'gigi': ('icecream', 422, 100),
+    'nina': ('explorer', 400),
 }
 FULL = (1536, 2730)
 
@@ -49,15 +55,15 @@ def feet_centre(im, box):
     return (xs.min() + xs.max()) / 2
 
 
-def build(rid, src, height):
+def build(rid, src, height, feet_x=88):
     frames = {'': load('resident-' + src), '-talk': load('resident-%s-talk' % src), '-smile': load('resident-%s-smile' % src)}
     base = frames['']
     box = figure_box(base)
     s = height / (box[3] - box[1])
     cx = feet_centre(base, box)
-    # premultiplied resize of the whole canvas, then placed so (cx, box[3]) lands on (88, BASELINE)
+    # premultiplied resize of the whole canvas, then placed so (cx, box[3]) lands on (feet_x, BASELINE)
     W, H = round(FULL[0] * s), round(FULL[1] * s)
-    ox, oy = round(88 - cx * s), round(BASELINE - box[3] * s)
+    ox, oy = round(feet_x - cx * s), round(BASELINE - box[3] * s)
     print(rid, 'scale %.5f' % s, 'feet centre x %.1f' % cx, 'offset', (ox, oy),
           'map: x\' = x*%.5f%+d, y\' = y*%.5f%+d' % (s, ox, s, oy))
     for suffix, im in frames.items():
@@ -71,5 +77,8 @@ def build(rid, src, height):
 
 
 if __name__ == '__main__':
-    for rid, (src, h) in RESIDENTS.items():
-        build(rid, src, h)
+    import sys
+    only = sys.argv[1:]
+    for rid, spec in RESIDENTS.items():
+        if not only or rid in only:
+            build(rid, *spec)

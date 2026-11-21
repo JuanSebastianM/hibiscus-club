@@ -106,11 +106,14 @@ const DOLL={
    sleeves). */
 /* Sleeves that cannot be lifted overhead convincingly from a flat picture (long sleeves, jackets,
    cardigans): these outfits get gentler arm emotes (see GENTLE). */
-const LONG_SLEEVES=new Set(['denim-jacket-skirt','black-flares-set','pink-velour-cargo','mint-cardigan-dress','star-pajamas']);
+const LONG_SLEEVES=new Set(['denim-jacket-skirt','black-flares-set','pink-velour-cargo','mint-cardigan-dress','star-pajamas',
+  'aqua-velour-tracksuit','hoodie-dress-leg-warmers','raincoat-set','bear-onesie','ballet-wrap-set']);
 /* How a garment's sleeves move with the arm (puppet.js): 'long' = the whole sleeve follows the arm;
    'puff' = short puffed or tee sleeves stay on the shoulder and the arm comes out from under them;
    anything else is sleeveless (a wide bodice is kept to the body, only what hugs the arm moves). */
-const SLEEVES={'hibiscus-flares':'puff','lilac-satin-bow-dress':'puff','lilac-cord-pinafore':'puff','denim-overalls':'puff'};
+const SLEEVES={'hibiscus-flares':'puff','lilac-satin-bow-dress':'puff','lilac-cord-pinafore':'puff','denim-overalls':'puff',
+  'crochet-cover-up':'puff','tennis-dress':'puff','baby-tee-cargo':'puff','butterfly-satin-skirt':'puff','denim-overall-dress':'puff',
+  'rash-guard-set':'puff','rainbow-tutu-tee':'puff','dino-romper':'puff','tulle-party-dress':'puff'};
 for(const id of LONG_SLEEVES)SLEEVES[id]='long';
 /* emote -> its gentle variant, used with LONG_SLEEVES */
 const GENTLE={wave:'waveLow',cheer:'wiggle',pose:'poseSoft'};
@@ -125,10 +128,18 @@ const ARM_SAFE={wave:'waveSafe',cheer:'wiggle',pose:'poseSafe'};
 /* the largest upper-arm rotation (degrees) an arm-safe emote may use */
 const ARM_SAFE_MAX=4;
 const SKIRT_TOP={'denim-jacket-skirt':{adult:415},'mint-cardigan-dress':{little:462}};
+/* SKIRT_END: below this doll-local y a skirt-kind outfit follows the legs again (leg warmers under a
+   short dress) */
+const SKIRT_END={'hoodie-dress-leg-warmers':{adult:600}};
 const OUTFIT_KIND={'hibiscus-flares':'trousers','black-flares-set':'trousers','pink-velour-cargo':'trousers',
   'lilac-satin-bow-dress':'skirt','denim-jacket-skirt':'skirt','green-hibiscus-sundress':'skirt',
   'yellow-dot-dress':'skirt','lilac-cord-pinafore':'skirt','pink-gingham-bow-dress':'skirt','mint-cardigan-dress':'skirt',
-  'denim-overalls':'trousers','star-pajamas':'trousers'};
+  'denim-overalls':'trousers','star-pajamas':'trousers',
+  'sarong-swimsuit':'skirt','tankini-board-shorts':'trousers','crochet-cover-up':'skirt','aqua-velour-tracksuit':'trousers',
+  'tennis-dress':'skirt','baby-tee-cargo':'trousers','sequin-halter-dress':'skirt','butterfly-satin-skirt':'skirt',
+  'puffer-vest-slip-dress':'skirt','plaid-knit-vest-set':'skirt','hoodie-dress-leg-warmers':'skirt','denim-overall-dress':'skirt',
+  'ruffle-swimsuit':'skirt','rash-guard-set':'trousers','beach-poncho':'skirt','rainbow-tutu-tee':'skirt',
+  'dino-romper':'trousers','raincoat-set':'trousers','tulle-party-dress':'skirt','bear-onesie':'trousers','ballet-wrap-set':'skirt'};
 /* Residents: one flat picture each (assets/scenes/<id>.png, 176 x 432), image px. Only the torso chain,
    breathing, sway, blink and the talking mouth. */
 const RESIDENTS={
@@ -151,26 +162,43 @@ const RESIDENTS={
   teo:{size:[176,432],joints:{root:[88,425],hips:[88,220],spine:[88,165],chest:[88,120],neck:[88,89],head:[88,79]},neckCut:87,frames:true,
     face:{eyes:[[[73.5,51],[75.5,49.6],[78,49.2],[80.5,49.8],[81.5,51],[79,52.4],[76,52.3]],[[94.5,51],[96.5,49.5],[99,49.2],[101.5,49.8],[102.5,51.2],[100,52.4],[97,52.3]]],
       mouth:[[77,68.6,0],[81,69.4,.6],[86,69.8,1],[91,69.8,1],[96,69.4,.5],[100,68.8,0]],corners:[[77,68.6],[100,68.8]],cheeks:[[74,62,5],[102,62,5]],chin:80,jawMax:1.5,teeth:true,lash:[.45,.65],lidSample:1,lidGap:.4,
-      patch:[88.5,70,15,6.5]}}
+      patch:[88.5,70,15,6.5]}},
+  gigi:{size:[176,432],joints:{root:[96,425],hips:[82,215],spine:[81,175],chest:[80,130],neck:[81,92],head:[81,85]},neckCut:90,frames:true,
+    face:{eyes:[[[68,55.5],[70,53.5],[73.5,52.5],[77,53],[79.5,55.5],[76.5,58],[71,57.8]],[[89.5,56],[91.5,54],[94.5,53.3],[97.5,54.3],[99,56.3],[96.5,58.8],[92,58.5]]],
+      mouth:[[75,69.6,0],[78.5,71,.6],[82,71.6,1],[85.5,71.5,1],[88,70.8,.5],[89.5,70.2,0]],corners:[[75,69.6],[89.5,70.2]],cheeks:[[71,64,5],[93,65,5]],chin:82,jawMax:1.5,teeth:true,lash:[.5,.75],lidSample:.8,lidGap:.4,
+      patch:[82,73.5,11,6.5],blinkFrame:'smile',blinkPatch:[[74,55.5,8.5,5.2],[94.5,56,8,5.2]]}},
+  nina:{size:[176,432],joints:{root:[87,425],hips:[80,230],spine:[79,185],chest:[78,140],neck:[77,106],head:[77,99]},neckCut:104,frames:true,
+    face:{eyes:[[[60,71],[62.5,69],[66,68.3],[69.5,69],[71,71],[68,73.5],[63,73.3]],[[81,71],[83,69],[86.5,68.3],[90,69],[91.5,71],[89,73.5],[84,73.3]]],
+      mouth:[[69.5,85.8,0],[73,87.2,.6],[77,87.8,1],[81,87.6,1],[83.5,86.8,.5],[84.8,86,0]],corners:[[69.5,85.8],[84.8,86]],cheeks:[[63,80,5],[89,80,5]],chin:96,jawMax:1.5,teeth:true,lash:[.5,.75],lidSample:1.5,lidGap:2.2,
+      patch:[77,88.5,10.5,6.5]}}
 };
 /* Drawn expression heads (art/ART-REQUESTS.md section 2), made game-ready by art/build_faces.py from
    art/source/pack2/02-faces: each sheet is a 4 x 3 grid in EXPRESSIONS order, cells of `cell` doll-local
    px drawn at `scale`, registered and colour-matched to the base doll's head and placed with their
    top-left at doll-local `at`; the alpha is the blend mask (only the region EXPRESSION_REGION names),
    and `lips` marks each cell's lips for the makeup pass. The side sheet serves the left view and,
-   mirrored, the right. Little Me's side sheet is drawn in three-quarter view and cannot sit on her
-   strict profile, so her side views keep the procedural face. Adding a sheet = its files + one entry. */
+   mirrored, the right (Little Me's side sheet was redrawn as a true profile for this). Adding a sheet =
+   its files + one entry. */
 /* Sideways glances (the drawn look-left / look-right eyes) read as side-eye on these faces, so they
    are off: idle and emotes never pick them while this is false. */
 const SIDE_GLANCES=false;
 const EXPRESSIONS=['neutral','soft-smile','big-smile','laugh','blink','half-closed','talk-eh','talk-oh','talk-ah','surprised','look-left','look-right'];
+/* The Grown-up's smiling talk heads (art/source/round2/talking-mouths, one row of six): her rest face smiles
+   with teeth, so she talks, blinks and laughs from that smile instead of from a closed mouth. Listed per view
+   as `smile` in EXPRESSION_ART with the cells that registered well (`names`); any other falls back to the
+   pack-2 shape in EXPRESSION_FALLBACK. */
+const SMILE_EXPRESSIONS=['smile-rest','smile-eh','smile-oh','smile-ah','smile-blink','smile-laugh'];
+const EXPRESSION_FALLBACK={'smile-rest':null,'smile-eh':'talk-eh','smile-oh':'talk-oh','smile-ah':'talk-ah','smile-blink':'blink','smile-laugh':'laugh'};
 const EXPRESSION_REGION={'neutral':'face','soft-smile':'face','big-smile':'face','laugh':'face','surprised':'face',
-  'blink':'eyes','half-closed':'eyes','look-left':'eyes','look-right':'eyes','talk-eh':'mouth','talk-oh':'mouth','talk-ah':'mouth'};
+  'blink':'eyes','half-closed':'eyes','look-left':'eyes','look-right':'eyes','talk-eh':'mouth','talk-oh':'mouth','talk-ah':'mouth',
+  'smile-rest':'mouth','smile-eh':'mouth','smile-oh':'mouth','smile-ah':'mouth','smile-blink':'eyes','smile-laugh':'face'};
 const EXPRESSION_ART={
-  adult:{front:{file:'assets/faces/faces-adult-front.webp',lips:'assets/faces/faces-adult-front-lips.webp',at:[156,56],cell:[104,100],scale:2},
-    side:{file:'assets/faces/faces-adult-side.webp',lips:'assets/faces/faces-adult-side-lips.webp',at:[12,54],cell:[86,100],scale:2}},
+  adult:{front:{file:'assets/faces/faces-adult-front.webp',lips:'assets/faces/faces-adult-front-lips.webp',at:[156,56],cell:[104,100],scale:2,
+      smile:{file:'assets/faces/faces-adult-front-smile.webp',lips:'assets/faces/faces-adult-front-smile-lips.webp',names:['smile-rest','smile-eh','smile-oh','smile-ah','smile-blink','smile-laugh']}},
+    side:{file:'assets/faces/faces-adult-side.webp',lips:'assets/faces/faces-adult-side-lips.webp',at:[12,54],cell:[86,100],scale:2,
+      smile:{file:'assets/faces/faces-adult-side-smile.webp',lips:'assets/faces/faces-adult-side-smile-lips.webp',names:['smile-rest','smile-eh','smile-oh','smile-ah','smile-blink','smile-laugh']}}},
   little:{front:{file:'assets/faces/faces-little-front.webp',lips:'assets/faces/faces-little-front-lips.webp',at:[140,94],cell:[134,116],scale:2},
-    side:null}
+    side:{file:'assets/faces/faces-little-side.webp',lips:'assets/faces/faces-little-side-lips.webp',at:[0,94],cell:[82,112],scale:2}}
 };
 /* The expression shown for a set of face parameters (one name; used for single-texture swaps). */
 function expressionFor(f){
@@ -191,17 +219,20 @@ function expressionFor(f){
    she talks: `eye` (blink, half closed, glances) and `mouth` (talking visemes chosen by how far the jaw
    is open, or a whole-face laugh, surprise or, for Little Me, smile). null = the live doll's own face
    (the rest pose). fade = cross-fade seconds for that channel. The Grown-up's own face already smiles,
-   so her smiles stay her own. */
+   so her smiles stay her own, and she talks, blinks and laughs with the smiling heads (smile-*): the
+   mouth goes smile, talk, smile without closing in between. */
 function expressionTargets(f,doll){
   const b=Math.max(...(f.blink||[0])),jm=f.jawMax||4,jf=(f.jaw||0)/jm;
   const g=SIDE_GLANCES?f.glance:0;
   // the Grown-up's drawn half-closed eyes read as a sideways, sleepy look: her blinks go straight to closed
-  const eye=b>(doll==='adult'?.35:.6)?'blink':b>.12&&doll!=='adult'?'half-closed':g<-.35?'look-left':g>.35?'look-right':null;
+  const adult=doll==='adult';
+  const eye=b>(adult?.35:.6)?(adult?'smile-blink':'blink'):b>.12&&!adult?'half-closed':g<-.35?'look-left':g>.35?'look-right':null;
   let mouth=null,full=false;
-  if(f.laugh>.3){mouth='laugh';full=true}
+  if(f.laugh>.3){mouth=adult?'smile-laugh':'laugh';full=true}
   else if(f.surprise>.3){mouth='surprised';full=true}
-  else if(jf>.18)mouth=jf>.55?'talk-ah':f.wide<-.3?'talk-oh':'talk-eh';
-  else if(doll==='little'&&f.smile>.35){mouth=f.smile>.75?'big-smile':'soft-smile';full=true}
+  else if(jf>.18)mouth=adult?(jf>.55?'smile-ah':f.wide<-.3?'smile-oh':'smile-eh'):jf>.55?'talk-ah':f.wide<-.3?'talk-oh':'talk-eh';
+  else if(adult&&jf>.05)mouth='smile-rest'; // between syllables: the drawn resting smile, so talking stays one drawing
+  else if(!adult&&f.smile>.35){mouth=f.smile>.75?'big-smile':'soft-smile';full=true}
   return {eye,mouth,eyeFade:.045,mouthFade:full?.16:.06};
 }
 /* ---------- measured data -> normalized canvas coordinates ---------- */
@@ -648,14 +679,14 @@ function faceDisplace(face,f,x,y,below){
   return [dx,dy];
 }
 
-const api={SIDE_GLANCES,warmMoment,TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIND,RESIDENTS,EXPRESSIONS,EXPRESSION_ART,EXPRESSION_REGION,GAIT,DURATION,
+const api={SIDE_GLANCES,SMILE_EXPRESSIONS,EXPRESSION_FALLBACK,warmMoment,TAU,DEG,CANVAS,BONES,PARENT,PIVOT,B,NB,ORIGINS,MIRROR,DOLL,OUTFIT_KIND,RESIDENTS,EXPRESSIONS,EXPRESSION_ART,EXPRESSION_REGION,GAIT,DURATION,
   views,rig,residentRig,toCanvas,expressionFor,expressionTargets,hashSeed,rand,noise,clamp,smooth,lerp,eventAt,
   restPose,copyPose,addPose,mixPose,localMatrix,forward,mul,apply,
   idlePose,blinkAt,talkPose,emotePose,envelope,walkPose,footPath,solveIK,cycleLength,walkSpeed,springStep,GAIT_FAST,gait,paceFor,
-  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,LONG_SLEEVES,RAISED_ARM_EMOTES,EMOTES,ARM_SAFE,ARM_SAFE_MAX,SLEEVES,sleevesOf:id=>SLEEVES[id]||'none',GENTLE,emoteFor,
+  mouthAt,faceDisplace,outfitKind:id=>OUTFIT_KIND[id]||'skirt',SKIRT_TOP,SKIRT_END,LONG_SLEEVES,RAISED_ARM_EMOTES,EMOTES,ARM_SAFE,ARM_SAFE_MAX,SLEEVES,sleevesOf:id=>SLEEVES[id]||'none',GENTLE,emoteFor,
   /* the rig of a view as dressed in an outfit (its own skirt line, canvas px) */
-  dressedRig(doll,view,outfit){const rg=rig(doll,view),y=SKIRT_TOP[outfit]?.[doll];if(y===undefined)return rg;
-    const srcView=view==='right'?'left':view;return {...rg,skirtTop:y+ORIGINS[doll][srcView][1]}}};
+  dressedRig(doll,view,outfit){const rg=rig(doll,view),y=SKIRT_TOP[outfit]?.[doll],e=SKIRT_END[outfit]?.[doll];if(y===undefined&&e===undefined)return rg;
+    const oy=ORIGINS[doll][view==='right'?'left':view][1];return {...rg,...(y!==undefined?{skirtTop:y+oy}:{}),...(e!==undefined?{skirtEnd:e+oy}:{})}}};
 root.HibiscusPuppetRig=api;
 if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
