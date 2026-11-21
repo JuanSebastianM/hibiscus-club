@@ -1120,11 +1120,13 @@ void main(){
       const load=s=>paintPortraitParts(s,!!opts.postcard).then(r=>r);
       p.ready=Promise.all([p.ready,load(shown).then(r=>{parts=r})]).then(([ok])=>ok,()=>{p.fail('backdrop');return false});
       p.setLookPortrait=(shot,v=view,emote)=>{
-        const next=normalShot(shot),same=lookKey(next,'x')===lookKey(shown,'x'),my=++token;
+        // the scenery, frame and sticker are not part of lookKey (the doll is the same): compare them too,
+        // or choosing a scenery would only show with the next change of clothes
+        const next=normalShot(shot),needParts=partsKey(next)!==partsKey(shown),same=!needParts&&lookKey(next,'x')===lookKey(shown,'x'),my=++token;
         const turnOnly=same&&v!==view;view=v;
         if(turnOnly){p.setView(v,true);if(emote)p.emote(emote);return}
         if(same){if(emote)p.emote(emote);return}
-        const needParts=partsKey(next)!==partsKey(shown);shown=next;
+        shown=next;
         (needParts?load(next):Promise.resolve(null)).then(r=>{if(my!==token||p.dead)return;if(r)parts=r;p.wantView=v;p.setLook(next,{view:v,emote});p.lastBack=null;kick()}).catch(e=>p.fail(e));
       };
       return p;
