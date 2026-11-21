@@ -319,10 +319,11 @@ test('painted rooms: eighteen backdrops, three per room, with sound measured geo
       const x = a[0] + (c[0] - a[0]) * (vy - a[1]) / (c[1] - a[1]);
       assert.ok(Math.abs(x - vx) < 3, `${tag}: side line misses the vanishing point by ${x - vx}`);
     }
-    // wide-angle paintings: a 6 m back wall indoors (7.5 m on the terraces), so a room reads as a room
-    assert.ok(b.scale > 0.45 && b.scale < 0.85, tag + ' scale ' + b.scale);
+    // human-scale paintings: the scale comes from a 2.0 m door or arch, or a 2.5 m ceiling, so the
+    // furniture's real-world sizes hold; the back walls were drawn about 3.5 m wide
+    assert.ok(b.scale > 0.85 && b.scale < 1.05, tag + ' scale ' + b.scale);
     const wallM = (br[0] - bl[0]) / (b.scale * 280);
-    assert.ok(wallM > 4.5 && wallM < 8, `${tag}: back wall ${wallM.toFixed(1)} m wide`);
+    assert.ok(wallM > 3.2 && wallM < 4.2, `${tag}: back wall ${wallM.toFixed(1)} m wide`);
     for (const z of b.wall) assert.ok(z[0] < z[2] && z[1] < z[3] && z[3] <= bl[1] && z[0] >= 0 && z[2] <= 1536, tag + ' wall zone');
     for (const o of b.openings) assert.ok(['window', 'door', 'arch', 'awning'].includes(o[4]) && o[0] < o[2] && o[1] < o[3], tag + ' opening');
     // a door at the back wall keeps the floor in front of it clear
@@ -357,12 +358,14 @@ test('painted rooms: every standing piece and rug stays on that room\'s floor, a
     // nothing reaches the picture's front edge: rugs end 30 px before it, standing pieces 24
     for (const id of rugs) assert.ok(L.box(L.constrain(piece(id, 768, 2000), b.id), b.id).b <= q[2][1] - 29.9, `${b.id} ${id}: rug cut off`);
     assert.ok(L.constrain(piece('armchair', 768, 2000), b.id).y <= q[2][1] - 23.9, b.id + ' front margin');
-    // sizes against the room: a bed a quarter to a third of the back wall, a bunk bed well under the door
+    // sizes against the room: the big pieces fit the back wall, and against the wall they stand
+    // under its door: the wardrobe (2 m with its top in view), the bunk bed and the Grown-up
     const wallW = q[1][0] - q[0][0], at = id => L.box(L.constrain(piece(id, 768, 0), b.id), b.id);
-    if (b.room !== 'patio') {
-      assert.ok(at('single-bed').w / wallW < 0.52 && at('sofa').w / wallW < 0.52 && at('bathtub').w / wallW < 0.4, `${b.id}: furniture too wide for the room`);
-      const door = b.openings.find(o => o[4] === 'door');
-      if (door) assert.ok(at('bunk-bed').h < (yb - door[1]) * 0.7, `${b.id}: the bunk bed is not well under the door`);
+    if (b.room !== 'patio') assert.ok(at('single-bed').w / wallW < 0.8 && at('sofa').w / wallW < 0.8 && at('bathtub').w / wallW < 0.6, `${b.id}: furniture too wide for the room`);
+    const door = b.openings.find(o => o[4] === 'door' || o[4] === 'arch'), sB = L.geo(b.id).sB;
+    if (door) for (const id of ['wardrobe', 'bunk-bed', '@adult']) {
+      const it = L.item(id), h = it.height * it.anchor[1] * it.defaultScale * sB;
+      assert.ok(h <= (yb - door[1]) * 1.0, `${b.id}: ${id} ${h.toFixed(0)} px taller than the door ${yb - door[1]}`);
     }
   }
 });
