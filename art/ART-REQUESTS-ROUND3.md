@@ -46,8 +46,8 @@ Attach: `art/source/base-adult-turnaround.webp`, `art/source/base-little-turnaro
 
 **Status:** the Grown-up files were delivered and their size and position are exactly right, but
 they are the old small picture enlarged about 3.2 times: at 100 % zoom the face, skin and outline
-are soft and stair-stepped. Please redo them with block A2 below. The Little Me files are still
-missing.
+are soft and stair-stepped. Please redo them with block A2 below. The Little Me files were not
+delivered: block A3 below is a standalone prompt for them.
 
 Deliver eight files, each **1536 x 3072 px**, transparent, one view per file, the doll centred,
 the top of the head 150 px from the top edge and the soles of the feet 150 px from the bottom
@@ -59,23 +59,42 @@ edge in every view:
 "Left" means she faces the left edge of the picture; "right" means she faces the right edge.
 The four views of one doll must be the same height and the same person.
 
-### A2. Redo of the base dolls with real detail
+### A2. Redo of the Grown-up base doll with real detail
 
-Attach: the delivered `base-adult-*.png` files (they fix the exact size, pose and position) and
-the two turnaround sheets (they fix the character).
+Attach: the four delivered `base-adult-*.png` files (they fix the exact size, pose and position)
+and `art/source/base-adult-turnaround.webp` (it fixes the character).
 
-Repaint each base doll with real detail at this size. Do not enlarge or upscale the attached
-picture: paint it again at full resolution.
+Repaint the Grown-up base doll with real detail at this size, in all four views. Do not enlarge
+or upscale the attached picture: paint it again at full resolution.
 
 - At 100 % zoom there must be no stair-stepped outline, no blocky pixels and no blur: crisp
   eyelashes, irises with a highlight, individual eyebrow hairs, lip texture, fingernails, toes,
   skin shading with smooth gradients, a clean anti-aliased outline.
 - Keep exactly the same silhouette, pose, proportions, face, skin tone, bodysuit and position on
   the canvas as the attached files. Laid over them, the outlines must coincide.
-- Same file names and sizes as above, for both dolls (Little Me: same method from her turnaround
-  sheet; head top 150 px from the top edge, soles 150 px from the bottom edge).
+- Deliver `base-adult-front.png`, `base-adult-left.png`, `base-adult-right.png`,
+  `base-adult-back.png`, each 1536 x 3072 px, transparent.
 
-## B. Pilot: three dressed dolls (do this before block C)
+### A3. Little Me base doll (not delivered yet)
+
+Attach: `art/source/base-little-turnaround.webp` (it fixes the character) and one finished
+`base-adult-front.png` from block A2 (it shows the level of detail and the canvas).
+
+Paint the Little Me base doll (the toddler in the turnaround sheet) at full resolution with real
+detail, in all four views. Same character, same face, same toddler proportions, same pose (standing
+straight, arms slightly away from the body, hands relaxed), same simple bodysuit and bald head as
+in her turnaround sheet, same lighting. Keep her age-appropriate.
+
+- Same quality bar as block A2: nothing stair-stepped, blocky or blurred at 100 % zoom.
+- Each file 1536 x 3072 px, transparent, one view per file, the doll centred, the top of her head
+  150 px from the top edge and the soles of her feet 150 px from the bottom edge. She fills the
+  canvas height like the Grown-up does; the game scales her down itself.
+- "Left" means she faces the left edge of the picture; "right" means she faces the right edge.
+  The four views must be the same height and the same child.
+- Deliver `base-little-front.png`, `base-little-left.png`, `base-little-right.png`,
+  `base-little-back.png`.
+
+## B. Pilot: three dressed dolls, Grown-up only (do this before block C)
 
 Attach: the four `base-adult-*.png` files from block A, plus the reference for each outfit:
 `art/source/pack2/03-outfits/` sheet cell or the cropped card from `dist/assets/wear/`.
