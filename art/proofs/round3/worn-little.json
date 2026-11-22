@@ -1,0 +1,384 @@
+{
+ "reg": {
+  "front": {
+   "a": 3.25718,
+   "b": [
+    111.7,
+    130.45
+   ],
+   "regions": {
+    "head": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "neck": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "shoulders": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "hands-l": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.09
+    },
+    "hands-r": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "knees": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "ankles": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "feet": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "headScale": 1.0001
+   }
+  },
+  "left": {
+   "a": 3.25765,
+   "b": [
+    427.58,
+    133.58
+   ],
+   "regions": {
+    "head": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "neck": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "shoulders": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "hands-l": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "knees": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "ankles": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "feet": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.09
+    },
+    "headScale": 1.0004
+   }
+  },
+  "right": {
+   "a": 3.25755,
+   "b": [
+    425.45,
+    133.63
+   ],
+   "regions": {
+    "head": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "neck": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "shoulders": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "hands-l": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "knees": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "ankles": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "feet": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "headScale": 1.0
+   }
+  },
+  "back": {
+   "a": 3.25721,
+   "b": [
+    111.67,
+    130.45
+   ],
+   "regions": {
+    "head": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "neck": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "shoulders": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "hands-l": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.09
+    },
+    "hands-r": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.09
+    },
+    "knees": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "ankles": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "feet": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "headScale": 1.0001
+   }
+  }
+ },
+ "entries": {
+  "dino-romper": {
+   "front": {
+    "src": "assets/worn/little-dino-romper-front.webp",
+    "mask": "assets/worn/little-dino-romper-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     396,
+     856
+    ],
+    "bytes": 60614,
+    "maskBytes": 4786,
+    "k": 1
+   },
+   "left": {
+    "src": "assets/worn/little-dino-romper-left.webp",
+    "mask": "assets/worn/little-dino-romper-left-mask.webp",
+    "at": [
+     3,
+     3
+    ],
+    "size": [
+     203,
+     856
+    ],
+    "bytes": 36712,
+    "maskBytes": 5146,
+    "k": 1
+   },
+   "right": {
+    "src": "assets/worn/little-dino-romper-right.webp",
+    "mask": "assets/worn/little-dino-romper-right-mask.webp",
+    "at": [
+     3,
+     3
+    ],
+    "size": [
+     202,
+     855
+    ],
+    "bytes": 37130,
+    "maskBytes": 5118,
+    "k": 1
+   },
+   "back": {
+    "src": "assets/worn/little-dino-romper-back.webp",
+    "mask": "assets/worn/little-dino-romper-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     396,
+     856
+    ],
+    "bytes": 58220,
+    "maskBytes": 4242,
+    "k": 1
+   }
+  },
+  "rainbow-tutu-tee": {
+   "front": {
+    "src": "assets/worn/little-rainbow-tutu-tee-front.webp",
+    "mask": "assets/worn/little-rainbow-tutu-tee-front-mask.webp",
+    "at": [
+     4,
+     4
+    ],
+    "size": [
+     395,
+     856
+    ],
+    "bytes": 52246,
+    "maskBytes": 5804,
+    "k": 1
+   },
+   "left": {
+    "src": "assets/worn/little-rainbow-tutu-tee-left.webp",
+    "mask": "assets/worn/little-rainbow-tutu-tee-left-mask.webp",
+    "at": [
+     -64,
+     3
+    ],
+    "size": [
+     338,
+     855
+    ],
+    "bytes": 36726,
+    "maskBytes": 6098,
+    "k": 1
+   },
+   "right": {
+    "src": "assets/worn/little-rainbow-tutu-tee-right.webp",
+    "mask": "assets/worn/little-rainbow-tutu-tee-right-mask.webp",
+    "at": [
+     -64,
+     3
+    ],
+    "size": [
+     336,
+     855
+    ],
+    "bytes": 37012,
+    "maskBytes": 6474,
+    "k": 1
+   },
+   "back": {
+    "src": "assets/worn/little-rainbow-tutu-tee-back.webp",
+    "mask": "assets/worn/little-rainbow-tutu-tee-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     396,
+     856
+    ],
+    "bytes": 51420,
+    "maskBytes": 5392,
+    "k": 1
+   }
+  }
+ },
+ "thumbs": {
+  "dino-romper": "assets/worn/thumbs/little-dino-romper.webp",
+  "rainbow-tutu-tee": "assets/worn/thumbs/little-rainbow-tutu-tee.webp"
+ }
+}

@@ -121,9 +121,9 @@ const sheets={
   async one(){heading('One');await tile(q.get('label')||'look',L(dolls[0],extra),{...opt,view:q.get('view')||'front'})},
   /* worn: the round 3 pilot (dist/worn.js), each outfit with dressed-doll art on the old path and worn, four
      views, composed at 2x (scale=1 shows them at full resolution); look={...} adds hair, shoes, accessories */
-  async worn(){const wanted=/[?&]worn=1\b/.test(location.search),[x,y,w,h]=[60,100,480,940];
-    for(const id of Object.keys(WORN_DATA.adult))if(want(id)){heading('Worn pilot · '+id+' · old path, then worn');
-      for(const on of [false,true]){Worn.setEnabled(on);for(const v of CATALOG.views){const c=await composeDoll(L('adult',{outfit:id,...extra}),v,2);
+  async worn(){const wanted=Worn.mode(),[x,y,w,h]=[60,100,480,940];
+    for(const d of dolls)for(const id of Object.keys(WORN_DATA[d]||{}))if(want(id)){heading('Worn · '+d+' · '+id+' · old path, then worn');
+      for(const on of [false,true]){Worn.setEnabled(on);for(const v of CATALOG.views){const c=await composeDoll(L(d,{outfit:id,...extra}),v,2);
         const t=document.createElement('canvas');t.width=w*2*scale;t.height=h*2*scale;const g=t.getContext('2d');g.fillStyle=q.get('bg')||'#cfe6d4';g.fillRect(0,0,t.width,t.height);
         g.imageSmoothingQuality='high';g.drawImage(c,x*2,y*2,w*2,h*2,0,0,t.width,t.height);
         const f=document.createElement('figure'),cap=document.createElement('figcaption');cap.textContent=(on?'worn ':'old ')+v;f.append(t,cap);section.append(f)}}}
