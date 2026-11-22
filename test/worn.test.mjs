@@ -1,7 +1,8 @@
 // Run with `node --test` from the repository root (Node 18+, no packages).
-// Dressed dolls in high resolution (round 3 pilot, dist/worn.js, dist/worn-data.js, art/build_worn.py):
-// the art and masks on disk at the size the data says, the registration of the new base to the old one,
-// every pilot outfit resolving in all four views behind the flag, and the old path when art is missing.
+// Dressed dolls in high resolution (round 3, dist/worn.js, dist/worn-data.js, art/build_worn.py): the art,
+// masks and no-arm side views on disk at the size the data says, the registration of each doll's new base
+// to the old one, the approved outfits on by default in all four views (?worn=0 turns them off, ?worn=1
+// shows every worn picture), and the old path when art is missing.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
@@ -12,6 +13,10 @@ const dist = new URL('dist/', root);
 const read = name => readFileSync(new URL(name, dist), 'utf8');
 const VIEWS = ['front', 'left', 'right', 'back'];
 const PILOT = ['tennis-dress', 'denim-jacket-skirt', 'crochet-cover-up'];
+// Little Me: the two Gemini outfits taken (the GPT base reduced to 512 x 1024, shipped at 1 px per doll px)
+const LITTLE = ['dino-romper', 'rainbow-tutu-tee'];
+const OUTFITS = { adult: PILOT, little: LITTLE };
+const HEIGHT = { adult: 873, little: 863 };
 
 function wornData() {
   const ctx = {};
@@ -29,7 +34,7 @@ function webpSize(buf) {
   return [buf.readUInt16LE(26) & 0x3fff, buf.readUInt16LE(28) & 0x3fff];
 }
 /* worn.js with the renderer it calls stubbed: `fail` makes every picture fail to load. */
-function loadWorn({ search = '?worn=1', fail = false } = {}) {
+function loadWorn({ search = '', fail = false } = {}) {
   const lru = () => { const m = new Map(); return { get: k => m.get(k), set: (k, v) => (m.set(k, v), v), clear: () => m.clear() } };
   const ctx = {
     location: { search }, console: { warn() {} },
@@ -46,34 +51,42 @@ function loadWorn({ search = '?worn=1', fail = false } = {}) {
   return ctx.Worn;
 }
 
-test('the pilot art is on disk at the size worn-data.js gives, with a garment mask, for all four views', () => {
+test('the worn art is on disk at the size worn-data.js gives, with a garment mask, for all four views', () => {
   const D = wornData();
   assert.equal(D.scale, 2);
-  assert.deepEqual(Object.keys(D.adult).sort(), [...PILOT].sort());
-  for (const id of PILOT) for (const view of VIEWS) {
-    const e = D.adult[id][view];
+  for (const doll of ['adult', 'little']) {
+  assert.deepEqual(Object.keys(D[doll]).sort(), [...OUTFITS[doll]].sort());
+  for (const id of OUTFITS[doll]) for (const view of VIEWS) {
+    const e = D[doll][id][view], k = e.k || D.scale;
     assert.ok(e, `${id} ${view}`);
     for (const f of [e.src, e.mask]) assert.ok(existsSync(new URL(f, dist)), f);
+    if (doll === 'adult' && (view === 'left' || view === 'right')) {
+      assert.ok(e.noarm && existsSync(new URL(e.noarm, dist)), `${id} ${view} no-arm garment`);
+      assert.deepEqual(webpSize(readFileSync(new URL(e.noarm, dist))), [...e.size], `${id} ${view} no-arm size`);
+    }
     const [w, h] = webpSize(readFileSync(new URL(e.src, dist)));
-    assert.deepEqual([w, h], [e.size[0] * D.scale, e.size[1] * D.scale], `${id} ${view} picture size`);
+    assert.deepEqual([w, h], [e.size[0] * k, e.size[1] * k], `${id} ${view} picture size`);
     assert.deepEqual(webpSize(readFileSync(new URL(e.mask, dist))), [...e.size], `${id} ${view} mask size`);
     // the picture covers the old base doll (397 x 873 front and back, about 182 wide from the side)
-    assert.ok(e.at[1] <= 8 && e.at[1] + e.size[1] >= 865, `${id} ${view} head to feet`);
+    assert.ok(e.at[1] <= 8 && e.at[1] + e.size[1] >= HEIGHT[doll] - 10, `${id} ${view} head to feet`);
+    assert.ok(existsSync(new URL(D.thumbs[doll][id], dist)), `${id} card picture`);
+  }
   }
 });
 
 test('the delivered sources are kept losslessly in art/source/round3', () => {
   for (const view of VIEWS) {
-    assert.ok(existsSync(new URL(`art/source/round3/base-adult-${view}.webp`, root)), `base ${view}`);
+    for (const doll of ['adult', 'little']) assert.ok(existsSync(new URL(`art/source/round3/base-${doll}-${view}.webp`, root)), `base ${doll} ${view}`);
     for (const id of PILOT) assert.ok(existsSync(new URL(`art/source/round3/worn-adult-${id}-${view}.webp`, root)), `${id} ${view}`);
   }
+  for (const id of PILOT) for (const view of ['left', 'right'])
+    assert.ok(existsSync(new URL(`art/source/round3/worn-adult-${id}-${view}-noarm.webp`, root)), `${id} ${view} noarm`);
 });
 
-test('the new base registers to the old one: one scale, and every region within half a doll pixel', () => {
-  const reg = wornData().reg.adult;
-  for (const view of VIEWS) {
-    const r = reg[view];
-    assert.ok(r.a > 3.1 && r.a < 3.3, `${view} scale ${r.a}`);
+test('each doll\'s new base registers to her old one: one scale, and every region within half a doll pixel', () => {
+  for (const doll of ['adult', 'little']) for (const view of VIEWS) {
+    const r = wornData().reg[doll][view];
+    assert.ok(r.a > 3.1 && r.a < 3.3, `${doll} ${view} scale ${r.a}`);
     assert.ok(Math.abs(r.regions.headScale - 1) < .01, `${view} head scale ${r.regions.headScale}`);
     for (const [name, m] of Object.entries(r.regions)) {
       if (name === 'headScale') continue;
@@ -83,8 +96,9 @@ test('the new base registers to the old one: one scale, and every region within 
   }
 });
 
-test('behind ?worn=1 the pilot outfits resolve in every view; without it, and for other outfits, the old path', () => {
-  const on = loadWorn(), off = loadWorn({ search: '' });
+test('the approved outfits are worn by default in every view; ?worn=0 is the old path; other outfits the old path', () => {
+  const on = loadWorn(), off = loadWorn({ search: '?worn=0' }), all = loadWorn({ search: '?worn=1' });
+  for (const id of PILOT) for (const view of VIEWS) assert.ok(all.use({ doll: 'adult', outfit: id }, view), `?worn=1 ${id} ${view}`);
   for (const id of PILOT) for (const view of VIEWS) {
     assert.ok(on.use({ doll: 'adult', outfit: id }, view), `${id} ${view}`);
     assert.equal(off.use({ doll: 'adult', outfit: id }, view), null);
@@ -95,6 +109,8 @@ test('behind ?worn=1 the pilot outfits resolve in every view; without it, and fo
   assert.equal(off.portraitScale({ doll: 'adult', outfit: 'tennis-dress' }), 1);
   assert.equal(on.use({ doll: 'adult', outfit: 'hibiscus-flares' }, 'front'), null);
   assert.equal(on.use({ doll: 'little', outfit: 'tennis-dress' }, 'front'), null);
+  for (const id of LITTLE) for (const view of VIEWS) assert.ok(on.use({ doll: 'little', outfit: id }, view), `little ${id} ${view}`);
+  assert.equal(on.portraitScale({ doll: 'little', outfit: 'dino-romper' }), 1, 'a 1x delivery keeps the 1x canvas');
 });
 
 test('when the worn picture cannot load, that outfit and view go back to the old path (never a bald doll)', async () => {

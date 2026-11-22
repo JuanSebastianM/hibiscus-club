@@ -1,0 +1,441 @@
+{
+ "reg": {
+  "front": {
+   "a": 3.22002,
+   "b": [
+    129.94,
+    130.52
+   ],
+   "regions": {
+    "head": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "neck": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "shoulders": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "hands-l": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "hands-r": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "knees": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "ankles": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "feet": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.09
+    },
+    "headScale": 1.0
+   }
+  },
+  "left": {
+   "a": 3.21912,
+   "b": [
+    474.54,
+    137.27
+   ],
+   "regions": {
+    "head": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "neck": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "shoulders": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "hands-l": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "knees": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "ankles": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "feet": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "headScale": 0.9996
+   }
+  },
+  "right": {
+   "a": 3.21962,
+   "b": [
+    474.53,
+    137.09
+   ],
+   "regions": {
+    "head": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "neck": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "shoulders": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.06
+    },
+    "hands-l": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "knees": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "ankles": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "feet": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "headScale": 0.9996
+   }
+  },
+  "back": {
+   "a": 3.22606,
+   "b": [
+    127.64,
+    127.75
+   ],
+   "regions": {
+    "head": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "neck": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "shoulders": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.08
+    },
+    "hands-l": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.09
+    },
+    "hands-r": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "knees": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "ankles": {
+     "shift": [
+      0.0,
+      0.0
+     ],
+     "edge": 0.07
+    },
+    "feet": {
+     "shift": [
+      0.0,
+      0.25
+     ],
+     "edge": 0.11
+    },
+    "headScale": 1.0
+   }
+  }
+ },
+ "entries": {
+  "crochet-cover-up": {
+   "front": {
+    "src": "assets/worn/adult-crochet-cover-up-front.webp",
+    "mask": "assets/worn/adult-crochet-cover-up-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 167802,
+    "maskBytes": 5554
+   },
+   "left": {
+    "src": "assets/worn/adult-crochet-cover-up-left.webp",
+    "mask": "assets/worn/adult-crochet-cover-up-left-mask.webp",
+    "at": [
+     4,
+     1
+    ],
+    "size": [
+     191,
+     867
+    ],
+    "bytes": 135730,
+    "maskBytes": 5318,
+    "noarm": "assets/worn/adult-crochet-cover-up-left-noarm.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-crochet-cover-up-right.webp",
+    "mask": "assets/worn/adult-crochet-cover-up-right-mask.webp",
+    "at": [
+     -14,
+     2
+    ],
+    "size": [
+     203,
+     865
+    ],
+    "bytes": 139844,
+    "maskBytes": 5488,
+    "noarm": "assets/worn/adult-crochet-cover-up-right-noarm.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-crochet-cover-up-back.webp",
+    "mask": "assets/worn/adult-crochet-cover-up-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     865
+    ],
+    "bytes": 163172,
+    "maskBytes": 5498
+   }
+  },
+  "denim-jacket-skirt": {
+   "front": {
+    "src": "assets/worn/adult-denim-jacket-skirt-front.webp",
+    "mask": "assets/worn/adult-denim-jacket-skirt-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 159356,
+    "maskBytes": 7758
+   },
+   "left": {
+    "src": "assets/worn/adult-denim-jacket-skirt-left.webp",
+    "mask": "assets/worn/adult-denim-jacket-skirt-left-mask.webp",
+    "at": [
+     3,
+     1
+    ],
+    "size": [
+     194,
+     867
+    ],
+    "bytes": 106884,
+    "maskBytes": 3938,
+    "noarm": "assets/worn/adult-denim-jacket-skirt-left-noarm.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-denim-jacket-skirt-right.webp",
+    "mask": "assets/worn/adult-denim-jacket-skirt-right-mask.webp",
+    "at": [
+     -11,
+     2
+    ],
+    "size": [
+     195,
+     865
+    ],
+    "bytes": 105484,
+    "maskBytes": 3720,
+    "noarm": "assets/worn/adult-denim-jacket-skirt-right-noarm.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-denim-jacket-skirt-back.webp",
+    "mask": "assets/worn/adult-denim-jacket-skirt-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     865
+    ],
+    "bytes": 158150,
+    "maskBytes": 7126
+   }
+  },
+  "tennis-dress": {
+   "front": {
+    "src": "assets/worn/adult-tennis-dress-front.webp",
+    "mask": "assets/worn/adult-tennis-dress-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 121106,
+    "maskBytes": 4676
+   },
+   "left": {
+    "src": "assets/worn/adult-tennis-dress-left.webp",
+    "mask": "assets/worn/adult-tennis-dress-left-mask.webp",
+    "at": [
+     -2,
+     1
+    ],
+    "size": [
+     195,
+     867
+    ],
+    "bytes": 89122,
+    "maskBytes": 4480,
+    "noarm": "assets/worn/adult-tennis-dress-left-noarm.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-tennis-dress-right.webp",
+    "mask": "assets/worn/adult-tennis-dress-right-mask.webp",
+    "at": [
+     -11,
+     2
+    ],
+    "size": [
+     194,
+     865
+    ],
+    "bytes": 88544,
+    "maskBytes": 4502,
+    "noarm": "assets/worn/adult-tennis-dress-right-noarm.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-tennis-dress-back.webp",
+    "mask": "assets/worn/adult-tennis-dress-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     865
+    ],
+    "bytes": 112030,
+    "maskBytes": 4198
+   }
+  }
+ },
+ "thumbs": {
+  "crochet-cover-up": "assets/worn/thumbs/adult-crochet-cover-up.webp",
+  "denim-jacket-skirt": "assets/worn/thumbs/adult-denim-jacket-skirt.webp",
+  "tennis-dress": "assets/worn/thumbs/adult-tennis-dress.webp"
+ }
+}

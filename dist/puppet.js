@@ -697,6 +697,7 @@ const HibiscusPuppet=(()=>{
       g.globalCompositeOperation='destination-in';g.drawImage(sheet,sx,sy,cw*k,ch*k,0,0,cw,ch);
       const v=mk(piece.canvas.width,piece.canvas.height),vg=v.getContext('2d');vg.drawImage(piece.canvas,0,0);vg.imageSmoothingQuality='high';
       vg.save();vg.beginPath();vg.rect(0,0,v.width,v.height);vg.clip();
+      const ks=piece.canvas.width/piece.box[2];if(ks!==1)vg.scale(ks,ks); // worn.js: a sharper head piece (k x)
       if(right){vg.translate(px-bx+cw,py-by);vg.scale(-1,1)}else vg.translate(px-bx,py-by);
       vg.drawImage(c,0,0);vg.restore();
       out[name]=v;

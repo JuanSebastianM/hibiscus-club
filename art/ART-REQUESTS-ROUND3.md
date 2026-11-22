@@ -18,6 +18,34 @@ Head, hair, face, shoes and accessories stay separate layers as today.
 
 Do the **pilot (block B)** first. If the pilot looks right in the game, do the rest (block C).
 
+## Status (after the second delivery)
+
+- **Done and in the game:** blocks A2 and A3 (both base dolls, with real detail) and block B (the
+  three Grown-up pilot outfits, with the no-arm side views). Two Little Me outfits from a second
+  image model (dino romper, rainbow tutu tee) are also in the game, at the old resolution.
+- **Next, in this order:** block C for the Grown-up, block C for Little Me, block E (faces),
+  block F (hair), block D (shoes).
+- **Use the image model that edits the base picture in place** (the one that produced blocks A
+  and B). The other model redrew the child for each picture, in three different canvas sizes, so
+  seven of its nine outfits could not be used.
+
+### Rules learned from the deliveries (they apply to every block below)
+
+- **Edit the base file, never redraw the doll.** Head, hands, legs and feet must stay identical
+  to the base file, pixel for pixel, and the canvas must stay 1536 x 3072.
+- **Never paste a piece of the base picture over clothing.** A cap sleeve covers the shoulder all
+  the way round. Where a hand hangs in front of a skirt, the skirt stays intact around the
+  fingers: no wedge of skin, no dark line at the wrist.
+- **Fully opaque body:** alpha 255 inside the figure, 0 outside. No black or coloured background.
+- **State hem lengths against the body:** skirts and dresses end about 60 % of the way from the
+  crotch to the knee unless the block says otherwise. (The pilot denim skirt came out at 35 %.)
+- **No-arm side views are the same picture minus the arm:** identical pleats, hem, folds and
+  outline, with only the near arm (and its sleeve) removed and the clothing behind it painted in.
+  Deliver a short sleeve of the near arm as its own file, `...-left-sleeve.png` /
+  `...-right-sleeve.png`, same canvas.
+- **Hoods:** deliver hooded outfits with the hood down, lying on the back, plus the separate
+  hood-up layer described in block C.
+
 ## Shared rules (paste before every block)
 
 You are producing art for a 2D paper-doll dress-up game. Hard requirements:
@@ -132,7 +160,7 @@ Extra files that make the animation cleaner, for every outfit: in the **left and
 also deliver the same picture **without the near arm** (the arm closest to the camera removed, the
 clothing behind it painted in), same canvas, named `...-left-noarm.png` and `...-right-noarm.png`.
 
-## C. The rest of the wardrobe (only after the pilot is approved)
+## C. The rest of the wardrobe (next)
 
 Same method as block B, four files per outfit, named
 `worn-{adult|little}-{outfit-id}-{front,left,right,back}.png`. Outfit ids and reference pictures
@@ -162,3 +190,32 @@ For each pair, edit the four base views so she wears the shoes and nothing else 
 not needed: deliver full-canvas files named `shoes-{adult|little}-{shoe-id}-{view}.png`. The foot
 sits inside the shoe: sole under the foot, straps over it, the ankle entering the shoe opening.
 Heels lift the heel of the foot; the toes stay on the ground line.
+
+## E. Faces on the new base dolls (after block C)
+
+Attach: `base-adult-front.png`, `base-adult-left.png` (and the Little Me ones for her set), plus
+the current expression sheets as the list of expressions: `art/source/pack2/02-faces/` and
+`art/source/round2/talking-mouths/`.
+
+The game swaps the face for blinks, talking and laughing. Those faces were drawn on the old, soft
+doll, so they look smoother than the new detailed face. Redraw each expression **as an edit of
+the base file**: same canvas, same head, only the eyes, brows, mouth and cheeks change. Nothing
+below the chin changes.
+
+- Per doll, front view and left view (the game mirrors left to get right).
+- Expressions: eyes closed (blink); mouth shapes "eh", "oh", "ah" on a neutral face; the same
+  three on a smiling face; smiling with closed mouth; big smile; laugh with eyes squeezed;
+  surprised.
+- File names `face-{adult|little}-{front|left}-{expression}.png`, e.g.
+  `face-adult-front-blink.png`.
+
+## F. Hair on the new base dolls (after block E)
+
+Attach: the four base files of the doll and the current hair sheets (`art/source/pack2/01-hair/`,
+`art/source/round2/hairstyles/`) as the designs.
+
+For each hairstyle, edit the four base views so she wears the hair and nothing else changes: same
+canvas, the face stays fully open, the hair grows from the hairline with no gap at the temples or
+ears. Also deliver each view as **hair only** on a transparent canvas (same size and position),
+named `hair-{adult|little}-{style-id}-{view}.png`, so the game can recolour it. Natural dark
+brown; the game applies the other colours.
