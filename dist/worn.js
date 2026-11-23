@@ -24,7 +24,7 @@ const Worn=(()=>{
   /* Which worn art is used: ON lists, per doll and outfit, the views judged clearly better than the flat
      outfit (they are used by default); ?worn=1 uses every worn picture there is (review), ?worn=0 none. */
   const ALL4=['front','left','right','back'];
-  const ON={adult:{'tennis-dress':ALL4,'denim-jacket-skirt':ALL4,'crochet-cover-up':ALL4},little:{'dino-romper':ALL4,'rainbow-tutu-tee':ALL4}};
+  const ON={adult:{'tennis-dress':ALL4,'denim-jacket-skirt':ALL4,'crochet-cover-up':ALL4,'hibiscus-flares':ALL4},little:{'dino-romper':ALL4,'rainbow-tutu-tee':ALL4}};
   const q=typeof location!=='undefined'?location.search:'';
   let mode=/[?&]worn=1\b/.test(q)?'all':/[?&]worn=0\b/.test(q)?'off':'default';
   let on=mode!=='off';
@@ -69,8 +69,13 @@ const Worn=(()=>{
       const [img,mask]=await Promise.all([asset(e.src),tinted?asset(e.mask):null]);
       const c=makeCanvas(img.naturalWidth,img.naturalHeight),g=ctx2d(c);g.drawImage(img,0,0);
       if(tinted){ // the colourway on the garment only (skin, lips and eyes stay)
-        const t=tintCanvas(c,tint),tg=t.getContext('2d');
+        const t=tintCanvas(c,tint),tg=ctx2d(t);
         tg.globalCompositeOperation='destination-in';tg.imageSmoothingQuality='high';tg.drawImage(mask,0,0,t.width,t.height);
+        // never the skin: a mask can take in skin where the base had bodysuit (an off-shoulder neckline), and
+        // a red or pink colourway's hue range reaches skin tones
+        const ti=tg.getImageData(0,0,t.width,t.height),td=ti.data,od=g.getImageData(0,0,c.width,c.height).data;
+        for(let i=0;i<td.length;i+=4){if(!td[i+3])continue;const r=od[i],gg=od[i+1],b=od[i+2];if(r>gg&&gg>b&&r>90&&(gg-b)>(r-gg)*.35&&(r-b)>40)td[i+3]=0}
+        tg.putImageData(ti,0,0);
         g.drawImage(t,0,0);
       }
       const dv=dollView(shot.doll,view),[ax,ay]=e.at;
@@ -155,6 +160,24 @@ const Worn=(()=>{
     });
   }
 
+  /* Trousers that reach the floor: the garment below the knees (the worn picture as delivered, its mask),
+     drawn again over the shoes, so the hem lies over the shoe as on the flat path for trousers (the feet
+     inside the shoes are fitted on the body picture, which also trims the hem; this puts it back). null
+     when the garment stops above the knees (skirts, shorts). */
+  function hemLayer(shot,view,e,body){
+    const k=e.k||data().scale,[,ay]=e.at,cut=KNEE[shot.doll]||640;
+    return memo(cache,['hem',bodyKey(shot,view),shot.outfitTint].join('|'),async()=>{
+      const mask=await asset(e.mask),W=body.width,H=body.height,y0=Math.max(0,Math.round((cut-ay)*k));
+      const m=makeCanvas(W,H),mg=ctx2d(m);mg.drawImage(mask,0,0,W,H);
+      const md=mg.getImageData(0,y0,W,H-y0).data;let any=0;for(let i=3;i<md.length;i+=4)if(md[i]>128){any++;if(any>W)break}
+      if(any<=W)return null; // nothing of the garment below the knees
+      const c=makeCanvas(W,H),g=c.getContext('2d');g.drawImage(body,0,0);g.globalCompositeOperation='destination-in';g.drawImage(m,0,0);
+      g.globalCompositeOperation='destination-out';g.fillRect(0,0,W,y0);
+      return c;
+    });
+  }
+  const KNEE={adult:640,little:700}; // doll-local y just above the knees
+
   /* ---------- the puppet's split (composeDollLayers) ---------- */
   /* The puppet cuts the doll into pieces by layer (puppet.js), so the worn picture is handed over as the
      layers of the old path: body = the worn picture outside the garment (her new head, face and limbs) and,
@@ -167,7 +190,12 @@ const Worn=(()=>{
      picture (lab.diff). */
   async function splitLayers(shot,view,e,shoes,draw,sharp=config.sharpPuppet){
     const D=DOLL_CANVAS,doll=shot.doll,dv=dollView(doll,view),[ox,oy]=dv.origin,[ax,ay]=e.at,[sw,sh]=e.size;
-    const [mask,old,noarm]=await Promise.all([asset(e.mask),bodyLayer(shot,view),e.noarm&&sideView(view)?asset(e.noarm).catch(()=>null):null]);
+    let [mask,old,noarm,sleeveArt]=await Promise.all([asset(e.mask),bodyLayer(shot,view),e.noarm&&sideView(view)?asset(e.noarm).catch(()=>null):null,
+      e.sleeve&&sideView(view)?asset(e.sleeve).catch(()=>null):null]);
+    // the colourway on the garment-only pictures too (all of them is garment)
+    const tint=(catalogItem(shot.outfit).tints||[]).find(t=>t.id===shot.outfitTint);
+    const tinted=img=>{if(!img||!tint||tint.id==='original')return img;const c=makeCanvas(img.naturalWidth||img.width,img.naturalHeight||img.height);c.getContext('2d').drawImage(img,0,0);return tintCanvas(c,tint)};
+    const rawNoarm=noarm;noarm=tinted(noarm);sleeveArt=tinted(sleeveArt);
     const oldPic=shoes?fitFeet(old,shoes,catalogItem(shot.shoes).fit[doll][view],dv,doll):old;
     const full=makeCanvas(D.width,D.height),fg=full.getContext('2d');fg.imageSmoothingQuality='high';draw(fg);
     const m=makeCanvas(D.width,D.height),mg=ctx2d(m);mg.imageSmoothingQuality='high';mg.drawImage(mask,ox+ax,oy+ay,sw,sh);
@@ -176,24 +204,40 @@ const Worn=(()=>{
     const hard=makeCanvas(D.width,D.height),hg=ctx2d(hard),hi=hg.createImageData(D.width,D.height);
     for(let i=3;i<md.length;i+=4)if(md[i]>=250)hi.data[i]=255;
     hg.putImageData(hi,0,0);
-    const rest=makeCanvas(D.width,D.height),rg0=rest.getContext('2d');rg0.drawImage(full,0,0);rg0.globalCompositeOperation='destination-out';rg0.drawImage(hard,0,0);
+    let rest=makeCanvas(D.width,D.height),rg0=rest.getContext('2d');rg0.drawImage(full,0,0);rg0.globalCompositeOperation='destination-out';rg0.drawImage(hard,0,0);
     // only inside the old body's outline: the puppet's pieces are cut by labels measured on it, so a rim
     // of a slightly wider redrawn limb would stay behind when the limb moves
     rg0.globalCompositeOperation='destination-in';rg0.drawImage(oldPic,ox,oy);
-    const body=makeCanvas(D.width,D.height),bg=body.getContext('2d');bg.drawImage(oldPic,ox,oy);bg.drawImage(rest,0,0);
+    {const ri=ctx2d(rest).getImageData(0,0,D.width,D.height),rd0=ri.data;for(let i=3;i<rd0.length;i+=4)if(rd0[i]<230)rd0[i]=0;ctx2d(rest).putImageData(ri,0,0)} // its soft rim too: the old body's own rim (under it) matches the labels
+    // (and the old body only inside the worn figure's outline: a garment can be slimmer than the bald body,
+    // close-fitting jeans for one, and the body round it must not show)
+    const body=makeCanvas(D.width,D.height),bg=body.getContext('2d');bg.drawImage(oldPic,ox,oy);bg.globalCompositeOperation='destination-in';bg.drawImage(full,0,0);bg.globalCompositeOperation='source-over';bg.drawImage(rest,0,0);
     const outfit=makeCanvas(D.width,D.height),og=outfit.getContext('2d');og.drawImage(full,0,0);og.globalCompositeOperation='destination-in';og.drawImage(m,0,0);
     const out=[{kind:'body',canvas:body},{kind:'outfit',canvas:outfit}];
     if(sideView(view)&&dv.arm){
       // the garment behind the near arm: the worn picture has none (the arm is painted over it), so each
-      // row's run under the arm (its polygon, grown 3 px) that has garment on both sides is filled with the
+      // row's run under the arm (its polygon, grown 5 px) that has garment on both sides is filled with the
       // fabric beside it (mirrored, cross-faded), so a swinging arm uncovers fabric, not the body
-      const W=D.width,H=D.height,rc=makeCanvas(W,H),rg=ctx2d(rc);rg.translate(ox,oy);rg.fillStyle=rg.strokeStyle='#000';rg.lineWidth=6;rg.lineJoin='round';
+      const W=D.width,H=D.height,rc=makeCanvas(W,H),rg=ctx2d(rc);rg.translate(ox,oy);rg.fillStyle=rg.strokeStyle='#000';rg.lineWidth=10;rg.lineJoin='round';
       rg.beginPath();shapePathInto(rg,{poly:dv.arm});rg.fill();rg.stroke();
-      const rd=rg.getImageData(0,0,W,H).data,oi=ctx2d(outfit).getImageData(0,0,W,H),od=oi.data,src=new Uint8ClampedArray(od);
+      // the body keeps the old body there (the worn arm's own rim, a pixel off the old one, would stay behind)
+      {const r2=makeCanvas(W,H),r2g=r2.getContext('2d');r2g.drawImage(rest,0,0);r2g.globalCompositeOperation='destination-out';r2g.drawImage(rc,0,0);
+        rest=r2;bg.clearRect(0,0,W,H);bg.globalCompositeOperation='source-over';bg.drawImage(oldPic,ox,oy);bg.globalCompositeOperation='destination-in';bg.drawImage(full,0,0);bg.globalCompositeOperation='source-over';bg.drawImage(rest,0,0)}
+      // with the near sleeve delivered alone, the sleeve goes with the arm: its pixels leave the outfit too
+      // (the garment under it comes from the no-arm view)
+      if(sleeveArt){rg.setTransform(1,0,0,1,0,0);rg.drawImage(sleeveArt,ox+ax,oy+ay,sw,sh)}
+      const rd=rg.getImageData(0,0,W,H).data,oi=ctx2d(outfit).getImageData(0,0,W,H),od=oi.data;
+      if(sleeveArt){const sc=makeCanvas(W,H),sg=ctx2d(sc);sg.drawImage(sleeveArt,ox+ax,oy+ay,sw,sh);const sd=sg.getImageData(0,0,W,H).data;
+        for(let i=3;i<sd.length;i+=4)if(sd[i]>40)od[i]=0}
+      const src=new Uint8ClampedArray(od);
       let ok=q=>src[q*4+3]>200;
       if(noarm){ // the garment the delivery drew without the near arm, where the arm hides it
+        // (under the arm the no-arm view is the truth, even where the worn garment shows a little)
         const nc=makeCanvas(W,H),ng=ctx2d(nc);ng.drawImage(noarm,ox+ax,oy+ay,sw,sh);const nd=ng.getImageData(0,0,W,H).data;
-        for(let q=0;q<W*H;q++){if(!rd[q*4+3]||ok(q)||nd[q*4+3]<=200)continue;for(let c=0;c<4;c++)od[q*4+c]=nd[q*4+c]}
+        // (its skin is not garment: the shoulder the no-arm view shows stays the body's)
+        const rc0=makeCanvas(W,H),rg1=ctx2d(rc0);rg1.drawImage(rawNoarm,ox+ax,oy+ay,sw,sh);const rn=rg1.getImageData(0,0,W,H).data;
+        const skin=i=>{const r=rn[i],g=rn[i+1],b=rn[i+2];return r>g&&g>b&&r>90&&(g-b)>(r-g)*.35&&(r-b)>40};
+        for(let q=0;q<W*H;q++){if(!rd[q*4+3]||nd[q*4+3]<=200||skin(q*4))continue;for(let c=0;c<4;c++)od[q*4+c]=nd[q*4+c]}
         src.set(od)}
       for(let y=0;y<H;y++){let x=0;const row=y*W;
         while(x<W){if(!rd[(row+x)*4+3]||ok(row+x)){x++;continue}
@@ -226,7 +270,10 @@ const Worn=(()=>{
         if(!(long&&sleeve))d[i+3]=d[i+3]*(1-g)}
       ag.putImageData(im,0,0);
       out.push({kind:'arm',canvas:arm});
-      if(anyOver){vg.putImageData(vi,0,0);out.push({kind:'over',canvas:over})}
+      if(sleeveArt){ // the delivery's near sleeve alone: it goes with the arm, drawn over it
+        const sc=makeCanvas(W,H),sg=sc.getContext('2d');sg.imageSmoothingQuality='high';sg.drawImage(sleeveArt,ox+ax,oy+ay,sw,sh);
+        out.push({kind:'over',canvas:sc,sleeveArt})}
+      else if(anyOver){vg.putImageData(vi,0,0);out.push({kind:'over',canvas:over})}
     }
     // sharper twins (k x) of the garment layers, for the puppet's textures: the worn picture at full
     // resolution, masked by the garment (outfit) or by the layer's own alpha (sleeve, arm)
@@ -235,9 +282,12 @@ const Worn=(()=>{
       for(const l of out){
         const c=makeCanvas(D.width*k,D.height*k),g=c.getContext('2d');g.drawImage(fullK,0,0);g.imageSmoothingQuality='high';
         // body: the worn picture outside the garment (under it the 1x old body is used); outfit: the garment
-        g.globalCompositeOperation=l.kind==='body'?'destination-out':'destination-in';
-        if(l.kind==='body')g.drawImage(hard,0,0,c.width,c.height);
-        else if(l.kind==='outfit')g.drawImage(mask,(ox+ax)*k,(oy+ay)*k,sw*k,sh*k);else g.drawImage(l.canvas,0,0,c.width,c.height);
+        g.globalCompositeOperation='destination-in';
+        if(l.sleeveArt){g.globalCompositeOperation='copy';g.setTransform(k,0,0,k,0,0);g.drawImage(l.sleeveArt,ox+ax,oy+ay,sw,sh);g.setTransform(1,0,0,1,0,0);delete l.sleeveArt}
+        else if(l.kind==='body')g.drawImage(rest,0,0,c.width,c.height); // only where the worn picture is used at 1x (else the old body)
+        else if(l.kind==='outfit'){g.drawImage(mask,(ox+ax)*k,(oy+ay)*k,sw*k,sh*k);
+          if(sleeveArt&&sideView(view)){g.globalCompositeOperation='destination-out';g.drawImage(sleeveArt,(ox+ax)*k,(oy+ay)*k,sw*k,sh*k)}}
+        else g.drawImage(l.canvas,0,0,c.width,c.height);
         l.hd=c}}
     return out;
   }
@@ -280,6 +330,10 @@ const Worn=(()=>{
     ops.push({kind:'body',draw:drawBody,layers:()=>splitLayers(shot,view,e,shoes,drawBody),hd:{canvas:bodyPic,rect:[ox+ax,oy+ay,sw,sh]}});
     ops.push({kind:'gem',draw:g=>{g.save();g.translate(ox,oy);drawGem(g,shot,view);g.restore()}});
     if(shoes)put('shoesFront',shoes.front);
+    // floor-length trousers: the hem over the shoes
+    const hem=shoes?await hemLayer(shot,view,e,body):null;
+    if(hem)ops.push({kind:'outfit',draw:g=>g.drawImage(hem,ox+ax,oy+ay,sw,sh),
+      hdLayer:k>1&&config.sharpPuppet?()=>{const c=makeCanvas(DOLL_CANVAS.width*k,DOLL_CANVAS.height*k),g=c.getContext('2d');g.setTransform(k,0,0,k,0,0);g.imageSmoothingQuality='high';g.drawImage(hem,ox+ax,oy+ay,sw,sh);return c}:null});
     if(held&&bagItem.kind==='pack')put('pack',held);
     if(held&&bagItem.kind!=='pack'){
       // her fingers over the handle (fit.grip), from the worn picture at full resolution; side views only

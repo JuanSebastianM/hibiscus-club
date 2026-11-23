@@ -12,7 +12,7 @@ const root = new URL('../', import.meta.url);
 const dist = new URL('dist/', root);
 const read = name => readFileSync(new URL(name, dist), 'utf8');
 const VIEWS = ['front', 'left', 'right', 'back'];
-const PILOT = ['tennis-dress', 'denim-jacket-skirt', 'crochet-cover-up'];
+const PILOT = ['tennis-dress', 'denim-jacket-skirt', 'crochet-cover-up', 'hibiscus-flares'];
 // Little Me: the two Gemini outfits taken (the GPT base reduced to 512 x 1024, shipped at 1 px per doll px)
 const LITTLE = ['dino-romper', 'rainbow-tutu-tee'];
 const OUTFITS = { adult: PILOT, little: LITTLE };
@@ -63,6 +63,7 @@ test('the worn art is on disk at the size worn-data.js gives, with a garment mas
     if (doll === 'adult' && (view === 'left' || view === 'right')) {
       assert.ok(e.noarm && existsSync(new URL(e.noarm, dist)), `${id} ${view} no-arm garment`);
       assert.deepEqual(webpSize(readFileSync(new URL(e.noarm, dist))), [...e.size], `${id} ${view} no-arm size`);
+      if (e.sleeve) assert.deepEqual(webpSize(readFileSync(new URL(e.sleeve, dist))), [e.size[0] * k, e.size[1] * k], `${id} ${view} sleeve size`);
     }
     const [w, h] = webpSize(readFileSync(new URL(e.src, dist)));
     assert.deepEqual([w, h], [e.size[0] * k, e.size[1] * k], `${id} ${view} picture size`);
@@ -81,6 +82,15 @@ test('the delivered sources are kept losslessly in art/source/round3', () => {
   }
   for (const id of PILOT) for (const view of ['left', 'right'])
     assert.ok(existsSync(new URL(`art/source/round3/worn-adult-${id}-${view}-noarm.webp`, root)), `${id} ${view} noarm`);
+});
+
+test('the default outfit (hibiscus flares) is worn with its sleeve layers, and floor-length trousers go over the shoes', () => {
+  const e = wornData().adult['hibiscus-flares'];
+  for (const view of ['left', 'right']) assert.ok(e[view].sleeve, `${view} sleeve layer`);
+  const w = read('worn.js');
+  assert.match(w, /function hemLayer\(/);
+  assert.match(w, /if\(shoes\)put\('shoesFront',shoes\.front\);\n    \/\/ floor-length trousers: the hem over the shoes/);
+  assert.match(readFileSync(new URL('art/build_worn.py', root), 'utf8'), /MIRROR = \{\("adult", "hibiscus-flares"\): \{"right": "left"\}\}/);
 });
 
 test('each doll\'s new base registers to her old one: one scale, and every region within half a doll pixel', () => {
@@ -104,10 +114,10 @@ test('the approved outfits are worn by default in every view; ?worn=0 is the old
     assert.equal(off.use({ doll: 'adult', outfit: id }, view), null);
   }
   assert.equal(on.portraitScale({ doll: 'adult', outfit: 'tennis-dress' }), 2);
-  assert.equal(on.portraitScale({ doll: 'adult', outfit: 'hibiscus-flares' }), 1);
+  assert.equal(on.portraitScale({ doll: 'adult', outfit: 'black-flares-set' }), 1);
   assert.equal(on.portraitScale({ doll: 'little', outfit: 'tennis-dress' }), 1);
   assert.equal(off.portraitScale({ doll: 'adult', outfit: 'tennis-dress' }), 1);
-  assert.equal(on.use({ doll: 'adult', outfit: 'hibiscus-flares' }, 'front'), null);
+  assert.equal(on.use({ doll: 'adult', outfit: 'black-flares-set' }, 'front'), null);
   assert.equal(on.use({ doll: 'little', outfit: 'tennis-dress' }, 'front'), null);
   for (const id of LITTLE) for (const view of VIEWS) assert.ok(on.use({ doll: 'little', outfit: id }, view), `little ${id} ${view}`);
   assert.equal(on.portraitScale({ doll: 'little', outfit: 'dino-romper' }), 1, 'a 1x delivery keeps the 1x canvas');
