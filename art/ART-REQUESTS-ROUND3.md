@@ -51,6 +51,14 @@ Do the **pilot (block B)** first. If the pilot looks right in the game, do the r
   outline, with only the near arm (and its sleeve) removed and the clothing behind it painted in.
   Deliver a short sleeve of the near arm as its own file, `...-left-sleeve.png` /
   `...-right-sleeve.png`, same canvas.
+- **Paint with the image model; never composite.** Do not cut, warp, paste or upscale any part of
+  the reference picture, and never fill skin with a flat colour. The reference shows the design
+  only. Clothing must be as sharp as her face at 100 % zoom. (A whole batch was rejected for this.)
+- **The four views show one garment.** Same print scale, same colours and the same details in the
+  front, left, right and back pictures. (One right view came with a paler, larger print, so the
+  game mirrors the left view instead.)
+- **Clean bare skin:** no thin pale line along where the bodysuit strap used to be, no straight
+  flat-topped edge on the arm under a sleeve frill, no loose specks beside hems.
 - **Hoods:** deliver hooded outfits with the hood down, lying on the back, plus the separate
   hood-up layer described in block C.
 
