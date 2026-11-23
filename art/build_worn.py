@@ -374,6 +374,8 @@ def garment_mask(worn, base, f=1.0):
     d = np.abs(worn[..., :3] * worn[..., 3:4] - base[..., :3] * base[..., 3:4]).max(-1)
     d = np.maximum(d, np.abs(worn[..., 3] - base[..., 3]))
     m = (d > .035).astype(np.float32) * (worn[..., 3] > .02)
+    # drop thin lines (an outline drawn a pixel off the base's along the arms and legs is not garment)
+    m = (box_blur((box_blur(m, 2) > .999).astype(np.float32), 2) > 1e-3).astype(np.float32)
     # close the holes (a lilac dress over the lilac bodysuit, mesh, pleats) without growing outward: the
     # skin round the garment is the base's and must stay with the body (puppet pieces), then soften 1 px
     r = 10
@@ -383,13 +385,109 @@ def garment_mask(worn, base, f=1.0):
     return np.clip(box_blur(closed, 1), 0, 1)
 
 
+# Clean-ups of art flaws, per doll and outfit, applied when shipping (the sources stay as delivered), in
+# the delivery's px: `cracks` = row ranges where hairline alpha cracks inside the skin are closed (the
+# ghost of the old bodysuit strap edge on the bare shoulders); `slivers` = row ranges where thin detached
+# specks and skin wedges beside the sleeves and elbows are removed.
+CLEAN = {
+    ("adult", "hibiscus-flares"): {"cracks": (500, 900), "slivers": (800, 1300)},
+}
+
+
+def close_cracks(a, y0, y1, r=4):
+    """Pixels inside the skin whose alpha dips (a hairline crack) get the alpha of the skin either side:
+    alpha < .98 with opaque pixels within r px on both sides along a row or a column."""
+    al = a[..., 3]
+    op = al >= .98
+    H, W = al.shape
+    fix = np.zeros_like(op)
+    for d in range(1, r + 1):
+        for ax in (0, 1):
+            fw = np.roll(op, d, ax)
+            for e in range(1, r + 1):
+                bw = np.roll(op, -e, ax)
+                fix |= fw & bw
+    band = np.zeros_like(op)
+    band[y0:y1] = True
+    # colour from the opaque skin round it (mean of the opaque pixels within 2 px)
+    acc, n = np.zeros(al.shape + (3,), np.float32), np.zeros(al.shape, np.float32)
+    for dy in range(-2, 3):
+        for dx in range(-2, 3):
+            o = np.roll(np.roll(op, dy, 0), dx, 1)
+            acc += np.roll(np.roll(a[..., :3], dy, 0), dx, 1) * o[..., None]
+            n += o
+    col = acc / np.maximum(n, 1)[..., None]
+    skin = (col[..., 0] > col[..., 1]) & (col[..., 1] > col[..., 2]) & (col[..., 0] > .55) & (n > 0)
+    fix &= band & ~op & skin
+    a[..., :3] = np.where(fix[..., None] & (al[..., None] < .5), col, a[..., :3])
+    a[..., 3] = np.where(fix, 1.0, al)
+    return int(fix.sum())
+
+
+def remove_slivers(a, y0, y1, wmax=10, rows_min=5):
+    """Thin pieces (runs at most wmax px wide with nothing either side) that hang below or float beside the
+    figure: groups of such runs over at least rows_min rows, or groups with nothing above and below."""
+    al = a[..., 3] > .4
+    H, W = al.shape
+    marks = []
+    for y in range(y0, y1):
+        row = al[y]
+        xs = np.flatnonzero(np.diff(np.concatenate(([0], row.astype(np.int8), [0]))))
+        for s, e in zip(xs[::2], xs[1::2]):
+            if e - s <= wmax and s > 0 and e < W:
+                marks.append((y, s, e))
+    # group runs that touch from one row to the next
+    groups = []
+    open_ = []
+    for y, s, e in marks:
+        g = next((g for g in open_ if g[-1][0] == y - 1 and g[-1][1] < e and s < g[-1][2]), None)
+        if g is None:
+            g = []
+            groups.append(g)
+            open_.append(g)
+        g.append((y, s, e))
+        open_ = [g for g in open_ if g[-1][0] >= y - 1]
+    gone = 0
+    for g in groups:
+        ytop, ybot = g[0][0], g[-1][0]
+        above = al[ytop - 1, g[0][1]:g[0][2]].any()
+        below = al[ybot + 1, g[-1][1]:g[-1][2]].any() if ybot + 1 < H else False
+        if len(g) >= rows_min and not below or not above and not below:
+            for y, s, e in g:
+                a[y, s:e, 3] = 0
+                gone += e - s
+    return gone
+
+
+# Views taken from the opposite side view, mirrored (the base's right view is its left one mirrored to
+# within half a pixel): for a delivery whose right view does not match the others (hibiscus flares: the
+# top's print paler and larger on the right than in the other three views).
+MIRROR = {("adult", "hibiscus-flares"): {"right": "left"}}
+
+
+def load_view(name_fmt, outfit, view):
+    """Load art/source/round3/<name_fmt with the view>, mirrored from the other side view when MIRROR says so."""
+    src = MIRROR.get((DOLL, outfit), {}).get(view)
+    if src:
+        return load(SRC / name_fmt.format(view=src))[:, ::-1].copy()
+    return load(SRC / name_fmt.format(view=view))
+
+
 def worn_and_base(outfit, view):
     """The worn picture and the base at the worn picture's size. A delivery drawn on the base reduced (the
     Gemini Little Me outfits: 512 x 1024, the base / 3 exactly) is used at its own size: the base is
     reduced to match and the registration scaled with it (returned factor f, new px = (a*u + b) / f)."""
-    worn = load(SRC / f"worn-{DOLL}-{outfit}-{view}.webp")
+    worn = load_view(f"worn-{DOLL}-{outfit}-{{view}}.webp", outfit, view)
     worn[..., 3] = np.where(worn[..., 3] < .04, 0, worn[..., 3])  # faint haze some deliveries carry round the figure
-    base_img = Image.open(SRC / f"base-{DOLL}-{view}.webp").convert("RGBA")
+    clean = CLEAN.get((DOLL, outfit))
+    if clean:
+        c = close_cracks(worn, *clean["cracks"]) if view in ("front", "back") and "cracks" in clean else 0
+        g = remove_slivers(worn, *clean["slivers"]) if "slivers" in clean else 0
+        print(f"    clean {outfit} {view}: {c} crack px closed, {g} sliver px removed")
+    mirrored = MIRROR.get((DOLL, outfit), {}).get(view)
+    base_img = Image.open(SRC / f"base-{DOLL}-{mirrored or view}.webp").convert("RGBA")
+    if mirrored:  # compare with the base mirrored the same way, so the garment mask is the same
+        base_img = base_img.transpose(Image.FLIP_LEFT_RIGHT)
     f = base_img.width / worn.shape[1]
     if abs(f - 1) > 1e-6:
         base_img = base_img.convert("RGBa").resize((worn.shape[1], worn.shape[0]), Image.LANCZOS).convert("RGBA")
@@ -402,7 +500,7 @@ def ship_one(outfit, view, reg, pm_cache):
     # shipped px per doll px: 2, or 1 for a delivery that has no more than the old doll's own resolution
     K = WORN_SCALE if reg[0] >= WORN_SCALE * .9 else 1
     na_path = SRC / f"worn-{DOLL}-{outfit}-{view}-noarm.webp"
-    noarm = load(na_path) if view in ("left", "right") and na_path.exists() else None
+    noarm = load_view(f"worn-{DOLL}-{outfit}-{{view}}-noarm.webp", outfit, view) if view in ("left", "right") and na_path.exists() else None
     a, bx, by = reg
     nx0, ny0, nx1, ny1 = bbox(worn[..., 3], .004)
     if noarm is not None:  # one frame for both
@@ -439,6 +537,16 @@ def ship_one(outfit, view, reg, pm_cache):
         q = OUT / f"{DOLL}-{outfit}-{view}-noarm.webp"
         Image.fromarray((np.clip(pic, 0, 1) * 255 + .5).astype(np.uint8), "RGBA").save(q, "WEBP", quality=QUALITY, alpha_quality=100, method=6)
         out["noarm"] = f"assets/worn/{q.name}"
+        out["bytes"] += q.stat().st_size
+    sl_path = SRC / f"worn-{DOLL}-{outfit}-{view}-sleeve.webp"
+    if view in ("left", "right") and sl_path.exists():
+        # the near arm's sleeve alone, at the picture's resolution, for the puppet: it goes with the arm
+        sl = load_view(f"worn-{DOLL}-{outfit}-{{view}}-sleeve.webp", outfit, view)
+        sl[..., 3] = np.where(sl[..., 3] < .04, 0, sl[..., 3])
+        pic = sample(premul_img(sl), a, bx, by, u0, v0, u1, v1, K)
+        q = OUT / f"{DOLL}-{outfit}-{view}-sleeve.webp"
+        Image.fromarray((np.clip(pic, 0, 1) * 255 + .5).astype(np.uint8), "RGBA").save(q, "WEBP", quality=QUALITY, alpha_quality=100, method=6)
+        out["sleeve"] = f"assets/worn/{q.name}"
         out["bytes"] += q.stat().st_size
     return out
 
@@ -485,6 +593,7 @@ def write_data():
             for v in VIEWS:
                 e = views[v]
                 extra = f",noarm:'{e['noarm']}'" if e.get("noarm") else ""
+                extra += f",sleeve:'{e['sleeve']}'" if e.get("sleeve") else ""
                 if e.get("k", WORN_SCALE) != WORN_SCALE:
                     extra += f",k:{e['k']}"
                 parts.append(f"{v}:{{src:'{e['src']}',mask:'{e['mask']}',at:[{e['at'][0]},{e['at'][1]}],size:[{e['size'][0]},{e['size'][1]}]{extra}}}")

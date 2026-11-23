@@ -1249,7 +1249,7 @@ async function composeDollLayers(raw,view='front'){
       canvas=makeCanvas(acc.width,acc.height);const g=canvas.getContext('2d');
       op.draw(g);g.globalCompositeOperation='destination-in';g.drawImage(acc,0,0);
     }else if(!canvas){canvas=makeCanvas(acc.width,acc.height);const g=canvas.getContext('2d');g.imageSmoothingQuality='high';op.draw(g)}
-    layers.push({kind:op.kind,canvas,behind:!!op.behind});
+    layers.push({kind:op.kind,canvas,behind:!!op.behind,...(op.hdLayer?{hd:op.hdLayer()}:{})}); // worn.js: a sharper twin for the puppet
     op.draw(ag);
   }
   const out={doll,view,origin,layers,shot,worn:worn||null};

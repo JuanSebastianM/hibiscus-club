@@ -264,8 +264,9 @@
      391,
      865
     ],
-    "bytes": 167802,
-    "maskBytes": 5554
+    "bytes": 156862,
+    "maskBytes": 5658,
+    "k": 2
    },
    "left": {
     "src": "assets/worn/adult-crochet-cover-up-left.webp",
@@ -278,8 +279,9 @@
      191,
      867
     ],
-    "bytes": 135730,
-    "maskBytes": 5318,
+    "bytes": 124716,
+    "maskBytes": 5520,
+    "k": 2,
     "noarm": "assets/worn/adult-crochet-cover-up-left-noarm.webp"
    },
    "right": {
@@ -293,8 +295,9 @@
      203,
      865
     ],
-    "bytes": 139844,
-    "maskBytes": 5488,
+    "bytes": 124048,
+    "maskBytes": 5650,
+    "k": 2,
     "noarm": "assets/worn/adult-crochet-cover-up-right-noarm.webp"
    },
    "back": {
@@ -306,10 +309,11 @@
     ],
     "size": [
      390,
-     865
+     864
     ],
-    "bytes": 163172,
-    "maskBytes": 5498
+    "bytes": 151084,
+    "maskBytes": 5382,
+    "k": 2
    }
   },
   "denim-jacket-skirt": {
@@ -324,8 +328,9 @@
      391,
      865
     ],
-    "bytes": 159356,
-    "maskBytes": 7758
+    "bytes": 149036,
+    "maskBytes": 7530,
+    "k": 2
    },
    "left": {
     "src": "assets/worn/adult-denim-jacket-skirt-left.webp",
@@ -338,8 +343,9 @@
      194,
      867
     ],
-    "bytes": 106884,
-    "maskBytes": 3938,
+    "bytes": 101380,
+    "maskBytes": 3688,
+    "k": 2,
     "noarm": "assets/worn/adult-denim-jacket-skirt-left-noarm.webp"
    },
    "right": {
@@ -353,8 +359,9 @@
      195,
      865
     ],
-    "bytes": 105484,
-    "maskBytes": 3720,
+    "bytes": 99898,
+    "maskBytes": 3726,
+    "k": 2,
     "noarm": "assets/worn/adult-denim-jacket-skirt-right-noarm.webp"
    },
    "back": {
@@ -366,10 +373,77 @@
     ],
     "size": [
      390,
+     864
+    ],
+    "bytes": 148784,
+    "maskBytes": 6994,
+    "k": 2
+   }
+  },
+  "hibiscus-flares": {
+   "front": {
+    "src": "assets/worn/adult-hibiscus-flares-front.webp",
+    "mask": "assets/worn/adult-hibiscus-flares-front-mask.webp",
+    "at": [
+     4,
+     4
+    ],
+    "size": [
+     389,
      865
     ],
-    "bytes": 158150,
-    "maskBytes": 7126
+    "bytes": 173860,
+    "maskBytes": 9516,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-hibiscus-flares-left.webp",
+    "mask": "assets/worn/adult-hibiscus-flares-left-mask.webp",
+    "at": [
+     4,
+     2
+    ],
+    "size": [
+     185,
+     866
+    ],
+    "bytes": 141530,
+    "maskBytes": 7330,
+    "k": 2,
+    "noarm": "assets/worn/adult-hibiscus-flares-left-noarm.webp",
+    "sleeve": "assets/worn/adult-hibiscus-flares-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-hibiscus-flares-right.webp",
+    "mask": "assets/worn/adult-hibiscus-flares-right-mask.webp",
+    "at": [
+     -6,
+     2
+    ],
+    "size": [
+     184,
+     866
+    ],
+    "bytes": 142144,
+    "maskBytes": 7456,
+    "k": 2,
+    "noarm": "assets/worn/adult-hibiscus-flares-right-noarm.webp",
+    "sleeve": "assets/worn/adult-hibiscus-flares-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-hibiscus-flares-back.webp",
+    "mask": "assets/worn/adult-hibiscus-flares-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 167712,
+    "maskBytes": 8900,
+    "k": 2
    }
   },
   "tennis-dress": {
@@ -384,8 +458,9 @@
      391,
      865
     ],
-    "bytes": 121106,
-    "maskBytes": 4676
+    "bytes": 119606,
+    "maskBytes": 4526,
+    "k": 2
    },
    "left": {
     "src": "assets/worn/adult-tennis-dress-left.webp",
@@ -398,8 +473,9 @@
      195,
      867
     ],
-    "bytes": 89122,
-    "maskBytes": 4480,
+    "bytes": 83916,
+    "maskBytes": 4384,
+    "k": 2,
     "noarm": "assets/worn/adult-tennis-dress-left-noarm.webp"
    },
    "right": {
@@ -413,8 +489,9 @@
      194,
      865
     ],
-    "bytes": 88544,
-    "maskBytes": 4502,
+    "bytes": 82200,
+    "maskBytes": 4400,
+    "k": 2,
     "noarm": "assets/worn/adult-tennis-dress-right-noarm.webp"
    },
    "back": {
@@ -426,16 +503,18 @@
     ],
     "size": [
      390,
-     865
+     864
     ],
-    "bytes": 112030,
-    "maskBytes": 4198
+    "bytes": 112576,
+    "maskBytes": 4022,
+    "k": 2
    }
   }
  },
  "thumbs": {
   "crochet-cover-up": "assets/worn/thumbs/adult-crochet-cover-up.webp",
   "denim-jacket-skirt": "assets/worn/thumbs/adult-denim-jacket-skirt.webp",
+  "hibiscus-flares": "assets/worn/thumbs/adult-hibiscus-flares.webp",
   "tennis-dress": "assets/worn/thumbs/adult-tennis-dress.webp"
  }
 }
