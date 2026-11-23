@@ -31,12 +31,20 @@ Do the **pilot (block B)** first. If the pilot looks right in the game, do the r
 
 ### Rules learned from the deliveries (they apply to every block below)
 
-- **Edit the base file, never redraw the doll.** Head, hands, legs and feet must stay identical
-  to the base file, pixel for pixel, and the canvas must stay 1536 x 3072.
+- **Edit the base file, never redraw the doll.** Head, hands, legs and feet must keep exactly the
+  position, shape and colour they have in the base file, and the canvas must stay 1536 x 3072.
+  (Their alpha values do not need to be preserved; see the next rule.)
 - **Never paste a piece of the base picture over clothing.** A cap sleeve covers the shoulder all
   the way round. Where a hand hangs in front of a skirt, the skirt stays intact around the
   fingers: no wedge of skin, no dark line at the wrist.
-- **Fully opaque body:** alpha 255 inside the figure, 0 outside. No black or coloured background.
+- **Normalise the alpha:** every pixel inside the figure fully opaque (alpha 255), everything
+  outside fully transparent (alpha 0), with a clean anti-aliased edge. The base files have alpha
+  250-254 inside the body; correct that rather than keeping it. No black or coloured background.
+- **The lavender bodysuit is a placeholder, never part of an outfit.** Wherever the outfit leaves
+  the body bare (shoulders, neckline, back, midriff, thighs), remove the bodysuit and paint skin,
+  continuing the base doll's own skin tone, shading and lighting with no visible seam. No
+  lavender may remain anywhere. Follow the reference's neckline and hem exactly and do not reveal
+  more than the reference shows.
 - **State hem lengths against the body:** skirts and dresses end about 60 % of the way from the
   crotch to the knee unless the block says otherwise. (The pilot denim skirt came out at 35 %.)
 - **No-arm side views are the same picture minus the arm:** identical pleats, hem, folds and
