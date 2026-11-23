@@ -162,24 +162,78 @@ clothing behind it painted in), same canvas, named `...-left-noarm.png` and `...
 
 ## C. The rest of the wardrobe (next)
 
-Same method as block B, four files per outfit, named
-`worn-{adult|little}-{outfit-id}-{front,left,right,back}.png`. Outfit ids and reference pictures
-are the card pictures in `dist/assets/wear/` and `dist/assets/items/outfits/`.
+One request per outfit. For each outfit, attach exactly **five files**:
 
-Grown-up: hibiscus-flares, lilac-satin-bow-dress, green-hibiscus-sundress, black-flares-set,
-pink-velour-cargo, sarong-swimsuit, tankini-board-shorts, aqua-velour-tracksuit, baby-tee-cargo,
-sequin-halter-dress, butterfly-satin-skirt, puffer-vest-slip-dress, plaid-knit-vest-set,
-hoodie-dress-leg-warmers, denim-overall-dress.
+1. The four base pictures of that doll, the ones the image model delivered in block A2/A3 and
+   that you already have: `base-adult-front.png`, `base-adult-left.png`, `base-adult-right.png`,
+   `base-adult-back.png` (for Little Me: the four `base-little-*.png`). These are the pictures
+   to edit.
+2. The outfit's **reference picture** from `art/refs/round3/` in this repository (see the tables
+   below). Each one is a single JPG showing the outfit as it is in the game today, on the doll,
+   from the front, left, right and back.
 
-Little Me (attach the `base-little-*.png` files; keep every design age-appropriate for a
-toddler): yellow-dot-dress, lilac-cord-pinafore, pink-gingham-bow-dress, denim-overalls,
-mint-cardigan-dress, star-pajamas, ruffle-swimsuit, rash-guard-set, beach-poncho (hood down,
-lying on her back), rainbow-tutu-tee, dino-romper, tulle-party-dress, raincoat-set (hood down),
-bear-onesie (hood down), ballet-wrap-set.
+The reference picture shows the **design only**: the garments, colours, patterns, details and
+lengths. It was assembled by the game from flat drawings, so it has small flaws (soft edges, odd
+sleeve openings, seams). Do not copy the flaws, the hair or the low resolution: paint the outfit
+properly on the base pictures.
 
-For the three hooded Little Me outfits also deliver a separate hood-up layer, four views each,
-same canvas: `hood-little-{outfit-id}-{front,left,right,back}.png`, showing only the hood worn
-up over the bare head (face fully open), nothing else.
+Then paste the shared rules, the "Rules learned" list, and this prompt, with the outfit id filled
+in:
+
+> Edit each of the four attached base pictures so she wears the outfit shown in the attached
+> reference picture. Keep the reference's design, colours, patterns and lengths. Deliver
+> `worn-{doll}-{outfit-id}-front.png`, `-left.png`, `-right.png`, `-back.png`, and for the side
+> views also `-left-noarm.png`, `-right-noarm.png` (same picture without the near arm) and, if
+> the outfit has sleeves, `-left-sleeve.png`, `-right-sleeve.png` (the near arm's sleeve alone).
+> Every file 1536 x 3072 px, transparent, the doll in exactly the same place as in the base
+> pictures.
+
+### Grown-up (15 outfits; `{doll}` = `adult`)
+
+| Outfit id | Reference picture to attach | Notes |
+|---|---|---|
+| `hibiscus-flares` | `art/refs/round3/ref-adult-hibiscus-flares.jpg` |  |
+| `lilac-satin-bow-dress` | `art/refs/round3/ref-adult-lilac-satin-bow-dress.jpg` |  |
+| `green-hibiscus-sundress` | `art/refs/round3/ref-adult-green-hibiscus-sundress.jpg` |  |
+| `black-flares-set` | `art/refs/round3/ref-adult-black-flares-set.jpg` |  |
+| `pink-velour-cargo` | `art/refs/round3/ref-adult-pink-velour-cargo.jpg` |  |
+| `sarong-swimsuit` | `art/refs/round3/ref-adult-sarong-swimsuit.jpg` |  |
+| `tankini-board-shorts` | `art/refs/round3/ref-adult-tankini-board-shorts.jpg` |  |
+| `aqua-velour-tracksuit` | `art/refs/round3/ref-adult-aqua-velour-tracksuit.jpg` |  |
+| `baby-tee-cargo` | `art/refs/round3/ref-adult-baby-tee-cargo.jpg` |  |
+| `sequin-halter-dress` | `art/refs/round3/ref-adult-sequin-halter-dress.jpg` |  |
+| `butterfly-satin-skirt` | `art/refs/round3/ref-adult-butterfly-satin-skirt.jpg` |  |
+| `puffer-vest-slip-dress` | `art/refs/round3/ref-adult-puffer-vest-slip-dress.jpg` |  |
+| `plaid-knit-vest-set` | `art/refs/round3/ref-adult-plaid-knit-vest-set.jpg` |  |
+| `hoodie-dress-leg-warmers` | `art/refs/round3/ref-adult-hoodie-dress-leg-warmers.jpg` |  |
+| `denim-overall-dress` | `art/refs/round3/ref-adult-denim-overall-dress.jpg` |  |
+
+Already done: `tennis-dress`, `denim-jacket-skirt`, `crochet-cover-up` (their reference pictures
+are in the folder too, in case you want the denim skirt redone at its original length).
+
+### Little Me (15 outfits; `{doll}` = `little`; keep every design age-appropriate for a toddler)
+
+| Outfit id | Reference picture to attach | Notes |
+|---|---|---|
+| `yellow-dot-dress` | `art/refs/round3/ref-little-yellow-dot-dress.jpg` |  |
+| `lilac-cord-pinafore` | `art/refs/round3/ref-little-lilac-cord-pinafore.jpg` |  |
+| `pink-gingham-bow-dress` | `art/refs/round3/ref-little-pink-gingham-bow-dress.jpg` |  |
+| `denim-overalls` | `art/refs/round3/ref-little-denim-overalls.jpg` |  |
+| `mint-cardigan-dress` | `art/refs/round3/ref-little-mint-cardigan-dress.jpg` |  |
+| `star-pajamas` | `art/refs/round3/ref-little-star-pajamas.jpg` |  |
+| `ruffle-swimsuit` | `art/refs/round3/ref-little-ruffle-swimsuit.jpg` |  |
+| `rash-guard-set` | `art/refs/round3/ref-little-rash-guard-set.jpg` |  |
+| `beach-poncho` | `art/refs/round3/ref-little-beach-poncho.jpg` | hood down, lying on her back; plus the hood-up layer |
+| `rainbow-tutu-tee` | `art/refs/round3/ref-little-rainbow-tutu-tee.jpg` | in the game at low resolution; redo at full size |
+| `dino-romper` | `art/refs/round3/ref-little-dino-romper.jpg` | in the game at low resolution; redo at full size |
+| `tulle-party-dress` | `art/refs/round3/ref-little-tulle-party-dress.jpg` |  |
+| `raincoat-set` | `art/refs/round3/ref-little-raincoat-set.jpg` | hood down; plus the hood-up layer |
+| `bear-onesie` | `art/refs/round3/ref-little-bear-onesie.jpg` | hood down; plus the hood-up layer |
+| `ballet-wrap-set` | `art/refs/round3/ref-little-ballet-wrap-set.jpg` |  |
+
+For the three hooded outfits also deliver a separate hood-up layer, four views each, same canvas:
+`hood-little-{outfit-id}-{front,left,right,back}.png`, showing only the hood worn up over the
+bare head (face fully open), nothing else.
 
 ## D. Shoes on the high-resolution feet (after block A)
 
