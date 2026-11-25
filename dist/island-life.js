@@ -73,10 +73,10 @@ function dailyList(){
 }
 function journal(){
   const bag=bagItems();
-  return `<div class="journal-head">${icon('book',20)}<h2>${t('life.journal')}</h2></div>
-    <h3 class="journal-sub">${t('life.stories',{doll:dollNames[state.doll]})} <b>${t('common.ratio',{n:storiesOf().filter((s,i)=>storyDone(lifePlayer(),state.doll,i)).length,total:storiesOf().length})}</b></h3>${storyList()}
+  return `<div class="journal-head">${icon('book',20)}<h2 id="journal-title">${t('life.journal')}</h2></div>
+    <div class="journal-body" tabindex="0" role="region" aria-labelledby="journal-title"><h3 class="journal-sub">${t('life.stories',{doll:dollNames[state.doll]})} <b>${t('common.ratio',{n:storiesOf().filter((s,i)=>storyDone(lifePlayer(),state.doll,i)).length,total:storiesOf().length})}</b></h3>${storyList()}
     <h3 class="journal-sub">${t('life.today')} <b>${t('common.ratio',{n:dailySummary().done,total:DAILY_COUNT})}</b></h3>${dailyList()}
-    <div class="inventory"><strong>${icon('ticket',16)} ${t('life.bag')}</strong><span>${escapeText(bag.join(' · ')||t('life.bagEmpty'))}</span></div>`;
+    <div class="inventory"><strong>${icon('ticket',16)} ${t('life.bag')}</strong><span>${escapeText(bag.join(' · ')||t('life.bagEmpty'))}</span></div></div>`;
 }
 function nameBadge(){
   const p=lifePlayer();
@@ -114,7 +114,9 @@ function refreshQuestUI(){
   const focusToken=document.activeElement?.dataset?.token;
   el.querySelector('.tokens').innerHTML=tokens();
   if(focusToken)(el.querySelector(`[data-token="${focusToken}"]`)||el).focus({preventScroll:true});
+  const jb=document.querySelector('#journal .journal-body'),jTop=jb?jb.scrollTop:0,jNow=currentStoryKey();
   document.querySelector('#journal').innerHTML=journal();
+  fitJournal(jNow!==currentStoryKey()?'story':jTop);
   document.querySelector('.travel-strip').outerHTML=travelStrip(objective());
   document.querySelector('.name-badge').outerHTML=nameBadge();
   el.querySelector('.walker-name').textContent=playerLabel();
@@ -270,6 +272,19 @@ function walkToToken(id){
   const x=parseFloat(b.style.left)/100,y=parseFloat(b.style.top)/100;
   walkTo(x,y,()=>collectToken(id),t('life.walkingToSparkle'));
 }
+/* Wide layouts (the Journal beside the scene, island-life.css): the Journal is no taller than the scene and
+   scrolls inside itself, so wheeling over it never moves the page. These keep the story she is on in view
+   inside the panel (never scrolling the window) and show a soft fade while more of the list is below. */
+function currentStoryKey(){const li=document.querySelector('#journal .story-list li.active, #journal .story-list li.ready');return li?[...li.parentNode.children].indexOf(li):-1}
+function fitJournal(at){
+  const body=document.querySelector('#journal .journal-body');if(!body)return;
+  if(at==='story'){
+    const li=body.querySelector('.story-list li.active, .story-list li.ready');
+    if(li&&body.scrollHeight>body.clientHeight+1){const b=body.getBoundingClientRect(),r=li.getBoundingClientRect();body.scrollTop+=r.top-b.top-Math.max(8,(b.height-r.height)/3)}
+  }else if(typeof at==='number')body.scrollTop=at;
+  const more=()=>body.closest('.journal')?.classList.toggle('more-below',body.scrollHeight-body.scrollTop-body.clientHeight>4);
+  body.onscroll=more;more();
+}
 function attachWorld(){
   const el=document.querySelector('#world'),actor=el.querySelector('.walker');
   const canvas=actor.querySelector('canvas');
@@ -290,7 +305,8 @@ function attachWorld(){
   size();
   attachPuppets(w,shot);
   positionWalker();
-  w.observer=new ResizeObserver(()=>{w.width=el.clientWidth;w.height=el.clientHeight;size();if(!w.frame)positionWalker();queueTalkLayout()});
+  w.observer=new ResizeObserver(()=>{w.width=el.clientWidth;w.height=el.clientHeight;size();if(!w.frame)positionWalker();queueTalkLayout();fitJournal()});
+  fitJournal('story');
   w.observer.observe(el);
   el.addEventListener('click',e=>{
     if(e.target.closest('.coach-slot,.talk .bubble'))return; // the tour card and the conversation float over the scene

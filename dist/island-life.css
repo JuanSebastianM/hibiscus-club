@@ -214,3 +214,19 @@
   .marker{bottom:calc(100% + 24px)}.marker b{width:26px;height:26px;font-size:1rem}.marker em{padding:0 5px}.marker-task b{width:20px;height:20px}
   .travel-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.travel-strip a{font-size:var(--fs-xs);padding-right:6px}.travel-strip img{width:36px;height:28px}
   .name-badge-text b{font-size:var(--fs-lg)}.name-change{min-height:44px}}
+/* Wide layouts, where the Journal sits beside the scene: the side column is exactly as tall as the scene
+   (never taller than the window) and stays put; the Journal's header stays and its list scrolls inside it,
+   without ever scrolling the page (overscroll-behavior). Stacked under the scene (1000 px and narrower) it
+   is part of the page as before. */
+.journal-body:focus-visible{outline:3px solid var(--focus);outline-offset:-3px;border-radius:0 0 12px 12px}
+@media(min-width:1001px){
+  .life-layout{align-items:stretch}
+  .life-right{display:flex;flex-direction:column;gap:16px;height:0;min-height:min(100%,calc(100vh - 24px));position:sticky;top:12px}
+  .journal{position:relative;flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+  .journal-head{flex:none}
+  .journal-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:6px;scrollbar-width:thin;scrollbar-color:var(--a300) transparent}
+  .journal-body::-webkit-scrollbar{width:8px}.journal-body::-webkit-scrollbar-thumb{background:var(--a300);border-radius:8px}
+  .journal::after{content:'';position:absolute;left:0;right:10px;bottom:0;height:26px;border-radius:0 0 14px 14px;background:linear-gradient(transparent,var(--paper));pointer-events:none;opacity:0;transition:opacity .2s}
+  .journal.more-below::after{opacity:1}
+  .life-profile{flex:none}
+}
