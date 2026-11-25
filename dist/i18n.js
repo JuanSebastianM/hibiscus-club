@@ -193,7 +193,7 @@ const I18N=(()=>{
     'privacy.text':'The game counts visits and play anonymously, so the people who make it can see how many players come, from which countries, and what they enjoy. The game’s own counts record only which rooms, games and items are used, the character and language, the country, and the kind of device (phone, tablet or computer). They never store names, IP addresses, cookies or anything that could tell two players apart.',
     'privacy.text2':'Page views are also counted by Cloudflare Web Analytics, which uses no cookies and sees the page address, the site you came from and your browser type. Your game is saved only in this browser, on this device. If your browser sends Do Not Track or Global Privacy Control, nothing is counted. Turning the switch off stops the game’s own counts at once, and Cloudflare’s page count from your next visit.',
     'notice.label':'About your privacy',
-    'notice.on':'This game counts visits and play anonymously, with no cookies and no ads, and keeps your save only on this device. Nothing is sent until you choose.',
+    'notice.on':'This game counts visits and play anonymously: it never keeps names, IP addresses, cookies or anything that could tell two players apart, and your save stays on this device. Nothing is sent until you choose.',
     'notice.off':'Counting is off, so nothing about your play is sent. The game uses no cookies or ads and keeps your save only on this device.',
     'notice.browser':'Your browser asks websites not to track you, so this game counts nothing. It uses no cookies or ads and keeps your save only on this device.',
     'notice.local':'Counting is off here, so nothing about your play is sent. The game uses no cookies or ads and keeps your save only on this device.',

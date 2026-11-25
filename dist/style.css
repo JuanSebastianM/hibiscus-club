@@ -305,4 +305,4 @@ dialog .dialog-actions>button:not(.primary):hover{background:var(--a50)}
 .notice-actions .notice-link:hover{color:var(--a800)}
 @media(prefers-reduced-motion:no-preference){.privacy-notice:not([hidden]){animation:notice-in .35s ease-out}@keyframes notice-in{from{opacity:0;transform:translateY(-6px)}}}
 @media(max-width:1424px){.privacy-notice{margin-left:16px;margin-right:16px}}
-@media(max-width:600px){.privacy-notice{margin:12px 10px 0;padding:10px 12px}.notice-actions{width:100%}}
+@media(max-width:600px){.privacy-notice{margin:12px 10px 0;padding:10px 12px}.notice-actions{width:100%;gap:6px}.notice-actions button{padding:6px 11px}.notice-actions .notice-link{padding:6px 4px}}

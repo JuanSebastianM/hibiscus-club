@@ -22,6 +22,9 @@ const HibiscusScenes=(()=>{
   const THREE_URL=new URL('vendor/three/three.module.min.js',base).href;
   const reducedQuery=matchMedia('(prefers-reduced-motion: reduce)');
   const TAU=Math.PI*2,MOTION_MAX=8,MAX_DRIVERS=48,WIND_SAMPLES=9;
+  // wind-driven layers: every layer's displacement at full deflection is scaled by at least SWAY_GAIN, and
+  // small ones up to a reach of MIN_REACH reference px, so even distant palms visibly sway
+  const SWAY_GAIN=2.2,MIN_REACH=2.2,MAX_REACH=12;
   // allowSoftwareGL: also run on a software renderer (?softgl in the address, for automated checks, as puppet.js)
   const config={allowSoftwareGL:/[?&]softgl\b/.test(location.search),maxPixelRatio:2,quality:'auto',debug:0,lodBias:-.5};
   const nature=()=>typeof HibiscusNature!=='undefined'?HibiscusNature:null;
@@ -270,7 +273,7 @@ const HibiscusScenes=(()=>{
             for(let x=0;x<R.w;x++,j++){const a=m[j];if(a<.05)continue;const px=(R.x+x+.5)/pxs;for(const q of parts)s+=field(px,py,q)[0]*a*top}}
           if(s*dir<0)parts=parts.map(q=>q.kind===0?{...q,c:-q.c,s:-q.s}:{...q,dx:-q.dx,dy:-q.dy});
         }
-        let cx=0,cw=0;
+        let cx=0,cw=0,vmax=0;
         for(let y=0,j=0;y<R.h;y++){
           const py=(R.y+y+.5)/pxs;
           for(let x=0,i=(R.y+y)*w+R.x;x<R.w;x++,i++,j++){
@@ -281,10 +284,10 @@ const HibiscusScenes=(()=>{
             const wt=a*(Math.sqrt(ux*ux+uy*uy)+.05);
             if(wt>domW[i]){domW[i]=wt;dom[i]=di}
             if(kind==='wind'&&a>flut[i])flut[i]=a;
-            cx+=(R.x+x)*a;cw+=a;
+            cx+=(R.x+x)*a;cw+=a;if(a>.5){const m2=Math.hypot(ux,uy);if(m2>vmax)vmax=m2}
           }
         }
-        drivers.push({kind,name:L.name||'',x:cw?cx/cw/w:.5,speed:L.speed??(L.type==='flicker'?1.7:1.2),phase,gust:L.gust??1});
+        drivers.push({kind,name:L.name||'',x:cw?cx/cw/w:.5,speed:L.speed??(L.type==='flicker'?1.7:1.2),phase,gust:L.gust??1,vmax});
       }
       const target=ch[L.type];
       if(target){for(let y=0,j=0;y<R.h;y++)for(let x=0,i=(R.y+y)*w+R.x;x<R.w;x++,i++,j++){const a=m[j]*amt;if(a>target[i])target[i]=a}}
@@ -352,8 +355,8 @@ void main(){
   float ph=idx*2.39996;
   vec2 off=v*uDrive[int(idx)]*uAmp;
   // leaf flutter toward the tips of wind-driven plants (|v| is largest there), stronger in a gust
-  if(mo.a>.01){vec2 fn=texture2D(uNoise,p/vec2(70.,55.)+uWindT*vec2(.05,.031)).rg-.5;off+=fn*length(v)*mo.a*(.15+.5*wHere)*.55*uAmp;}
-  if(aux.r>.002){vec2 wn=texture2D(uNoise,p/vec2(420.,330.)+uWindT*vec2(.011,.005)).rg-.5;off+=aux.r*wn*2.2*uWindPx*(.3+.85*wHere)*uAmp;}
+  if(mo.a>.01){vec2 fn=texture2D(uNoise,p/vec2(70.,55.)+uWindT*vec2(.05,.031)).rg-.5;off+=fn*length(v)*mo.a*(.3+.6*wHere)*.7*uAmp;}
+  if(aux.r>.002){vec2 wn=texture2D(uNoise,p/vec2(420.,330.)+uWindT*vec2(.011,.005)).rg-.5;off+=aux.r*wn*2.2*uWindPx*(.55+.9*wHere)*uAmp;}
   float wm=fx.r,f=1.,shim=0.,sw=0.;vec2 q=vec2(0.);
   if(wm>.002){
     if(uWater2.x>0.)f=clamp((uv.y-uWater2.x)/uWater2.y,.1,1.);
@@ -660,11 +663,16 @@ void main(){
       this.masks.drivers.forEach((d,i)=>{
         if(d.kind==='wind'){
           const sp=this.springs[i]||(this.springs[i]={x:0,v:0}),w=windAt(d.x),om=clamp(d.speed*1.6,1.3,3.4),z=.3,ph=d.phase,t=this.t;
+          // a continuous gentle sway (a period of 3 to 5.5 s, two unrelated sines so it never ticks like a
+          // metronome), a lean downwind that grows with the wind, and a little turbulence; gusts push all three
+          const ws=TAU/clamp(6/d.speed,3,5.5),sway=.65*Math.sin(t*ws+ph)+.35*Math.sin(t*ws*1.53+ph*1.9);
           const turb=.5*Math.sin(t*2.83+ph)+.3*Math.sin(t*5.21+ph*2.1)+.2*Math.sin(t*8.6+ph*.6);
-          const F=d.gust*((w-.3)*1.5+turb*(.1+.35*w));
+          const g=d.g??(d.g=clamp(Math.max(SWAY_GAIN,MIN_REACH/(d.vmax||1)),SWAY_GAIN,5));
+          const F=d.gust*g*(sway*(.45+.45*w)+(w-.3)*1.9+turb*(.08+.25*w));
           const n=Math.max(1,Math.ceil(dt*90)),h=dt/n;
           for(let k=0;k<n;k++){sp.v+=(om*om*(F-sp.x)-2*z*om*sp.v)*h;sp.x+=sp.v*h}
-          drive[i]=sp.x;
+          // soft cap: never more than MAX_REACH reference px, so a big gust cannot tear a crown off its mask
+          const lim=MAX_REACH/(d.vmax||1);drive[i]=lim*Math.tanh(sp.x/lim);
         }else if(d.kind==='osc')drive[i]=Math.sin(this.t*d.speed+d.phase)*.78+Math.sin(this.t*d.speed*2.31+d.phase*1.7)*.22;
         else if(d.kind==='wash')drive[i]=N?(N.wash(clk,d.x)*2-1)*.9:0;
         else drive[i]=0;
