@@ -1,6 +1,12 @@
 // Living scenes: the island map and the Island Life districts drawn through WebGL (three.js) with water,
 // wind, lights, sky and a few particles, driven by the per-scene data in scene-data.js.
 //
+// Nothing here follows the pointer: the picture moves the same whether or not a pointer or finger is over
+// it. Plants, lanterns and bunting are moved by one wind signal per scene (nature.js: a slow breeze plus
+// gusts every 6 to 15 s that travel across the picture), each layer through its own damped spring, so a
+// palm crown bends downwind in a gust and settles back with a little overshoot. The ambience hears the
+// same wind. Water carries a slow travelling swell, and the surf washes in and slides back.
+//
 //   const fx = HibiscusScenes.mount(containerEl, 'boardwalk')   // 'island' | 'boardwalk' | 'market' | 'pavilion'
 //   fx.setActor(x, y)        // the walking character, as fractions of the container (same as island-life p.x/p.y)
 //   fx.setPaused(bool)  fx.resize()  fx.unmount()
@@ -15,8 +21,10 @@ const HibiscusScenes=(()=>{
   const base=(document.currentScript&&document.currentScript.src)||location.href;
   const THREE_URL=new URL('vendor/three/three.module.min.js',base).href;
   const reducedQuery=matchMedia('(prefers-reduced-motion: reduce)');
-  const TAU=Math.PI*2,MOTION_MAX=8,SPEED_MAX=8,MAX_RIPPLES=4;
-  const config={allowSoftwareGL:false,maxPixelRatio:2,quality:'auto',debug:0,lodBias:-.5};
+  const TAU=Math.PI*2,MOTION_MAX=8,MAX_DRIVERS=48,WIND_SAMPLES=9;
+  // allowSoftwareGL: also run on a software renderer (?softgl in the address, for automated checks, as puppet.js)
+  const config={allowSoftwareGL:/[?&]softgl\b/.test(location.search),maxPixelRatio:2,quality:'auto',debug:0,lodBias:-.5};
+  const nature=()=>typeof HibiscusNature!=='undefined'?HibiscusNature:null;
   let enabled=true,threePromise=null,webgl2=null,noise=null,ticker=0;
   const mounts=new Set(),byElement=new WeakMap(),pool=[],maskCache=new Map();
 
@@ -191,14 +199,23 @@ const HibiscusScenes=(()=>{
     return [].concat(m).map(p=>p.rotate?{kind:0,cx:p.rotate[0]*ref[0],cy:p.rotate[1]*ref[1],c:Math.cos(p.rotate[2]*Math.PI/180)-1,s:Math.sin(p.rotate[2]*Math.PI/180)}
       :p.shift?{kind:1,dx:p.shift[0],dy:p.shift[1]}:p.bend?{kind:2,y0:p.bend[0]*ref[1],y1:p.bend[1]*ref[1],dx:p.bend[2],dy:p.bend[3]}:{kind:1,dx:0,dy:0});
   }
+  /* What drives a layer's motion: the scene's wind (plants, lanterns, bunting: a damped spring per layer),
+     the shoreline wash (surf), or a slow independent oscillation (clouds, the sailboat's bob). */
+  function driveOf(L){
+    if(L.drive)return L.drive;
+    if(L.type==='foam')return 'wash';
+    if(/sailboat/i.test(L.name||'')||(L.speed??1.2)<.2)return 'osc';
+    return 'wind';
+  }
+  const windDirOf=scene=>scene.windDir||Math.sign((scene.particles||[]).find(p=>p.kind==='petal')?.wind?.[0]||1)||1;
   async function buildMasks(scene,img,overlays){
-    const ref=scene.size||[img.naturalWidth,img.naturalHeight],ms=scene.mask||.5;
+    const ref=scene.size||[img.naturalWidth,img.naturalHeight],ms=scene.mask||.5,dir=windDirOf(scene);
     const w=Math.max(8,Math.round(img.naturalWidth*ms)),h=Math.max(8,Math.round(img.naturalHeight*ms)),n=w*h;
     const pxs=w/ref[0];  // mask pixels per reference-image pixel
     const pic=new Picture(img,w,h);await later();
     const ch={water:new Float32Array(n),flow:new Float32Array(n),flicker:new Float32Array(n),stars:new Float32Array(n),
-      wind:new Float32Array(n),foam:new Float32Array(n),parallax:new Float32Array(n),dapple:new Float32Array(n)};
-    const vx=new Float32Array(n),vy=new Float32Array(n),ps=new Float32Array(n),pc=new Float32Array(n),sp=new Float32Array(n),sw=new Float32Array(n);
+      wind:new Float32Array(n),foam:new Float32Array(n),dapple:new Float32Array(n)};
+    const vx=new Float32Array(n),vy=new Float32Array(n),flut=new Float32Array(n),dom=new Int16Array(n).fill(-1),domW=new Float32Array(n),drivers=[];
     const keys=Object.assign({},typeof HibiscusSceneData!=='undefined'?HibiscusSceneData.keys:null,scene.keys);
     const resolveKey=(k,R)=>{
       if(!k)return null;
@@ -237,40 +254,57 @@ const HibiscusScenes=(()=>{
       if(not)for(let i=0;i<rn;i++)m[i]*=1-not[i];
       if(L.cut){const c=boxBlur(shapeMask(L.cut,w,h,R),R.w,R.h,(L.cutFeather??L.feather??4)*pxs*.5);for(let i=0;i<rn;i++)m[i]*=1-c[i]}
       if(L.soften)m=boxBlur(m,R.w,R.h,L.soften*pxs*.5);
-      const amt=L.amount??1,phase=(L.phase??(li*.618034)%1)*TAU,sinP=Math.sin(phase),cosP=Math.cos(phase);
-      if(L.motion){
-        const speed=L.speed??1.2,parts=motionParts(L.motion,ref);
+      const amt=L.amount??1,phase=(L.phase??(li*.618034)%1)*TAU;
+      if((L.motion||L.type==='flicker')&&drivers.length<MAX_DRIVERS){
+        const di=drivers.length,kind=L.motion?driveOf(L):'none';
+        let parts=L.motion?motionParts(L.motion,ref):[];
+        const field=(px,py,q)=>{
+          if(q.kind===0){const dx=px-q.cx,dy=py-q.cy;return [dx*q.c-dy*q.s,dx*q.s+dy*q.c]}
+          if(q.kind===1)return [q.dx,q.dy];
+          const t=clamp((py-q.y0)/(q.y1-q.y0),0,1),f=t*t*(3-2*t)*.6+t*.4;return [q.dx*f,q.dy*f];
+        };
+        // A wind-driven layer bends downwind: judge its upper part (where a crown or a tip is) and flip if needed.
+        if(kind==='wind'&&parts.length){
+          let s=0;
+          for(let y=0,j=0;y<R.h;y++){const py=(R.y+y+.5)/pxs,top=1.25-y/R.h;
+            for(let x=0;x<R.w;x++,j++){const a=m[j];if(a<.05)continue;const px=(R.x+x+.5)/pxs;for(const q of parts)s+=field(px,py,q)[0]*a*top}}
+          if(s*dir<0)parts=parts.map(q=>q.kind===0?{...q,c:-q.c,s:-q.s}:{...q,dx:-q.dx,dy:-q.dy});
+        }
+        let cx=0,cw=0;
         for(let y=0,j=0;y<R.h;y++){
           const py=(R.y+y+.5)/pxs;
           for(let x=0,i=(R.y+y)*w+R.x;x<R.w;x++,i++,j++){
             const a=m[j]*amt;if(a<.002)continue;
             const px=(R.x+x+.5)/pxs;let ux=0,uy=0;
-            for(const q of parts){
-              if(q.kind===0){const dx=px-q.cx,dy=py-q.cy;ux+=dx*q.c-dy*q.s;uy+=dx*q.s+dy*q.c}
-              else if(q.kind===1){ux+=q.dx;uy+=q.dy}
-              else{const t=clamp((py-q.y0)/(q.y1-q.y0),0,1),f=t*t*(3-2*t)*.6+t*.4;ux+=q.dx*f;uy+=q.dy*f}
-            }
+            for(const q of parts){const u=field(px,py,q);ux+=u[0];uy+=u[1]}
             vx[i]+=ux*a;vy[i]+=uy*a;
-            const wt=a*(Math.sqrt(ux*ux+uy*uy)+.05);ps[i]+=sinP*wt;pc[i]+=cosP*wt;sp[i]+=speed*wt;sw[i]+=wt;
+            const wt=a*(Math.sqrt(ux*ux+uy*uy)+.05);
+            if(wt>domW[i]){domW[i]=wt;dom[i]=di}
+            if(kind==='wind'&&a>flut[i])flut[i]=a;
+            cx+=(R.x+x)*a;cw+=a;
           }
         }
-      }else if(L.type==='flicker'){
-        const speed=L.speed??1.7;
-        for(let y=0,j=0;y<R.h;y++)for(let x=0,i=(R.y+y)*w+R.x;x<R.w;x++,i++,j++){const a=m[j]*amt*.05;if(a<1e-4)continue;ps[i]+=sinP*a;pc[i]+=cosP*a;sp[i]+=speed*a;sw[i]+=a}
+        drivers.push({kind,name:L.name||'',x:cw?cx/cw/w:.5,speed:L.speed??(L.type==='flicker'?1.7:1.2),phase,gust:L.gust??1});
       }
       const target=ch[L.type];
-      if(target){const v=L.type==='parallax'?(L.depth??1):1;for(let y=0,j=0;y<R.h;y++)for(let x=0,i=(R.y+y)*w+R.x;x<R.w;x++,i++,j++){const a=m[j]*amt*v;if(a>target[i])target[i]=a}}
+      if(target){for(let y=0,j=0;y<R.h;y++)for(let x=0,i=(R.y+y)*w+R.x;x<R.w;x++,i++,j++){const a=m[j]*amt;if(a>target[i])target[i]=a}}
       await later();
+    }
+    // Spread each layer's index a few texels past its edge, so the soft rim of a layer reads its own driver.
+    for(let pass=0;pass<3;pass++){
+      const src=dom.slice();
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(src[i]>=0)continue;
+        const v=x>0&&src[i-1]>=0?src[i-1]:x<w-1&&src[i+1]>=0?src[i+1]:y>0&&src[i-w]>=0?src[i-w]:y<h-1&&src[i+w]>=0?src[i+w]:-1;if(v>=0)dom[i]=v}
     }
     const fx=new Uint8Array(n*4),mo=new Uint8Array(n*4),aux=new Uint8Array(n*4);
     const b=v=>v<=0?0:v>=1?255:Math.round(v*255);
     for(let i=0;i<n;i++){
       fx[i*4]=b(ch.water[i]);fx[i*4+1]=b(ch.flow[i]);fx[i*4+2]=b(ch.flicker[i]);fx[i*4+3]=b(ch.stars[i]);
       mo[i*4]=Math.round(128+clamp(vx[i]/MOTION_MAX,-1,1)*127);mo[i*4+1]=Math.round(128+clamp(vy[i]/MOTION_MAX,-1,1)*127);
-      const ph=sw[i]?(Math.atan2(ps[i],pc[i])/TAU+1)%1:0;mo[i*4+2]=b(ph);mo[i*4+3]=sw[i]?b(sp[i]/sw[i]/SPEED_MAX):0;
-      aux[i*4]=b(ch.wind[i]);aux[i*4+1]=b(ch.foam[i]);aux[i*4+2]=b(ch.parallax[i]);aux[i*4+3]=b(ch.dapple[i]);
+      mo[i*4+2]=dom[i]<0?0:dom[i];mo[i*4+3]=b(flut[i]);
+      aux[i*4]=b(ch.wind[i]);aux[i*4+1]=b(ch.foam[i]);aux[i*4+2]=0;aux[i*4+3]=b(ch.dapple[i]);
     }
-    return {w,h,fx,mo,aux};
+    return {w,h,fx,mo,aux,drivers,dir};
   }
   async function masksFor(id,scene,img,src){
     const key=id+'|'+src;
@@ -291,38 +325,48 @@ const HibiscusScenes=(()=>{
   const FRAG_BG=`
 precision highp float;
 uniform sampler2D uImg,uFx,uMo,uAux,uNoise;
-uniform vec2 uImgSize,uView,uPointer;
-uniform vec4 uRect,uWater,uWater2,uRip[${MAX_RIPPLES}];
-uniform vec3 uHover;
-uniform float uBias,uTime,uAmp,uParallax,uWindPx,uFlowSpeed,uFlowLen,uRipAspect,uDebug,uFoam;
+uniform vec2 uImgSize,uView,uMaskSize;
+uniform vec4 uRect,uWater,uWater2;
+uniform float uBias,uTime,uClock,uWindT,uAmp,uWindPx,uFlowSpeed,uFlowLen,uDebug,uFoam,uSwell;
+uniform float uDrive[${MAX_DRIVERS}],uWind[${WIND_SAMPLES}];
 varying vec2 vUv;
+float windAt(float x){float f=clamp(x,0.,1.)*${(WIND_SAMPLES-1).toFixed(1)};int i=int(floor(f));int j=min(i+1,${WIND_SAMPLES-1});return mix(uWind[i],uWind[j],f-float(i));}
+float hash1(float c,float i){return fract(sin(7.*127.1+c*311.7+i*74.7)*43758.5453);}
+// the shoreline wash, the same shape as HibiscusNature.wash (fast push in, slow slide back)
+float washAt(float t,float x){
+  float p=t/8.5+clamp(x,0.,1.)*.35,c=floor(p),f=p-c;
+  float s=f<.3?smoothstep(0.,1.,f/.3):1.-smoothstep(0.,1.,(f-.3)/.7);
+  float a=hash1(c,6.)>.82?1.15:.6+.4*hash1(c,8.);
+  return s*a;
+}
 void main(){
   vec2 uv=(vUv*uView-uRect.xy)/uRect.zw;
   if(uv.x<0.||uv.y<0.||uv.x>1.||uv.y>1.){gl_FragColor=vec4(0.);return;}
   vec2 p=uv*uImgSize;
   vec4 fx=texture2D(uFx,uv),mo=texture2D(uMo,uv),aux=texture2D(uAux,uv);
-  if(uDebug>.5){vec3 m=uDebug<1.5?fx.rgb+vec3(fx.a):uDebug<2.5?vec3(abs(mo.r*255.-128.)/24.,abs(mo.g*255.-128.)/24.,mo.a*4.):aux.rgb+vec3(aux.a*.5);
+  float idx=floor(texture2D(uMo,(floor(uv*uMaskSize)+.5)/uMaskSize).b*255.+.5);
+  if(uDebug>.5){vec3 m=uDebug<1.5?fx.rgb+vec3(fx.a):uDebug<2.5?vec3(abs(mo.r*255.-128.)/24.,abs(mo.g*255.-128.)/24.,mo.a*.6+fract(idx*.618)*.4):aux.rgb+vec3(aux.a*.5);
     gl_FragColor=vec4(texture2D(uImg,uv).rgb*.3+min(m,1.)*.75,1.);return;}
-  vec2 off=aux.b*uPointer*uParallax;
+  float wHere=windAt(uv.x);
   vec2 v=(mo.rg*255.-128.)/127.*${MOTION_MAX.toFixed(1)};
-  float ph=mo.b*6.2831853,sp=mo.a*${SPEED_MAX.toFixed(1)};
-  float osc=sin(uTime*sp+ph)*.78+sin(uTime*sp*2.31+ph*1.7)*.22;
-  off+=v*osc*uAmp;
-  if(aux.r>.002){vec2 wn=texture2D(uNoise,p/vec2(420.,330.)+uTime*vec2(.011,.005)).rg-.5;off+=aux.r*wn*2.2*uWindPx*uAmp;}
-  float wm=fx.r,f=1.,shim=0.,rl=0.;vec2 q=vec2(0.);
+  float ph=idx*2.39996;
+  vec2 off=v*uDrive[int(idx)]*uAmp;
+  // leaf flutter toward the tips of wind-driven plants (|v| is largest there), stronger in a gust
+  if(mo.a>.01){vec2 fn=texture2D(uNoise,p/vec2(70.,55.)+uWindT*vec2(.05,.031)).rg-.5;off+=fn*length(v)*mo.a*(.15+.5*wHere)*.55*uAmp;}
+  if(aux.r>.002){vec2 wn=texture2D(uNoise,p/vec2(420.,330.)+uWindT*vec2(.011,.005)).rg-.5;off+=aux.r*wn*2.2*uWindPx*(.3+.85*wHere)*uAmp;}
+  float wm=fx.r,f=1.,shim=0.,sw=0.;vec2 q=vec2(0.);
   if(wm>.002){
     if(uWater2.x>0.)f=clamp((uv.y-uWater2.x)/uWater2.y,.1,1.);
     q=p/(uWater.y*f)*vec2(1./uWater2.z,1.);
-    vec2 n1=texture2D(uNoise,q*.05+uTime*vec2(.006,.014)).rg-.5;
-    vec2 n2=texture2D(uNoise,q*.083+vec2(.37,.11)-uTime*vec2(.011,.009)).gr-.5;
-    vec2 wv=(n1+n2*.8);shim=wv.y;
-    off+=wm*wv*uWater.x*f*uAmp;
-    for(int i=0;i<${MAX_RIPPLES};i++){
-      vec4 r=uRip[i];if(r.w<=0.)continue;
-      vec2 d=(p-r.xy)*vec2(1.,uRipAspect);float dist=length(d),x=dist-r.z*70.;
-      float env=exp(-x*x/500.)*r.w;
-      off+=wm*(d/max(dist,1.))*sin(x*.28)*env*4.5;rl+=env*cos(x*.28);
-    }
+    // fine ripples: two slow noise fields drifting past each other
+    vec2 n1=texture2D(uNoise,q*.05+uTime*vec2(.004,.009)).rg-.5;
+    vec2 n2=texture2D(uNoise,q*.083+vec2(.37,.11)-uTime*vec2(.007,.006)).gr-.5;
+    vec2 wv=(n1+n2*.8)*.75;shim=wv.y;
+    // swell: long crests rolling toward the viewer, bent by a slow noise so they never line up
+    float bendc=texture2D(uNoise,q*.012+vec2(.2,.7)+uTime*.0015).r*5.;
+    float sph=q.y*1.15+q.x*.08+bendc-uTime*.75;
+    sw=sin(sph)*(.7+.3*sin(sph*.37+q.x*.05));
+    off+=wm*(wv+vec2(0.,sw*.55*uSwell))*uWater.x*f*uAmp;
   }
   vec2 sp2=p+off;vec3 col;
   if(fx.g>.002){
@@ -333,35 +377,34 @@ void main(){
   }else col=texture2D(uImg,sp2/uImgSize,uBias).rgb;
   if(wm>.002){
     float lum=dot(col,vec3(.299,.587,.114));
-    col*=1.+wm*(shim*.07+rl*.16)*uAmp;
-    float g1=texture2D(uNoise,q*.21+uTime*vec2(.017,.031)).b,g2=texture2D(uNoise,q*.17+vec2(.5,.2)-uTime*vec2(.023,.012)).b;
-    float pch=smoothstep(.38,.72,texture2D(uNoise,q*.012+uTime*vec2(.004,-.003)).r);
+    col*=1.+wm*(shim*.06+sw*.035*uSwell)*uAmp;
+    float g1=texture2D(uNoise,q*.21+uTime*vec2(.012,.022)).b,g2=texture2D(uNoise,q*.17+vec2(.5,.2)-uTime*vec2(.016,.009)).b;
+    float pch=smoothstep(.38,.72,texture2D(uNoise,q*.012+uTime*vec2(.003,-.002)).r);
     float gl=smoothstep(uWater2.w,uWater2.w+.16,g1*g2+pch*.08)*pch*smoothstep(uWater.w-.25,uWater.w+.1,lum);
     col+=gl*wm*uWater.z*uAmp*(vec3(.55,.53,.5)+col*.5);
   }
   if(aux.g>.002){
-    float br=sin(uTime*.9+ph+p.x*.012+p.y*.02)*.5+.5;
-    col=mix(col,col+(1.-col)*.4,aux.g*br*uFoam*uAmp);
+    float br=washAt(uClock,uv.x)*(.7+.6*texture2D(uNoise,p/90.+vec2(uClock*.004,0.)).g);
+    col=mix(col,col+(1.-col)*.42,aux.g*clamp(br,0.,1.3)*uFoam*uAmp);
   }
-  float hov=uHover.z*(1.-smoothstep(0.,110.,distance(p,uHover.xy)));
   if(fx.b>.002){
     float h=texture2D(uNoise,p*.0035+vec2(uTime*.021,0.)).b;
     float fl=sin(uTime*1.3+ph)*.45+sin(uTime*3.7+ph*2.)*.25+(h-.5)*.9;
-    col*=1.+fx.b*(fl*.16*uAmp+hov*.3);
+    col*=1.+fx.b*fl*.16*uAmp;
   }
   if(fx.a>.002){
     float tw=texture2D(uNoise,p*.0042+vec2(uTime*.03,uTime*.011)).b*texture2D(uNoise,p*.0031-vec2(uTime*.017,0.)).b*2.4;
     col*=mix(1.,.45+tw*tw*.8,fx.a*uAmp);
   }
   if(aux.a>.002){
-    float n=texture2D(uNoise,p/260.+uTime*vec2(.009,.005)).g;
+    float n=texture2D(uNoise,p/260.+vec2(uWindT*.012,uWindT*.006)).g;
     col*=1.+aux.a*(n-.5)*.34*uAmp;
   }
   gl_FragColor=vec4(col,1.);
 }`;
   const VERT_SPR=`
 attribute vec2 aCenter;attribute vec2 aSize;attribute float aRot;attribute vec4 aColor;attribute vec4 aExtra;
-uniform vec4 uRect;uniform vec2 uView,uImgSize;uniform float uTime,uAmp,uMinPx;uniform vec3 uHover;
+uniform vec4 uRect;uniform vec2 uView,uImgSize;uniform float uTime,uAmp,uMinPx;
 varying vec2 vC;varying vec4 vColor;varying float vKind;
 void main(){
   vec2 sc=uRect.zw/uImgSize;float s=sqrt(sc.x*sc.y);
@@ -373,7 +416,6 @@ void main(){
   float a=aColor.a;
   if(aExtra.z>0.&&aExtra.x>.5&&aExtra.x<1.5){float h=aExtra.y,w=.5+.5*sin(uTime*(.55+h*.9)+h*40.);a*=mix(1.,pow(w,7.)*2.6,aExtra.z);}
   else if(aExtra.z>0.){float h=aExtra.y;a*=1.+aExtra.z*(sin(uTime*(1.1+h*1.7)+h*40.)*.55+sin(uTime*(3.3+h*3.1)+h*13.)*.3+sin(uTime*(9.+h*6.)+h*7.)*.15);}
-  if(aExtra.w>0.)a*=1.+aExtra.w*uHover.z*(1.-smoothstep(0.,max(aSize.x,aSize.y)*1.4+60.,distance(aCenter,uHover.xy)));
   vColor=vec4(aColor.rgb,a*uAmp);
 }`;
   const FRAG_SPR=`
@@ -414,7 +456,7 @@ void main(){
       if(s.kind==='sparkle'){p.life=rand(.35,.9);p.age=-rand(0,s.gap||1.5)}
       return p;
     }
-    update(dt,t,pointer,actor,scale){
+    update(dt,t,actor,gust){
       const flee=(p,src,radius,force)=>{if(!src)return;const dx=p.x-src[0],dy=p.y-src[1],d=Math.hypot(dx,dy);if(d<radius&&d>.01){const f=(1-d/radius)*force;p.vx+=dx/d*f*dt;p.vy+=dy/d*f*dt;p.scare=Math.min(1,p.scare+dt*3)}};
       for(const p of this.list){
         const s=p.spec,a=this.area(s);p.age+=dt;
@@ -422,8 +464,8 @@ void main(){
         const k=s.kind,R=(s.scatter||120)*this.sx;
         if(k==='petal'){
           const wind=s.wind||[18,10];
-          p.vx+=((wind[0]*this.sx+Math.sin(t*.7+p.seed*20)*14)-p.vx)*dt*.8;p.vy+=((wind[1]*this.sy+Math.sin(t*2.1+p.seed*9)*9)-p.vy)*dt*.8;
-          flee(p,pointer,R,900);flee(p,actor,R*1.2,1100);
+          p.vx+=((wind[0]*this.sx*gust+Math.sin(t*.7+p.seed*20)*14)-p.vx)*dt*.8;p.vy+=((wind[1]*this.sy+Math.sin(t*2.1+p.seed*9)*9)-p.vy)*dt*.8;
+          flee(p,actor,R*1.2,1100);
           p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=(p.vr+p.vx*.01)*dt;
           const t01=p.age/p.life;p.alpha=Math.min(1,p.age*1.5)*Math.min(1,(1-t01)*4);
           p.w=p.size*(.55+.45*Math.abs(Math.cos(t*2+p.seed*9)));p.h=p.size;
@@ -433,7 +475,7 @@ void main(){
           const spd=(k==='butterfly'?42:14)*this.sx,dx=p.tx-p.x,dy=p.ty-p.y,d=Math.hypot(dx,dy)||1;
           p.vx+=(dx/d*spd-p.vx)*dt*(k==='butterfly'?1.6:.6)+Math.sin(t*3+p.seed*30)*(k==='butterfly'?40:6)*dt;
           p.vy+=(dy/d*spd-p.vy)*dt*(k==='butterfly'?1.6:.6)+Math.cos(t*2.6+p.seed*17)*(k==='butterfly'?50:6)*dt;
-          flee(p,pointer,R,k==='butterfly'?700:260);flee(p,actor,R,k==='butterfly'?700:260);
+          flee(p,actor,R,k==='butterfly'?700:260);
           const vmax=spd*(2.5+p.scare*2);const v=Math.hypot(p.vx,p.vy);if(v>vmax){p.vx*=vmax/v;p.vy*=vmax/v}
           p.x+=p.vx*dt;p.y+=p.vy*dt;p.scare=Math.max(0,p.scare-dt);
           if(k==='butterfly'){p.flap+=dt*(11+p.scare*8);p.alpha=Math.min(1,p.age);p.w=p.size*(.2+.8*Math.abs(Math.cos(p.flap)));p.h=p.size*.8;p.rot=clamp(p.vx*.004,-.5,.5)}
@@ -492,10 +534,9 @@ void main(){
   class Scene{
     constructor(el,id,opts){
       this.el=el;this.id=id;this.opts=opts||{};this.data=sceneData(id);this.state='idle';this.paused=false;this.visible=true;
-      this.t=0;this.last=0;this.raf=0;this.amp=0;this.ripples=[];this.pointer=[0,0];this.pointerTarget=[0,0];this.hover=null;this.hoverAmt=0;
+      this.t=0;this.last=0;this.raf=0;this.amp=0;this.windT=0;this.springs=[];
       this.actor=null;this.frameTimes=[];this.ema=16;this.level=0;this.stats={frames:0,slow:0};
       this.onVisibility=()=>this.kick();
-      this.onPointer=e=>this.pointerEvent(e);
       if(this.data)this.start();
     }
     async start(){
@@ -540,11 +581,11 @@ void main(){
         uMo:{value:dataTex(masks.mo,masks.w,masks.h,T.LinearFilter,T.ClampToEdgeWrapping)},uAux:{value:dataTex(masks.aux,masks.w,masks.h,T.LinearFilter,T.ClampToEdgeWrapping)},
         uNoise:{value:dataTex(nz.data,nz.size,nz.size,T.LinearFilter,T.RepeatWrapping)},
         uImgSize:{value:new T.Vector2(this.img[0],this.img[1])},uView:{value:new T.Vector2(1,1)},uRect:{value:new T.Vector4(0,0,1,1)},
-        uPointer:{value:new T.Vector2()},uHover:{value:new T.Vector3()},uTime:{value:0},uAmp:{value:0},
-        uParallax:{value:0},uWindPx:{value:(d.wind?.px??1)*this.k},uFlowSpeed:{value:fl.speed??1.2},uFlowLen:{value:(fl.len??8)*this.k},
+        uTime:{value:0},uClock:{value:0},uWindT:{value:0},uAmp:{value:0},uMaskSize:{value:new T.Vector2(masks.w,masks.h)},
+        uDrive:{value:new Float32Array(MAX_DRIVERS)},uWind:{value:new Float32Array(WIND_SAMPLES)},uSwell:{value:W.swell??1},
+        uWindPx:{value:(d.wind?.px??1)*this.k},uFlowSpeed:{value:fl.speed??1.2},uFlowLen:{value:(fl.len??8)*this.k},
         uWater:{value:new T.Vector4((W.px??1.2)*this.k,(W.scale??40)*this.k,W.glint??.8,W.glintLum??.5)},
         uWater2:{value:new T.Vector4(W.horizon??0,W.depth??.3,W.stretch??1.6,W.glintAt??.4)},
-        uRip:{value:Array.from({length:MAX_RIPPLES},()=>new T.Vector4())},uRipAspect:{value:d.rippleAspect??1},
         uDebug:{value:config.debug|0},uBias:{value:config.lodBias},uFoam:{value:d.foam??1}
       };
       const scene=this.scene=new T.Scene(),cam=this.camera=new T.OrthographicCamera(-1,1,1,-1,0,1);
@@ -552,7 +593,7 @@ void main(){
       this.bgMat=new T.ShaderMaterial({uniforms:this.bgUniforms,vertexShader:VERT_BG,fragmentShader:FRAG_BG,depthTest:false,depthWrite:false});
       const bg=new T.Mesh(quad,this.bgMat);bg.frustumCulled=false;scene.add(bg);
       this.sprUniforms={uRect:this.bgUniforms.uRect,uView:this.bgUniforms.uView,uImgSize:this.bgUniforms.uImgSize,uTime:this.bgUniforms.uTime,
-        uAmp:this.bgUniforms.uAmp,uHover:this.bgUniforms.uHover,uMinPx:{value:3}};
+        uAmp:this.bgUniforms.uAmp,uMinPx:{value:3}};
       this.sprMat=new T.ShaderMaterial({uniforms:this.sprUniforms,vertexShader:VERT_SPR,fragmentShader:FRAG_SPR,side:T.DoubleSide,transparent:true,depthTest:false,depthWrite:false,
         blending:T.CustomBlending,blendEquation:T.AddEquation,blendSrc:T.OneFactor,blendDst:T.OneMinusSrcAlphaFactor,blendSrcAlpha:T.OneFactor,blendDstAlpha:T.OneMinusSrcAlphaFactor});
       const lights=d.lights||[];
@@ -576,7 +617,6 @@ void main(){
       this.io.observe(this.el);
       this.ro=new ResizeObserver(()=>this.resize());this.ro.observe(this.el);
       document.addEventListener('visibilitychange',this.onVisibility);
-      for(const t of ['pointermove','pointerdown','pointerleave','pointercancel'])this.el.addEventListener(t,this.onPointer,{passive:true});
     }
     resize(){
       if(!this.renderer)return;
@@ -586,22 +626,9 @@ void main(){
       this.renderer.setPixelRatio(dpr);this.renderer.setSize(f.W,f.H,false);
       this.bgUniforms.uView.value.set(f.W,f.H);this.bgUniforms.uRect.value.set(f.x,f.y,f.w,f.h);
       this.scale=Math.sqrt(f.w*f.h/(this.img[0]*this.img[1]));
-      this.bgUniforms.uParallax.value=(this.data.parallax??3)/Math.max(.05,this.scale);
       if(this.state==='live'&&!this.raf)this.renderFrame(performance.now(),true);
     }
     toImage(cx,cy){const f=this.frame;return f?[(cx-f.x)/f.w*this.img[0],(cy-f.y)/f.h*this.img[1]]:null}
-    pointerEvent(e){
-      if(this.state!=='live')return;
-      const r=this.el.getBoundingClientRect(),cx=e.clientX-r.left-this.el.clientLeft,cy=e.clientY-r.top-this.el.clientTop;
-      if(e.type==='pointerleave'||e.type==='pointercancel'){this.hover=null;this.pointerTarget=[0,0];return}
-      const p=this.toImage(cx,cy);if(!p)return;
-      this.hover=p;this.pointerTarget=[clamp(cx/r.width*2-1,-1,1),clamp(cy/r.height*2-1,-1,1)];
-      if(e.type==='pointerdown'){
-        const m=this.masks,mx=clamp(Math.floor(p[0]/this.img[0]*m.w),0,m.w-1),my=clamp(Math.floor(p[1]/this.img[1]*m.h),0,m.h-1);
-        if(m.fx[(my*m.w+mx)*4]>64){this.ripples.push({x:p[0],y:p[1],t:0});if(this.ripples.length>MAX_RIPPLES)this.ripples.shift()}
-      }
-      this.kick();
-    }
     shouldRun(){return this.state==='live'&&!this.paused&&this.visible&&!document.hidden&&this.el.isConnected}
     kick(){
       if(this.state!=='live')return;
@@ -615,25 +642,45 @@ void main(){
       if(this.state!=='live')return;
       if(!once&&!this.shouldRun())return;
       const dt=this.last?Math.min(.1,(now-this.last)/1000):0;this.last=now;
-      if(!once){this.t=(this.t+dt)%3600;this.amp=Math.min(1,this.amp+dt/1.2);this.stats.frames++}
-      const U=this.bgUniforms,s=this.amp*this.amp*(3-2*this.amp);
-      U.uTime.value=this.t;U.uAmp.value=this.opts.still?0:s;
-      const k=1-Math.exp(-dt*3.5);this.pointer[0]+=(this.pointerTarget[0]-this.pointer[0])*k;this.pointer[1]+=(this.pointerTarget[1]-this.pointer[1])*k;
-      U.uPointer.value.set(-this.pointer[0],-this.pointer[1]);
-      this.hoverAmt+=((this.hover?1:0)-this.hoverAmt)*Math.min(1,dt*5);
-      if(this.hover)U.uHover.value.set(this.hover[0],this.hover[1],this.hoverAmt);else U.uHover.value.z=this.hoverAmt;
-      this.ripples=this.ripples.filter(r=>(r.t+=dt)<3.2);
-      U.uRip.value.forEach((v,i)=>{const r=this.ripples[i];if(r)v.set(r.x,r.y,r.t,Math.exp(-r.t*1.1)*(1-r.t/3.2));else v.set(0,0,0,0)});
+      if(!once)this.advance(dt);
+      this.draw();
+      if(this.state!=='live')return;
+      if(!once){this.watchPerformance(dt);this.raf=requestAnimationFrame(n=>this.renderFrame(n))}
+    }
+    /* One step of the weather: the wind across the picture, each layer's spring, the wash, the particles. */
+    advance(dt){
+      this.t=(this.t+dt)%3600;this.amp=Math.min(1,this.amp+dt/1.2);this.stats.frames++;
+      const U=this.bgUniforms,N=nature(),clk=config.clock?config.clock():N?N.now():this.t,dir=this.masks.dir||1,seed=N?N.seed(this.id):0;
+      const windAt=x=>N?N.wind(seed,clk,dir>0?x:1-x):.3;
+      for(let i=0;i<WIND_SAMPLES;i++)U.uWind.value[i]=windAt(i/(WIND_SAMPLES-1));
+      const mid=U.uWind.value[(WIND_SAMPLES-1)>>1];
+      this.windT=(this.windT+dt*(.45+mid))%1000;
+      U.uWindT.value=this.windT;U.uClock.value=clk%(8.5*400);U.uTime.value=this.t;
+      const drive=U.uDrive.value;
+      this.masks.drivers.forEach((d,i)=>{
+        if(d.kind==='wind'){
+          const sp=this.springs[i]||(this.springs[i]={x:0,v:0}),w=windAt(d.x),om=clamp(d.speed*1.6,1.3,3.4),z=.3,ph=d.phase,t=this.t;
+          const turb=.5*Math.sin(t*2.83+ph)+.3*Math.sin(t*5.21+ph*2.1)+.2*Math.sin(t*8.6+ph*.6);
+          const F=d.gust*((w-.3)*1.5+turb*(.1+.35*w));
+          const n=Math.max(1,Math.ceil(dt*90)),h=dt/n;
+          for(let k=0;k<n;k++){sp.v+=(om*om*(F-sp.x)-2*z*om*sp.v)*h;sp.x+=sp.v*h}
+          drive[i]=sp.x;
+        }else if(d.kind==='osc')drive[i]=Math.sin(this.t*d.speed+d.phase)*.78+Math.sin(this.t*d.speed*2.31+d.phase*1.7)*.22;
+        else if(d.kind==='wash')drive[i]=N?(N.wash(clk,d.x)*2-1)*.9:0;
+        else drive[i]=0;
+      });
       if(this.parts&&dt){
-        const actor=this.readActor();
-        this.swarm.update(dt,this.t,this.hover,actor,this.scale);
+        this.swarm.update(dt,this.t,this.readActor(),.5+mid);
         this.swarm.list.forEach((p,i)=>{const k=KIND[p.spec.kind];this.parts.set(i,p.x,p.y,p.w||p.size,p.h||p.size,p.rot,p.color[0],p.color[1],p.color[2],Math.max(0,p.alpha)*(p.spec.alpha??1),k,p.seed,0,0)});
         this.parts.flush();
       }
+    }
+    draw(){
+      const s=this.amp*this.amp*(3-2*this.amp);
+      this.bgUniforms.uAmp.value=this.opts.still?0:s;
       this.renderer.render(this.scene,this.camera);
       if(this.shaderFailed){this.fail();return}
       if(this.renderer.domElement.style.visibility==='hidden')this.renderer.domElement.style.visibility='visible';
-      if(!once){this.watchPerformance(dt);this.raf=requestAnimationFrame(n=>this.renderFrame(n))}
     }
     readActor(){
       if(this.actorXY){const f=this.frame;return f?this.toImage(this.actorXY[0]*f.W,this.actorXY[1]*f.H):null}
@@ -657,7 +704,6 @@ void main(){
       if(this.raf)cancelAnimationFrame(this.raf);this.raf=0;
       this.io?.disconnect();this.ro?.disconnect();this.io=this.ro=null;
       document.removeEventListener('visibilitychange',this.onVisibility);
-      for(const t of ['pointermove','pointerdown','pointerleave','pointercancel'])this.el.removeEventListener(t,this.onPointer);
       if(this.renderer){
         this.scene?.traverse(o=>{if(o.isMesh){o.geometry.dispose()}});
         this.bgMat?.dispose();this.sprMat?.dispose();this.lights?.dispose();this.parts?.dispose();this.quad?.dispose();
@@ -694,6 +740,8 @@ void main(){
       setActor:(x,y)=>{m.actorXY=x==null?null:[x,y]},
       get state(){return m.state==='live'&&m.still?'still':m.state},
       get _scene(){return m},
+      /* Tests: advance the weather by dt seconds and draw once (use while paused, with config.clock set). */
+      _step:dt=>{if(m.state==='live'){m.advance(dt);m.draw()}},
       info:()=>({state:m.state,still:!!m.still,level:m.level,frame:m.frame,ema:m.ema,frames:m.stats.frames,
         memory:m.renderer?{...m.renderer.info.memory}:null,render:m.renderer?{...m.renderer.info.render}:null,particles:m.swarm?.list.length||0})
     };

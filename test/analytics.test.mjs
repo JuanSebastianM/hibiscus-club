@@ -145,3 +145,37 @@ test('i18n dictionaries have the same keys', () => {
   assert.deepEqual(es.filter(k => !en.includes(k)), [], 'Spanish-only keys');
   assert.deepEqual(en.filter(k => !es.includes(k)), [], 'English keys missing from Spanish');
 });
+
+test('first-visit notice state: shown until answered, respects opt-outs, holds events only while counting is on', () => {
+  const A = loadClient().HibiscusAnalytics, env = { local: false, browserOptOut: false };
+  assert.deepEqual({ ...A.noticeState({ analytics: true, notice: 0 }, env) }, { show: true, mode: 'on', hold: true });
+  assert.deepEqual({ ...A.noticeState({ analytics: true, notice: 1 }, env) }, { show: false, mode: 'on', hold: false });
+  assert.deepEqual({ ...A.noticeState({ analytics: false, notice: 0 }, env) }, { show: true, mode: 'off', hold: false });
+  assert.deepEqual({ ...A.noticeState({ analytics: true, notice: 0 }, { local: false, browserOptOut: true }) }, { show: true, mode: 'browser', hold: false });
+  assert.deepEqual({ ...A.noticeState({ analytics: true, notice: 0 }, { local: true, browserOptOut: false }) }, { show: true, mode: 'local', hold: false });
+  assert.equal(A.noticeState({}, env).show, true, 'an old save without the field sees it once');
+  // with the browser's own signals
+  assert.equal(loadClient({ gpc: true }).HibiscusAnalytics.noticeState({ analytics: true }).mode, 'browser');
+  assert.equal(loadClient({ dnt: '1' }).HibiscusAnalytics.noticeState({ analytics: true }).mode, 'browser');
+});
+
+test('while the notice holds, nothing is sent (not even on page hide) until OK; turning counting off drops it all', () => {
+  const ok = loadClient(), A = ok.HibiscusAnalytics;
+  A.init(true, () => ({ c: 'adult', l: 'en' }), { hold: true });
+  assert.equal(A.held, true);
+  A.track('visit', 'map'); A.track('room', 'salon');
+  for (let i = 0; i < 30; i++) A.track('chat', 'market'); // more than a batch: still nothing
+  A.flush(); ok.listeners.pagehide();
+  assert.equal(ok.sent.length, 0, 'nothing before the choice');
+  A.release();
+  A.flush();
+  const sent = ok.sent.flatMap(s => s.body.ev);
+  assert.deepEqual(sent.slice(0, 2).map(x => x.e + ':' + x.d), ['visit:map', 'room:salon']);
+  assert.equal(sent.length, 32);
+  const off = loadClient(), B = off.HibiscusAnalytics;
+  B.init(true, () => ({ c: 'adult', l: 'en' }), { hold: true });
+  B.track('visit', 'map');
+  B.setEnabled(false); B.release();
+  B.track('room', 'salon'); B.flush(); off.listeners.pagehide();
+  assert.equal(off.sent.length, 0, 'turned off at the notice: nothing ever sent');
+});

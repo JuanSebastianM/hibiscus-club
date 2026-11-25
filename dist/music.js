@@ -37,6 +37,7 @@ const HibiscusMusic=(()=>{
     eighths:{0:[0,2],2:[0,2],4:[7,2],6:[0,2],8:[0,2],10:[0,2],12:[7,2],14:[4,2]},
     long:{0:[0,7],8:[4,7]}};
 
+  const effectListeners=[];
   let ctx=null,chain=null,timer=null,offTimer=null,wanted=false,unlocked=false,step=0,nextTime=0,sfxCount=0;
   const stats={steps:0,notes:0,cycles:0,timersStarted:0,activeTimers:0,starts:0,stops:0};
 
@@ -62,9 +63,11 @@ const HibiscusMusic=(()=>{
     comp.connect(limit);limit.connect(out);out.connect(c.destination);
     const music=c.createGain();music.gain.value=musicLevel;music.connect(comp);
     const sfx=c.createGain();sfx.gain.value=SFX_LEVEL;sfx.connect(comp);
+    // ambience.js joins after the compressor, so the music never pumps the surf and birds (the limiter still guards both)
+    const amb=c.createGain();amb.gain.value=1;amb.connect(limit);
     const noise=c.createBuffer(1,c.sampleRate,c.sampleRate),nd=noise.getChannelData(0);
     for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
-    return {c,music,sfx,m:makeFx(c,music),s:makeFx(c,sfx),noise};
+    return {c,music,sfx,amb,m:makeFx(c,music),s:makeFx(c,sfx),noise};
   }
 
   // ---- instruments --------------------------------------------------------
@@ -248,9 +251,15 @@ const HibiscusMusic=(()=>{
     BPM,CYCLE_BARS,CYCLE_SECONDS:CYCLE_STEPS*STEP,sections:SECTIONS.map(s=>s.name),stats,
     get context(){return ctx},
     get running(){return !!timer},
+    get unlocked(){return unlocked},
+    /* The ambience's way in: the shared AudioContext and a gain after the compressor (created on first use). */
+    ambienceBus(){return ensureCtx()?chain.amb:null},
+    buildOutput:buildChain,
+    onEffect(f){effectListeners.push(f)},
     setEnabled(on){wanted=!!on;apply();},
     effect(win){
       if(!ensureCtx())return;
+      for(const f of effectListeners)try{f(win)}catch{}
       if(ctx.state!=='running')ctx.resume().catch(()=>{});
       (win?fanfare:sparkle)(chain.s,ctx.currentTime+.01);
     },
