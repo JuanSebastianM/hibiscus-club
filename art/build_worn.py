@@ -688,8 +688,12 @@ def _raw(outfit, name):
 def match_local(x, ref, r=60):
     """x's garment moved to ref's local colour (the difference where both are garment, spread smoothly over
     r px): a no-arm view drawn separately is a shade off, and it shows round the arm when the arm swings."""
-    w = (garment_px(x) & garment_px(ref)).astype(np.float32)
-    d = np.stack([box_blur((ref[..., c] - x[..., c]) * w, r) for c in range(3)], -1)
+    # only well inside both garments (8 px from anything else: the arm's rim is not garment) and where the
+    # two are the same fabric (a fold or the arm's shadow in one of them is not a colour difference)
+    inside = lambda m: box_blur(m.astype(np.float32), 8) > .999
+    diff = ref[..., :3] - x[..., :3]
+    w = (inside(garment_px(x)) & inside(garment_px(ref)) & (np.abs(diff).max(-1) < .12)).astype(np.float32)
+    d = np.stack([box_blur(diff[..., c] * w, r) for c in range(3)], -1)
     n = box_blur(w, r)[..., None]
     corr = np.where(n > 1e-3, d / np.maximum(n, 1e-3), 0)
     g = np.clip(box_blur(garment_px(x).astype(np.float32), 2), 0, 1)[..., None]

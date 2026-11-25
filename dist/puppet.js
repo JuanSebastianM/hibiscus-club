@@ -467,7 +467,7 @@ const HibiscusPuppet=(()=>{
     const {lab,armMask}=await baseLabels(rg,dv,!fan);await later();
     const kindOutfit=R.outfitKind(layers.shot.outfit),outfitFit=layers.worn?{}:catalogItem(layers.shot.outfit)?.fit?.[layers.doll]?.[view]||{}; // worn.js: no flat-outfit fit
     const armIdx=layers.layers.findIndex(l=>l.kind==='arm');
-    const groups={hairB:[],far:[],torso:[],legs:[],skirt:[],arms:[],over:[],raised:[],hairF:[]};
+    const groups={hairB:[],far:[],torso:[],legs:[],skirtUnder:[],skirt:[],arms:[],over:[],raised:[],hairF:[]};
     // raised-arm emotes (front view, outfits that can show them): the posed pictures, loaded now
     const poseSpec=view==='front'&&R.raisedOK(layers.shot.outfit)&&!layers.worn?R.POSE_ARMS[layers.doll]:null; // worn.js: arm-safe emotes
     const poseImgs=poseSpec&&Promise.all(Object.entries(poseSpec).map(([name,s])=>asset(s.file).then(img=>[name,s,img]))).catch(e=>{if(config.debug)console.warn(e);return null});
@@ -513,6 +513,10 @@ const HibiscusPuppet=(()=>{
         if(pc)(L.kind==='hairBack'||L.kind==='clipBehind'||L.behind?groups.hairB:groups.hairF).push(pc);
         continue;
       }
+      // worn.js: the garment rebuilt behind the arms counts only where the arm moves away (its label)
+      if(L.fill&&!rg.side){d=new Uint8ClampedArray(d); // (side views: the arm layer takes all of the arm along)
+        for(let i=0;i<L.fill.length;i++)if(L.fill[i]&&lab[i]!==L_ARM0&&lab[i]!==L_ARM1){for(let c=0;c<4;c++)d[i*4+c]=L.fill.orig[i*4+c];
+        if(hd){const k=hd.k,x=i%W,y=(i/W)|0;for(let v=0;v<k;v++)for(let u=0;u<k;u++)hd.data[((y*k+v)*W*k+x*k+u)*4+3]=0}}}
       const ex=[Math.max(0,box[0]-3),Math.max(0,box[1]-3),Math.min(W-1,box[2]+3),Math.min(H-1,box[3]+3)];
       // labels for this layer
       const lb=new Uint8Array(lab);
@@ -525,7 +529,7 @@ const HibiscusPuppet=(()=>{
           sleeve=i=>armMask[i]&&!clipM[i];
         }
         for(let i=0;i<lb.length;i++)if(lb[i]===L_ARM0)lb[i]=L_TORSO;
-        if(['body','outfit','outfitBack'].includes(L.kind)){const orig=d;d=new Uint8ClampedArray(d);inpaintUnder(d,armNear);if(sleeve){const s=sleeve,o=orig;sleeve={test:s,data:o}}}
+        if(['body','outfit','outfitBack'].includes(L.kind)){const orig=d;d=new Uint8ClampedArray(d);inpaintUnder(d,L.fill?armNear.map((m,i)=>m&&!L.fill[i]?1:0):armNear);if(sleeve){const s=sleeve,o=orig;sleeve={test:s,data:o}}} // worn.js: `fill` = the garment already rebuilt under the arm
       }
       // front/back: a garment wider than the bare arm crosses the arm/body line measured on the bald
       // doll; below the armpit only what lies within a sleeve's reach of the arm bones goes with the arm
@@ -541,6 +545,7 @@ const HibiscusPuppet=(()=>{
           else if((x-armAxisX(a,y))*(a?-1:1)>sleeveR)lb[i]=y>hipLineY(rg,x)?(x<px.root[0]?L_LEG0:L_LEG1):L_TORSO;
         }
       }
+      if(L.fill)for(let i=0;i<lb.length;i++)if(L.fill[i]&&(lb[i]===L_ARM0||lb[i]===L_ARM1||lb[i]===L_PUFF))lb[i]=Math.floor(i/W)>hipLineY(rg,i%W)?(i%W<px.root[0]?L_LEG0:L_LEG1):L_TORSO; // worn.js: the garment behind the arm stays
       if(rg.side&&li>armIdx&&L.kind==='over')for(let i=0;i<lb.length;i++)if(overArm[i])lb[i]=L_ARM0;
       if(kindOutfit==='skirt'&&['outfit','outfitBack','over'].includes(L.kind)){
         // below skirtTop the garment is skirt, except a long sleeve's cuff round the forearm
@@ -579,11 +584,13 @@ const HibiscusPuppet=(()=>{
         const variants=!poseSpec?[[member,spec]]:P===L_TORSO?[[i=>lb[i]===P&&!cut(0,i)&&!cut(1,i),spec],
           ...[0,1].map(a=>[i=>lb[i]===(a?L_ARM1:L_ARM0)&&Math.floor(i/W)<shoulderBelow||lb[i]===P&&cut(a,i),{...spec,shoulderOf:a}])]
           :P===L_PUFF?[[i=>lb[i]===P&&!sleeveOf(0,i)&&!sleeveOf(1,i),spec],...[0,1].map(a=>[i=>lb[i]===P&&sleeveOf(a,i),{...spec,puffSide:a}])]:[[member,spec]];
+        // worn.js: the skirt rebuilt behind the resting hands lies under the arms (the rest of the skirt over them)
+        if(L.fill&&P===L_SKIRT){const [m0,s0]=variants[0];variants.splice(0,1,[i=>m0(i)&&!L.fill[i],s0],[i=>m0(i)&&!!L.fill[i],{...s0,under:true}])}
         if(poseSpec&&P===L_PUFF&&sleeves==='puff'&&['outfit','over'].includes(L.kind))capSrc.push({d,lb,hem});
         for(const [mem,sp] of variants){
           const pc=makePiece(d,ex,mem,hd?{...sp,hd}:sp);
           if(!pc)continue;
-          groups[GROUP_OF[P]].push(pc);
+          (sp.under?groups.skirtUnder:groups[GROUP_OF[P]]).push(pc);
           if(P===L_HEAD&&rg.face){overlaySrc=canvas;headPiece=pc;groups.torso.push({overlay:true})}
         }
       }
@@ -603,7 +610,7 @@ const HibiscusPuppet=(()=>{
     }
     // front and back: a flared skirt lies over the hands (as in the still picture); side views: the near arm is in front
     if(posed)raisedCaps(posed,groups,rg,capSrc,beyondCut,capNear);
-    const order=[...groups.hairB,...groups.far,...groups.torso,...groups.legs,...(rg.side?[...groups.skirt,...groups.arms]:[...groups.arms,...groups.skirt]),...groups.over,...groups.raised,...groups.hairF];
+    const order=[...groups.hairB,...groups.far,...groups.torso,...groups.legs,...(rg.side?[...groups.skirtUnder,...groups.skirt,...groups.arms]:[...groups.skirtUnder,...groups.arms,...groups.skirt]),...groups.over,...groups.raised,...groups.hairF];
     // drawn expression heads (puppet-rig.js EXPRESSION_ART), when a sheet exists for this doll and view
     const expr=headPiece&&await expressionHeads(layers.doll,view,headPiece,layers.shot).catch(e=>{if(config.debug)console.warn(e);return null});
     if(expr){headPiece.expr=expr;overlaySrc=null}
