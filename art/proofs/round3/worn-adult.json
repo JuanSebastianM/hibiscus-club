@@ -252,6 +252,270 @@
   }
  },
  "entries": {
+  "aqua-velour-tracksuit": {
+   "front": {
+    "src": "assets/worn/adult-aqua-velour-tracksuit-front.webp",
+    "mask": "assets/worn/adult-aqua-velour-tracksuit-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 143092,
+    "maskBytes": 9576,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-aqua-velour-tracksuit-left.webp",
+    "mask": "assets/worn/adult-aqua-velour-tracksuit-left-mask.webp",
+    "at": [
+     4,
+     1
+    ],
+    "size": [
+     174,
+     866
+    ],
+    "bytes": 128750,
+    "maskBytes": 5588,
+    "k": 2,
+    "noarm": "assets/worn/adult-aqua-velour-tracksuit-left-noarm.webp",
+    "sleeve": "assets/worn/adult-aqua-velour-tracksuit-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-aqua-velour-tracksuit-right.webp",
+    "mask": "assets/worn/adult-aqua-velour-tracksuit-right-mask.webp",
+    "at": [
+     4,
+     2
+    ],
+    "size": [
+     174,
+     865
+    ],
+    "bytes": 122822,
+    "maskBytes": 5646,
+    "k": 2,
+    "noarm": "assets/worn/adult-aqua-velour-tracksuit-right-noarm.webp",
+    "sleeve": "assets/worn/adult-aqua-velour-tracksuit-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-aqua-velour-tracksuit-back.webp",
+    "mask": "assets/worn/adult-aqua-velour-tracksuit-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 129746,
+    "maskBytes": 8998,
+    "k": 2
+   }
+  },
+  "baby-tee-cargo": {
+   "front": {
+    "src": "assets/worn/adult-baby-tee-cargo-front.webp",
+    "mask": "assets/worn/adult-baby-tee-cargo-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 127424,
+    "maskBytes": 5124,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-baby-tee-cargo-left.webp",
+    "mask": "assets/worn/adult-baby-tee-cargo-left-mask.webp",
+    "at": [
+     4,
+     1
+    ],
+    "size": [
+     174,
+     866
+    ],
+    "bytes": 95874,
+    "maskBytes": 5458,
+    "k": 2,
+    "noarm": "assets/worn/adult-baby-tee-cargo-left-noarm.webp",
+    "sleeve": "assets/worn/adult-baby-tee-cargo-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-baby-tee-cargo-right.webp",
+    "mask": "assets/worn/adult-baby-tee-cargo-right-mask.webp",
+    "at": [
+     5,
+     2
+    ],
+    "size": [
+     173,
+     865
+    ],
+    "bytes": 96300,
+    "maskBytes": 5480,
+    "k": 2,
+    "noarm": "assets/worn/adult-baby-tee-cargo-right-noarm.webp",
+    "sleeve": "assets/worn/adult-baby-tee-cargo-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-baby-tee-cargo-back.webp",
+    "mask": "assets/worn/adult-baby-tee-cargo-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 114888,
+    "maskBytes": 4616,
+    "k": 2
+   }
+  },
+  "black-flares-set": {
+   "front": {
+    "src": "assets/worn/adult-black-flares-set-front.webp",
+    "mask": "assets/worn/adult-black-flares-set-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 112738,
+    "maskBytes": 10724,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-black-flares-set-left.webp",
+    "mask": "assets/worn/adult-black-flares-set-left-mask.webp",
+    "at": [
+     4,
+     1
+    ],
+    "size": [
+     175,
+     866
+    ],
+    "bytes": 93658,
+    "maskBytes": 6036,
+    "k": 2,
+    "noarm": "assets/worn/adult-black-flares-set-left-noarm.webp",
+    "sleeve": "assets/worn/adult-black-flares-set-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-black-flares-set-right.webp",
+    "mask": "assets/worn/adult-black-flares-set-right-mask.webp",
+    "at": [
+     2,
+     2
+    ],
+    "size": [
+     176,
+     865
+    ],
+    "bytes": 87096,
+    "maskBytes": 6140,
+    "k": 2,
+    "noarm": "assets/worn/adult-black-flares-set-right-noarm.webp",
+    "sleeve": "assets/worn/adult-black-flares-set-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-black-flares-set-back.webp",
+    "mask": "assets/worn/adult-black-flares-set-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 97824,
+    "maskBytes": 10416,
+    "k": 2
+   }
+  },
+  "butterfly-satin-skirt": {
+   "front": {
+    "src": "assets/worn/adult-butterfly-satin-skirt-front.webp",
+    "mask": "assets/worn/adult-butterfly-satin-skirt-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 126118,
+    "maskBytes": 5332,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-butterfly-satin-skirt-left.webp",
+    "mask": "assets/worn/adult-butterfly-satin-skirt-left-mask.webp",
+    "at": [
+     -40,
+     1
+    ],
+    "size": [
+     274,
+     866
+    ],
+    "bytes": 106678,
+    "maskBytes": 6458,
+    "k": 2,
+    "noarm": "assets/worn/adult-butterfly-satin-skirt-left-noarm.webp",
+    "sleeve": "assets/worn/adult-butterfly-satin-skirt-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-butterfly-satin-skirt-right.webp",
+    "mask": "assets/worn/adult-butterfly-satin-skirt-right-mask.webp",
+    "at": [
+     -41,
+     2
+    ],
+    "size": [
+     258,
+     865
+    ],
+    "bytes": 102778,
+    "maskBytes": 6384,
+    "k": 2,
+    "noarm": "assets/worn/adult-butterfly-satin-skirt-right-noarm.webp",
+    "sleeve": "assets/worn/adult-butterfly-satin-skirt-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-butterfly-satin-skirt-back.webp",
+    "mask": "assets/worn/adult-butterfly-satin-skirt-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 115538,
+    "maskBytes": 5032,
+    "k": 2
+   }
+  },
   "crochet-cover-up": {
    "front": {
     "src": "assets/worn/adult-crochet-cover-up-front.webp",
@@ -380,6 +644,70 @@
     "k": 2
    }
   },
+  "green-hibiscus-sundress": {
+   "front": {
+    "src": "assets/worn/adult-green-hibiscus-sundress-front.webp",
+    "mask": "assets/worn/adult-green-hibiscus-sundress-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 152228,
+    "maskBytes": 4998,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-green-hibiscus-sundress-left.webp",
+    "mask": "assets/worn/adult-green-hibiscus-sundress-left-mask.webp",
+    "at": [
+     -31,
+     1
+    ],
+    "size": [
+     250,
+     866
+    ],
+    "bytes": 123040,
+    "maskBytes": 6656,
+    "k": 2,
+    "noarm": "assets/worn/adult-green-hibiscus-sundress-left-noarm.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-green-hibiscus-sundress-right.webp",
+    "mask": "assets/worn/adult-green-hibiscus-sundress-right-mask.webp",
+    "at": [
+     -35,
+     2
+    ],
+    "size": [
+     251,
+     865
+    ],
+    "bytes": 120080,
+    "maskBytes": 6976,
+    "k": 2,
+    "noarm": "assets/worn/adult-green-hibiscus-sundress-right-noarm.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-green-hibiscus-sundress-back.webp",
+    "mask": "assets/worn/adult-green-hibiscus-sundress-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 149158,
+    "maskBytes": 5200,
+    "k": 2
+   }
+  },
   "hibiscus-flares": {
    "front": {
     "src": "assets/worn/adult-hibiscus-flares-front.webp",
@@ -443,6 +771,330 @@
     ],
     "bytes": 167712,
     "maskBytes": 8900,
+    "k": 2
+   }
+  },
+  "lilac-satin-bow-dress": {
+   "front": {
+    "src": "assets/worn/adult-lilac-satin-bow-dress-front.webp",
+    "mask": "assets/worn/adult-lilac-satin-bow-dress-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 152628,
+    "maskBytes": 6148,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-lilac-satin-bow-dress-left.webp",
+    "mask": "assets/worn/adult-lilac-satin-bow-dress-left-mask.webp",
+    "at": [
+     -66,
+     1
+    ],
+    "size": [
+     319,
+     866
+    ],
+    "bytes": 129620,
+    "maskBytes": 6474,
+    "k": 2,
+    "noarm": "assets/worn/adult-lilac-satin-bow-dress-left-noarm.webp",
+    "sleeve": "assets/worn/adult-lilac-satin-bow-dress-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-lilac-satin-bow-dress-right.webp",
+    "mask": "assets/worn/adult-lilac-satin-bow-dress-right-mask.webp",
+    "at": [
+     -79,
+     2
+    ],
+    "size": [
+     333,
+     865
+    ],
+    "bytes": 127448,
+    "maskBytes": 6656,
+    "k": 2,
+    "noarm": "assets/worn/adult-lilac-satin-bow-dress-right-noarm.webp",
+    "sleeve": "assets/worn/adult-lilac-satin-bow-dress-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-lilac-satin-bow-dress-back.webp",
+    "mask": "assets/worn/adult-lilac-satin-bow-dress-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 133196,
+    "maskBytes": 5570,
+    "k": 2
+   }
+  },
+  "pink-velour-cargo": {
+   "front": {
+    "src": "assets/worn/adult-pink-velour-cargo-front.webp",
+    "mask": "assets/worn/adult-pink-velour-cargo-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 170030,
+    "maskBytes": 9514,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-pink-velour-cargo-left.webp",
+    "mask": "assets/worn/adult-pink-velour-cargo-left-mask.webp",
+    "at": [
+     4,
+     1
+    ],
+    "size": [
+     175,
+     866
+    ],
+    "bytes": 146000,
+    "maskBytes": 5508,
+    "k": 2,
+    "noarm": "assets/worn/adult-pink-velour-cargo-left-noarm.webp",
+    "sleeve": "assets/worn/adult-pink-velour-cargo-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-pink-velour-cargo-right.webp",
+    "mask": "assets/worn/adult-pink-velour-cargo-right-mask.webp",
+    "at": [
+     -4,
+     2
+    ],
+    "size": [
+     182,
+     865
+    ],
+    "bytes": 136794,
+    "maskBytes": 5868,
+    "k": 2,
+    "noarm": "assets/worn/adult-pink-velour-cargo-right-noarm.webp",
+    "sleeve": "assets/worn/adult-pink-velour-cargo-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-pink-velour-cargo-back.webp",
+    "mask": "assets/worn/adult-pink-velour-cargo-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 181984,
+    "maskBytes": 9402,
+    "k": 2
+   }
+  },
+  "sarong-swimsuit": {
+   "front": {
+    "src": "assets/worn/adult-sarong-swimsuit-front.webp",
+    "mask": "assets/worn/adult-sarong-swimsuit-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 126616,
+    "maskBytes": 4130,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-sarong-swimsuit-left.webp",
+    "mask": "assets/worn/adult-sarong-swimsuit-left-mask.webp",
+    "at": [
+     4,
+     1
+    ],
+    "size": [
+     177,
+     866
+    ],
+    "bytes": 82880,
+    "maskBytes": 5174,
+    "k": 2,
+    "noarm": "assets/worn/adult-sarong-swimsuit-left-noarm.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-sarong-swimsuit-right.webp",
+    "mask": "assets/worn/adult-sarong-swimsuit-right-mask.webp",
+    "at": [
+     4,
+     2
+    ],
+    "size": [
+     179,
+     865
+    ],
+    "bytes": 86792,
+    "maskBytes": 5392,
+    "k": 2,
+    "noarm": "assets/worn/adult-sarong-swimsuit-right-noarm.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-sarong-swimsuit-back.webp",
+    "mask": "assets/worn/adult-sarong-swimsuit-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 113756,
+    "maskBytes": 3736,
+    "k": 2
+   }
+  },
+  "sequin-halter-dress": {
+   "front": {
+    "src": "assets/worn/adult-sequin-halter-dress-front.webp",
+    "mask": "assets/worn/adult-sequin-halter-dress-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 194668,
+    "maskBytes": 4192,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-sequin-halter-dress-left.webp",
+    "mask": "assets/worn/adult-sequin-halter-dress-left-mask.webp",
+    "at": [
+     0,
+     1
+    ],
+    "size": [
+     191,
+     866
+    ],
+    "bytes": 135222,
+    "maskBytes": 5624,
+    "k": 2,
+    "noarm": "assets/worn/adult-sequin-halter-dress-left-noarm.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-sequin-halter-dress-right.webp",
+    "mask": "assets/worn/adult-sequin-halter-dress-right-mask.webp",
+    "at": [
+     -20,
+     2
+    ],
+    "size": [
+     206,
+     865
+    ],
+    "bytes": 134108,
+    "maskBytes": 5808,
+    "k": 2,
+    "noarm": "assets/worn/adult-sequin-halter-dress-right-noarm.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-sequin-halter-dress-back.webp",
+    "mask": "assets/worn/adult-sequin-halter-dress-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 197152,
+    "maskBytes": 4304,
+    "k": 2
+   }
+  },
+  "tankini-board-shorts": {
+   "front": {
+    "src": "assets/worn/adult-tankini-board-shorts-front.webp",
+    "mask": "assets/worn/adult-tankini-board-shorts-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     391,
+     865
+    ],
+    "bytes": 126936,
+    "maskBytes": 3714,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-tankini-board-shorts-left.webp",
+    "mask": "assets/worn/adult-tankini-board-shorts-left-mask.webp",
+    "at": [
+     4,
+     1
+    ],
+    "size": [
+     174,
+     866
+    ],
+    "bytes": 90048,
+    "maskBytes": 5088,
+    "k": 2,
+    "noarm": "assets/worn/adult-tankini-board-shorts-left-noarm.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-tankini-board-shorts-right.webp",
+    "mask": "assets/worn/adult-tankini-board-shorts-right-mask.webp",
+    "at": [
+     9,
+     2
+    ],
+    "size": [
+     170,
+     865
+    ],
+    "bytes": 89620,
+    "maskBytes": 5076,
+    "k": 2,
+    "noarm": "assets/worn/adult-tankini-board-shorts-right-noarm.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-tankini-board-shorts-back.webp",
+    "mask": "assets/worn/adult-tankini-board-shorts-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     390,
+     864
+    ],
+    "bytes": 121380,
+    "maskBytes": 3736,
     "k": 2
    }
   },
@@ -512,9 +1164,19 @@
   }
  },
  "thumbs": {
+  "aqua-velour-tracksuit": "assets/worn/thumbs/adult-aqua-velour-tracksuit.webp",
+  "baby-tee-cargo": "assets/worn/thumbs/adult-baby-tee-cargo.webp",
+  "black-flares-set": "assets/worn/thumbs/adult-black-flares-set.webp",
+  "butterfly-satin-skirt": "assets/worn/thumbs/adult-butterfly-satin-skirt.webp",
   "crochet-cover-up": "assets/worn/thumbs/adult-crochet-cover-up.webp",
   "denim-jacket-skirt": "assets/worn/thumbs/adult-denim-jacket-skirt.webp",
+  "green-hibiscus-sundress": "assets/worn/thumbs/adult-green-hibiscus-sundress.webp",
   "hibiscus-flares": "assets/worn/thumbs/adult-hibiscus-flares.webp",
+  "lilac-satin-bow-dress": "assets/worn/thumbs/adult-lilac-satin-bow-dress.webp",
+  "pink-velour-cargo": "assets/worn/thumbs/adult-pink-velour-cargo.webp",
+  "sarong-swimsuit": "assets/worn/thumbs/adult-sarong-swimsuit.webp",
+  "sequin-halter-dress": "assets/worn/thumbs/adult-sequin-halter-dress.webp",
+  "tankini-board-shorts": "assets/worn/thumbs/adult-tankini-board-shorts.webp",
   "tennis-dress": "assets/worn/thumbs/adult-tennis-dress.webp"
  }
 }
