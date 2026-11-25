@@ -274,6 +274,33 @@ function restartPuppets(){
 function setPageTitle(){
   document.title=t('meta.title',{page:places.find(p=>p.id===route)?.name||districtOf(route)?.name||t('page.'+route)});
 }
+/* After every room change the play area is brought into view: the scene of a walk-in place, the map, or a
+   room's stage or main panel. It is centred in the window when it fits, else its top sits just under the top
+   edge. Going from place to place keeps the scene exactly where it was on screen, so it simply swaps. Only
+   navigation moves the page, never the player's own scrolling, and the jump is always instant. On the very
+   first load with the privacy notice showing, the page stays at the top so the notice is seen. */
+const PLAY_AREAS=['.scene-case','.map-case','.workbench .display','.workbench','.album-head'];
+if('scrollRestoration' in history)history.scrollRestoration='manual'; // back and forward land like any navigation
+function playArea(){for(const s of PLAY_AREAS){const el=main.querySelector(s);if(el)return el}return null}
+function sceneTop(){
+  const el=main.querySelector('.scene-case');if(!el)return null;
+  const r=el.getBoundingClientRect();
+  return r.bottom>40&&r.top<innerHeight-40?r.top:null; // only when the scene was (partly) on screen
+}
+function placeView(keepTop,stayTop){
+  const go=()=>{
+    const el=playArea();
+    if(stayTop||!el){window.scrollTo({left:0,top:0,behavior:'instant'});return 0}
+    const r=el.getBoundingClientRect(),vh=innerHeight,top=scrollY+r.top;
+    const y=keepTop!=null?top-keepTop:r.height<=vh-24?top-(vh-r.height)/2:top-8;
+    const to=Math.max(0,Math.min(Math.round(y),document.documentElement.scrollHeight-vh));
+    window.scrollTo({left:0,top:to,behavior:'instant'});
+    return scrollY;
+  };
+  const at=go();
+  // once more after the next frame, in case late layout moved things, unless the player already scrolled
+  requestAnimationFrame(()=>{if(Math.abs(scrollY-at)<2)go()});
+}
 function navigate(){
   detachWorld();
   document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
@@ -293,7 +320,9 @@ function navigate(){
   clearTimeout(timer);if(round)round.up=[];resetRunway();
   if(stampIds.includes(route)&&!state.visits.includes(route)){state.visits.push(route);persist();}
   setPageTitle();
-  draw();window.scrollTo(0,0);
+  const keepTop=walking&&isDistrictRoute(leaving)?sceneTop():null; // place to place: the scene swaps in place
+  draw();
+  placeView(keepTop,!leaving&&!notice.hidden);
   if(dropped)say(t('shop.droppedLeave'));
   else if(houseLeft)say(houseLeft);
   else if(walking&&route!==leaving)sceneSay(t('life.arrive',{place:districtOf(route).name,next:objective().text}));
