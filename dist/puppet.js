@@ -514,12 +514,10 @@ const HibiscusPuppet=(()=>{
         continue;
       }
       // worn.js: the garment rebuilt behind the arms counts only where the arm moves away (its label)
-      if(L.fill&&!rg.side){d=new Uint8ClampedArray(d); // (side views: the arm layer takes all of the arm along)
-        for(let i=0;i<L.fill.length;i++)if(L.fill[i]&&lab[i]!==L_ARM0&&lab[i]!==L_ARM1){for(let c=0;c<4;c++)d[i*4+c]=L.fill.orig[i*4+c];
-        if(hd){const k=hd.k,x=i%W,y=(i/W)|0;for(let v=0;v<k;v++)for(let u=0;u<k;u++)hd.data[((y*k+v)*W*k+x*k+u)*4+3]=0}}}
       const ex=[Math.max(0,box[0]-3),Math.max(0,box[1]-3),Math.min(W-1,box[2]+3),Math.min(H-1,box[3]+3)];
       // labels for this layer
       const lb=new Uint8Array(lab);
+      if(L.armPx)for(let i=0;i<lb.length;i++)if(L.armPx[i])lb[i]=L.armPx[i]===1?L_ARM0:L_ARM1; // worn.js: all of the arm as drawn goes with it
       let sleeve=null;
       const underArm=rg.side&&li<armIdx;
       if(underArm){
