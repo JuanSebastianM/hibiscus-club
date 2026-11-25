@@ -24,7 +24,11 @@ const Worn=(()=>{
   /* Which worn art is used: ON lists, per doll and outfit, the views judged clearly better than the flat
      outfit (they are used by default); ?worn=1 uses every worn picture there is (review), ?worn=0 none. */
   const ALL4=['front','left','right','back'];
-  const ON={adult:{'tennis-dress':ALL4,'denim-jacket-skirt':ALL4,'crochet-cover-up':ALL4,'hibiscus-flares':ALL4},little:{'dino-romper':ALL4,'rainbow-tutu-tee':ALL4}};
+  const ON={adult:{'tennis-dress':ALL4,'denim-jacket-skirt':ALL4,'crochet-cover-up':ALL4,'hibiscus-flares':ALL4,
+    // block C2 (redrawn bodies, fitted to the base at import)
+    'aqua-velour-tracksuit':ALL4,'baby-tee-cargo':ALL4,'black-flares-set':ALL4,'butterfly-satin-skirt':ALL4,'green-hibiscus-sundress':ALL4,
+    'lilac-satin-bow-dress':ALL4,'pink-velour-cargo':ALL4,'sarong-swimsuit':ALL4,'sequin-halter-dress':ALL4,'tankini-board-shorts':ALL4},
+    little:{'dino-romper':ALL4,'rainbow-tutu-tee':ALL4}};
   const q=typeof location!=='undefined'?location.search:'';
   let mode=/[?&]worn=1\b/.test(q)?'all':/[?&]worn=0\b/.test(q)?'off':'default';
   let on=mode!=='off';
@@ -222,7 +226,10 @@ const Worn=(()=>{
       rg.beginPath();shapePathInto(rg,{poly:dv.arm});rg.fill();rg.stroke();
       // the body keeps the old body there (the worn arm's own rim, a pixel off the old one, would stay behind)
       {const r2=makeCanvas(W,H),r2g=r2.getContext('2d');r2g.drawImage(rest,0,0);r2g.globalCompositeOperation='destination-out';r2g.drawImage(rc,0,0);
-        rest=r2;bg.clearRect(0,0,W,H);bg.globalCompositeOperation='source-over';bg.drawImage(oldPic,ox,oy);bg.globalCompositeOperation='destination-in';bg.drawImage(full,0,0);bg.globalCompositeOperation='source-over';bg.drawImage(rest,0,0)}
+        rest=r2;bg.clearRect(0,0,W,H);bg.globalCompositeOperation='source-over';bg.drawImage(oldPic,ox,oy);bg.globalCompositeOperation='destination-in';bg.drawImage(full,0,0);bg.globalCompositeOperation='source-over';bg.drawImage(rest,0,0)
+        // with the near sleeve delivered alone, nothing of the old body under the arm (its flat outfit's
+        // sleeve repaint would swing with the arm as a dark glove round the hand)
+        if(sleeveArt){bg.globalCompositeOperation='destination-out';bg.drawImage(rc,0,0);bg.globalCompositeOperation='source-over'}}
       // with the near sleeve delivered alone, the sleeve goes with the arm: its pixels leave the outfit too
       // (the garment under it comes from the no-arm view)
       if(sleeveArt){rg.setTransform(1,0,0,1,0,0);rg.drawImage(sleeveArt,ox+ax,oy+ay,sw,sh)}
@@ -258,7 +265,9 @@ const Worn=(()=>{
       ctx2d(outfit).putImageData(oi,0,0);
       // the near arm (skin) and its sleeve: a long sleeve round all the arm's bones goes with the arm; a short
       // one (round the upper arm) is an `over` layer drawn after the arm, which the puppet also moves with it
-      const R=typeof HibiscusPuppetRig!=='undefined'?HibiscusPuppetRig:null,long=R?.sleevesOf(shot.outfit)==='long',px=R?.rig(doll,view).px;
+      // (with the sleeve delivered alone it is the `over` layer, so the arm keeps only its skin: else the
+      // fabric round the hand, the trousers behind it, would go with the arm)
+      const R=typeof HibiscusPuppetRig!=='undefined'?HibiscusPuppetRig:null,long=!sleeveArt&&R?.sleevesOf(shot.outfit)==='long',px=R?.rig(doll,view).px;
       const segs=px?(long?[['sh0','el0'],['el0','wr0'],['wr0','hand0']]:[['sh0','el0']]).map(([a,b])=>[px[a],px[b]]):[];
       const near=(x,y)=>segs.some(([a,b])=>{const vx=b[0]-a[0],vy=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*vx+(y-a[1])*vy)/(vx*vx+vy*vy||1)));return Math.hypot(x-a[0]-vx*t,y-a[1]-vy*t)<26});
       const arm=makeCanvas(W,H),ag=ctx2d(arm),over=makeCanvas(W,H),vg=ctx2d(over);
