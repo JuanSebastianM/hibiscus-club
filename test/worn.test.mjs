@@ -12,7 +12,10 @@ const root = new URL('../', import.meta.url);
 const dist = new URL('dist/', root);
 const read = name => readFileSync(new URL(name, dist), 'utf8');
 const VIEWS = ['front', 'left', 'right', 'back'];
-const PILOT = ['tennis-dress', 'denim-jacket-skirt', 'crochet-cover-up', 'hibiscus-flares'];
+// block C2: bodies redrawn by the image model, fitted to the base at import (art/build_worn.py REDRAWN)
+const REDRAWN = ['aqua-velour-tracksuit', 'baby-tee-cargo', 'black-flares-set', 'butterfly-satin-skirt', 'green-hibiscus-sundress',
+  'lilac-satin-bow-dress', 'pink-velour-cargo', 'sarong-swimsuit', 'sequin-halter-dress', 'tankini-board-shorts'];
+const PILOT = ['tennis-dress', 'denim-jacket-skirt', 'crochet-cover-up', 'hibiscus-flares', ...REDRAWN];
 // Little Me: the two Gemini outfits taken (the GPT base reduced to 512 x 1024, shipped at 1 px per doll px)
 const LITTLE = ['dino-romper', 'rainbow-tutu-tee'];
 const OUTFITS = { adult: PILOT, little: LITTLE };
@@ -93,6 +96,19 @@ test('the default outfit (hibiscus flares) is worn with its sleeve layers, and f
   assert.match(readFileSync(new URL('art/build_worn.py', root), 'utf8'), /MIRROR = \{\("adult", "hibiscus-flares"\): \{"right": "left"\}\}/);
 });
 
+test('the redrawn bodies are fitted to the base at import: warp, head and hands from the base, one colour in every view', () => {
+  const py = readFileSync(new URL('art/build_worn.py', root), 'utf8');
+  for (const id of REDRAWN) assert.ok(py.includes(`"${id}"`), `${id} in REDRAWN`);
+  assert.match(py, /def fit_redrawn\(/);
+  assert.match(py, /def restore_from_base\(/);
+  assert.match(py, /MATCH_COLOUR = \{\("adult", "sequin-halter-dress"\): "front"\}/);
+  // sleeves cut from the fitted view, so the swinging sleeve is the still picture's fabric
+  assert.match(py, /def sleeve_from_fitted\(/);
+  const D = wornData().adult;
+  for (const id of ['aqua-velour-tracksuit', 'black-flares-set', 'pink-velour-cargo', 'lilac-satin-bow-dress', 'butterfly-satin-skirt', 'baby-tee-cargo'])
+    for (const view of ['left', 'right']) assert.ok(D[id][view].sleeve, `${id} ${view} sleeve layer`);
+});
+
 test('each doll\'s new base registers to her old one: one scale, and every region within half a doll pixel', () => {
   for (const doll of ['adult', 'little']) for (const view of VIEWS) {
     const r = wornData().reg[doll][view];
@@ -114,10 +130,10 @@ test('the approved outfits are worn by default in every view; ?worn=0 is the old
     assert.equal(off.use({ doll: 'adult', outfit: id }, view), null);
   }
   assert.equal(on.portraitScale({ doll: 'adult', outfit: 'tennis-dress' }), 2);
-  assert.equal(on.portraitScale({ doll: 'adult', outfit: 'black-flares-set' }), 1);
+  assert.equal(on.portraitScale({ doll: 'adult', outfit: 'hoodie-dress-leg-warmers' }), 1);
   assert.equal(on.portraitScale({ doll: 'little', outfit: 'tennis-dress' }), 1);
   assert.equal(off.portraitScale({ doll: 'adult', outfit: 'tennis-dress' }), 1);
-  assert.equal(on.use({ doll: 'adult', outfit: 'black-flares-set' }, 'front'), null);
+  assert.equal(on.use({ doll: 'adult', outfit: 'hoodie-dress-leg-warmers' }, 'front'), null);
   assert.equal(on.use({ doll: 'little', outfit: 'tennis-dress' }, 'front'), null);
   for (const id of LITTLE) for (const view of VIEWS) assert.ok(on.use({ doll: 'little', outfit: id }, view), `little ${id} ${view}`);
   assert.equal(on.portraitScale({ doll: 'little', outfit: 'dino-romper' }), 1, 'a 1x delivery keeps the 1x canvas');
