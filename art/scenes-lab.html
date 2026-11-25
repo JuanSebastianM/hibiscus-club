@@ -6,7 +6,7 @@
 <title>Living scenes lab</title>
 <!-- Living-scenes lab. Serve the repo root (e.g. python3 -m http.server 4205) and open /art/scenes-lab.html
      Params: scene=island,boardwalk,market,pavilion,beach,park,icecream,treehouse (default all) · size=desktop|phone|both (default both)
-     debug=1 (fx mask: R water, G flow, B lights, white stars) | 2 (motion: R/G |vector|, B speed) | 3 (aux: R wind, G foam, B parallax, grey dapple)
+     debug=1 (fx mask: R water, G flow, B lights, white stars) | 2 (motion: R/G |vector|, B layer index tint + leaf flutter) | 3 (aux: R wind rustle, G foam, grey dapple)
      still=1 (WebGL with every effect at zero: framing check) · nofx=1 (plain CSS backgrounds only) · soft=1 (allow software WebGL)
      quality=auto|high · pins=0 (hide fake overlays). window.lab exposes the handles for scripted tests. -->
 <style>
@@ -43,6 +43,7 @@ figcaption{font-size:12px;color:#7d5b72;margin-top:4px}
 <select id="debug"><option value="0">Normal</option><option value="1">Mask: fx</option><option value="2">Mask: motion</option><option value="3">Mask: aux</option></select>
 <span class="state" id="summary"></span></header>
 <main id="out"></main>
+<script src="../dist/nature.js"></script>
 <script src="../dist/scene-data.js"></script>
 <script src="../dist/scene-fx.js"></script>
 <script>

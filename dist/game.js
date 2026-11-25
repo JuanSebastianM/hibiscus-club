@@ -30,6 +30,7 @@ function loadGame(){
     looks:{adult:readLook(raw.looks?.adult,'adult'),little:readLook(raw.looks?.little,'little')},
     stars:smallInt(raw.stars,Number.MAX_SAFE_INTEGER),sound:raw.sound!==false,sparkle:raw.sparkle!==false,
     analytics:raw.analytics!==false, // anonymous play counts (analytics.js); the Privacy dialog has the switch
+    notice:raw.notice===1?1:0, // 1 once the first-visit privacy notice was answered (OK, or counting turned off)
     visits:stampIds.filter(id=>Array.isArray(raw.visits)&&raw.visits.includes(id)),
     missions:smallInt(raw.missions,Number.MAX_SAFE_INTEGER),
     bouquets:smallInt(raw.bouquets,Number.MAX_SAFE_INTEGER),
@@ -284,6 +285,7 @@ function navigate(){
   route=[...places.map(p=>p.id),...DISTRICT_IDS,'scrapbook','runway'].includes(id)?id:'map';
   const walking=isDistrictRoute(route);
   document.documentElement.dataset.room=walking?'life':route; // style.css: each room's pastel theme; walk-in places share "life"
+  setAmbience();
   if(route!==leaving){
     if(!(walking&&isDistrictRoute(leaving)))track('room',walking?'life':route);
     if(walking)track('district',route);
@@ -335,9 +337,10 @@ function wrapBouquet(){
 document.addEventListener('click',async e=>{
   const b=e.target.closest('button,a');if(!b||b.disabled)return;
   if(!b.classList.contains('sound'))tone();
-  if(b.classList.contains('sound')){state.sound=!state.sound;persist();HibiscusMusic.setEnabled(state.sound);navBar();tone();track('sound',state.sound?'on':'off');return;}
+  if(b.classList.contains('sound')){state.sound=!state.sound;persist();HibiscusMusic.setEnabled(state.sound);setAmbience();navBar();tone();track('sound',state.sound?'on':'off');return;}
   if(b.classList.contains('sparkle-toggle')){state.sparkle=!state.sparkle;persist();track('sparkle',state.sparkle?'on':'off');try{HibiscusFx.setEnabled(state.sparkle);if(state.sparkle){const r=b.getBoundingClientRect();HibiscusFx.burst(r.left+r.width/2,r.top+r.height/2)}}catch{}navBar();if(state.sparkle)restartPuppets();return;}
   const d=b.dataset;
+  if(d.notice){noticeAction(d.notice);return;}
   if(d.lang){setLanguage(d.lang);return;}
   if(makeoverClick(b,d))return;
   if(d.pose!==undefined){performPose(Number(d.pose));return;}
@@ -389,8 +392,38 @@ function syncPrivacy(){
 document.addEventListener('change',e=>{
   if(e.target.id!=='analytics-switch')return;
   state.analytics=e.target.checked;persist();
-  try{HibiscusAnalytics.setEnabled(state.analytics)}catch{}
+  try{HibiscusAnalytics.setEnabled(state.analytics);if(state.analytics)HibiscusAnalytics.release()}catch{} // switching it on is a choice too
+  renderNotice();
 });
+/* First-visit privacy notice: a small card under the top bar (in the page flow, never over the game) until
+   it is answered once. While it shows for the first time with counting on, analytics.js keeps events back
+   (nothing is sent, Web Analytics is not loaded) until OK or "Turn off counting". */
+const notice=document.querySelector('#privacy-notice');
+let noticeMode='on',noticeTurnedOff=false;
+function noticeInfo(){try{return HibiscusAnalytics.noticeState(state)}catch{return {show:!state.notice,mode:state.analytics?'on':'off',hold:false}}}
+function renderNotice(){
+  if(notice.hidden)return;
+  noticeMode=noticeInfo().mode;
+  notice.querySelector('.notice-text').textContent=t(noticeTurnedOff?'notice.turnedOff':'notice.'+noticeMode);
+  notice.querySelector('[data-notice="off"]').hidden=noticeMode!=='on';
+}
+function noticeAction(what){
+  if(what==='off'){
+    state.analytics=false;state.notice=1;persist();noticeTurnedOff=true;
+    try{HibiscusAnalytics.setEnabled(false);HibiscusAnalytics.release()}catch{}
+    syncPrivacy();renderNotice();notice.querySelector('[data-notice="ok"]').focus();
+    return;
+  }
+  state.notice=1;persist(); // OK (or Escape)
+  try{HibiscusAnalytics.release()}catch{}
+  const had=notice.contains(document.activeElement);
+  notice.hidden=true;
+  if(had)main.focus({preventScroll:true});
+}
+notice.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();noticeAction('ok')}});
+window.addEventListener('langchange',renderNotice);
+/* Place sounds (ambience.js) follow the room: the map is the island, walk-in places their own, rooms silent. */
+function setAmbience(){try{HibiscusAmbience.setPlace(isDistrictRoute(route)?route:route==='map'?'island':route);HibiscusAmbience.setEnabled(state.sound)}catch{}}
 /* Focus goes back to the footer link, unless something else (a room change) already took it. */
 privacyDialog.addEventListener('close',()=>{
   const a=document.activeElement;
@@ -413,8 +446,10 @@ window.addEventListener('langchange',()=>{
 HibiscusMusic.setEnabled(state.sound);
 try{HibiscusFx.setEnabled(state.sparkle)}catch{}
 I18N.applyStatic(); // i18n.js picked the language: the saved choice, else the browser's
-try{HibiscusAnalytics.init(state.analytics,()=>({c:state.doll,l:I18N.lang}))}catch{}
+const firstNotice=noticeInfo();
+try{HibiscusAnalytics.init(state.analytics,()=>({c:state.doll,l:I18N.lang}),{hold:firstNotice.hold})}catch{}
 syncPrivacy();
+if(firstNotice.show){notice.hidden=false;renderNotice();}
 navigate();
 track('visit',isDistrictRoute(route)?'life':route);
 /* Daily errands refresh at local midnight: redraw what shows them when the day changes. */

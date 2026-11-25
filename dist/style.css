@@ -294,3 +294,15 @@ dialog .dialog-actions>button:not(.primary):hover{background:var(--a50)}
 @media(prefers-reduced-motion:reduce){.pin:hover,.pin:focus-visible{transform:translate(-50%,-50%)}}
 /* phones: news toasts appear at the top, so they never cover the scene, its tour tip or the controls under it */
 @media(max-width:480px){#announcer{top:10px;bottom:auto;transform:translate(-50%,-12px)}#announcer.shown{transform:translate(-50%,0)}}
+/* First-visit privacy notice: a small card under the top bar, in the page flow (it moves the room down a little and never covers it), until answered once. */
+.privacy-notice{box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;max-width:1360px;margin:16px auto 0;padding:10px 16px;background:#fffdfe;border:1.5px solid var(--a200);border-radius:14px;box-shadow:0 3px 10px #5a3d5c14}
+.privacy-notice[hidden]{display:none}
+.notice-text{flex:1 1 320px;margin:0;font-size:var(--fs-sm);line-height:1.45;color:var(--text-soft)}
+.notice-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.notice-actions button{min-height:40px;padding:6px 14px;border-radius:12px;font-weight:bold;font-size:var(--fs-sm)}
+.notice-actions [data-notice="off"]{background:var(--white);border:1.5px solid var(--a300);color:var(--a800)}
+.notice-actions .notice-link{background:none;border:0;padding:6px;color:var(--text-soft);font-weight:normal;text-decoration:underline;text-decoration-color:var(--a500);text-underline-offset:3px}
+.notice-actions .notice-link:hover{color:var(--a800)}
+@media(prefers-reduced-motion:no-preference){.privacy-notice:not([hidden]){animation:notice-in .35s ease-out}@keyframes notice-in{from{opacity:0;transform:translateY(-6px)}}}
+@media(max-width:1424px){.privacy-notice{margin-left:16px;margin-right:16px}}
+@media(max-width:600px){.privacy-notice{margin:12px 10px 0;padding:10px 12px}.notice-actions{width:100%}}
