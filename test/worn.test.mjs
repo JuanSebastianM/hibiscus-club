@@ -109,6 +109,17 @@ test('the redrawn bodies are fitted to the base at import: warp, head and hands 
     for (const view of ['left', 'right']) assert.ok(D[id][view].sleeve, `${id} ${view} sleeve layer`);
 });
 
+test('the garment behind the resting arms is rebuilt for the puppet, and puppet.js keeps it with the garment', () => {
+  const w = read('worn.js'), p = read('puppet.js');
+  assert.match(w, /function armFootprint\(/);
+  assert.match(w, /function fillUnderArms\(/);
+  assert.match(w, /out\[1\]\.fill=fill/);
+  // puppet.js: no inpainting over it, its pixels never go with the arm, the rebuilt skirt lies under the arms
+  assert.match(p, /inpaintUnder\(d,L\.fill\?/);
+  assert.match(p, /if\(L\.fill\)for\(let i=0;i<lb\.length;i\+\+\)if\(L\.fill\[i\]/);
+  assert.match(p, /groups\.skirtUnder/);
+});
+
 test('each doll\'s new base registers to her old one: one scale, and every region within half a doll pixel', () => {
   for (const doll of ['adult', 'little']) for (const view of VIEWS) {
     const r = wornData().reg[doll][view];
