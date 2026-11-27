@@ -27,7 +27,9 @@ const Worn=(()=>{
   const ON={adult:{'tennis-dress':ALL4,'denim-jacket-skirt':ALL4,'crochet-cover-up':ALL4,'hibiscus-flares':ALL4,
     // block C2 (redrawn bodies, fitted to the base at import)
     'aqua-velour-tracksuit':ALL4,'baby-tee-cargo':ALL4,'black-flares-set':ALL4,'butterfly-satin-skirt':ALL4,'green-hibiscus-sundress':ALL4,
-    'lilac-satin-bow-dress':ALL4,'pink-velour-cargo':ALL4,'sarong-swimsuit':ALL4,'sequin-halter-dress':ALL4,'tankini-board-shorts':ALL4},
+    'lilac-satin-bow-dress':ALL4,'pink-velour-cargo':ALL4,'sarong-swimsuit':ALL4,'sequin-halter-dress':ALL4,'tankini-board-shorts':ALL4,
+    // block C3 (the hoodie dress stays flat: in the side walk the bare thighs between hem and leg warmers tear)
+    'puffer-vest-slip-dress':ALL4,'plaid-knit-vest-set':ALL4,'denim-overall-dress':ALL4},
     little:{'dino-romper':ALL4,'rainbow-tutu-tee':ALL4}};
   const q=typeof location!=='undefined'?location.search:'';
   let mode=/[?&]worn=1\b/.test(q)?'all':/[?&]worn=0\b/.test(q)?'off':'default';
@@ -207,6 +209,11 @@ const Worn=(()=>{
         let near=false;for(let k=from;k<c.length-1&&!near;k++){const [p,q]=[c[k],c[k+1]],vx=q[0]-p[0],vy=q[1]-p[1],t=Math.max(0,Math.min(1,((x-p[0])*vx+(y-p[1])*vy)/(vx*vx+vy*vy||1)));near=Math.hypot(x-p[0]-vx*t,y-p[1]-vy*t)<(k>=2&&rg.side?rad+10:rad)} // (the hand is wider than the arm)
         if(near)F[i]=1}
     }
+    // side views: nothing below the garment's hem in each column (her hand over a bare thigh below a short
+    // hem: the thigh joins the hand through skin and must stay with the leg; the rig's arm polygon still
+    // takes the hand itself along)
+    if(rg.side){const hemY=new Int32Array(W).fill(-1),kn=Math.round(px.kn0[1]);for(let y=0;y<kn;y++)for(let x=0;x<W;x++)if(md[(y*W+x)*4+3]>=128)hemY[x]=y; // (above the knee: leg warmers are not the hem)
+      for(let i=0;i<W*H;i++)if(F[i]&&((i/W)|0)>hemY[i%W]+4)F[i]=0}
     // only what joins the wrist or hand through her skin (a thigh below a hem, within reach of the fingers, is not
     // the arm)
     const G=new Uint8Array(W*H),stack=[];

@@ -644,6 +644,72 @@
     "k": 2
    }
   },
+  "denim-overall-dress": {
+   "front": {
+    "src": "assets/worn/adult-denim-overall-dress-front.webp",
+    "mask": "assets/worn/adult-denim-overall-dress-front-mask.webp",
+    "at": [
+     4,
+     4
+    ],
+    "size": [
+     389,
+     864
+    ],
+    "bytes": 166272,
+    "maskBytes": 4230,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-denim-overall-dress-left.webp",
+    "mask": "assets/worn/adult-denim-overall-dress-left-mask.webp",
+    "at": [
+     -6,
+     2
+    ],
+    "size": [
+     209,
+     864
+    ],
+    "bytes": 134714,
+    "maskBytes": 5232,
+    "k": 2,
+    "noarm": "assets/worn/adult-denim-overall-dress-left-noarm.webp",
+    "sleeve": "assets/worn/adult-denim-overall-dress-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-denim-overall-dress-right.webp",
+    "mask": "assets/worn/adult-denim-overall-dress-right-mask.webp",
+    "at": [
+     -10,
+     2
+    ],
+    "size": [
+     194,
+     865
+    ],
+    "bytes": 130530,
+    "maskBytes": 5164,
+    "k": 2,
+    "noarm": "assets/worn/adult-denim-overall-dress-right-noarm.webp",
+    "sleeve": "assets/worn/adult-denim-overall-dress-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-denim-overall-dress-back.webp",
+    "mask": "assets/worn/adult-denim-overall-dress-back-mask.webp",
+    "at": [
+     4,
+     5
+    ],
+    "size": [
+     389,
+     862
+    ],
+    "bytes": 159038,
+    "maskBytes": 4048,
+    "k": 2
+   }
+  },
   "green-hibiscus-sundress": {
    "front": {
     "src": "assets/worn/adult-green-hibiscus-sundress-front.webp",
@@ -771,6 +837,70 @@
     ],
     "bytes": 167712,
     "maskBytes": 8900,
+    "k": 2
+   }
+  },
+  "hoodie-dress-leg-warmers": {
+   "front": {
+    "src": "assets/worn/adult-hoodie-dress-leg-warmers-front.webp",
+    "mask": "assets/worn/adult-hoodie-dress-leg-warmers-front-mask.webp",
+    "at": [
+     4,
+     4
+    ],
+    "size": [
+     389,
+     864
+    ],
+    "bytes": 164876,
+    "maskBytes": 9150,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-hoodie-dress-leg-warmers-left.webp",
+    "mask": "assets/worn/adult-hoodie-dress-leg-warmers-left-mask.webp",
+    "at": [
+     4,
+     2
+    ],
+    "size": [
+     196,
+     864
+    ],
+    "bytes": 109352,
+    "maskBytes": 5192,
+    "k": 2,
+    "sleeve": "assets/worn/adult-hoodie-dress-leg-warmers-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/adult-hoodie-dress-leg-warmers-right.webp",
+    "mask": "assets/worn/adult-hoodie-dress-leg-warmers-right-mask.webp",
+    "at": [
+     -15,
+     2
+    ],
+    "size": [
+     193,
+     865
+    ],
+    "bytes": 111618,
+    "maskBytes": 5592,
+    "k": 2,
+    "sleeve": "assets/worn/adult-hoodie-dress-leg-warmers-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/adult-hoodie-dress-leg-warmers-back.webp",
+    "mask": "assets/worn/adult-hoodie-dress-leg-warmers-back-mask.webp",
+    "at": [
+     4,
+     5
+    ],
+    "size": [
+     389,
+     862
+    ],
+    "bytes": 162590,
+    "maskBytes": 9072,
     "k": 2
    }
   },
@@ -903,6 +1033,130 @@
     ],
     "bytes": 181878,
     "maskBytes": 9300,
+    "k": 2
+   }
+  },
+  "plaid-knit-vest-set": {
+   "front": {
+    "src": "assets/worn/adult-plaid-knit-vest-set-front.webp",
+    "mask": "assets/worn/adult-plaid-knit-vest-set-front-mask.webp",
+    "at": [
+     4,
+     4
+    ],
+    "size": [
+     389,
+     864
+    ],
+    "bytes": 154228,
+    "maskBytes": 3800,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-plaid-knit-vest-set-left.webp",
+    "mask": "assets/worn/adult-plaid-knit-vest-set-left-mask.webp",
+    "at": [
+     5,
+     2
+    ],
+    "size": [
+     187,
+     864
+    ],
+    "bytes": 84030,
+    "maskBytes": 5406,
+    "k": 2
+   },
+   "right": {
+    "src": "assets/worn/adult-plaid-knit-vest-set-right.webp",
+    "mask": "assets/worn/adult-plaid-knit-vest-set-right-mask.webp",
+    "at": [
+     5,
+     2
+    ],
+    "size": [
+     177,
+     865
+    ],
+    "bytes": 84164,
+    "maskBytes": 5142,
+    "k": 2
+   },
+   "back": {
+    "src": "assets/worn/adult-plaid-knit-vest-set-back.webp",
+    "mask": "assets/worn/adult-plaid-knit-vest-set-back-mask.webp",
+    "at": [
+     4,
+     5
+    ],
+    "size": [
+     389,
+     862
+    ],
+    "bytes": 148852,
+    "maskBytes": 4450,
+    "k": 2
+   }
+  },
+  "puffer-vest-slip-dress": {
+   "front": {
+    "src": "assets/worn/adult-puffer-vest-slip-dress-front.webp",
+    "mask": "assets/worn/adult-puffer-vest-slip-dress-front-mask.webp",
+    "at": [
+     4,
+     4
+    ],
+    "size": [
+     389,
+     864
+    ],
+    "bytes": 112532,
+    "maskBytes": 4760,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/adult-puffer-vest-slip-dress-left.webp",
+    "mask": "assets/worn/adult-puffer-vest-slip-dress-left-mask.webp",
+    "at": [
+     5,
+     2
+    ],
+    "size": [
+     173,
+     864
+    ],
+    "bytes": 68460,
+    "maskBytes": 6400,
+    "k": 2
+   },
+   "right": {
+    "src": "assets/worn/adult-puffer-vest-slip-dress-right.webp",
+    "mask": "assets/worn/adult-puffer-vest-slip-dress-right-mask.webp",
+    "at": [
+     9,
+     2
+    ],
+    "size": [
+     168,
+     865
+    ],
+    "bytes": 69984,
+    "maskBytes": 6654,
+    "k": 2
+   },
+   "back": {
+    "src": "assets/worn/adult-puffer-vest-slip-dress-back.webp",
+    "mask": "assets/worn/adult-puffer-vest-slip-dress-back-mask.webp",
+    "at": [
+     4,
+     5
+    ],
+    "size": [
+     389,
+     862
+    ],
+    "bytes": 105384,
+    "maskBytes": 5194,
     "k": 2
    }
   },
@@ -1170,10 +1424,14 @@
   "butterfly-satin-skirt": "assets/worn/thumbs/adult-butterfly-satin-skirt.webp",
   "crochet-cover-up": "assets/worn/thumbs/adult-crochet-cover-up.webp",
   "denim-jacket-skirt": "assets/worn/thumbs/adult-denim-jacket-skirt.webp",
+  "denim-overall-dress": "assets/worn/thumbs/adult-denim-overall-dress.webp",
   "green-hibiscus-sundress": "assets/worn/thumbs/adult-green-hibiscus-sundress.webp",
   "hibiscus-flares": "assets/worn/thumbs/adult-hibiscus-flares.webp",
+  "hoodie-dress-leg-warmers": "assets/worn/thumbs/adult-hoodie-dress-leg-warmers.webp",
   "lilac-satin-bow-dress": "assets/worn/thumbs/adult-lilac-satin-bow-dress.webp",
   "pink-velour-cargo": "assets/worn/thumbs/adult-pink-velour-cargo.webp",
+  "plaid-knit-vest-set": "assets/worn/thumbs/adult-plaid-knit-vest-set.webp",
+  "puffer-vest-slip-dress": "assets/worn/thumbs/adult-puffer-vest-slip-dress.webp",
   "sarong-swimsuit": "assets/worn/thumbs/adult-sarong-swimsuit.webp",
   "sequin-halter-dress": "assets/worn/thumbs/adult-sequin-halter-dress.webp",
   "tankini-board-shorts": "assets/worn/thumbs/adult-tankini-board-shorts.webp",
