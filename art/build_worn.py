@@ -395,6 +395,7 @@ def garment_mask(worn, base, f=1.0, redrawn=False):
 # specks and skin wedges beside the sleeves and elbows are removed.
 CLEAN = {
     ("adult", "hibiscus-flares"): {"cracks": (500, 900), "slivers": (800, 1300)},
+    ("adult", "hoodie-dress-leg-warmers"): {"slivers": (1250, 2000)},  # specks between the cuffs and the body, at the hem
 }
 
 
@@ -490,7 +491,18 @@ def load_view(name_fmt, outfit, view):
 # fabric as the still picture.
 REDRAWN = {("adult", o) for o in ("aqua-velour-tracksuit", "baby-tee-cargo", "black-flares-set", "butterfly-satin-skirt",
                                   "green-hibiscus-sundress", "lilac-satin-bow-dress", "pink-velour-cargo", "sarong-swimsuit",
-                                  "sequin-halter-dress", "tankini-board-shorts")}
+                                  "sequin-halter-dress", "tankini-board-shorts",
+                                  # block C3 (head, hands and feet already the base's to the pixel: NOFIT)
+                                  "puffer-vest-slip-dress", "plaid-knit-vest-set", "hoodie-dress-leg-warmers", "denim-overall-dress")}
+# No-arm deliveries not used (the arm smeared out sideways or regenerated: streaks, a spiral, a blob): the
+# puppet rebuilds the garment behind the near arm from the fabric beside it instead
+# Redrawn bodies that lie on the base already (head, hands and feet pixel-identical, outline within a pixel):
+# not warped (the warp, measured on skin, took the silver slip dress for skin and pulled it in), only their
+# masks treat skin as skin
+NOFIT = {("adult", o) for o in ("puffer-vest-slip-dress", "plaid-knit-vest-set", "hoodie-dress-leg-warmers", "denim-overall-dress")}
+NOARM_UNUSED = {("adult", o) for o in ("puffer-vest-slip-dress", "plaid-knit-vest-set", "hoodie-dress-leg-warmers")}
+# (the denim overall dress keeps its no-arm views: the puppet uses only their broad colour there, faded, which
+# reads better on denim than the rows rebuilt from the fabric beside the arm)
 # the garment's colour statistics in every view matched to this view's (sequin halter dress: the front is light
 # coral, the delivered sides and back a darker mauve)
 MATCH_COLOUR = {("adult", "sequin-halter-dress"): "front"}
@@ -641,6 +653,11 @@ def match_colour(x, ref):
 def fit_redrawn(outfit, name, worn, base):
     """A redrawn picture (name = view, or view-noarm) fitted to the base: (fitted picture, (u, v))."""
     key = (DOLL, outfit, name)
+    if (DOLL, outfit) in NOFIT:
+        H, W = worn.shape[:2]
+        z = np.zeros((H, W), np.float32)
+        _FITTED[key] = (worn, (z, z))
+        return worn.copy(), (z, z)
     if key in _FITTED:
         return _FITTED[key][0].copy(), _FITTED[key][1]
     view = name.split("-")[0]
@@ -719,6 +736,8 @@ def sleeve_from_fitted(outfit, view, sleeve, fitted, uv):
             sc = float((np.roll(np.roll(S, dy, 0), dx, 1) * G).sum())
             if sc > best:
                 best, arg = sc, (dx, dy)
+    if (DOLL, outfit) in NOFIT:  # the sleeve file is in place (same render, registered)
+        arg = (0, 0)
     sa = np.roll(np.roll(sleeve[..., 3], arg[1] * k, 0), arg[0] * k, 1)
     sa = np.clip(warp_img(sa, *uv), 0, 1)
     out = fitted.copy()
@@ -761,6 +780,8 @@ def ship_one(outfit, view, reg, pm_cache):
     # shipped px per doll px: 2, or 1 for a delivery that has no more than the old doll's own resolution
     K = WORN_SCALE if reg[0] >= WORN_SCALE * .9 else 1
     na_path = SRC / f"worn-{DOLL}-{outfit}-{view}-noarm.webp"
+    if (DOLL, outfit) in NOARM_UNUSED:
+        na_path = SRC / "none"
     noarm = load_view(f"worn-{DOLL}-{outfit}-{{view}}-noarm.webp", outfit, view) if view in ("left", "right") and na_path.exists() else None
     if noarm is not None and redrawn:
         noarm[..., 3] = np.where(noarm[..., 3] < .04, 0, noarm[..., 3])

@@ -18,16 +18,36 @@ Head, hair, face, shoes and accessories stay separate layers as today.
 
 Do the **pilot (block B)** first. If the pilot looks right in the game, do the rest (block C).
 
-## Status (after the second delivery)
+## Status: Grown-up wardrobe done; next Little Me
 
-- **Done and in the game:** blocks A2 and A3 (both base dolls, with real detail) and block B (the
-  three Grown-up pilot outfits, with the no-arm side views). Two Little Me outfits from a second
-  image model (dino romper, rainbow tutu tee) are also in the game, at the old resolution.
-- **Next, in this order:** block C for the Grown-up, block C for Little Me, block E (faces),
-  block F (hair), block D (shoes).
-- **Use the image model that edits the base picture in place** (the one that produced blocks A
-  and B). The other model redrew the child for each picture, in three different canvas sizes, so
-  seven of its nine outfits could not be used.
+- **Done and in the game:** blocks A2 and A3 (both base dolls), block B and all of block C for the
+  Grown-up: all 18 of her outfits are drawn worn; 17 are on by default in all four views (the
+  hoodie dress art is done but stays off until its walking animation is fixed). Two Little Me
+  outfits from a second image model (dino romper, rainbow tutu tee) are in the game at the old
+  resolution.
+- **Next, in this order:** block C for Little Me, block E (faces), block F (hair), block D (shoes).
+- **Use the image model that edits the base picture in place.** The other model redrew the child for
+  each picture, in three different canvas sizes, so seven of its nine outfits could not be used.
+
+### Rules for Little Me, from importing the Grown-up's wardrobe
+
+These cost the most work at import; please treat them as hard requirements.
+
+- **The whole body stays on the base within a few pixels.** In one batch the body between chin and
+  ankles was regenerated and drifted 10 to 67 px from the base (arms, waist, legs); it had to be
+  warped back. Edit the base picture; do not regenerate the figure.
+- **Head, hands and feet are the base's pixels.** Restore them from the base file if the model
+  touched them (four outfits came back with a new face). The last batch did this right: head, hands
+  and feet identical to the base.
+- **One colour in all four views.** A sequin dress came back coral in front and mauve in the other
+  three views; it had to be recoloured.
+- **No-arm side views: the same side view with only the near arm removed** and the garment behind it
+  painted in, matching the folds, print and outline around it. Not smeared sideways (streaks), not
+  swirled, not blurred into a blob, not a different garment, not a sleeveless armhole. In the last
+  batch all four no-arm views were smeared and could not be used.
+- **Sleeve files are cut from the same side view,** pixel for pixel in place, not drawn separately.
+- **Asymmetric details on the correct side in every view** (bows, knots, buckles, pockets,
+  drawstrings): check each side view against the front view.
 
 ### Rules learned from the deliveries (they apply to every block below)
 

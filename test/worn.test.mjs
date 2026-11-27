@@ -14,13 +14,25 @@ const read = name => readFileSync(new URL(name, dist), 'utf8');
 const VIEWS = ['front', 'left', 'right', 'back'];
 // block C2: bodies redrawn by the image model, fitted to the base at import (art/build_worn.py REDRAWN)
 const REDRAWN = ['aqua-velour-tracksuit', 'baby-tee-cargo', 'black-flares-set', 'butterfly-satin-skirt', 'green-hibiscus-sundress',
-  'lilac-satin-bow-dress', 'pink-velour-cargo', 'sarong-swimsuit', 'sequin-halter-dress', 'tankini-board-shorts'];
+  'lilac-satin-bow-dress', 'pink-velour-cargo', 'sarong-swimsuit', 'sequin-halter-dress', 'tankini-board-shorts',
+  'puffer-vest-slip-dress', 'plaid-knit-vest-set', 'hoodie-dress-leg-warmers', 'denim-overall-dress'];
+// block C3: their no-arm deliveries are not used (the puppet rebuilds the garment behind the arm)
+const NOARM_UNUSED = ['puffer-vest-slip-dress', 'plaid-knit-vest-set', 'hoodie-dress-leg-warmers'];
+// worn art there but not on by default (the puppet's side walk is not clean yet)
+const NOT_DEFAULT = ['hoodie-dress-leg-warmers'];
 const PILOT = ['tennis-dress', 'denim-jacket-skirt', 'crochet-cover-up', 'hibiscus-flares', ...REDRAWN];
 // Little Me: the two Gemini outfits taken (the GPT base reduced to 512 x 1024, shipped at 1 px per doll px)
 const LITTLE = ['dino-romper', 'rainbow-tutu-tee'];
 const OUTFITS = { adult: PILOT, little: LITTLE };
 const HEIGHT = { adult: 873, little: 863 };
 
+/* Every Grown-up outfit in the catalog (items written inline and the generated pack entries). */
+function CATALOG_ADULT_OUTFITS() {
+  const c = read('catalog.js'), ids = new Set();
+  for (const m of c.matchAll(/\{id:'([a-z-]+)',category:'outfit',dolls:\['adult'\]/g)) ids.add(m[1]);
+  for (const m of c.matchAll(/"([a-z-]+)":\{"cat":"outfits-adult"/g)) ids.add(m[1]);
+  return [...ids];
+}
 function wornData() {
   const ctx = {};
   vm.createContext(ctx);
@@ -64,8 +76,11 @@ test('the worn art is on disk at the size worn-data.js gives, with a garment mas
     assert.ok(e, `${id} ${view}`);
     for (const f of [e.src, e.mask]) assert.ok(existsSync(new URL(f, dist)), f);
     if (doll === 'adult' && (view === 'left' || view === 'right')) {
+      if (NOARM_UNUSED.includes(id)) assert.ok(!e.noarm, `${id} ${view} no no-arm file`);
+      else {
       assert.ok(e.noarm && existsSync(new URL(e.noarm, dist)), `${id} ${view} no-arm garment`);
       assert.deepEqual(webpSize(readFileSync(new URL(e.noarm, dist))), [...e.size], `${id} ${view} no-arm size`);
+      }
       if (e.sleeve) assert.deepEqual(webpSize(readFileSync(new URL(e.sleeve, dist))), [e.size[0] * k, e.size[1] * k], `${id} ${view} sleeve size`);
     }
     const [w, h] = webpSize(readFileSync(new URL(e.src, dist)));
@@ -137,14 +152,15 @@ test('the approved outfits are worn by default in every view; ?worn=0 is the old
   const on = loadWorn(), off = loadWorn({ search: '?worn=0' }), all = loadWorn({ search: '?worn=1' });
   for (const id of PILOT) for (const view of VIEWS) assert.ok(all.use({ doll: 'adult', outfit: id }, view), `?worn=1 ${id} ${view}`);
   for (const id of PILOT) for (const view of VIEWS) {
+    if (NOT_DEFAULT.includes(id)) { assert.equal(on.use({ doll: 'adult', outfit: id }, view), null, `${id} ${view} flat by default`); continue }
     assert.ok(on.use({ doll: 'adult', outfit: id }, view), `${id} ${view}`);
     assert.equal(off.use({ doll: 'adult', outfit: id }, view), null);
   }
   assert.equal(on.portraitScale({ doll: 'adult', outfit: 'tennis-dress' }), 2);
-  assert.equal(on.portraitScale({ doll: 'adult', outfit: 'hoodie-dress-leg-warmers' }), 1);
+  
   assert.equal(on.portraitScale({ doll: 'little', outfit: 'tennis-dress' }), 1);
   assert.equal(off.portraitScale({ doll: 'adult', outfit: 'tennis-dress' }), 1);
-  assert.equal(on.use({ doll: 'adult', outfit: 'hoodie-dress-leg-warmers' }, 'front'), null);
+  for (const id of CATALOG_ADULT_OUTFITS().filter(id => !NOT_DEFAULT.includes(id))) assert.ok(on.use({ doll: 'adult', outfit: id }, 'front'), `every Grown-up outfit is worn: ${id}`);
   assert.equal(on.use({ doll: 'little', outfit: 'tennis-dress' }, 'front'), null);
   for (const id of LITTLE) for (const view of VIEWS) assert.ok(on.use({ doll: 'little', outfit: id }, view), `little ${id} ${view}`);
   assert.equal(on.portraitScale({ doll: 'little', outfit: 'dino-romper' }), 1, 'a 1x delivery keeps the 1x canvas');
