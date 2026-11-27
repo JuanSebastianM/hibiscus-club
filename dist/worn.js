@@ -28,8 +28,8 @@ const Worn=(()=>{
     // block C2 (redrawn bodies, fitted to the base at import)
     'aqua-velour-tracksuit':ALL4,'baby-tee-cargo':ALL4,'black-flares-set':ALL4,'butterfly-satin-skirt':ALL4,'green-hibiscus-sundress':ALL4,
     'lilac-satin-bow-dress':ALL4,'pink-velour-cargo':ALL4,'sarong-swimsuit':ALL4,'sequin-halter-dress':ALL4,'tankini-board-shorts':ALL4,
-    // block C3 (the hoodie dress stays flat: in the side walk the bare thighs between hem and leg warmers tear)
-    'puffer-vest-slip-dress':ALL4,'plaid-knit-vest-set':ALL4,'denim-overall-dress':ALL4},
+    // block C3
+    'puffer-vest-slip-dress':ALL4,'plaid-knit-vest-set':ALL4,'hoodie-dress-leg-warmers':ALL4,'denim-overall-dress':ALL4},
     little:{'dino-romper':ALL4,'rainbow-tutu-tee':ALL4}};
   const q=typeof location!=='undefined'?location.search:'';
   let mode=/[?&]worn=1\b/.test(q)?'all':/[?&]worn=0\b/.test(q)?'off':'default';
@@ -183,6 +183,18 @@ const Worn=(()=>{
     });
   }
   const KNEE={adult:640,little:700}; // doll-local y just above the knees
+  /* The near hand as it lies on her thigh in the side views: its outline in the left view of the 1536 x
+     3072 base picture (art/source/round3/base-adult-left.webp; the right view is its mirror). Below the hem
+     the rig's arm polygon (fitted loosely to the old picture) also takes in thigh, which then swung away
+     with the hand as a flap, and the old body under it still had the hand drawn on the thigh. */
+  const HAND_SIDE={adult:[[622,1690],[626,1762],[644,1777],[651,1802],[654,1846],[661,1864],[690,1869],[699,1882],[716,1882],
+    [723,1869],[748,1867],[754,1850],[760,1830],[773,1832],[783,1816],[788,1790],[793,1740],[798,1690]]};
+  function handMask(doll,view){
+    const P=HAND_SIDE[doll],r=data()?.reg?.[doll]?.[view];if(!P||!r)return null;
+    const [ox,oy]=dollView(doll,view).origin,W=DOLL_CANVAS.width,H=DOLL_CANVAS.height,c=makeCanvas(W,H),g=ctx2d(c);
+    g.beginPath();P.forEach(([X,Y],k)=>{const x=(view==='right'?1536-X:X),u=(x-r.b[0])/r.a+ox,v=(Y-r.b[1])/r.a+oy;k?g.lineTo(u,v):g.moveTo(u,v)});g.closePath();g.fill();
+    const d=g.getImageData(0,0,W,H).data,m=new Uint8Array(W*H);for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>127?1:0;return m;
+  }
 
   /* The garment behind the arms where they rest on it. The footprint: the worn picture's pixels that are
      not garment within the arm's reach of its bones (puppet-rig.js: elbow, wrist, hand and the fingertips
@@ -196,6 +208,7 @@ const Worn=(()=>{
      soft edge is not), within the arm's reach of its bones (puppet-rig.js: shoulder or armpit, elbow,
      wrist, hand and 40 px past the hand for the fingers; the hand a little wider in side views). From the
      segment `from` on (1: from the elbow down). null if none. */
+  const skinHue=(d,i)=>{const r=d[i*4],g=d[i*4+1],b=d[i*4+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx<60)return false;const h=(Math.atan2(Math.sqrt(3)*(g-b),2*r-g-b)*180/Math.PI+360)%360;return h>9&&h<32&&(mx-mn)/mx>.33};
   function armFootprint(fd,md,rg,doll,from=0){
     const px=rg.px,W=DOLL_CANVAS.width,H=DOLL_CANVAS.height;
     const rad=doll==='little'?27:30,F=new Uint8Array(W*H);let any=false;
@@ -205,14 +218,17 @@ const Worn=(()=>{
       const yTop=rg.side?c[0][1]:rg.armCut[a][1][1];
       const xs=c.map(p=>p[0]),ys=c.map(p=>p[1]);
       const x0=Math.max(0,Math.floor(Math.min(...xs)-rad-10)),x1=Math.min(W-1,Math.ceil(Math.max(...xs)+rad+10)),y0=Math.max(0,Math.floor(Math.max(yTop,Math.min(...ys)-rad))),y1=Math.min(H-1,Math.ceil(Math.max(...ys)+rad+10));
-      for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x;if(fd[i*4+3]<200||md[i*4+3]>60)continue; // her opaque skin (the garment's soft edge is not)
+      for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x;if(fd[i*4+3]<200||md[i*4+3]>60&&!(rg.side&&skinHue(fd,i)))continue; // (side views: her skin even where a mask took it in) // her opaque skin (the garment's soft edge is not)
         let near=false;for(let k=from;k<c.length-1&&!near;k++){const [p,q]=[c[k],c[k+1]],vx=q[0]-p[0],vy=q[1]-p[1],t=Math.max(0,Math.min(1,((x-p[0])*vx+(y-p[1])*vy)/(vx*vx+vy*vy||1)));near=Math.hypot(x-p[0]-vx*t,y-p[1]-vy*t)<(k>=2&&rg.side?rad+10:rad)} // (the hand is wider than the arm)
         if(near)F[i]=1}
     }
     // side views: nothing below the garment's hem in each column (her hand over a bare thigh below a short
     // hem: the thigh joins the hand through skin and must stay with the leg; the rig's arm polygon still
     // takes the hand itself along)
-    if(rg.side){const hemY=new Int32Array(W).fill(-1),kn=Math.round(px.kn0[1]);for(let y=0;y<kn;y++)for(let x=0;x<W;x++)if(md[(y*W+x)*4+3]>=128)hemY[x]=y; // (above the knee: leg warmers are not the hem)
+    if(rg.side){const hemY=new Int32Array(W).fill(-1),kn=Math.round(px.kn0[1]),wy=Math.round(rg.skirtTop); // (the end of the first garment run down from the waist: leg warmers are not the hem)
+      for(let x=0;x<W;x++){let last=-1,gap=0;for(let y=wy;y<kn;y++){if(md[(y*W+x)*4+3]>=128){last=y;gap=0}else if(last>=0&&++gap>40)break}hemY[x]=last}
+      {const h2=new Int32Array(hemY);for(let x=0;x<W;x++){const y=h2[x];if(y>=0&&y+2<H&&!F[(y+2)*W+x])continue; // (a column's own hem where it ends on her skin; the neighbours' where the arm covers it)
+        let m=-1;for(let k=Math.max(0,x-60);k<=Math.min(W-1,x+60);k++)if(h2[k]>m)m=h2[k];hemY[x]=m}}
       for(let i=0;i<W*H;i++)if(F[i]&&((i/W)|0)>hemY[i%W]+4)F[i]=0}
     // only what joins the wrist or hand through her skin (a thigh below a hem, within reach of the fingers, is not
     // the arm)
@@ -238,14 +254,20 @@ const Worn=(()=>{
     const done=new Uint8Array(W*H);
     const blend=new Uint8Array(W*H);
     if(nd){
-      for(let i=0;i<W*H;i++)if(F2[i]&&nd[i*4+3]>200){for(let c=0;c<4;c++)od[i*4+c]=nd[i*4+c];done[i]=1}
+      // (not below the worn picture's own hem: the no-arm view's skirt may hang lower)
+      const hemN=new Int32Array(W).fill(H),kn=Math.round(px.kn0[1]),wy=Math.round(rg.skirtTop);
+      // (the lowest garment row down from the waist, across gaps up to 40 px: a midriff between top and
+      // shorts is not the hem, the thigh down to a leg warmer is)
+      for(let x=0;x<W;x++){let last=-1,gap=0;for(let y=wy;y<kn;y++){const g=md[(y*W+x)*4+3]>=128||F2[y*W+x]&&md[(y*W+x)*4+3]>0;if(g){last=y;gap=0}else if(last>=0&&++gap>40)break}if(last>=0)hemN[x]=last}
+      for(let i=0;i<W*H;i++)if(F2[i]&&nd[i*4+3]>200&&nd[i*4]+nd[i*4+1]+nd[i*4+2]>90&&((i/W)|0)<=hemN[i%W]){/* (not the no-arm view's dark rim or shadow gaps) */for(let c=0;c<4;c++)od[i*4+c]=nd[i*4+c];done[i]=1}
       // the no-arm view to the worn picture's shade where they meet: the difference on a 12 px band of the
       // garment round the patch, spread over the patch (a separately drawn view is a little off)
       let x0=W,y0=H,x1=0,y1=0;for(let i=0;i<W*H;i++)if(done[i]){const x=i%W,y=(i/W)|0;if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
-      if(x1>=x0){const r=36;x0=Math.max(0,x0-2*r);y0=Math.max(0,y0-2*r);x1=Math.min(W-1,x1+2*r);y1=Math.min(H-1,y1+2*r);
+      if(x1>=x0){const r=24;x0=Math.max(0,x0-2*r);y0=Math.max(0,y0-2*r);x1=Math.min(W-1,x1+2*r);y1=Math.min(H-1,y1+2*r);
+        const skinLk=i=>{const r=od[i*4],g=od[i*4+1],b=od[i*4+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx<60)return false;const h=(Math.atan2(Math.sqrt(3)*(g-b),2*r-g-b)*180/Math.PI+360)%360;return h>9&&h<32&&(mx-mn)/mx>.33};
         const bw=x1-x0+1,bh=y1-y0+1,A=[0,1,2,3].map(()=>new Float32Array(bw*bh)),B=[0,1,2,3].map(()=>new Float32Array(bw*bh));
         for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x,q=(y-y0)*bw+x-x0;
-          if(!F2[i]&&od[i*4+3]>200&&md[i*4+3]>=250){for(let c=0;c<3;c++)A[c][q]=od[i*4+c];A[3][q]=1}
+          if(!F2[i]&&od[i*4+3]>200&&md[i*4+3]>=250&&!skinLk(i)&&nd[i*4+3]>200){for(let c=0;c<3;c++)A[c][q]=od[i*4+c]-nd[i*4+c];A[3][q]=1} // (the shade difference to the no-arm view, not the colour: a pale top above khaki must not bleed down) // (not skin a mask took in: the forearm over khaki)
           if(nd[i*4+3]>200){for(let c=0;c<3;c++)B[c][q]=nd[i*4+c];B[3][q]=1}}
         const blur=a=>{const t=new Float32Array(a.length);for(let y=0;y<bh;y++){let s=0;for(let x=-r;x<bw+r;x++){if(x+r<bw)s+=a[y*bw+x+r];if(x-r-1>=0)s-=a[y*bw+x-r-1];if(x>=0)t[y*bw+x]=s}}
           const u=new Float32Array(a.length);for(let x=0;x<bw;x++){let s=0;for(let y=-r;y<bh+r;y++){if(y+r<bh)s+=t[(y+r)*bw+x];if(y-r-1>=0)s-=t[(y-r-1)*bw+x];if(y>=0)u[y*bw+x]=s}}return u};
@@ -253,8 +275,8 @@ const Worn=(()=>{
         const outside=i=>!F2[i]&&od[i*4+3]>200&&md[i*4+3]>=250;
         // the worn picture's own broad light and shade there, spread in from round the patch, with a little of
         // the no-arm view's fine texture (its folds and print do not line up with the worn picture's: faded)
-        const base=(q,c)=>a[3][q]>=1?a[c][q]/a[3][q]:null;
-        const patch=(i,q,c)=>{const v=base(q,c);return v!==null&&b[3][q]>=1?.25*(nd[i*4+c]-b[c][q]/b[3][q])+v:nd[i*4+c]};
+        const base=(q,c)=>b[3][q]>=1?b[c][q]/b[3][q]+(a[3][q]>=1?a[c][q]/a[3][q]:0):null;
+        const patch=(i,q,c)=>{const v=base(q,c);return v!==null&&b[3][q]>=1?.08*(nd[i*4+c]-b[c][q]/b[3][q])+v:nd[i*4+c]};
         for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=y*W+x,q=(y-y0)*bw+x-x0;if(!done[i])continue;
           for(let c=0;c<3;c++)od[i*4+c]=Math.max(0,Math.min(255,patch(i,q,c)))}
         // and no edge in the shape of the arm: over its outer 12 px the patch starts as the garment just
@@ -322,7 +344,7 @@ const Worn=(()=>{
         let a=s,b=e,frac=0;
         if(!(L&&Rr)){const dir=L?1:-1;let edge;
           const ft=fits&&fits[Math.abs(s-px.hand0[0])<Math.abs(s-px.hand1[0])?0:1];
-          edge=ft&&ft.dir===dir&&y>=ft.ya&&y<=ft.yb?ft.f(y):edgeAt(y,L?s-1:e+1,dir);
+          edge=ft&&ft.dir===dir&&y>=ft.ya&&y<=ft.yb?ft.f(y):rg.side?null:edgeAt(y,L?s-1:e+1,dir); // (side views: the no-arm view or nothing; a guessed edge grew the skirt below its hem)
           if(edge===null)continue;
           const lim=fits?40:0; // (front/back: out to the fitted edge, also past what the hand covered)
           if(L){b=Math.min(e+lim,Math.floor(edge),W-1);frac=edge-Math.floor(edge)}else{a=Math.max(s-lim,Math.ceil(edge),0);frac=Math.ceil(edge)-edge}}
@@ -343,6 +365,11 @@ const Worn=(()=>{
         let k=0,r=0,g=0,b=0;for(const j of [i-1,i+1,i-W,i+W]){if(!hav(j))continue;r+=cur[j*4];g+=cur[j*4+1];b+=cur[j*4+2];k++}
         if(k>=2||(k===1&&md[i*4+3]>=250)){od[i*4]=r/k;od[i*4+1]=g/k;od[i*4+2]=b/k;od[i*4+3]=255;filled[i]=1;n++}}
       if(!n)break}
+    // (a rebuilt pixel that came out black took a transparent source somewhere: not garment)
+    for(let i=0;i<W*H;i++)if(filled[i]&&od[i*4]+od[i*4+1]+od[i*4+2]<60&&fd[i*4]+fd[i*4+1]+fd[i*4+2]>=60){
+      // (unless the garment round it is that dark: black trousers)
+      const x=i%W,y=(i/W)|0;let n=0,sm=0;for(let dy=-6;dy<=6;dy++)for(let dx=-6;dx<=6;dx++){const j=(y+dy)*W+x+dx;if(j<0||j>=W*H||filled[j]||md[j*4+3]<250||src[j*4+3]<200)continue;sm+=src[j*4]+src[j*4+1]+src[j*4+2];n++}
+      if(!n||sm/n>=120){od[i*4+3]=0;filled[i]=0}}
     // front and back: out to the fitted edge where the garment stops short of it (a bite the hand's
     // footprint did not reach), texture mirrored from inside
     const F8=fits?(()=>{const m=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!F[y*W+x])continue;for(let dy=-10;dy<=10;dy++)for(let dx=-10;dx<=10;dx++){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<W&&Y<H)m[Y*W+X]=1}}return m})():null,nearF=i=>!!F8&&!!F8[i];
@@ -360,9 +387,9 @@ const Worn=(()=>{
         for(let x=Math.max(0,Math.round(hx-100));x<=Math.min(W-1,Math.round(hx+100));x++){const i=y*W+x;if(!filled[i])continue;
           const out=(x-e)*ft.dir;if(out>=.5){for(let c=0;c<4;c++)od[i*4+c]=fd[i*4+3]>8&&md[i*4+3]<128?0:od0[i*4+c];filled[i]=0}else if(out>-.5)od[i*4+3]=Math.max(od0[i*4+3],Math.round(255*(.5-out)))}}}
     const f=new Uint8ClampedArray(od);
-    for(let y=2;y<H-2;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!filled[i])continue;for(let c=0;c<3;c++){let s=0;for(let k=-2;k<=2;k++)s+=f[(i+k*W)*4+c];od[i*4+c]=s/5}}
+    for(let y=2;y<H-2;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!filled[i])continue;for(let c=0;c<3;c++){let s=0,n=0;for(let k=-2;k<=2;k++){const j=(i+k*W)*4;if(f[j+3]>200){s+=f[j+c];n++}}if(n)od[i*4+c]=s/n}} // (only opaque neighbours: the transparent ones are black)
     // what the arm uncovers and nothing rebuilds is not garment (the hand's soft rim on it)
-    {const skinLike=j=>{const r=od[j*4],g=od[j*4+1],b=od[j*4+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx<30)return true;const h=(Math.atan2(Math.sqrt(3)*(g-b),2*r-g-b)*180/Math.PI+360)%360;return h>5&&h<40&&(mx-mn)/mx>.25};
+    {const skinLike=j=>{const r=od[j*4],g=od[j*4+1],b=od[j*4+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx<30)return false;const h=(Math.atan2(Math.sqrt(3)*(g-b),2*r-g-b)*180/Math.PI+360)%360;return h>5&&h<40&&(mx-mn)/mx>.25};
       const near=i=>{const x=i%W,y=(i/W)|0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const X=x+dx,Y=y+dy;if(X>=0&&Y>=0&&X<W&&Y<H&&F[Y*W+X])return true}return false};
       for(let i=0;i<W*H;i++)if(open(i)&&!filled[i]&&md[i*4+3]<250&&skinLike(i)&&near(i))od[i*4+3]=0}
     og.putImageData(oi,0,0);
@@ -417,9 +444,51 @@ const Worn=(()=>{
       // past it would stay behind on the skirt when the arm swings)
       {const R=typeof HibiscusPuppetRig!=='undefined'?HibiscusPuppetRig:null,Fa=R&&armFootprint(ctx2d(full).getImageData(0,0,W,H).data,md,R.rig(doll,view),doll,1);
         if(Fa){rg.setTransform(1,0,0,1,0,0);const ri=rg.getImageData(0,0,W,H);for(let i=0;i<Fa.length;i++)if(Fa[i])ri.data[i*4+3]=255;rg.putImageData(ri,0,0);rg.translate(ox,oy)}}
+      // below the hem, on her bare thigh, the arm is the hand itself (HAND_SIDE), not the thigh round it
+      const hand=handMask(doll,view),bare=new Uint8Array(W*H),under=new Uint8Array(W*H);
+      if(hand){const R=typeof HibiscusPuppetRig!=='undefined'?HibiscusPuppetRig:null,kn=R?Math.round(R.rig(doll,view).px.kn0[1]):H,hemY=new Int32Array(W).fill(-1);
+        // (the end of the garment's first run down from the waist in each column: leg warmers further down are
+        // not the hem)
+        const wy=Math.round(R?R.rig(doll,view).skirtTop:300);
+        for(let x=0;x<W;x++){let last=-1,gap=0;for(let y=wy;y<kn;y++){if(md[(y*W+x)*4+3]>=128){last=y;gap=0}else if(last>=0&&++gap>40)break}hemY[x]=last}
+        // (the hem as the lowest garment within 60 px either side: where the forearm covers the skirt down to
+        // the hem, that column shows no garment near the hem)
+        const hm=new Int32Array(W);for(let x=0;x<W;x++){let m=-1;for(let k=Math.max(0,x-60);k<=Math.min(W-1,x+60);k++)if(hemY[k]>m)m=hemY[k];hm[x]=m}
+        // (a column's own hem where it ends on her skin; the neighbours' where the arm covers it there)
+        const rci=rg.getImageData(0,0,W,H).data;
+        bare.hm=hm;
+        for(let x=0;x<W;x++){const y=hemY[x];if(y>=0&&y+2<H&&!rci[((y+2)*W+x)*4+3])hm[x]=y}
+        // round the hand: everything below the hand's top that is not garment is thigh or hand (the hand mask
+        // tells which), whatever the hem does there (a slit, a curved hem)
+        let hx0=W,hx1=-1,hy0=H;for(let i=0;i<W*H;i++)if(hand[i]){const x=i%W,y=(i/W)|0;if(x<hx0)hx0=x;if(x>hx1)hx1=x;if(y<hy0)hy0=y}
+        let hb=H;for(let x=Math.max(0,hx0-25);x<=Math.min(W-1,hx1+25);x++)if(hm[x]>=0&&hm[x]<hb)hb=hm[x]; // (the hem's highest point round the hand)
+        const fdh=ctx2d(full).getImageData(0,0,W,H).data;
+        for(let i=0;i<W*H;i++){const x=i%W,y=(i/W)|0;if(md[i*4+3]>=128||fdh[i*4+3]<8)continue; // (her, not the background)
+          if(x>=hx0-25&&x<=hx1+25&&y>Math.max(hy0,hb))bare[i]=1;else if(hm[x]>=0&&y>hm[x])bare[i]=1}
+        rg.setTransform(1,0,0,1,0,0);const ri=rg.getImageData(0,0,W,H);for(let i=0;i<W*H;i++)if(bare[i]&&ri.data[i*4+3]){under[i]=1;if(!hand[i])ri.data[i*4+3]=0}rg.putImageData(ri,0,0);rg.translate(ox,oy)}
       // the body keeps the old body there (the worn arm's own rim, a pixel off the old one, would stay behind)
       {const r2=makeCanvas(W,H),r2g=r2.getContext('2d');r2g.drawImage(rest,0,0);r2g.globalCompositeOperation='destination-out';r2g.drawImage(rc,0,0);
         rest=r2;bg.clearRect(0,0,W,H);bg.globalCompositeOperation='source-over';bg.drawImage(oldPic,ox,oy);bg.globalCompositeOperation='destination-in';bg.drawImage(full,0,0);bg.globalCompositeOperation='source-over';bg.drawImage(rest,0,0)}
+      // and under the hand on the bare thigh the body is the thigh, rebuilt down the columns from the thigh
+      // above and below the hand (the old body has the hand drawn there)
+      // (the thigh round the hand inside the rig's arm polygon is the worn picture's, as everywhere else on her
+      // legs, not the old body's)
+      if(hand){const fdd=ctx2d(full).getImageData(0,0,W,H).data,rgc=ctx2d(rest),ri2=rgc.getImageData(0,0,W,H),bi0=bg.getImageData(0,0,W,H);
+        for(let i=0;i<W*H;i++)if(bare[i]&&under[i]&&!hand[i]&&fdd[i*4+3]>200){for(let c=0;c<4;c++){ri2.data[i*4+c]=fdd[i*4+c];bi0.data[i*4+c]=fdd[i*4+c]}}
+        rgc.putImageData(ri2,0,0);bg.putImageData(bi0,0,0)}
+      if(hand){const bi=bg.getImageData(0,0,W,H),bd=bi.data,src=new Uint8ClampedArray(bd),hole=i=>bare[i]&&(hand[i]||under[i]); // (the old body's own hand lies anywhere under the rig's arm)
+        const H2=new Uint8Array(W*H);for(let i=0;i<W*H;i++)if(hole(i)){const x=i%W,y=(i/W)|0;for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const j=(y+dy)*W+x+dx;if(j>=0&&j<W*H&&bare[j]&&((j/W)|0)>bare.hm[j%W])H2[j]=1}} // (the thigh below the hem only: the hand's rim on the skirt keeps the picture)
+        const ok=j=>!H2[j]&&src[j*4+3]>200;
+        for(let x=0;x<W;x++){let y=0;while(y<H){if(!H2[y*W+x]){y++;continue}const s0=y;while(y<H&&H2[y*W+x])y++;const e0=y-1,n=e0-s0+1;
+          const dn=e0<H-1&&ok((e0+1)*W+x)?(e0+1)*W+x:-1,up=dn<0&&s0>0&&ok((s0-1)*W+x)?(s0-1)*W+x:-1;if(up<0&&dn<0)continue; // (from the thigh below the hand: above it is the hem)
+          for(let k=s0;k<=e0;k++){const t=(k-s0+.5)/n,o=(k*W+x)*4,a0=up<0?dn:up,b0=dn<0?up:dn,tt=up<0||dn<0?0:t;for(let c=0;c<3;c++)bd[o+c]=src[a0*4+c]*(1-tt)+src[b0*4+c]*tt;bd[o+3]=255}}}
+        // then smoothed as a membrane held by the thigh all round it (no seam where the fill meets the thigh)
+        {const idx=[];for(let i=0;i<W*H;i++)if(H2[i]&&bd[i*4+3])idx.push(i);const v=new Float32Array(W*H*3);for(let i=0;i<W*H;i++)for(let c=0;c<3;c++)v[i*3+c]=bd[i*4+c];
+          const has=j=>bd[j*4+3]>200&&(H2[j]||ok(j));
+          for(let it=0;it<150;it++)for(const i of idx){let n=0,r0=0,g0=0,b0=0;for(const j of [i-1,i+1,i-W,i+W])if(has(j)){r0+=v[j*3];g0+=v[j*3+1];b0+=v[j*3+2];n++}if(n){v[i*3]=r0/n;v[i*3+1]=g0/n;v[i*3+2]=b0/n}}
+          for(const i of idx)for(let c=0;c<3;c++)bd[i*4+c]=v[i*3+c]}
+        bg.putImageData(bi,0,0);out[0].thighFill=H2
+        {const rc2=ctx2d(rest),rr=rc2.getImageData(0,0,W,H);for(let i=0;i<W*H;i++)if(H2[i])rr.data[i*4+3]=0;rc2.putImageData(rr,0,0)}} // (the sharp twin there is the drawn hand's shadow: the fill instead)
       // with the near sleeve delivered alone, the sleeve goes with the arm: its pixels leave the outfit too
       // (the garment under it comes from the no-arm view)
       if(sleeveArt){rg.setTransform(1,0,0,1,0,0);rg.drawImage(sleeveArt,ox+ax,oy+ay,sw,sh)}
@@ -434,7 +503,7 @@ const Worn=(()=>{
         // (its skin is not garment: the shoulder the no-arm view shows stays the body's)
         const rc0=makeCanvas(W,H),rg1=ctx2d(rc0);rg1.drawImage(rawNoarm,ox+ax,oy+ay,sw,sh);const rn=rg1.getImageData(0,0,W,H).data;
         const skin=i=>{const r=rn[i],g=rn[i+1],b=rn[i+2];return r>g&&g>b&&r>90&&(g-b)>(r-g)*.35&&(r-b)>40};
-        for(let q=0;q<W*H;q++){if(!rd[q*4+3]||nd[q*4+3]<=200||skin(q*4))continue;for(let c=0;c<4;c++)od[q*4+c]=nd[q*4+c]}
+        for(let q=0;q<W*H;q++){if(!rd[q*4+3]||nd[q*4+3]<=200||skin(q*4)||nd[q*4]+nd[q*4+1]+nd[q*4+2]<=90)continue;for(let c=0;c<4;c++)od[q*4+c]=nd[q*4+c]}
         src.set(od)}
       for(let y=0;y<H;y++){let x=0;const row=y*W;
         while(x<W){if(!rd[(row+x)*4+3]||ok(row+x)){x++;continue}
