@@ -21,7 +21,8 @@ Do the **pilot (block B)** first. If the pilot looks right in the game, do the r
 ## Status: Grown-up wardrobe done; next Little Me
 
 - **Done and in the game:** blocks A2 and A3 (both base dolls), block B and all of block C for the
-  Grown-up: all 18 of her outfits are drawn worn and on by default in all four views. Two Little Me
+  Grown-up: all 18 of her outfits are drawn worn; 17 are on by default in all four views (the
+  hoodie dress art is done but stays off until its walking animation is fixed). Two Little Me
   outfits from a second image model (dino romper, rainbow tutu tee) are in the game at the old
   resolution.
 - **Next, in this order:** block C for Little Me, block E (faces), block F (hair), block D (shoes).
