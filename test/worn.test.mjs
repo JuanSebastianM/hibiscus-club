@@ -19,7 +19,7 @@ const REDRAWN = ['aqua-velour-tracksuit', 'baby-tee-cargo', 'black-flares-set', 
 // block C3: their no-arm deliveries are not used (the puppet rebuilds the garment behind the arm)
 const NOARM_UNUSED = ['puffer-vest-slip-dress', 'plaid-knit-vest-set', 'hoodie-dress-leg-warmers'];
 // worn art there but not on by default (the puppet's side walk is not clean yet)
-const NOT_DEFAULT = ['hoodie-dress-leg-warmers'];
+const NOT_DEFAULT = [];
 const PILOT = ['tennis-dress', 'denim-jacket-skirt', 'crochet-cover-up', 'hibiscus-flares', ...REDRAWN];
 // Little Me: the two Gemini outfits taken (the GPT base reduced to 512 x 1024, shipped at 1 px per doll px)
 const LITTLE = ['dino-romper', 'rainbow-tutu-tee'];

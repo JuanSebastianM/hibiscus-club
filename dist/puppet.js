@@ -491,7 +491,11 @@ const HibiscusPuppet=(()=>{
     // side views: how far the torso reaches under the top of the leg (deeper at the back: the seat)
     const shoulderBelow=Math.max(rg.armCut?rg.armCut[0][1][1]:0,rg.armCut?rg.armCut[1][1][1]:0);
     const hipBand=new Float32Array(W);
-    if(rg.side){const [a,b]=rg.hipLine,k=layers.doll==='little'?.75:1;for(let x=0;x<W;x++){const t=clamp((x-a[0])/(b[0]-a[0]),0,1);hipBand[x]=hipLineY(rg,x)+k*lerp(45,120,t)}}
+    if(rg.side){const [a,b]=rg.hipLine,k=layers.doll==='little'?.75:1;for(let x=0;x<W;x++){const t=clamp((x-a[0])/(b[0]-a[0]),0,1);hipBand[x]=hipLineY(rg,x)+k*lerp(45,layers.worn?70:120,t)}} // worn.js: a shallower seat (the deeper one stuck out behind the swinging thigh as a wedge)
+    // worn.js: under a short hem the torso keeps only the thigh the garment covers (the bare thigh below the
+    // hem goes with the leg alone, or it stays behind as a flap when the leg swings)
+    const covered=rg.side&&layers.worn?(()=>{const o=layers.layers.find(l=>l.kind==='outfit');if(!o)return null;const d=pixelsOf(o.canvas).data,m=new Uint8Array(W*H);
+      for(let i=0;i<m.length;i++)if(d[i*4+3]>128)m[i]=1;return dilate(m,W,H,3)})():null;
     for(let li=0;li<layers.layers.length;li++){
       const L=layers.layers[li];
       let canvas=L.canvas;
@@ -544,6 +548,8 @@ const HibiscusPuppet=(()=>{
         }
       }
       if(L.fill)for(let i=0;i<lb.length;i++)if(L.fill[i]&&(lb[i]===L_ARM0||lb[i]===L_ARM1||lb[i]===L_PUFF))lb[i]=Math.floor(i/W)>hipLineY(rg,i%W)?(i%W<px.root[0]?L_LEG0:L_LEG1):L_TORSO; // worn.js: the garment behind the arm stays
+      // worn.js: bare thigh below a short hem that the bald doll's hip line gives the torso goes with the leg
+      if(covered&&L.kind==='body')for(let i=0;i<lb.length;i++)if(lb[i]===L_TORSO&&!covered[i]&&Math.floor(i/W)>hipLineY(rg,i%W)-70&&Math.floor(i/W)>rg.skirtTop)lb[i]=L_LEG0;
       if(rg.side&&li>armIdx&&L.kind==='over')for(let i=0;i<lb.length;i++)if(overArm[i])lb[i]=L_ARM0;
       if(kindOutfit==='skirt'&&['outfit','outfitBack','over'].includes(L.kind)){
         // below skirtTop the garment is skirt, except a long sleeve's cuff round the forearm
@@ -552,7 +558,7 @@ const HibiscusPuppet=(()=>{
           return d[(Math.round(m[1])*W+Math.round(m[0]))*4+3]>200});
         for(let y=Math.ceil(rg.skirtTop);y<Math.min(H,rg.skirtEnd??H);y++)for(let x=0;x<W;x++){
           const i=y*W+x,l=lb[i];
-          if(l===L_TORSO||l===L_LEG0||l===L_LEG1)lb[i]=L_SKIRT;
+          if(l===L_TORSO||l===L_LEG0||l===L_LEG1){if(!covered||L.kind!=='body'||covered[i])lb[i]=L_SKIRT} // worn.js: bare skin below the hem is not skirt
           else if(!rg.side&&(l===L_ARM0||l===L_ARM1)){const a=l===L_ARM0?0:1;if(!sleeveTo[a]||y>cuffEnd[a][1]+6||(x-armAxisX(a,y))*(a?-1:1)>armR*.8)lb[i]=L_SKIRT}
         }
       }
@@ -568,7 +574,7 @@ const HibiscusPuppet=(()=>{
         // side views: the torso keeps the top of the thigh under the leg, so a swinging leg never
         // opens a hole at the hip (at rest the leg piece covers it exactly)
         // front/back: the torso keeps the shoulder disc under each arm, so a raised arm never opens a gap
-        const member=P!==L_TORSO?i=>lb[i]===P:rg.side?i=>lb[i]===P||(lb[i]===L_LEG0&&Math.floor(i/W)<hipBand[i%W])
+        const member=P!==L_TORSO?i=>lb[i]===P:rg.side?i=>lb[i]===P||(lb[i]===L_LEG0&&Math.floor(i/W)<hipBand[i%W]&&(!covered||L.kind!=='body'||covered[i]))
           :fan?i=>lb[i]===P:i=>lb[i]===P||((lb[i]===L_ARM0||lb[i]===L_ARM1)&&Math.floor(i/W)<shoulderBelow);
         const kind=P===L_ARM0||P===L_ARM1?'arm':P===L_LEG0||P===L_LEG1?'leg':P===L_SKIRT?'skirt':'torso';
         const spec={kind,limb:P===L_ARM1||P===L_LEG1?1:0,fan:fan&&kind==='arm',layer:L.kind,grid:P===L_HEAD?config.headGrid:config.grid,face:P===L_HEAD&&!!rg.face};
