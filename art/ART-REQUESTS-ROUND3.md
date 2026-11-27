@@ -82,6 +82,21 @@ These cost the most work at import; please treat them as hard requirements.
 - **Hoods:** deliver hooded outfits with the hood down, lying on the back, plus the separate
   hood-up layer described in block C.
 
+## Reminder: clean-up once every outfit is on the new art
+
+Do this only when both wardrobes (Grown-up and Little Me) are fully on the dressed-doll art and
+have been play-tested:
+
+- Remove the old flat outfit pictures, which are then only reachable with `?worn=0`: the outfit
+  files in `dist/assets/items/outfits-adult/`, `dist/assets/items/outfits-little/`,
+  `dist/assets/items/views/outfits-*/`, and the outfit files in `dist/assets/wear/` and
+  `dist/assets/wear/thumbs/` (about 1.5 MB for the Grown-up alone). Keep shoes, hair, jewelry and
+  accessories, and keep `dist/assets/dolls/`, which the animated doll still uses.
+- Remove the `?worn=0` switch and the flat outfit code path with them, and update the tests and
+  the README.
+- Decide whether to keep the lossless art sources in `art/source/round3/` in the repository
+  (about 120 MB) or move them out.
+
 ## Shared rules (paste before every block)
 
 You are producing art for a 2D paper-doll dress-up game. Hard requirements:
