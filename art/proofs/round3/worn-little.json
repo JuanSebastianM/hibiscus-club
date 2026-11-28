@@ -252,66 +252,600 @@
   }
  },
  "entries": {
+  "ballet-wrap-set": {
+   "front": {
+    "src": "assets/worn/little-ballet-wrap-set-front.webp",
+    "mask": "assets/worn/little-ballet-wrap-set-front-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     397,
+     855
+    ],
+    "bytes": 148432,
+    "maskBytes": 6592,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-ballet-wrap-set-left.webp",
+    "mask": "assets/worn/little-ballet-wrap-set-left-mask.webp",
+    "at": [
+     -40,
+     3
+    ],
+    "size": [
+     286,
+     855
+    ],
+    "bytes": 111192,
+    "maskBytes": 4898,
+    "k": 2,
+    "sleeve": "assets/worn/little-ballet-wrap-set-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/little-ballet-wrap-set-right.webp",
+    "mask": "assets/worn/little-ballet-wrap-set-right-mask.webp",
+    "at": [
+     -35,
+     3
+    ],
+    "size": [
+     284,
+     855
+    ],
+    "bytes": 112242,
+    "maskBytes": 4872,
+    "k": 2,
+    "sleeve": "assets/worn/little-ballet-wrap-set-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/little-ballet-wrap-set-back.webp",
+    "mask": "assets/worn/little-ballet-wrap-set-back-mask.webp",
+    "at": [
+     2,
+     4
+    ],
+    "size": [
+     401,
+     855
+    ],
+    "bytes": 144364,
+    "maskBytes": 8346,
+    "k": 2
+   }
+  },
+  "beach-poncho": {
+   "front": {
+    "src": "assets/worn/little-beach-poncho-front.webp",
+    "mask": "assets/worn/little-beach-poncho-front-mask.webp",
+    "at": [
+     6,
+     4
+    ],
+    "size": [
+     393,
+     855
+    ],
+    "bytes": 260022,
+    "maskBytes": 7840,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-beach-poncho-front-hood.webp",
+     "at": [
+      82,
+      -37
+     ],
+     "size": [
+      240,
+      273
+     ]
+    }
+   },
+   "left": {
+    "src": "assets/worn/little-beach-poncho-left.webp",
+    "mask": "assets/worn/little-beach-poncho-left-mask.webp",
+    "at": [
+     -1,
+     3
+    ],
+    "size": [
+     246,
+     855
+    ],
+    "bytes": 182182,
+    "maskBytes": 7348,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-beach-poncho-left-hood.webp",
+     "at": [
+      -2,
+      -33
+     ],
+     "size": [
+      227,
+      262
+     ]
+    }
+   },
+   "right": {
+    "src": "assets/worn/little-beach-poncho-right.webp",
+    "mask": "assets/worn/little-beach-poncho-right-mask.webp",
+    "at": [
+     -29,
+     3
+    ],
+    "size": [
+     278,
+     855
+    ],
+    "bytes": 197456,
+    "maskBytes": 6142,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-beach-poncho-right-hood.webp",
+     "at": [
+      -15,
+      -34
+     ],
+     "size": [
+      226,
+      263
+     ]
+    }
+   },
+   "back": {
+    "src": "assets/worn/little-beach-poncho-back.webp",
+    "mask": "assets/worn/little-beach-poncho-back-mask.webp",
+    "at": [
+     5,
+     4
+    ],
+    "size": [
+     394,
+     855
+    ],
+    "bytes": 259560,
+    "maskBytes": 6176,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-beach-poncho-back-hood.webp",
+     "at": [
+      84,
+      -36
+     ],
+     "size": [
+      236,
+      266
+     ]
+    }
+   }
+  },
+  "bear-onesie": {
+   "front": {
+    "src": "assets/worn/little-bear-onesie-front.webp",
+    "mask": "assets/worn/little-bear-onesie-front-mask.webp",
+    "at": [
+     7,
+     4
+    ],
+    "size": [
+     393,
+     855
+    ],
+    "bytes": 281576,
+    "maskBytes": 13692,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-bear-onesie-front-hood.webp",
+     "at": [
+      82,
+      -37
+     ],
+     "size": [
+      239,
+      273
+     ]
+    }
+   },
+   "left": {
+    "src": "assets/worn/little-bear-onesie-left.webp",
+    "mask": "assets/worn/little-bear-onesie-left-mask.webp",
+    "at": [
+     4,
+     3
+    ],
+    "size": [
+     245,
+     855
+    ],
+    "bytes": 206440,
+    "maskBytes": 12730,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-bear-onesie-left-hood.webp",
+     "at": [
+      -2,
+      -34
+     ],
+     "size": [
+      227,
+      263
+     ]
+    },
+    "sleeve": "assets/worn/little-bear-onesie-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/little-bear-onesie-right.webp",
+    "mask": "assets/worn/little-bear-onesie-right-mask.webp",
+    "at": [
+     -28,
+     3
+    ],
+    "size": [
+     233,
+     855
+    ],
+    "bytes": 208092,
+    "maskBytes": 12904,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-bear-onesie-right-hood.webp",
+     "at": [
+      -15,
+      -34
+     ],
+     "size": [
+      226,
+      263
+     ]
+    },
+    "sleeve": "assets/worn/little-bear-onesie-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/little-bear-onesie-back.webp",
+    "mask": "assets/worn/little-bear-onesie-back-mask.webp",
+    "at": [
+     5,
+     4
+    ],
+    "size": [
+     393,
+     855
+    ],
+    "bytes": 262528,
+    "maskBytes": 18612,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-bear-onesie-back-hood.webp",
+     "at": [
+      84,
+      -36
+     ],
+     "size": [
+      236,
+      266
+     ]
+    }
+   }
+  },
+  "denim-overalls": {
+   "front": {
+    "src": "assets/worn/little-denim-overalls-front.webp",
+    "mask": "assets/worn/little-denim-overalls-front-mask.webp",
+    "at": [
+     6,
+     4
+    ],
+    "size": [
+     393,
+     855
+    ],
+    "bytes": 191524,
+    "maskBytes": 4724,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-denim-overalls-left.webp",
+    "mask": "assets/worn/little-denim-overalls-left-mask.webp",
+    "at": [
+     4,
+     3
+    ],
+    "size": [
+     201,
+     855
+    ],
+    "bytes": 95472,
+    "maskBytes": 5548,
+    "k": 2,
+    "sleeve": "assets/worn/little-denim-overalls-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/little-denim-overalls-right.webp",
+    "mask": "assets/worn/little-denim-overalls-right-mask.webp",
+    "at": [
+     4,
+     3
+    ],
+    "size": [
+     201,
+     855
+    ],
+    "bytes": 117462,
+    "maskBytes": 5060,
+    "k": 2,
+    "sleeve": "assets/worn/little-denim-overalls-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/little-denim-overalls-back.webp",
+    "mask": "assets/worn/little-denim-overalls-back-mask.webp",
+    "at": [
+     7,
+     4
+    ],
+    "size": [
+     388,
+     855
+    ],
+    "bytes": 189866,
+    "maskBytes": 5606,
+    "k": 2
+   }
+  },
   "dino-romper": {
    "front": {
     "src": "assets/worn/little-dino-romper-front.webp",
     "mask": "assets/worn/little-dino-romper-front-mask.webp",
     "at": [
-     3,
+     6,
      4
     ],
     "size": [
-     396,
-     856
+     392,
+     855
     ],
-    "bytes": 60614,
-    "maskBytes": 4786,
-    "k": 1
+    "bytes": 173992,
+    "maskBytes": 5020,
+    "k": 2
    },
    "left": {
     "src": "assets/worn/little-dino-romper-left.webp",
     "mask": "assets/worn/little-dino-romper-left-mask.webp",
     "at": [
-     3,
+     4,
      3
     ],
     "size": [
-     203,
-     856
+     201,
+     855
     ],
-    "bytes": 36712,
-    "maskBytes": 5146,
-    "k": 1
+    "bytes": 103156,
+    "maskBytes": 4730,
+    "k": 2,
+    "sleeve": "assets/worn/little-dino-romper-left-sleeve.webp"
    },
    "right": {
     "src": "assets/worn/little-dino-romper-right.webp",
     "mask": "assets/worn/little-dino-romper-right-mask.webp",
     "at": [
-     3,
+     4,
      3
     ],
     "size": [
-     202,
+     201,
      855
     ],
-    "bytes": 37130,
-    "maskBytes": 5118,
-    "k": 1
+    "bytes": 111372,
+    "maskBytes": 4504,
+    "k": 2,
+    "sleeve": "assets/worn/little-dino-romper-right-sleeve.webp"
    },
    "back": {
     "src": "assets/worn/little-dino-romper-back.webp",
     "mask": "assets/worn/little-dino-romper-back-mask.webp",
     "at": [
-     3,
+     7,
+     4
+    ],
+    "size": [
+     390,
+     855
+    ],
+    "bytes": 153876,
+    "maskBytes": 5146,
+    "k": 2
+   }
+  },
+  "lilac-cord-pinafore": {
+   "front": {
+    "src": "assets/worn/little-lilac-cord-pinafore-front.webp",
+    "mask": "assets/worn/little-lilac-cord-pinafore-front-mask.webp",
+    "at": [
+     6,
+     4
+    ],
+    "size": [
+     393,
+     855
+    ],
+    "bytes": 190296,
+    "maskBytes": 5514,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-lilac-cord-pinafore-left.webp",
+    "mask": "assets/worn/little-lilac-cord-pinafore-left-mask.webp",
+    "at": [
+     -48,
+     3
+    ],
+    "size": [
+     304,
+     855
+    ],
+    "bytes": 143660,
+    "maskBytes": 5958,
+    "k": 2,
+    "sleeve": "assets/worn/little-lilac-cord-pinafore-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/little-lilac-cord-pinafore-right.webp",
+    "mask": "assets/worn/little-lilac-cord-pinafore-right-mask.webp",
+    "at": [
+     -46,
+     3
+    ],
+    "size": [
+     307,
+     855
+    ],
+    "bytes": 125020,
+    "maskBytes": 7672,
+    "k": 2,
+    "sleeve": "assets/worn/little-lilac-cord-pinafore-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/little-lilac-cord-pinafore-back.webp",
+    "mask": "assets/worn/little-lilac-cord-pinafore-back-mask.webp",
+    "at": [
+     4,
      4
     ],
     "size": [
      396,
-     856
+     855
     ],
-    "bytes": 58220,
-    "maskBytes": 4242,
-    "k": 1
+    "bytes": 193828,
+    "maskBytes": 5324,
+    "k": 2
+   }
+  },
+  "mint-cardigan-dress": {
+   "front": {
+    "src": "assets/worn/little-mint-cardigan-dress-front.webp",
+    "mask": "assets/worn/little-mint-cardigan-dress-front-mask.webp",
+    "at": [
+     9,
+     4
+    ],
+    "size": [
+     387,
+     855
+    ],
+    "bytes": 219172,
+    "maskBytes": 7564,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-mint-cardigan-dress-left.webp",
+    "mask": "assets/worn/little-mint-cardigan-dress-left-mask.webp",
+    "at": [
+     -33,
+     3
+    ],
+    "size": [
+     279,
+     855
+    ],
+    "bytes": 150020,
+    "maskBytes": 5118,
+    "k": 2,
+    "sleeve": "assets/worn/little-mint-cardigan-dress-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/little-mint-cardigan-dress-right.webp",
+    "mask": "assets/worn/little-mint-cardigan-dress-right-mask.webp",
+    "at": [
+     -44,
+     3
+    ],
+    "size": [
+     291,
+     855
+    ],
+    "bytes": 150248,
+    "maskBytes": 4902,
+    "k": 2,
+    "sleeve": "assets/worn/little-mint-cardigan-dress-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/little-mint-cardigan-dress-back.webp",
+    "mask": "assets/worn/little-mint-cardigan-dress-back-mask.webp",
+    "at": [
+     6,
+     4
+    ],
+    "size": [
+     394,
+     855
+    ],
+    "bytes": 218100,
+    "maskBytes": 8088,
+    "k": 2
+   }
+  },
+  "pink-gingham-bow-dress": {
+   "front": {
+    "src": "assets/worn/little-pink-gingham-bow-dress-front.webp",
+    "mask": "assets/worn/little-pink-gingham-bow-dress-front-mask.webp",
+    "at": [
+     5,
+     4
+    ],
+    "size": [
+     393,
+     855
+    ],
+    "bytes": 199116,
+    "maskBytes": 4784,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-pink-gingham-bow-dress-left.webp",
+    "mask": "assets/worn/little-pink-gingham-bow-dress-left-mask.webp",
+    "at": [
+     -42,
+     3
+    ],
+    "size": [
+     299,
+     855
+    ],
+    "bytes": 111742,
+    "maskBytes": 6414,
+    "k": 2
+   },
+   "right": {
+    "src": "assets/worn/little-pink-gingham-bow-dress-right.webp",
+    "mask": "assets/worn/little-pink-gingham-bow-dress-right-mask.webp",
+    "at": [
+     -43,
+     3
+    ],
+    "size": [
+     302,
+     855
+    ],
+    "bytes": 124922,
+    "maskBytes": 6778,
+    "k": 2
+   },
+   "back": {
+    "src": "assets/worn/little-pink-gingham-bow-dress-back.webp",
+    "mask": "assets/worn/little-pink-gingham-bow-dress-back-mask.webp",
+    "at": [
+     -1,
+     4
+    ],
+    "size": [
+     404,
+     855
+    ],
+    "bytes": 172592,
+    "maskBytes": 5812,
+    "k": 2
    }
   },
   "rainbow-tutu-tee": {
@@ -324,61 +858,500 @@
     ],
     "size": [
      395,
-     856
+     855
     ],
-    "bytes": 52246,
-    "maskBytes": 5804,
-    "k": 1
+    "bytes": 152972,
+    "maskBytes": 4678,
+    "k": 2
    },
    "left": {
     "src": "assets/worn/little-rainbow-tutu-tee-left.webp",
     "mask": "assets/worn/little-rainbow-tutu-tee-left-mask.webp",
     "at": [
-     -64,
+     -47,
      3
     ],
     "size": [
-     338,
+     312,
      855
     ],
-    "bytes": 36726,
-    "maskBytes": 6098,
-    "k": 1
+    "bytes": 104800,
+    "maskBytes": 6140,
+    "k": 2,
+    "sleeve": "assets/worn/little-rainbow-tutu-tee-left-sleeve.webp"
    },
    "right": {
     "src": "assets/worn/little-rainbow-tutu-tee-right.webp",
     "mask": "assets/worn/little-rainbow-tutu-tee-right-mask.webp",
     "at": [
-     -64,
+     -48,
      3
     ],
     "size": [
-     336,
+     311,
      855
     ],
-    "bytes": 37012,
-    "maskBytes": 6474,
-    "k": 1
+    "bytes": 119296,
+    "maskBytes": 6318,
+    "k": 2,
+    "sleeve": "assets/worn/little-rainbow-tutu-tee-right-sleeve.webp"
    },
    "back": {
     "src": "assets/worn/little-rainbow-tutu-tee-back.webp",
     "mask": "assets/worn/little-rainbow-tutu-tee-back-mask.webp",
     "at": [
+     7,
+     4
+    ],
+    "size": [
+     393,
+     855
+    ],
+    "bytes": 149026,
+    "maskBytes": 5218,
+    "k": 2
+   }
+  },
+  "raincoat-set": {
+   "front": {
+    "src": "assets/worn/little-raincoat-set-front.webp",
+    "mask": "assets/worn/little-raincoat-set-front-mask.webp",
+    "at": [
+     5,
+     4
+    ],
+    "size": [
+     397,
+     855
+    ],
+    "bytes": 184724,
+    "maskBytes": 8250,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-raincoat-set-front-hood.webp",
+     "at": [
+      91,
+      -20
+     ],
+     "size": [
+      221,
+      254
+     ]
+    }
+   },
+   "left": {
+    "src": "assets/worn/little-raincoat-set-left.webp",
+    "mask": "assets/worn/little-raincoat-set-left-mask.webp",
+    "at": [
+     3,
+     3
+    ],
+    "size": [
+     215,
+     855
+    ],
+    "bytes": 128528,
+    "maskBytes": 5280,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-raincoat-set-left-hood.webp",
+     "at": [
+      0,
+      -24
+     ],
+     "size": [
+      226,
+      253
+     ]
+    },
+    "sleeve": "assets/worn/little-raincoat-set-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/little-raincoat-set-right.webp",
+    "mask": "assets/worn/little-raincoat-set-right-mask.webp",
+    "at": [
+     -5,
+     3
+    ],
+    "size": [
+     233,
+     855
+    ],
+    "bytes": 143112,
+    "maskBytes": 5572,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-raincoat-set-right-hood.webp",
+     "at": [
+      -16,
+      -24
+     ],
+     "size": [
+      226,
+      253
+     ]
+    },
+    "sleeve": "assets/worn/little-raincoat-set-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/little-raincoat-set-back.webp",
+    "mask": "assets/worn/little-raincoat-set-back-mask.webp",
+    "at": [
      3,
      4
     ],
     "size": [
-     396,
-     856
+     397,
+     855
     ],
-    "bytes": 51420,
-    "maskBytes": 5392,
-    "k": 1
+    "bytes": 149846,
+    "maskBytes": 7520,
+    "k": 2,
+    "hood": {
+     "src": "assets/worn/little-raincoat-set-back-hood.webp",
+     "at": [
+      91,
+      -23
+     ],
+     "size": [
+      222,
+      252
+     ]
+    }
+   }
+  },
+  "rash-guard-set": {
+   "front": {
+    "src": "assets/worn/little-rash-guard-set-front.webp",
+    "mask": "assets/worn/little-rash-guard-set-front-mask.webp",
+    "at": [
+     6,
+     4
+    ],
+    "size": [
+     394,
+     855
+    ],
+    "bytes": 149164,
+    "maskBytes": 4400,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-rash-guard-set-left.webp",
+    "mask": "assets/worn/little-rash-guard-set-left-mask.webp",
+    "at": [
+     4,
+     3
+    ],
+    "size": [
+     201,
+     855
+    ],
+    "bytes": 103616,
+    "maskBytes": 4660,
+    "k": 2,
+    "sleeve": "assets/worn/little-rash-guard-set-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/little-rash-guard-set-right.webp",
+    "mask": "assets/worn/little-rash-guard-set-right-mask.webp",
+    "at": [
+     4,
+     3
+    ],
+    "size": [
+     201,
+     855
+    ],
+    "bytes": 107348,
+    "maskBytes": 4840,
+    "k": 2,
+    "sleeve": "assets/worn/little-rash-guard-set-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/little-rash-guard-set-back.webp",
+    "mask": "assets/worn/little-rash-guard-set-back-mask.webp",
+    "at": [
+     7,
+     4
+    ],
+    "size": [
+     390,
+     855
+    ],
+    "bytes": 129186,
+    "maskBytes": 5430,
+    "k": 2
+   }
+  },
+  "ruffle-swimsuit": {
+   "front": {
+    "src": "assets/worn/little-ruffle-swimsuit-front.webp",
+    "mask": "assets/worn/little-ruffle-swimsuit-front-mask.webp",
+    "at": [
+     5,
+     4
+    ],
+    "size": [
+     395,
+     855
+    ],
+    "bytes": 152910,
+    "maskBytes": 3606,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-ruffle-swimsuit-left.webp",
+    "mask": "assets/worn/little-ruffle-swimsuit-left-mask.webp",
+    "at": [
+     -9,
+     3
+    ],
+    "size": [
+     230,
+     855
+    ],
+    "bytes": 84510,
+    "maskBytes": 5674,
+    "k": 2
+   },
+   "right": {
+    "src": "assets/worn/little-ruffle-swimsuit-right.webp",
+    "mask": "assets/worn/little-ruffle-swimsuit-right-mask.webp",
+    "at": [
+     -9,
+     3
+    ],
+    "size": [
+     227,
+     855
+    ],
+    "bytes": 78044,
+    "maskBytes": 6092,
+    "k": 2
+   },
+   "back": {
+    "src": "assets/worn/little-ruffle-swimsuit-back.webp",
+    "mask": "assets/worn/little-ruffle-swimsuit-back-mask.webp",
+    "at": [
+     2,
+     4
+    ],
+    "size": [
+     398,
+     855
+    ],
+    "bytes": 119068,
+    "maskBytes": 4588,
+    "k": 2
+   }
+  },
+  "star-pajamas": {
+   "front": {
+    "src": "assets/worn/little-star-pajamas-front.webp",
+    "mask": "assets/worn/little-star-pajamas-front-mask.webp",
+    "at": [
+     6,
+     4
+    ],
+    "size": [
+     394,
+     855
+    ],
+    "bytes": 194890,
+    "maskBytes": 8918,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-star-pajamas-left.webp",
+    "mask": "assets/worn/little-star-pajamas-left-mask.webp",
+    "at": [
+     4,
+     3
+    ],
+    "size": [
+     201,
+     855
+    ],
+    "bytes": 135962,
+    "maskBytes": 5240,
+    "k": 2,
+    "sleeve": "assets/worn/little-star-pajamas-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/little-star-pajamas-right.webp",
+    "mask": "assets/worn/little-star-pajamas-right-mask.webp",
+    "at": [
+     4,
+     3
+    ],
+    "size": [
+     201,
+     855
+    ],
+    "bytes": 145740,
+    "maskBytes": 5652,
+    "k": 2,
+    "sleeve": "assets/worn/little-star-pajamas-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/little-star-pajamas-back.webp",
+    "mask": "assets/worn/little-star-pajamas-back-mask.webp",
+    "at": [
+     3,
+     4
+    ],
+    "size": [
+     397,
+     855
+    ],
+    "bytes": 176632,
+    "maskBytes": 8316,
+    "k": 2
+   }
+  },
+  "tulle-party-dress": {
+   "front": {
+    "src": "assets/worn/little-tulle-party-dress-front.webp",
+    "mask": "assets/worn/little-tulle-party-dress-front-mask.webp",
+    "at": [
+     6,
+     4
+    ],
+    "size": [
+     393,
+     855
+    ],
+    "bytes": 153202,
+    "maskBytes": 5370,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-tulle-party-dress-left.webp",
+    "mask": "assets/worn/little-tulle-party-dress-left-mask.webp",
+    "at": [
+     -76,
+     3
+    ],
+    "size": [
+     349,
+     855
+    ],
+    "bytes": 101540,
+    "maskBytes": 6340,
+    "k": 2,
+    "sleeve": "assets/worn/little-tulle-party-dress-left-sleeve.webp"
+   },
+   "right": {
+    "src": "assets/worn/little-tulle-party-dress-right.webp",
+    "mask": "assets/worn/little-tulle-party-dress-right-mask.webp",
+    "at": [
+     -60,
+     3
+    ],
+    "size": [
+     339,
+     855
+    ],
+    "bytes": 99182,
+    "maskBytes": 6332,
+    "k": 2,
+    "sleeve": "assets/worn/little-tulle-party-dress-right-sleeve.webp"
+   },
+   "back": {
+    "src": "assets/worn/little-tulle-party-dress-back.webp",
+    "mask": "assets/worn/little-tulle-party-dress-back-mask.webp",
+    "at": [
+     2,
+     4
+    ],
+    "size": [
+     399,
+     855
+    ],
+    "bytes": 166042,
+    "maskBytes": 6628,
+    "k": 2
+   }
+  },
+  "yellow-dot-dress": {
+   "front": {
+    "src": "assets/worn/little-yellow-dot-dress-front.webp",
+    "mask": "assets/worn/little-yellow-dot-dress-front-mask.webp",
+    "at": [
+     7,
+     4
+    ],
+    "size": [
+     394,
+     855
+    ],
+    "bytes": 176302,
+    "maskBytes": 5078,
+    "k": 2
+   },
+   "left": {
+    "src": "assets/worn/little-yellow-dot-dress-left.webp",
+    "mask": "assets/worn/little-yellow-dot-dress-left-mask.webp",
+    "at": [
+     -32,
+     3
+    ],
+    "size": [
+     270,
+     855
+    ],
+    "bytes": 109594,
+    "maskBytes": 5858,
+    "k": 2
+   },
+   "right": {
+    "src": "assets/worn/little-yellow-dot-dress-right.webp",
+    "mask": "assets/worn/little-yellow-dot-dress-right-mask.webp",
+    "at": [
+     -30,
+     3
+    ],
+    "size": [
+     268,
+     855
+    ],
+    "bytes": 112818,
+    "maskBytes": 6134,
+    "k": 2
+   },
+   "back": {
+    "src": "assets/worn/little-yellow-dot-dress-back.webp",
+    "mask": "assets/worn/little-yellow-dot-dress-back-mask.webp",
+    "at": [
+     5,
+     4
+    ],
+    "size": [
+     395,
+     855
+    ],
+    "bytes": 166258,
+    "maskBytes": 4652,
+    "k": 2
    }
   }
  },
  "thumbs": {
+  "ballet-wrap-set": "assets/worn/thumbs/little-ballet-wrap-set.webp",
+  "beach-poncho": "assets/worn/thumbs/little-beach-poncho.webp",
+  "bear-onesie": "assets/worn/thumbs/little-bear-onesie.webp",
+  "denim-overalls": "assets/worn/thumbs/little-denim-overalls.webp",
   "dino-romper": "assets/worn/thumbs/little-dino-romper.webp",
-  "rainbow-tutu-tee": "assets/worn/thumbs/little-rainbow-tutu-tee.webp"
+  "lilac-cord-pinafore": "assets/worn/thumbs/little-lilac-cord-pinafore.webp",
+  "mint-cardigan-dress": "assets/worn/thumbs/little-mint-cardigan-dress.webp",
+  "pink-gingham-bow-dress": "assets/worn/thumbs/little-pink-gingham-bow-dress.webp",
+  "rainbow-tutu-tee": "assets/worn/thumbs/little-rainbow-tutu-tee.webp",
+  "raincoat-set": "assets/worn/thumbs/little-raincoat-set.webp",
+  "rash-guard-set": "assets/worn/thumbs/little-rash-guard-set.webp",
+  "ruffle-swimsuit": "assets/worn/thumbs/little-ruffle-swimsuit.webp",
+  "star-pajamas": "assets/worn/thumbs/little-star-pajamas.webp",
+  "tulle-party-dress": "assets/worn/thumbs/little-tulle-party-dress.webp",
+  "yellow-dot-dress": "assets/worn/thumbs/little-yellow-dot-dress.webp"
  }
 }

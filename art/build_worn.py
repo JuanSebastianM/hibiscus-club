@@ -349,7 +349,10 @@ def overlay_sheet(view, fixed_rgba, mov_rgba, fig, k, res, path):
 
 
 # ------------------------------------------------------------------ shipping
-def garment_mask(worn, base, f=1.0, redrawn=False):
+SKIN_HUED = {("little", "bear-onesie")}
+
+
+def garment_mask(worn, base, f=1.0, redrawn=False, skin_hued=False):
     """Where the worn picture differs from the base (the garment), softened: 0..1 at the new picture's px.
     A redrawn body differs from the base's everywhere by a few levels: there skin-coloured pixels are not
     garment either."""
@@ -377,9 +380,12 @@ def garment_mask(worn, base, f=1.0, redrawn=False):
     d = np.maximum(d, np.abs(worn[..., 3] - base[..., 3]))
     m = (d > .035).astype(np.float32) * (worn[..., 3] > .02)
     if redrawn:  # skin-coloured where the base has skin is skin (not the garment's edge over the bodysuit)
-        m *= ~(skin_px(worn) & skin_px(base))
+        # (a skin-hued garment, the bear onesie's brown fleece: skin-hued but clearly unlike the base is garment)
+        strong = (d > .12) if skin_hued else np.zeros_like(d, bool)
+        m *= ~(skin_px(worn) & skin_px(base) & ~strong)
     # drop thin lines (an outline drawn a pixel off the base's along the arms and legs is not garment)
-    m = (box_blur((box_blur(m, 2) > .999).astype(np.float32), 2) > 1e-3).astype(np.float32)
+    ro = 4 if DOLL == "little" else 2  # (Little Me's limbs carry a heavier outline stroke)
+    m = (box_blur((box_blur(m, ro) > .999).astype(np.float32), ro) > 1e-3).astype(np.float32)
     # close the holes (a lilac dress over the lilac bodysuit, mesh, pleats) without growing outward: the
     # skin round the garment is the base's and must stay with the body (puppet pieces), then soften 1 px
     r = 10
@@ -500,12 +506,21 @@ REDRAWN = {("adult", o) for o in ("aqua-velour-tracksuit", "baby-tee-cargo", "bl
 # not warped (the warp, measured on skin, took the silver slip dress for skin and pulled it in), only their
 # masks treat skin as skin
 NOFIT = {("adult", o) for o in ("puffer-vest-slip-dress", "plaid-knit-vest-set", "hoodie-dress-leg-warmers", "denim-overall-dress")}
+# Little Me's wardrobe (block C for Little Me): drawn on her base in place (head identical, feet within a few
+# levels), so not warped either; no no-arm views were delivered (the puppet rebuilds the garment behind the arm)
+LITTLE_C = ('ballet-wrap-set', 'beach-poncho', 'bear-onesie', 'denim-overalls', 'dino-romper', 'lilac-cord-pinafore', 'mint-cardigan-dress', 'pink-gingham-bow-dress', 'rainbow-tutu-tee', 'raincoat-set', 'rash-guard-set', 'ruffle-swimsuit', 'star-pajamas', 'tulle-party-dress', 'yellow-dot-dress')
+REDRAWN |= {("little", o) for o in LITTLE_C}
+NOFIT |= {("little", o) for o in LITTLE_C}
 NOARM_UNUSED = {("adult", o) for o in ("puffer-vest-slip-dress", "plaid-knit-vest-set", "hoodie-dress-leg-warmers")}
 # (the denim overall dress keeps its no-arm views: the puppet uses only their broad colour there, faded, which
 # reads better on denim than the rows rebuilt from the fabric beside the arm)
 # the garment's colour statistics in every view matched to this view's (sequin halter dress: the front is light
 # coral, the delivered sides and back a darker mauve)
-MATCH_COLOUR = {("adult", "sequin-halter-dress"): "front"}
+MATCH_COLOUR = {("adult", "sequin-halter-dress"): "front",
+                # Little Me: the bear onesie warmer orange-brown, the raincoat and ruffle swimsuit darker, in the
+                # other views than in front
+                ("little", "bear-onesie"): "front", ("little", "raincoat-set"): "front", ("little", "ruffle-swimsuit"): "front",
+                ("little", "lilac-cord-pinafore"): "front"}  # (the pinafore paler lilac in the right view)
 _FITTED = {}
 FLOW_CACHE = None  # --flow-cache DIR: the warps kept between runs (keyed by the source file's size and time)
 
@@ -633,19 +648,27 @@ def restore_from_base(x, base, view):
     return n
 
 
-def garment_stats(x):
-    m = garment_px(x)
+def diff_garment(x, base):
+    """For a picture drawn on the base in place: the garment is what differs from the base (whatever its hue:
+    a brown bear onesie is skin-coloured to the hue test)."""
+    m = ((np.abs(x[..., :3] - base[..., :3]).max(-1) > .12) & (x[..., 3] > .9)).astype(np.float32)
+    return box_blur((box_blur(m, 2) > .999).astype(np.float32), 2) > 1e-3
+
+
+def garment_stats(x, base=None):
+    m = garment_px(x) if base is None else diff_garment(x, base)
     y0 = fig_box(x)[1]
-    m[:y0 + int(.2 * (fig_box(x)[3] - y0))] = False  # not the face
+    m[:y0 + int((.28 if DOLL == "little" else .2) * (fig_box(x)[3] - y0))] = False  # not the face
     c = x[..., :3][m]
     return c.mean(0), c.std(0)
 
 
-def match_colour(x, ref):
+def match_colour(x, ref, base=None):
     """Garment pixels moved to the reference view's colour statistics (per channel mean and spread)."""
-    mu, sd = garment_stats(x)
+    mu, sd = garment_stats(x, base)
     mu_r, sd_r = ref
-    g = np.clip(box_blur(garment_px(x).astype(np.float32), 2), 0, 1)[..., None]
+    gm = garment_px(x) if base is None else diff_garment(x, base)
+    g = np.clip(box_blur(gm.astype(np.float32), 2), 0, 1)[..., None]
     new = np.clip((x[..., :3] - mu) * (sd_r / np.maximum(sd, 1e-4)) + mu_r, 0, 1)
     x[..., :3] = x[..., :3] * (1 - g) + new * g
 
@@ -656,6 +679,15 @@ def fit_redrawn(outfit, name, worn, base):
     if (DOLL, outfit) in NOFIT:
         H, W = worn.shape[:2]
         z = np.zeros((H, W), np.float32)
+        view = name.split("-")[0]
+        ref = MATCH_COLOUR.get((DOLL, outfit))
+        if ref and view != ref:
+            rk = (DOLL, outfit, "stats", ref)
+            if rk not in _FITTED:
+                _FITTED[rk] = garment_stats(*_raw(outfit, ref))
+            worn = worn.copy()
+            match_colour(worn, _FITTED[rk], base)
+            print(f"    {outfit} {name}: colour matched to {ref}")
         _FITTED[key] = (worn, (z, z))
         return worn.copy(), (z, z)
     if key in _FITTED:
@@ -741,7 +773,7 @@ def sleeve_from_fitted(outfit, view, sleeve, fitted, uv):
     sa = np.roll(np.roll(sleeve[..., 3], arg[1] * k, 0), arg[0] * k, 1)
     sa = np.clip(warp_img(sa, *uv), 0, 1)
     out = fitted.copy()
-    out[..., 3] *= sa * garment_px(fitted)
+    out[..., 3] *= sa * (1.0 if (DOLL, outfit) in NOFIT else garment_px(fitted))  # (in place: the sleeve file is the shape; a brown fleece is skin-hued)
     out[..., 3] = np.clip(box_blur(out[..., 3], 1), 0, 1) * (fitted[..., 3] > .02)
     cover = float(out[..., 3].sum() / max(sleeve[..., 3].sum(), 1))
     print(f"    sleeve {outfit} {view}: shape moved {arg[0] * k}, {arg[1] * k} px, {cover:.0%} of the delivered sleeve")
@@ -802,7 +834,7 @@ def ship_one(outfit, view, reg, pm_cache):
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / f"{DOLL}-{outfit}-{view}.webp"
     img.save(p, "WEBP", quality=QUALITY, alpha_quality=100, method=6)
-    gm = garment_mask(worn, base, f, redrawn)
+    gm = garment_mask(worn, base, f, redrawn, (DOLL, outfit) in SKIN_HUED)
     gmi = Image.fromarray((gm * 255 + .5).astype(np.uint8), "L")
     W1, H1 = u1 - u0, v1 - v0
     box = (bx + a * u0, by + a * v0, bx + a * u1, by + a * v1)
@@ -823,6 +855,19 @@ def ship_one(outfit, view, reg, pm_cache):
         q = OUT / f"{DOLL}-{outfit}-{view}-noarm.webp"
         Image.fromarray((np.clip(pic, 0, 1) * 255 + .5).astype(np.uint8), "RGBA").save(q, "WEBP", quality=QUALITY, alpha_quality=100, method=6)
         out["noarm"] = f"assets/worn/{q.name}"
+        out["bytes"] += q.stat().st_size
+    hd_path = SRC / f"hood-{DOLL}-{outfit}-{view}.webp"
+    if hd_path.exists():
+        # the hood worn up (hood alone, face open), on the same canvas: shipped at K, cropped to itself
+        hd = load(hd_path)
+        hd[..., 3] = np.where(hd[..., 3] < .04, 0, hd[..., 3])
+        hx0, hy0, hx1, hy1 = bbox(hd[..., 3], .004)
+        hu0, hv0 = math.floor((hx0 - bx) / a) - 2, math.floor((hy0 - by) / a) - 2
+        hu1, hv1 = math.ceil((hx1 - bx) / a) + 2, math.ceil((hy1 - by) / a) + 2
+        pic = sample(premul_img(hd), a, bx, by, hu0, hv0, hu1, hv1, K)
+        q = OUT / f"{DOLL}-{outfit}-{view}-hood.webp"
+        Image.fromarray((np.clip(pic, 0, 1) * 255 + .5).astype(np.uint8), "RGBA").save(q, "WEBP", quality=QUALITY, alpha_quality=100, method=6)
+        out["hood"] = {"src": f"assets/worn/{q.name}", "at": [hu0, hv0], "size": [hu1 - hu0, hv1 - hv0]}
         out["bytes"] += q.stat().st_size
     sl_path = SRC / f"worn-{DOLL}-{outfit}-{view}-sleeve.webp"
     if view in ("left", "right") and sl_path.exists():
@@ -845,7 +890,7 @@ def ship_thumb(outfit):
     worn, base, f = worn_and_base(outfit, "front")
     d = np.abs(worn[..., :3] * worn[..., 3:4] - base[..., :3] * base[..., 3:4]).max(-1)
     if (DOLL, outfit) in REDRAWN:
-        a = garment_mask(worn, base, f, True) * worn[..., 3]
+        a = garment_mask(worn, base, f, True, (DOLL, outfit) in SKIN_HUED) * worn[..., 3]
     else:
         a = np.clip((d - .03) / .05, 0, 1) * worn[..., 3] if f < 1.01 else garment_mask(worn, base, f) * worn[..., 3]
     out = worn.copy()
@@ -885,6 +930,9 @@ def write_data():
                 e = views[v]
                 extra = f",noarm:'{e['noarm']}'" if e.get("noarm") else ""
                 extra += f",sleeve:'{e['sleeve']}'" if e.get("sleeve") else ""
+                if e.get("hood"):
+                    h = e["hood"]
+                    extra += f",hood:{{src:'{h['src']}',at:[{h['at'][0]},{h['at'][1]}],size:[{h['size'][0]},{h['size'][1]}]}}"
                 if e.get("k", WORN_SCALE) != WORN_SCALE:
                     extra += f",k:{e['k']}"
                 parts.append(f"{v}:{{src:'{e['src']}',mask:'{e['mask']}',at:[{e['at'][0]},{e['at'][1]}],size:[{e['size'][0]},{e['size'][1]}]{extra}}}")
@@ -907,7 +955,7 @@ def do_import(src_dir):
         for a, b in RENAME.items():
             if stem.startswith(a):
                 stem = b + stem[len(a):]
-        if not any(stem.startswith(f"{k}-{d}-") for k in ("base", "worn") for d in DOLLS):
+        if not any(stem.startswith(f"{k}-{d}-") for k in ("base", "worn", "hood") for d in DOLLS):
             continue
         img = Image.open(p)
         img.load()

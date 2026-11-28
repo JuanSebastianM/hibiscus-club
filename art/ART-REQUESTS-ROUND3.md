@@ -18,17 +18,17 @@ Head, hair, face, shoes and accessories stay separate layers as today.
 
 Do the **pilot (block B)** first. If the pilot looks right in the game, do the rest (block C).
 
-## Status: Grown-up wardrobe done; next Little Me
+## Status: both wardrobes drawn; next faces, hair, shoes
 
-- **Done and in the game:** blocks A2 and A3 (both base dolls), block B and all of block C for the
-  Grown-up: all 18 of her outfits are drawn worn and on by default in all four views. Two Little Me
-  outfits from a second image model (dino romper, rainbow tutu tee) are in the game at the old
-  resolution.
-- **Next, in this order:** block C for Little Me, block E (faces), block F (hair), block D (shoes).
+- **Done and in the game:** blocks A2 and A3 (both base dolls), block B and all of block C for both
+  dolls: the Grown-up's 18 outfits and Little Me's 15 are drawn worn and on by default in all four
+  views (Little Me's at 2 px per doll px like the Grown-up's; the hooded poncho's hood-up layer is used,
+  the raincoat's and onesie's are shipped for a later hood toggle).
+- **Next, in this order:** block E (faces), block F (hair), block D (shoes).
 - **Use the image model that edits the base picture in place.** The other model redrew the child for
   each picture, in three different canvas sizes, so seven of its nine outfits could not be used.
 
-### Rules for Little Me, from importing the Grown-up's wardrobe
+### Rules learned importing the wardrobes (still apply to every later block)
 
 These cost the most work at import; please treat them as hard requirements.
 

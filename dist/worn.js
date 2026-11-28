@@ -30,7 +30,8 @@ const Worn=(()=>{
     'lilac-satin-bow-dress':ALL4,'pink-velour-cargo':ALL4,'sarong-swimsuit':ALL4,'sequin-halter-dress':ALL4,'tankini-board-shorts':ALL4,
     // block C3
     'puffer-vest-slip-dress':ALL4,'plaid-knit-vest-set':ALL4,'hoodie-dress-leg-warmers':ALL4,'denim-overall-dress':ALL4},
-    little:{'dino-romper':ALL4,'rainbow-tutu-tee':ALL4}};
+    // Little Me: her whole wardrobe (block C for Little Me, at 2x)
+    little:{'ballet-wrap-set':ALL4,'beach-poncho':ALL4,'bear-onesie':ALL4,'denim-overalls':ALL4,'dino-romper':ALL4,'lilac-cord-pinafore':ALL4,'mint-cardigan-dress':ALL4,'pink-gingham-bow-dress':ALL4,'rainbow-tutu-tee':ALL4,'raincoat-set':ALL4,'rash-guard-set':ALL4,'ruffle-swimsuit':ALL4,'star-pajamas':ALL4,'tulle-party-dress':ALL4,'yellow-dot-dress':ALL4}};
   const q=typeof location!=='undefined'?location.search:'';
   let mode=/[?&]worn=1\b/.test(q)?'all':/[?&]worn=0\b/.test(q)?'off':'default';
   let on=mode!=='off';
@@ -153,7 +154,7 @@ const Worn=(()=>{
   /* The same on the band of rows it changes only (the feet), cached per look: a quarter of the pixel work. */
   function fittedFeet(shot,view,e,body,shoes,baseW){
     const doll=shot.doll,fit=catalogItem(shot.shoes).fit[doll][view],dv=dollView(doll,view),k=e.k||data().scale;
-    return memo(cache,['feet',bodyKey(shot,view),shot.outfitTint,shot.shoesTint].join('|'),async()=>{
+    return memo(cache,['feet',bodyKey(shot,view),shot.outfitTint,shot.shoesTint,body.hoodless?'h':''].join('|'),async()=>{
       const foot=fit?.foot,trimY=fit?.trim??dollView(doll,'left').footTop;
       const v0=Math.min(foot?foot.top:Infinity,trimY??Infinity);
       if(!isFinite(v0))return body;
@@ -188,7 +189,9 @@ const Worn=(()=>{
      the rig's arm polygon (fitted loosely to the old picture) also takes in thigh, which then swung away
      with the hand as a flap, and the old body under it still had the hand drawn on the thigh. */
   const HAND_SIDE={adult:[[622,1690],[626,1762],[644,1777],[651,1802],[654,1846],[661,1864],[690,1869],[699,1882],[716,1882],
-    [723,1869],[748,1867],[754,1850],[760,1830],[773,1832],[783,1816],[788,1790],[793,1740],[798,1690]]};
+    [723,1869],[748,1867],[754,1850],[760,1830],[773,1832],[783,1816],[788,1790],[793,1740],[798,1690]],
+    little:[[660,1700],[663,1800],[667,1900],[685,1916],[700,1916],[712,1936],[730,1946],[750,1946],[762,1931],[780,1939],
+    [800,1931],[810,1911],[830,1901],[845,1881],[858,1830],[862,1700]]};
   function handMask(doll,view){
     const P=HAND_SIDE[doll],r=data()?.reg?.[doll]?.[view];if(!P||!r)return null;
     const [ox,oy]=dollView(doll,view).origin,W=DOLL_CANVAS.width,H=DOLL_CANVAS.height,c=makeCanvas(W,H),g=ctx2d(c);
@@ -576,6 +579,37 @@ const Worn=(()=>{
   }
 
   /* ---------- the dressed doll as draw operations (as dollOps in portrait.js) ---------- */
+  /* Hoods worn up (Little Me's poncho, raincoat and onesie: the delivered hood-up layer, `e.hood`). The beach
+     poncho wears it up by default, as on the old path; the others down. A look's `hood` ('up' | 'down') would
+     override that (no studio control yet). A hat wins: with a hat on, the hood is down. */
+  const HOOD_UP={little:new Set(['beach-poncho'])};
+  /* Where the hood lies down on her back in the worn picture (doll-local; the right view mirrors the left about
+     MIRROR 207): with the hood up it goes, and the garment below carries on up to the neckline (the hood-up
+     layer covers that), so there is one hood, not two. */
+  const HOOD_DOWN_AREA={little:{'beach-poncho':{back:[[108,196],[312,196],[302,262],[262,324],[205,366],[148,324],[116,262]],
+    left:[[158,196],[244,196],[244,384],[198,384],[174,330],[163,270]]}}};
+  function hoodless(shot,view,e,pic){
+    const A=HOOD_DOWN_AREA[shot.doll]?.[shot.outfit],P=A&&(view==='right'?A.left?.map(([x,y])=>[207-x,y]):A[view]);if(!P)return pic;
+    return memo(cache,['hoodless',bodyKey(shot,view),shot.outfitTint,pic.width].join('|'),async()=>{
+      const k=e.k||data().scale,[ax,ay]=e.at,W=pic.width,H=pic.height,m=makeCanvas(W,H),mg=ctx2d(m);
+      mg.beginPath();P.forEach(([x,y],i)=>i?mg.lineTo((x-ax)*k,(y-ay)*k):mg.moveTo((x-ax)*k,(y-ay)*k));mg.closePath();mg.fill();
+      const md=mg.getImageData(0,0,W,H).data,c=makeCanvas(W,H),g=ctx2d(c);g.drawImage(pic,0,0);
+      const im=g.getImageData(0,0,W,H),d=im.data,src=new Uint8ClampedArray(d);
+      // side views: the garment's extent just below the area (the poncho's own back edge carries on up)
+      let bx0=0,bx1=W-1,yb=-1,lim=null;if(view!=='back'&&view!=='front'){for(let y=H-1;y>=0&&yb<0;y--)for(let x=0;x<W;x++)if(md[(y*W+x)*4+3]>127){yb=y;break}
+        if(yb>=0&&yb+1<H){bx0=W;bx1=-1;for(let x=0;x<W;x++)if(src[((yb+1)*W+x)*4+3]>200){if(x<bx0)bx0=x;if(x>bx1)bx1=x}
+          // her back's line: from the top of the area by the neck straight down to the garment's back edge below it
+          const tx=(P[0][0]-ax)*k,ty=(P[0][1]-ay)*k,back=view==='left'?bx1:bx0;lim=y=>tx+(back-tx)*Math.max(0,Math.min(1,(y-ty)/Math.max(1,yb-ty)))}}
+      for(let x=0;x<W;x++){let y1=-1;for(let y=H-1;y>=0;y--)if(md[(y*W+x)*4+3]>127){y1=y;break}if(y1<0)continue;
+        let y0=y1;while(y0>0&&md[((y0-1)*W+x)*4+3]>127)y0--;
+        const below=y1+1<H&&src[((y1+1)*W+x)*4+3]>200;
+        for(let y=y0;y<=y1;y++){const o=(y*W+x)*4;
+          if(!below||x<bx0||x>bx1||src[o+3]<8||lim&&(view==='left'?x>lim(y):x<lim(y))){d[o+3]=0;continue}
+          const n=y1-y0+1,yy=Math.min(H-1,y1+1+((y1-y)%Math.max(1,Math.min(n,Math.round(40*k))))),q=(yy*W+x)*4; // the fabric below, mirrored up
+          if(src[q+3]<200){d[o+3]=0;continue}
+          for(let ch=0;ch<4;ch++)d[o+ch]=src[q+ch]}}
+      g.putImageData(im,0,0);c.hoodless=true;return c})}
+  const hoodUp=(shot,e,hatOn)=>!!e.hood&&!hatOn&&(shot.hood==='up'||shot.hood!=='down'&&!!HOOD_UP[shot.doll]?.has(shot.outfit));
   async function build(shot,view,e){
     const doll=shot.doll,dv=dollView(doll,view),[ox,oy]=dv.origin,k=e.k||data().scale,[ax,ay]=e.at,[sw,sh]=e.size;
     const hairFit=catalogItem(shot.hair).fit[doll][view];
@@ -588,6 +622,8 @@ const Worn=(()=>{
       !earItem||earItem.stud||(hairFit.earsUnder&&view==='front')?null:spriteItemLayer(doll,view,shot.earrings,shot.earringsTint),
       !clipItem||clipItem.proc||hairFit.clip?.hide?null:clipSprite(shot,view)
     ]);
+    const hoodOn=hoodUp(shot,e,!!catalogItem(shot.hat)?.fit?.[doll]?.[view]&&shot.hat!=='none');
+    if(hoodOn)body=await hoodless(shot,view,e,body);
     const bodyPic=shoes?await fittedFeet(shot,view,e,body,shoes,base.width):body;
     const drawBody=g=>g.drawImage(bodyPic,ox+ax,oy+ay,sw,sh);
     const ops=[],put=(kind,layer)=>ops.push({kind,layer,draw:g=>g.drawImage(layer,0,0)});
@@ -600,10 +636,15 @@ const Worn=(()=>{
       glassItem?.fit?.[doll]?.[view]?.lens?accLayer(doll,view,glassItem.id,'lens'):null,
       heldFit?accLayer(doll,view,bagItem.id):null]);
     if(hatFit?.cut)hair=await hatHair(doll,view,hair,shot,hatFit.cut,hat,base,hatFit.hairTune?.[shot.hair]);
-    const clipAt={...hairFit.clip,...(hatFit&&hatFit.clip===false?{hide:true}:{})},clipBehind=!!clipAt.behind;
+    // a hood worn up hides her hair (but what shows in its face opening, the old path's for the poncho), her
+    // earrings and clips, as on the old path
+    const hoodImg=hoodOn?await asset(e.hood.src):null;
+    if(hoodOn){const face=catalogItem('beach-poncho')?.fit?.[doll]?.[view]?.hood?.face||[];
+      hair={...hair,back:null,shade:null,front:face.length&&hair.front?softClip(hair.front,ox,oy,face):null};earrings=null;clipLayer=null}
+    const clipAt={...hairFit.clip,...(hatFit&&hatFit.clip===false||hoodOn?{hide:true}:{})},clipBehind=!!clipAt.behind;
     const proc=clipItem?.proc&&!clipAt.hide?clipItem.proc:0;
     const drawProc=g=>{g.save();g.translate(ox,oy);drawCharmView(g,proc,clipAt,dv,view);g.restore()};
-    const stud=earItem?.stud&&dv.face?.lobes&&!(hairFit.earsUnder&&view==='front')?earItem.stud:null;
+    const stud=earItem?.stud&&dv.face?.lobes&&!hoodOn&&!(hairFit.earsUnder&&view==='front')?earItem.stud:null;
     const drawStuds=g=>{g.save();g.translate(ox,oy);for(const [x,y] of dv.face.lobes)drawStud(g,view==='back'?'clutch':stud,x,y+dv.face.unit*(view==='back'?.02:.06),dv.face.unit*(view==='back'?.09:.15));g.restore()};
     const earsUnder=!!hairFit.earsUnder||view==='back';
     const clips=kind=>{if(clipLayer)put(kind,clipLayer);if(proc)ops.push({kind:'charm',behind:kind==='clipBehind',draw:drawProc})};
@@ -635,6 +676,8 @@ const Worn=(()=>{
     if(hair.front)put('hairFront',hair.front);
     if(!earsUnder)ears();
     if(!clipBehind&&!clipAt.hide)clips('clip');
+    if(hoodOn){const [hx,hy]=e.hood.at,[hw,hh]=e.hood.size;
+      ops.push({kind:'hood',draw:g=>g.drawImage(hoodImg,ox+hx,oy+hy,hw,hh)})}
     if(glasses)put('glasses',lens||glasses);
     if(hat)put('hat',hat);
     return {ops,doll,view,origin:[ox,oy],shoes,worn:e};

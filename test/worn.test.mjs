@@ -22,15 +22,19 @@ const NOARM_UNUSED = ['puffer-vest-slip-dress', 'plaid-knit-vest-set', 'hoodie-d
 const NOT_DEFAULT = [];
 const PILOT = ['tennis-dress', 'denim-jacket-skirt', 'crochet-cover-up', 'hibiscus-flares', ...REDRAWN];
 // Little Me: the two Gemini outfits taken (the GPT base reduced to 512 x 1024, shipped at 1 px per doll px)
-const LITTLE = ['dino-romper', 'rainbow-tutu-tee'];
+const LITTLE = ['ballet-wrap-set', 'beach-poncho', 'bear-onesie', 'denim-overalls', 'dino-romper', 'lilac-cord-pinafore',
+  'mint-cardigan-dress', 'pink-gingham-bow-dress', 'rainbow-tutu-tee', 'raincoat-set', 'rash-guard-set', 'ruffle-swimsuit',
+  'star-pajamas', 'tulle-party-dress', 'yellow-dot-dress'];
+// Little Me outfits with worn art that stay on the old path by default (none)
+const LITTLE_NOT_DEFAULT = [];
 const OUTFITS = { adult: PILOT, little: LITTLE };
 const HEIGHT = { adult: 873, little: 863 };
 
 /* Every Grown-up outfit in the catalog (items written inline and the generated pack entries). */
-function CATALOG_ADULT_OUTFITS() {
+function CATALOG_ADULT_OUTFITS(doll = 'adult') {
   const c = read('catalog.js'), ids = new Set();
-  for (const m of c.matchAll(/\{id:'([a-z-]+)',category:'outfit',dolls:\['adult'\]/g)) ids.add(m[1]);
-  for (const m of c.matchAll(/"([a-z-]+)":\{"cat":"outfits-adult"/g)) ids.add(m[1]);
+  for (const m of c.matchAll(new RegExp(`\\{id:'([a-z-]+)',category:'outfit',dolls:\\['${doll}'\\]`, 'g'))) ids.add(m[1]);
+  for (const m of c.matchAll(new RegExp(`"([a-z-]+)":\\{"cat":"outfits-${doll}"`, 'g'))) ids.add(m[1]);
   return [...ids];
 }
 function wornData() {
@@ -116,7 +120,7 @@ test('the redrawn bodies are fitted to the base at import: warp, head and hands 
   for (const id of REDRAWN) assert.ok(py.includes(`"${id}"`), `${id} in REDRAWN`);
   assert.match(py, /def fit_redrawn\(/);
   assert.match(py, /def restore_from_base\(/);
-  assert.match(py, /MATCH_COLOUR = \{\("adult", "sequin-halter-dress"\): "front"\}/);
+  assert.match(py, /MATCH_COLOUR = \{\("adult", "sequin-halter-dress"\): "front",/);
   // sleeves cut from the fitted view, so the swinging sleeve is the still picture's fabric
   assert.match(py, /def sleeve_from_fitted\(/);
   const D = wornData().adult;
@@ -163,7 +167,10 @@ test('the approved outfits are worn by default in every view; ?worn=0 is the old
   for (const id of CATALOG_ADULT_OUTFITS().filter(id => !NOT_DEFAULT.includes(id))) assert.ok(on.use({ doll: 'adult', outfit: id }, 'front'), `every Grown-up outfit is worn: ${id}`);
   assert.equal(on.use({ doll: 'little', outfit: 'tennis-dress' }, 'front'), null);
   for (const id of LITTLE) for (const view of VIEWS) assert.ok(on.use({ doll: 'little', outfit: id }, view), `little ${id} ${view}`);
-  assert.equal(on.portraitScale({ doll: 'little', outfit: 'dino-romper' }), 1, 'a 1x delivery keeps the 1x canvas');
+  assert.equal(on.portraitScale({ doll: 'little', outfit: 'dino-romper' }), 2, 'Little Me at 2x too');
+  const little = CATALOG_ADULT_OUTFITS('little');
+  assert.equal(little.length, 15);
+  for (const id of little.filter(id => !LITTLE_NOT_DEFAULT.includes(id))) assert.ok(on.use({ doll: 'little', outfit: id }, 'front'), `every Little Me outfit is worn: ${id}`);
 });
 
 test('when the worn picture cannot load, that outfit and view go back to the old path (never a bald doll)', async () => {
